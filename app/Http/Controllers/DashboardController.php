@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pesanan;
+use App\Models\PesananCatering;
 use App\Models\BahanBaku;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -47,6 +48,18 @@ class DashboardController extends Controller
         // 4. Pesanan Terbaru
         $pesananTerbaru = Pesanan::with('user')->latest()->take(5)->get();
 
+        // 5. Pesanan Catering Menunggu Konfirmasi (Notifikasi FASE 5)
+        $cateringMenunggu = PesananCatering::with('paketCatering')
+                                            ->where('status', 'menunggu_konfirmasi')
+                                            ->latest()
+                                            ->get();
+        
+        // 6. Pesanan Catering Mendekati Batas Konfirmasi (H-3)
+        $cateringUrgent = PesananCatering::with('paketCatering')
+                                          ->where('status', 'menunggu_konfirmasi')
+                                          ->whereDate('tanggal_acara', '<=', Carbon::today()->addDays(3))
+                                          ->get();
+
         return view('dashboard.index', compact(
             'pesananHariIni',
             'pendapatanHariIni',
@@ -55,7 +68,9 @@ class DashboardController extends Controller
             'labels',
             'dataPendapatan',
             'listStokMenipis',
-            'pesananTerbaru'
+            'pesananTerbaru',
+            'cateringMenunggu',
+            'cateringUrgent'
         ));
     }
 }
