@@ -12,7 +12,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['"Google Sans"', 'Inter', 'Outfit', ...defaultTheme.fontFamily.sans],
+                sans: ['"Outfit"', '"Plus Jakarta Sans"', 'Inter', ...defaultTheme.fontFamily.sans],
                 mono: ['"Anonymous Pro"', ...defaultTheme.fontFamily.mono],
             },
             colors: {

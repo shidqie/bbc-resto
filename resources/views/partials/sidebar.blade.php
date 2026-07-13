@@ -92,6 +92,28 @@
             ],
         ])
 
+        {{-- Catering & Nasi Box (Submenu) --}}
+        @include('partials.sidebar-submenu', [
+            'icon' => 'o-cake',
+            'label' => 'Catering',
+            'isOpen' => request()->routeIs('paket-catering.*') || request()->routeIs('pesanan-catering.*'),
+            'items' => [
+                ['label' => 'Paket Catering',     'url' => route('paket-catering.index'),    'active' => request()->routeIs('paket-catering.*')],
+                ['label' => 'Pesanan Masuk',       'url' => route('pesanan-catering.index'),  'active' => request()->routeIs('pesanan-catering.*')],
+            ],
+        ])
+
+        {{-- Laporan (Submenu) --}}
+        @include('partials.sidebar-submenu', [
+            'icon' => 'o-chart-bar',
+            'label' => 'Laporan',
+            'isOpen' => request()->routeIs('laporan.*'),
+            'items' => [
+                ['label' => 'Lap. Penjualan', 'url' => route('laporan.penjualan'), 'active' => request()->routeIs('laporan.penjualan')],
+                ['label' => 'Lap. Stok',      'url' => route('laporan.stok'),       'active' => request()->routeIs('laporan.stok')],
+            ],
+        ])
+
         {{-- Pengguna (Submenu) --}}
         @include('partials.sidebar-submenu', [
             'icon' => 'o-users',

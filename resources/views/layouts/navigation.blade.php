@@ -15,6 +15,18 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    
+                    @if(auth()->user()->role->name === 'Admin' || auth()->user()->role->name === 'Kasir' || auth()->user()->role->name === 'Manajer')
+                    <x-nav-link :href="route('laporan.penjualan')" :active="request()->routeIs('laporan.penjualan')">
+                        {{ __('Lap. Penjualan') }}
+                    </x-nav-link>
+                    @endif
+
+                    @if(auth()->user()->role->name === 'Admin' || auth()->user()->role->name === 'Manajer')
+                    <x-nav-link :href="route('laporan.stok')" :active="request()->routeIs('laporan.stok')">
+                        {{ __('Lap. Stok') }}
+                    </x-nav-link>
+                    @endif
                 </div>
             </div>
 
