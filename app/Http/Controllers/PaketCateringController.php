@@ -12,7 +12,7 @@ class PaketCateringController extends Controller
     public function index(Request $request)
     {
         $jenis = $request->input('jenis', 'all');
-        $query = PaketCatering::withCount('detailBahan');
+        $query = PaketCatering::withCount('komponens');
 
         if ($jenis !== 'all') {
             $query->where('jenis_paket', $jenis);
@@ -24,8 +24,8 @@ class PaketCateringController extends Controller
 
     public function create()
     {
-        $bahanBakus = BahanBaku::with('satuan')->orderBy('nama_bahan')->get();
-        return view('catering.paket.create', compact('bahanBakus'));
+        $menus = \App\Models\Menu::where('jenis_menu', 'catering')->get();
+        return view('catering.paket.create', compact('menus'));
     }
 
     public function store(Request $request)
@@ -35,10 +35,12 @@ class PaketCateringController extends Controller
             'jenis_paket' => 'required|in:catering,nasi_box',
             'harga' => 'required|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'bahan_baku_id' => 'required|array|min:1',
-            'bahan_baku_id.*' => 'exists:bahan_bakus,id',
-            'jumlah_kebutuhan' => 'required|array',
-            'jumlah_kebutuhan.*' => 'required|numeric|min:0.01',
+            'komponen' => 'required|array|min:1',
+            'komponen.*.nama_komponen' => 'required|string',
+            'komponen.*.tipe' => 'required|in:fixed,choice',
+            'komponen.*.urutan' => 'required|numeric',
+            'komponen.*.menu_id' => 'required|array|min:1',
+            'komponen.*.menu_id.*' => 'exists:menus,id',
         ]);
 
         $paket = PaketCatering::create([
@@ -48,12 +50,20 @@ class PaketCateringController extends Controller
             'deskripsi' => $request->deskripsi,
         ]);
 
-        foreach ($request->bahan_baku_id as $index => $bahanBakuId) {
-            DetailPaketCatering::create([
+        foreach ($request->komponen as $komp) {
+            $komponen = \App\Models\KomponenPaket::create([
                 'paket_catering_id' => $paket->id,
-                'bahan_baku_id' => $bahanBakuId,
-                'jumlah_kebutuhan' => $request->jumlah_kebutuhan[$index],
+                'nama_komponen' => $komp['nama_komponen'],
+                'tipe' => $komp['tipe'],
+                'urutan' => $komp['urutan'],
             ]);
+
+            foreach ($komp['menu_id'] as $menuId) {
+                \App\Models\OpsiKomponen::create([
+                    'komponen_paket_id' => $komponen->id,
+                    'menu_id' => $menuId,
+                ]);
+            }
         }
 
         return redirect()->route('paket-catering.index')->with('success', 'Paket berhasil ditambahkan!');
@@ -61,15 +71,15 @@ class PaketCateringController extends Controller
 
     public function show(PaketCatering $paketCatering)
     {
-        $paketCatering->load('detailBahan.bahanBaku.satuan');
+        $paketCatering->load('komponens.opsi.menu');
         return view('catering.paket.show', compact('paketCatering'));
     }
 
     public function edit(PaketCatering $paketCatering)
     {
-        $paketCatering->load('detailBahan');
-        $bahanBakus = BahanBaku::with('satuan')->orderBy('nama_bahan')->get();
-        return view('catering.paket.edit', compact('paketCatering', 'bahanBakus'));
+        $paketCatering->load('komponens.opsi');
+        $menus = \App\Models\Menu::where('jenis_menu', 'catering')->get();
+        return view('catering.paket.edit', compact('paketCatering', 'menus'));
     }
 
     public function update(Request $request, PaketCatering $paketCatering)
@@ -79,10 +89,12 @@ class PaketCateringController extends Controller
             'jenis_paket' => 'required|in:catering,nasi_box',
             'harga' => 'required|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'bahan_baku_id' => 'required|array|min:1',
-            'bahan_baku_id.*' => 'exists:bahan_bakus,id',
-            'jumlah_kebutuhan' => 'required|array',
-            'jumlah_kebutuhan.*' => 'required|numeric|min:0.01',
+            'komponen' => 'required|array|min:1',
+            'komponen.*.nama_komponen' => 'required|string',
+            'komponen.*.tipe' => 'required|in:fixed,choice',
+            'komponen.*.urutan' => 'required|numeric',
+            'komponen.*.menu_id' => 'required|array|min:1',
+            'komponen.*.menu_id.*' => 'exists:menus,id',
         ]);
 
         $paketCatering->update([
@@ -92,14 +104,23 @@ class PaketCateringController extends Controller
             'deskripsi' => $request->deskripsi,
         ]);
 
-        // Hapus BOM lama dan buat ulang
-        $paketCatering->detailBahan()->delete();
-        foreach ($request->bahan_baku_id as $index => $bahanBakuId) {
-            DetailPaketCatering::create([
+        // Hapus komponen lama
+        $paketCatering->komponens()->delete();
+
+        foreach ($request->komponen as $komp) {
+            $komponen = \App\Models\KomponenPaket::create([
                 'paket_catering_id' => $paketCatering->id,
-                'bahan_baku_id' => $bahanBakuId,
-                'jumlah_kebutuhan' => $request->jumlah_kebutuhan[$index],
+                'nama_komponen' => $komp['nama_komponen'],
+                'tipe' => $komp['tipe'],
+                'urutan' => $komp['urutan'],
             ]);
+
+            foreach ($komp['menu_id'] as $menuId) {
+                \App\Models\OpsiKomponen::create([
+                    'komponen_paket_id' => $komponen->id,
+                    'menu_id' => $menuId,
+                ]);
+            }
         }
 
         return redirect()->route('paket-catering.index')->with('success', 'Paket berhasil diperbarui!');
@@ -107,7 +128,7 @@ class PaketCateringController extends Controller
 
     public function destroy(PaketCatering $paketCatering)
     {
-        $paketCatering->detailBahan()->delete();
+        $paketCatering->komponens()->delete();
         $paketCatering->delete();
         return redirect()->route('paket-catering.index')->with('success', 'Paket berhasil dihapus!');
     }

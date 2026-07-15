@@ -18,9 +18,9 @@ class PaketCatering extends Model
         'is_active' => 'boolean',
     ];
 
-    public function detailBahan()
+    public function komponens()
     {
-        return $this->hasMany(DetailPaketCatering::class);
+        return $this->hasMany(KomponenPaket::class)->orderBy('urutan');
     }
 
     public function pesanans()

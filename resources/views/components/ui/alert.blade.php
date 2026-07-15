@@ -15,7 +15,7 @@
 {{-- Alert Sukses --}}
 @if(session('success'))
     <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3">
-        <i class="fas fa-check-circle shrink-0"></i>
+        <x-heroicon-o-check-circle class="shrink-0 w-5 h-5 inline-block shrink-0" />
         <p class="text-sm font-medium">{{ session('success') }}</p>
     </div>
 @endif
@@ -23,7 +23,7 @@
 {{-- Alert Error --}}
 @if(session('error'))
     <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex items-center gap-3">
-        <i class="fas fa-exclamation-circle shrink-0"></i>
+        <x-heroicon-o-exclamation-circle class="shrink-0 w-5 h-5 inline-block shrink-0" />
         <p class="text-sm font-medium">{{ session('error') }}</p>
     </div>
 @endif
@@ -33,7 +33,7 @@
     <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex flex-col gap-1">
         @foreach($errors->all() as $error)
             <div class="flex items-center gap-2">
-                <i class="fas fa-exclamation-circle text-xs shrink-0"></i>
+                <x-heroicon-o-exclamation-circle class="text-xs shrink-0 w-5 h-5 inline-block shrink-0" />
                 <p class="text-sm font-medium">{{ $error }}</p>
             </div>
         @endforeach

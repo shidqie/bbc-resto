@@ -37,7 +37,7 @@
                     {{-- Search --}}
                     <div class="relative w-full lg:w-96">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <i class="fas fa-search text-gray-400"></i>
+                            <x-heroicon-o-magnifying-glass class="text-gray-400 w-5 h-5 inline-block shrink-0" />
                         </div>
                         <input type="text" name="search" value="{{ request('search') }}" 
                                class="bg-white border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full pl-10 p-2.5 transition-colors outline-none" 
@@ -66,7 +66,7 @@
                         </select>
                         @if(request()->hasAny(['search', 'kategori', 'status_stok', 'supplier']))
                             <a href="{{ route('bahan-baku.index') }}" class="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors" title="Reset Filter">
-                                <i class="fas fa-times"></i>
+                                <x-heroicon-o-x-mark class="w-5 h-5 inline-block shrink-0" />
                             </a>
                         @endif
                         <button type="submit" class="hidden"></button>
@@ -125,15 +125,15 @@
                         <td class="px-6 py-3 text-center">
                             <div x-data="{ open: false }" class="relative inline-block text-left">
                                 <button @click="open = !open" @click.away="open = false" class="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
-                                    <i class="fas fa-ellipsis-v"></i>
+                                    <x-heroicon-o-ellipsis-vertical class="w-5 h-5 inline-block shrink-0" />
                                 </button>
                                 
                                 <div x-show="open" style="display: none;" class="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-1.5 overflow-hidden">
                                     <a href="{{ route('bahan-baku.show', $item->id) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                        <i class="fas fa-eye w-4 text-gray-400 mr-2"></i> Detail
+                                        <x-heroicon-o-eye class="w-4 text-gray-400 mr-2 w-5 h-5 inline-block shrink-0" /> Detail
                                     </a>
                                     <a href="{{ route('bahan-baku.edit', $item->id) }}" class="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50">
-                                        <i class="fas fa-edit w-4 text-blue-400 mr-2"></i> Edit Data
+                                        <x-heroicon-o-pencil-square class="w-4 text-blue-400 mr-2 w-5 h-5 inline-block shrink-0" /> Edit Data
                                     </a>
                                     <div class="h-px bg-gray-100 my-1"></div>
                                     @if($item->status)
@@ -146,7 +146,7 @@
                                         <input type="hidden" name="harga_terakhir" value="{{ $item->harga_terakhir }}">
                                         <input type="hidden" name="status" value="0">
                                         <button type="submit" class="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50" onclick="return confirm('Nonaktifkan bahan baku ini?')">
-                                            <i class="fas fa-ban w-4 mr-2"></i> Nonaktifkan
+                                            <x-heroicon-o-no-symbol class="w-4 mr-2 w-5 h-5 inline-block shrink-0" /> Nonaktifkan
                                         </button>
                                     </form>
                                     @else
@@ -159,14 +159,14 @@
                                         <input type="hidden" name="harga_terakhir" value="{{ $item->harga_terakhir }}">
                                         <input type="hidden" name="status" value="1">
                                         <button type="submit" class="w-full text-left px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50">
-                                            <i class="fas fa-check w-4 mr-2"></i> Aktifkan
+                                            <x-heroicon-o-check class="w-4 mr-2 w-5 h-5 inline-block shrink-0" /> Aktifkan
                                         </button>
                                     </form>
                                     @endif
                                     <form action="{{ route('bahan-baku.destroy', $item->id) }}" method="POST">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50" onclick="return confirm('Hapus permanen bahan baku ini?')">
-                                            <i class="fas fa-trash w-4 mr-2"></i> Hapus
+                                            <x-heroicon-o-trash class="w-4 mr-2 w-5 h-5 inline-block shrink-0" /> Hapus
                                         </button>
                                     </form>
                                 </div>

@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('detail_pesanan_caterings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pesanan_catering_id')->constrained('pesanan_caterings')->onDelete('cascade');
-            $table->foreignId('bahan_baku_id')->constrained('bahan_bakus');
-            $table->decimal('jumlah_digunakan', 10, 2);
+            $table->foreignId('pesanan_catering_id')->constrained('pesanan_caterings')->cascadeOnDelete();
+            $table->foreignId('komponen_paket_id')->constrained('komponen_pakets');
+            $table->foreignId('menu_id')->constrained('menus');
             $table->timestamps();
         });
     }

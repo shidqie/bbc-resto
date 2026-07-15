@@ -32,7 +32,7 @@
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <form action="{{ route('stok-menipis.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                         <div class="relative w-full sm:w-64">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <x-heroicon-o-magnifying-glass class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 inline-block shrink-0" />
                             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari bahan baku..." class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
                         </div>
                         

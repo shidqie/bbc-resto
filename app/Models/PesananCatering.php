@@ -7,69 +7,62 @@ use Illuminate\Database\Eloquent\Model;
 class PesananCatering extends Model
 {
     protected $fillable = [
-        'no_pesanan',
-        'paket_catering_id',
+        'kode_pesanan',
         'nama_pemesan',
-        'no_telepon',
-        'email',
-        'alamat_pengiriman',
+        'kontak',
+        'lokasi_acara',
+        'metode_pengiriman',
+        'ongkos_kirim',
+        'jarak_km',
+        'latitude',
+        'longitude',
         'tanggal_acara',
-        'detail_acara',
+        'paket_id',
         'jumlah_porsi',
-        'harga_per_porsi',
-        'total_harga',
+        'total_tagihan',
         'dp_amount',
-        'dp_percentage',
-        'sisa_pembayaran',
         'status',
-        'confirmed_by',
-        'confirmed_at',
-        'catatan_pembatalan',
+        'catatan'
     ];
 
     protected $casts = [
         'tanggal_acara' => 'date',
-        'confirmed_at' => 'datetime',
     ];
 
-    public function paketCatering()
+    public function paket()
     {
-        return $this->belongsTo(PaketCatering::class);
+        return $this->belongsTo(PaketCatering::class, 'paket_id');
     }
 
-    public function confirmedBy()
+    public function details()
     {
-        return $this->belongsTo(User::class, 'confirmed_by');
+        return $this->hasMany(PesananCateringDetail::class, 'pesanan_id');
     }
 
-    public function pembayarans()
+    public function addons()
     {
-        return $this->hasMany(PembayaranCatering::class);
+        return $this->hasMany(PesananCateringAddon::class, 'pesanan_id');
     }
 
-    public function detailBahan()
+    public function buktiPembayarans()
     {
-        return $this->hasMany(DetailPesananCatering::class);
+        return $this->morphMany(BuktiPembayaran::class, 'pesanan');
     }
 
-    /**
-     * Generate nomor pesanan otomatis
-     */
-    public static function generateNoPesanan(string $jenisPaket): string
+    public static function generateKodePesanan(): string
     {
-        $prefix = $jenisPaket === 'catering' ? 'CTR' : 'NBX';
         $date = now()->format('Ymd');
-        $lastOrder = self::where('no_pesanan', 'like', $prefix . $date . '%')
-            ->orderBy('no_pesanan', 'desc')
+        $lastOrder = self::where('kode_pesanan', 'like', 'CTR' . $date . '%')
+            ->orderBy('id', 'desc')
             ->first();
 
         if ($lastOrder) {
-            $lastNumber = (int) substr($lastOrder->no_pesanan, -4);
+            $lastNumber = (int) substr($lastOrder->kode_pesanan, -4);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
 
-        return $prefix . $date . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return 'CTR' . $date . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }

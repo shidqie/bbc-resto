@@ -58,7 +58,7 @@
                         <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
                             <h2 class="text-lg font-bold text-gray-900">Item Bahan Baku</h2>
                             <button type="button" onclick="addRow()" class="inline-flex items-center gap-2 text-sm font-medium text-[#3B82F6] bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
-                                <i class="fas fa-plus"></i> Tambah Item
+                                <x-heroicon-o-plus class="w-5 h-5 inline-block shrink-0" /> Tambah Item
                             </button>
                         </div>
 
@@ -89,7 +89,7 @@
                         <div class="mt-8 flex justify-end gap-3 pt-6 border-t border-gray-100">
                             <x-ui.button href="{{ route('pengadaan.index') }}" variant="outline">Batal</x-ui.button>
                             <button type="button" onclick="submitForm()" class="px-5 py-2.5 text-white bg-[#3B82F6] hover:bg-[#2563EB] rounded-xl font-medium transition-colors shadow-sm flex items-center gap-2">
-                                <i class="fas fa-save"></i> Simpan Pengadaan
+                                <x-heroicon-o-document-check class="w-5 h-5 inline-block shrink-0" /> Simpan Pengadaan
                             </button>
                         </div>
                     </div>
@@ -126,7 +126,7 @@
         </td>
         <td class="px-2 py-3 align-top text-center pt-4">
             <button type="button" class="text-red-500 hover:text-red-700 transition-colors" onclick="removeRow(this)">
-                <i class="fas fa-trash-alt"></i>
+                <x-heroicon-o-trash class="w-5 h-5 inline-block shrink-0" />
             </button>
         </td>
     </tr>
@@ -172,6 +172,8 @@
         const template = document.getElementById('row-template');
         const clone = template.content.cloneNode(true);
         container.appendChild(clone);
+        const rows = container.querySelectorAll('.item-row');
+        return rows[rows.length - 1];
     }
 
     function removeRow(btn) {
@@ -194,8 +196,24 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Add 1 default row on load
-        addRow();
+        const prepopulate = @json($prepopulate ?? []);
+        if (prepopulate.length > 0) {
+            prepopulate.forEach(item => {
+                const row = addRow();
+                if (row) {
+                    const select = row.querySelector('.bahan-select');
+                    select.value = item.bahan_baku_id;
+                    updateSatuan(select);
+                    
+                    const jumlahInput = row.querySelector('.jumlah-input');
+                    jumlahInput.value = item.jumlah;
+                    calculateSubtotal(jumlahInput);
+                }
+            });
+        } else {
+            // Add 1 default row on load
+            addRow();
+        }
     });
 </script>
 @endsection

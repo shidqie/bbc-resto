@@ -54,7 +54,7 @@
                             </div>
                         @empty
                             <div class="p-6 text-center text-gray-500 text-sm">
-                                <i class="fas fa-check-circle text-emerald-400 text-2xl mb-2 block"></i>
+                                <x-heroicon-o-check-circle class="text-emerald-400 text-2xl mb-2 block w-[1em] h-[1em] inline-block shrink-0" />
                                 <p>Stok bahan baku aman.</p>
                             </div>
                         @endforelse
@@ -95,27 +95,41 @@
             </div>
         </div>
 
-        {{-- Notifikasi Pesanan Catering (FASE 5) --}}
-        @if($cateringUrgent->count() > 0)
-        <div class="bg-red-50 border border-red-200 rounded-2xl p-4 md:p-6">
+        {{-- Notifikasi Pesanan Urgent (H-3) --}}
+        @if($cateringUrgent->count() > 0 || $nasiBoxUrgent->count() > 0)
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-4 md:p-6 mb-6">
             <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center"><i class="fas fa-exclamation-triangle text-red-500"></i></div>
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center"><x-heroicon-o-exclamation-triangle class="text-red-500 w-5 h-5 inline-block shrink-0" /></div>
                 <div>
-                    <h3 class="font-bold text-red-800">Pesanan Catering Urgent!</h3>
-                    <p class="text-xs text-red-600">Pesanan berikut sudah mendekati batas H-3 konfirmasi</p>
+                    <h3 class="font-bold text-red-800">Pesanan Urgent (H-3)!</h3>
+                    <p class="text-xs text-red-600">Pesanan berikut sudah mendekati batas H-3 acara</p>
                 </div>
             </div>
             <div class="space-y-2">
                 @foreach($cateringUrgent as $urgent)
-                <a href="{{ route('pesanan-catering.show', $urgent) }}" class="block bg-white rounded-xl p-3 hover:shadow-md transition-shadow border border-red-100">
+                <a href="{{ route('admin.pesanan.catering.show', $urgent->id) }}" class="block bg-white rounded-xl p-3 hover:shadow-md transition-shadow border border-red-100">
                     <div class="flex justify-between items-center">
                         <div>
-                            <span class="font-bold text-red-600">{{ $urgent->no_pesanan }}</span>
+                            <span class="font-bold text-red-600">{{ $urgent->kode_pesanan }} <span class="text-xs text-red-500 ml-1">(Catering)</span></span>
                             <span class="text-sm text-gray-600 ml-2">{{ $urgent->nama_pemesan }}</span>
                         </div>
                         <div class="text-right">
                             <div class="text-xs text-red-500 font-medium">Acara: {{ $urgent->tanggal_acara->format('d/m/Y') }}</div>
-                            <div class="text-xs text-gray-400">{{ $urgent->paketCatering->nama_paket }}</div>
+                            <div class="text-xs text-gray-400">{{ $urgent->paket->nama_paket }}</div>
+                        </div>
+                    </div>
+                </a>
+                @endforeach
+                @foreach($nasiBoxUrgent as $urgent)
+                <a href="{{ route('admin.pesanan.nasibox.show', $urgent->id) }}" class="block bg-white rounded-xl p-3 hover:shadow-md transition-shadow border border-red-100">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-red-600">{{ $urgent->kode_pesanan }} <span class="text-xs text-red-500 ml-1">(Nasi Box)</span></span>
+                            <span class="text-sm text-gray-600 ml-2">{{ $urgent->nama_pemesan }}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-red-500 font-medium">Acara: {{ $urgent->tanggal_acara->format('d/m/Y') }}</div>
+                            <div class="text-xs text-gray-400">{{ $urgent->menu->nama }}</div>
                         </div>
                     </div>
                 </a>
@@ -124,24 +138,39 @@
         </div>
         @endif
 
-        @if($cateringMenunggu->count() > 0)
+        {{-- Notifikasi Menunggu Konfirmasi --}}
+        @if($cateringMenunggu->count() > 0 || $nasiBoxMenunggu->count() > 0)
         <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 md:p-6">
             <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center"><i class="fas fa-bell text-yellow-500"></i></div>
+                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center"><x-heroicon-o-bell class="text-yellow-500 w-5 h-5 inline-block shrink-0" /></div>
                 <div>
-                    <h3 class="font-bold text-yellow-800">Pesanan Catering Menunggu Konfirmasi ({{ $cateringMenunggu->count() }})</h3>
+                    <h3 class="font-bold text-yellow-800">Menunggu Konfirmasi ({{ $cateringMenunggu->count() + $nasiBoxMenunggu->count() }})</h3>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 @foreach($cateringMenunggu as $waiting)
-                <a href="{{ route('pesanan-catering.show', $waiting) }}" class="block bg-white rounded-xl p-3 hover:shadow-md transition-shadow border border-yellow-100">
+                <a href="{{ route('admin.pesanan.catering.show', $waiting->id) }}" class="block bg-white rounded-xl p-3 hover:shadow-md transition-shadow border border-yellow-100">
                     <div class="flex justify-between items-center">
                         <div>
-                            <span class="font-semibold text-gray-900 text-sm">{{ $waiting->no_pesanan }}</span>
+                            <span class="font-semibold text-gray-900 text-sm">{{ $waiting->kode_pesanan }} <span class="text-xs text-yellow-600 ml-1">(Catering)</span></span>
                             <span class="text-xs text-gray-500 ml-1">{{ $waiting->nama_pemesan }}</span>
                         </div>
                         <div class="text-right">
-                            <div class="text-xs font-medium text-primary">Rp {{ number_format($waiting->total_harga, 0, ',', '.') }}</div>
+                            <div class="text-xs font-medium text-primary">Rp {{ number_format($waiting->total_tagihan, 0, ',', '.') }}</div>
+                            <div class="text-[10px] text-gray-400">{{ $waiting->tanggal_acara->format('d/m/Y') }}</div>
+                        </div>
+                    </div>
+                </a>
+                @endforeach
+                @foreach($nasiBoxMenunggu as $waiting)
+                <a href="{{ route('admin.pesanan.nasibox.show', $waiting->id) }}" class="block bg-white rounded-xl p-3 hover:shadow-md transition-shadow border border-yellow-100">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="font-semibold text-gray-900 text-sm">{{ $waiting->kode_pesanan }} <span class="text-xs text-yellow-600 ml-1">(Nasi Box)</span></span>
+                            <span class="text-xs text-gray-500 ml-1">{{ $waiting->nama_pemesan }}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs font-medium text-primary">Rp {{ number_format($waiting->total_tagihan, 0, ',', '.') }}</div>
                             <div class="text-[10px] text-gray-400">{{ $waiting->tanggal_acara->format('d/m/Y') }}</div>
                         </div>
                     </div>

@@ -25,7 +25,7 @@
                 @csrf
                 
                 <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-                    <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                    <x-heroicon-o-information-circle class="text-blue-500 mt-0.5 w-5 h-5 inline-block shrink-0" />
                     <div>
                         <h4 class="text-sm font-bold text-blue-900">Petunjuk Pengisian</h4>
                         <p class="text-xs text-blue-700 mt-1">
@@ -71,7 +71,7 @@
                                         </td>
                                         <td class="px-4 py-3 align-top text-center pt-4">
                                             <button type="button" class="text-red-500 hover:text-red-700 transition-colors" onclick="removeRow(this)">
-                                                <i class="fas fa-times"></i>
+                                                <x-heroicon-o-x-mark class="w-5 h-5 inline-block shrink-0" />
                                             </button>
                                         </td>
                                     </tr>
@@ -102,7 +102,7 @@
                                         </td>
                                         <td class="px-4 py-3 align-top text-center pt-4">
                                             <button type="button" class="text-red-500 hover:text-red-700 transition-colors" onclick="removeRow(this)">
-                                                <i class="fas fa-times"></i>
+                                                <x-heroicon-o-x-mark class="w-5 h-5 inline-block shrink-0" />
                                             </button>
                                         </td>
                                     </tr>
@@ -131,7 +131,7 @@
                                     </td>
                                     <td class="px-4 py-3 align-top text-center pt-4">
                                         <button type="button" class="text-red-500 hover:text-red-700 transition-colors" onclick="removeRow(this)">
-                                            <i class="fas fa-times"></i>
+                                            <x-heroicon-o-x-mark class="w-5 h-5 inline-block shrink-0" />
                                         </button>
                                     </td>
                                 </tr>
@@ -142,7 +142,7 @@
 
                 <div class="mt-4">
                     <button type="button" onclick="addRow()" class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 transition-colors">
-                        <i class="fas fa-plus"></i> Tambah Bahan
+                        <x-heroicon-o-plus class="w-5 h-5 inline-block shrink-0" /> Tambah Bahan
                     </button>
                 </div>
 
@@ -179,7 +179,7 @@
         </td>
         <td class="px-4 py-3 align-top text-center pt-4">
             <button type="button" class="text-red-500 hover:text-red-700 transition-colors" onclick="removeRow(this)">
-                <i class="fas fa-times"></i>
+                <x-heroicon-o-x-mark class="w-5 h-5 inline-block shrink-0" />
             </button>
         </td>
     </tr>

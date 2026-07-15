@@ -3,15 +3,27 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', [\App\Http\Controllers\LandingController::class, 'index'])->name('home');
 
-// Route Publik Catering (Tanpa Login)
-Route::get('/pesan-catering', [\App\Http\Controllers\PesananCateringController::class, 'createPublic'])->name('catering.pesan');
-Route::post('/pesan-catering', [\App\Http\Controllers\PesananCateringController::class, 'storePublic'])->name('catering.pesan.store');
-Route::get('/pesan-catering/{pesananCatering}/sukses', [\App\Http\Controllers\PesananCateringController::class, 'success'])->name('catering.pesanan.success');
-Route::post('/pesan-catering/{pesananCatering}/upload-bukti', [\App\Http\Controllers\PesananCateringController::class, 'uploadBukti'])->name('catering.upload-bukti.public');
+// ─── PUBLIK — Form Catering ───────────────────────────────────────────────────
+Route::get('/pesan/catering', [\App\Http\Controllers\PesananCateringController::class, 'create'])->name('pesan.catering');
+Route::post('/pesan/catering', [\App\Http\Controllers\PesananCateringController::class, 'store'])->name('pesan.catering.store');
+Route::get('/pesan/catering/komponen/{paketId}', [\App\Http\Controllers\PesananCateringController::class, 'getKomponen'])->name('pesan.catering.komponen');
+Route::post('/pesan/catering/preview', [\App\Http\Controllers\PesananCateringController::class, 'preview'])->name('pesan.catering.preview');
+
+// ─── PUBLIK — Form Nasi Box ───────────────────────────────────────────────────
+Route::get('/pesan/nasi-box', [\App\Http\Controllers\PesananNasiBoxController::class, 'create'])->name('pesan.nasibox');
+Route::post('/pesan/nasi-box', [\App\Http\Controllers\PesananNasiBoxController::class, 'store'])->name('pesan.nasibox.store');
+Route::post('/pesan/nasi-box/preview', [\App\Http\Controllers\PesananNasiBoxController::class, 'preview'])->name('pesan.nasibox.preview');
+
+// ─── PUBLIK — Bayar & Status ─────────────────────────────────────────────────
+Route::get('/pesan/bayar/{kodePesanan}', [\App\Http\Controllers\BuktiPembayaranController::class, 'show'])->name('pesanan.bayar');
+Route::post('/pesan/bukti', [\App\Http\Controllers\BuktiPembayaranController::class, 'store'])->name('pesanan.bukti.store');
+Route::get('/pesan/status/{kodePesanan}', [\App\Http\Controllers\BuktiPembayaranController::class, 'status'])->name('pesanan.status');
+
+// Legacy redirect agar link lama tidak broken
+Route::get('/pesan-catering', function() { return redirect()->route('pesan.catering'); });
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -50,14 +62,17 @@ Route::middleware('auth')->group(function () {
         Route::resource('paket-catering', \App\Http\Controllers\PaketCateringController::class);
         Route::patch('/paket-catering/{paketCatering}/toggle', [\App\Http\Controllers\PaketCateringController::class, 'toggleActive'])->name('paket-catering.toggle');
 
-        // Manajemen Pesanan Catering (Admin)
-        Route::get('/pesanan-catering', [\App\Http\Controllers\PesananCateringController::class, 'index'])->name('pesanan-catering.index');
-        Route::get('/pesanan-catering/{pesananCatering}', [\App\Http\Controllers\PesananCateringController::class, 'show'])->name('pesanan-catering.show');
-        Route::patch('/pesanan-catering/{pesananCatering}/confirm', [\App\Http\Controllers\PesananCateringController::class, 'confirm'])->name('pesanan-catering.confirm');
-        Route::post('/pesanan-catering/{pesananCatering}/upload-bukti', [\App\Http\Controllers\PesananCateringController::class, 'uploadBukti'])->name('pesanan-catering.upload-bukti');
-        Route::patch('/pesanan-catering/pembayaran/{pembayaran}/verify', [\App\Http\Controllers\PesananCateringController::class, 'verifyPembayaran'])->name('pesanan-catering.verify-pembayaran');
-        Route::patch('/pesanan-catering/{pesananCatering}/cancel', [\App\Http\Controllers\PesananCateringController::class, 'cancel'])->name('pesanan-catering.cancel');
-        Route::patch('/pesanan-catering/{pesananCatering}/complete', [\App\Http\Controllers\PesananCateringController::class, 'complete'])->name('pesanan-catering.complete');
+        // Manajemen Pesanan Catering (Admin — new schema)
+        Route::get('/admin/pesanan/catering', [\App\Http\Controllers\PesananCateringController::class, 'index'])->name('admin.pesanan.catering.index');
+        Route::get('/admin/pesanan/catering/{pesanan}', [\App\Http\Controllers\PesananCateringController::class, 'show'])->name('admin.pesanan.catering.show');
+        Route::patch('/admin/pesanan/catering/{pesanan}/konfirmasi', [\App\Http\Controllers\PesananCateringController::class, 'konfirmasi'])->name('admin.pesanan.catering.konfirmasi');
+        Route::patch('/admin/bukti/{buktiId}/verifikasi-dp', [\App\Http\Controllers\PesananCateringController::class, 'verifikasiDp'])->name('admin.bukti.verifikasi-dp');
+
+        // Manajemen Pesanan Nasi Box (Admin)
+        Route::get('/admin/pesanan/nasi-box', [\App\Http\Controllers\PesananNasiBoxController::class, 'index'])->name('admin.pesanan.nasibox.index');
+        Route::get('/admin/pesanan/nasi-box/{pesanan}', [\App\Http\Controllers\PesananNasiBoxController::class, 'show'])->name('admin.pesanan.nasibox.show');
+        Route::patch('/admin/pesanan/nasi-box/{pesanan}/konfirmasi', [\App\Http\Controllers\PesananNasiBoxController::class, 'konfirmasi'])->name('admin.pesanan.nasibox.konfirmasi');
+
     });
 
     // Route Kasir (POS, Pembayaran, Laporan Penjualan) - Admin & Manajer otomatis bisa akses (karena Manajer butuh laporan penjualan juga)

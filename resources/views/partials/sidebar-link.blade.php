@@ -13,7 +13,7 @@
 
 <a href="{{ route($route) }}" 
    class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition group {{ $active ? 'bg-gray-800 text-white' : 'hover:text-white hover:bg-gray-800/50' }}" 
-   title="{{ $label }}">
+   x-bind:title="!sidebarOpen ? '{{ $label }}' : ''">
     @svg('heroicon-' . $icon, 'w-6 h-6 shrink-0 ' . ($active ? 'text-white' : 'text-gray-400 group-hover:text-white'))
     <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-200">{{ $label }}</span>
 </a>

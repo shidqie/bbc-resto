@@ -38,12 +38,49 @@ class PengadaanController extends Controller
         return view('pengadaan.index', compact('pengadaans', 'stats'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $suppliers = Supplier::orderBy('nama_supplier')->get();
         // Hanya tampilkan bahan baku aktif
         $bahanBakus = BahanBaku::with('satuan')->where('status', 1)->orderBy('nama_bahan')->get();
-        return view('pengadaan.create', compact('suppliers', 'bahanBakus'));
+
+        $prepopulate = [];
+        $pesananId = $request->query('pesanan_id');
+        if ($pesananId) {
+            $pesananCatering = \App\Models\PesananCatering::with('details.menu.resep.bahanBaku.satuan')->find($pesananId);
+            if ($pesananCatering && $pesananCatering->status === 'menunggu_konfirmasi') {
+                $estimasi = [];
+                foreach ($pesananCatering->details as $detail) {
+                    if ($detail->menu) {
+                        foreach ($detail->menu->resep as $r) {
+                            $bahanId = $r->bahan_baku_id;
+                            $kebutuhan = $r->jumlah_kebutuhan * $pesananCatering->jumlah_porsi;
+                            
+                            if (!isset($estimasi[$bahanId])) {
+                                $estimasi[$bahanId] = [
+                                    'bahan_baku_id' => $bahanId,
+                                    'kebutuhan_total' => 0,
+                                    'stok_saat_ini' => $r->bahanBaku->stok ?? 0,
+                                ];
+                            }
+                            $estimasi[$bahanId]['kebutuhan_total'] += $kebutuhan;
+                        }
+                    }
+                }
+                
+                foreach ($estimasi as $est) {
+                    $kekurangan = max(0, $est['kebutuhan_total'] - $est['stok_saat_ini']);
+                    if ($kekurangan > 0) {
+                        $prepopulate[] = [
+                            'bahan_baku_id' => $est['bahan_baku_id'],
+                            'jumlah' => $kekurangan
+                        ];
+                    }
+                }
+            }
+        }
+
+        return view('pengadaan.create', compact('suppliers', 'bahanBakus', 'prepopulate', 'pesananId'));
     }
 
     public function store(Request $request)

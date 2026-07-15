@@ -21,7 +21,7 @@
         <div class="m-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex flex-col gap-1 shrink-0">
             @foreach($errors->all() as $error)
                 <div class="flex items-center gap-2">
-                    <i class="fas fa-exclamation-circle text-xs"></i>
+                    <x-heroicon-o-exclamation-circle class="text-xs w-5 h-5 inline-block shrink-0" />
                     <p class="text-sm">{{ $error }}</p>
                 </div>
             @endforeach
@@ -36,12 +36,12 @@
             
             {{-- Category Filter --}}
             <div class="flex gap-2 overflow-x-auto pb-4 mb-4 hide-scrollbar">
-                <button type="button" class="whitespace-nowrap px-4 py-2 rounded-xl bg-[#3B82F6] text-white font-medium text-sm shadow-sm">Semua</button>
-                @foreach($menus->pluck('kategori')->unique('id') as $kat)
-                    @if($kat)
-                        <button type="button" class="kat-filter whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors" data-kategori="{{ $kat->id }}">{{ $kat->nama_kategori ?? $kat->nama }}</button>
-                    @endif
-                @endforeach
+                <button type="button" class="whitespace-nowrap px-4 py-2 rounded-xl bg-[#3B82F6] text-white font-medium text-sm shadow-sm" data-kategori="semua">Semua</button>
+                <button type="button" class="kat-filter whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors" data-kategori="1,2,3">Paket Nasi</button>
+                <button type="button" class="kat-filter whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors" data-kategori="4">Lauk</button>
+                <button type="button" class="kat-filter whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors" data-kategori="5">Sayur & Lalapan</button>
+                <button type="button" class="kat-filter whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors" data-kategori="6">Tambahan</button>
+                <button type="button" class="kat-filter whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors" data-kategori="7,8,9">Minuman</button>
             </div>
 
             {{-- Menu Grid --}}
@@ -51,14 +51,14 @@
                          data-id="{{ $menu->id }}" 
                          data-nama="{{ $menu->nama }}" 
                          data-harga="{{ $menu->harga }}"
-                         data-kategori="{{ $menu->kategori_id }}"
+                         data-kategori="{{ $menu->kategori_menu_id }}"
                          onclick="addToCart(this)">
                         <div class="h-32 bg-gray-100 relative">
                             @if($menu->foto)
                                 <img src="{{ Storage::url($menu->foto) }}" alt="{{ $menu->nama }}" class="w-full h-full object-cover">
                             @else
                                 <div class="w-full h-full flex items-center justify-center text-gray-300">
-                                    <i class="fas fa-utensils text-4xl"></i>
+                                    <x-heroicon-o-cake class="text-4xl w-[1em] h-[1em] inline-block shrink-0" />
                                 </div>
                             @endif
                             <div class="absolute top-2 right-2 bg-white/90 backdrop-blur text-[#3B82F6] font-bold text-xs px-2 py-1 rounded-lg">
@@ -82,10 +82,10 @@
             <div class="p-4 border-b border-gray-100 bg-gray-50 shrink-0 cursor-pointer lg:cursor-default" onclick="toggleCartMobile()">
                 <div class="flex justify-between items-center">
                     <h2 class="font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-shopping-cart text-[#3B82F6]"></i> Detail Pesanan
+                        <x-heroicon-o-shopping-cart class="text-[#3B82F6] w-5 h-5 inline-block shrink-0" /> Detail Pesanan
                     </h2>
                     <div class="lg:hidden">
-                        <i class="fas fa-chevron-up text-gray-400" id="cart-toggle-icon"></i>
+                        <x-heroicon-o-chevron-up class="text-gray-400 w-5 h-5 inline-block shrink-0" />
                     </div>
                 </div>
             </div>
@@ -94,7 +94,7 @@
                 {{-- Cart Items --}}
                 <div class="flex-1 overflow-y-auto p-4 space-y-3" id="cart-items">
                     <div class="text-center py-8 text-gray-400 text-sm" id="empty-cart-msg">
-                        <i class="fas fa-box-open text-3xl mb-2"></i>
+                        <x-heroicon-o-archive-box class="text-3xl mb-2 w-[1em] h-[1em] inline-block shrink-0" />
                         <p>Belum ada menu yang dipilih</p>
                     </div>
                     {{-- Items will be injected here via JS --}}
@@ -152,7 +152,7 @@
                         <span class="text-sm font-bold text-[#16A34A]" id="kembalian-display">Rp 0</span>
                     </div>
                     <button type="button" onclick="submitOrder()" class="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white py-3.5 rounded-xl font-bold text-sm shadow-md transition-all flex justify-center items-center gap-2">
-                        <i class="fas fa-check-circle"></i> Proses Pesanan
+                        <x-heroicon-o-check-circle class="w-5 h-5 inline-block shrink-0" /> Proses Pesanan
                     </button>
                 </div>
             </div>
@@ -171,7 +171,7 @@
                 <div class="text-xs text-[#3B82F6] font-medium menu-harga-display">Rp 0</div>
             </div>
             <button type="button" class="absolute top-3 right-3 text-gray-300 hover:text-[#DC2626] transition-colors" onclick="removeCartItem(this)">
-                <i class="fas fa-times"></i>
+                <x-heroicon-o-x-mark class="w-5 h-5 inline-block shrink-0" />
             </button>
         </div>
         
@@ -361,8 +361,11 @@
             btn.classList.add('bg-[#3B82F6]', 'text-white');
 
             const katId = btn.getAttribute('data-kategori');
+            const katArray = katId ? katId.split(',') : [];
+            
             document.querySelectorAll('.menu-card').forEach(card => {
-                if (card.getAttribute('data-kategori') == katId) {
+                const cardKat = card.getAttribute('data-kategori');
+                if (katArray.includes(cardKat)) {
                     card.style.display = 'flex';
                 } else {
                     card.style.display = 'none';

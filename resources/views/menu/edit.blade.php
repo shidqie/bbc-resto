@@ -30,7 +30,7 @@
                         <div class="w-32 h-32 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400 overflow-hidden relative group">
                             <img id="previewFoto" src="{{ $menu->foto ? Storage::url($menu->foto) : '' }}" class="w-full h-full object-cover {{ $menu->foto ? '' : 'hidden' }}">
                             <div id="placeholderFoto" class="flex flex-col items-center justify-center {{ $menu->foto ? 'hidden' : '' }}">
-                                <i class="fas fa-camera text-3xl mb-2"></i>
+                                <x-heroicon-o-camera class="text-3xl mb-2 w-[1em] h-[1em] inline-block shrink-0" />
                                 <span class="text-xs font-medium">Upload</span>
                             </div>
                             <input type="file" name="foto" id="foto" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewImage(this)">

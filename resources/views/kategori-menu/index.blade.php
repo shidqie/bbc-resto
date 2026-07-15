@@ -15,7 +15,7 @@
             :breadcrumbs="['Menu', 'Kategori Menu']">
             <x-slot:actions>
                 <button onclick="document.getElementById('modalTambah').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white px-5 py-2.5 rounded-xl font-medium text-sm transition-colors shadow-sm">
-                    <i class="fas fa-plus"></i> Tambah Kategori
+                    <x-heroicon-o-plus class="w-5 h-5 inline-block shrink-0" /> Tambah Kategori
                 </button>
             </x-slot:actions>
         </x-ui.page-header>
@@ -26,7 +26,7 @@
         <x-ui.data-table :paginator="$kategoris">
             <x-slot:toolbar>
                 <div class="relative w-full sm:w-72">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <x-heroicon-o-magnifying-glass class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 inline-block shrink-0" />
                     <form action="{{ route('kategori-menu.index') }}" method="GET">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari kategori..." class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
                     </form>
@@ -52,13 +52,13 @@
                             </td>
                             <td class="px-6 py-4 text-right space-x-2">
                                 <button onclick="editKategori({{ $kategori->id }}, '{{ addslashes($kategori->nama_kategori ?? $kategori->nama) }}')" class="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors" title="Edit">
-                                    <i class="fas fa-edit"></i>
+                                    <x-heroicon-o-pencil-square class="w-5 h-5 inline-block shrink-0" />
                                 </button>
                                 <form action="{{ route('kategori-menu.destroy', $kategori->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kategori ini?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors" title="Hapus">
-                                        <i class="fas fa-trash-alt"></i>
+                                        <x-heroicon-o-trash class="w-5 h-5 inline-block shrink-0" />
                                     </button>
                                 </form>
                             </td>

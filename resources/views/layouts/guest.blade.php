@@ -14,8 +14,16 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <style>
+            .admin-shell .bg-primary { background-color: #3B82F6 !important; }
+            .admin-shell .text-primary { color: #3B82F6 !important; }
+            .admin-shell .border-primary { border-color: #3B82F6 !important; }
+            .admin-shell .focus\:border-primary:focus { border-color: #3B82F6 !important; }
+            .admin-shell .focus\:ring-primary:focus { --tw-ring-color: #3B82F6 !important; }
+        </style>
     </head>
-    <body class="font-sans antialiased bg-[#111827] text-gray-300 min-h-screen flex">
+    <body class="admin-shell font-sans antialiased bg-[#111827] text-gray-300 min-h-screen flex">
         
         <!-- Layar Kiri: Gambar & Branding (Sembunyi di HP) -->
         <div class="hidden lg:flex lg:w-1/2 relative items-center justify-center border-r border-gray-800">

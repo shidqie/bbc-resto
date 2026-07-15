@@ -37,7 +37,7 @@
             <div class="mt-4 sm:mt-0 flex gap-2">
                 <x-ui.button href="{{ route('pesanan.index') }}" variant="outline" icon="fa-arrow-left">Kembali</x-ui.button>
                 <button onclick="window.print()" class="inline-flex items-center gap-2 text-white bg-gray-800 hover:bg-gray-900 px-5 py-2.5 rounded-xl font-medium text-sm transition-colors shadow-sm">
-                    <i class="fas fa-print"></i> Cetak Struk
+                    <x-heroicon-o-printer class="w-5 h-5 inline-block shrink-0" /> Cetak Struk
                 </button>
             </div>
         </div>
@@ -101,7 +101,7 @@
                 {{-- Action / Update Status --}}
                 <div class="bg-white rounded-2xl border border-[#3B82F6]/20 shadow-sm p-6 space-y-4 relative overflow-hidden no-print">
                     <div class="absolute top-0 right-0 p-4 opacity-10">
-                        <i class="fas fa-tasks text-6xl text-[#3B82F6]"></i>
+                        <x-heroicon-o-clipboard-document-list class="text-6xl text-[#3B82F6] w-[1em] h-[1em] inline-block shrink-0" />
                     </div>
                     <h2 class="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2 relative z-10">Aksi Pesanan</h2>
                     
@@ -125,13 +125,17 @@
                             </div>
                         </form>
                         <p class="text-[11px] text-gray-500 mt-3 relative z-10 bg-blue-50 p-2 rounded-lg border border-blue-100">
-                            <i class="fas fa-info-circle text-[#3B82F6] mr-1"></i> 
+                            <x-heroicon-o-information-circle class="text-[#3B82F6] mr-1 w-5 h-5 inline-block shrink-0" /> 
                             Stok bahan baku akan dipotong otomatis saat status menjadi <strong>Selesai</strong>.
                         </p>
                     @else
                         <div class="text-center py-4 relative z-10">
                             <div class="w-12 h-12 rounded-full {{ $pesanan->status_pesanan == 'selesai' ? 'bg-green-100 text-[#16A34A]' : 'bg-red-100 text-[#DC2626]' }} flex items-center justify-center mx-auto mb-2 text-xl">
-                                <i class="fas {{ $pesanan->status_pesanan == 'selesai' ? 'fa-check' : 'fa-times' }}"></i>
+                                @if($pesanan->status_pesanan == 'selesai')
+                                    <x-heroicon-o-check class="w-5 h-5 inline-block shrink-0" />
+                                @else
+                                    <x-heroicon-o-x-mark class="w-5 h-5 inline-block shrink-0" />
+                                @endif
                             </div>
                             <p class="font-bold text-gray-900">Pesanan {{ ucfirst($pesanan->status_pesanan) }}</p>
                             <p class="text-xs text-gray-500 mt-1">Tidak ada aksi lanjutan yang tersedia.</p>
@@ -169,7 +173,7 @@
                             <div class="text-xs font-medium text-gray-500 mb-2">Status Pembayaran:</div>
                             @if($pesanan->status_pembayaran == 'lunas')
                                 <div class="bg-green-50 text-[#16A34A] px-3 py-2 rounded-lg border border-green-200 text-center font-bold text-sm flex items-center justify-center gap-2 print-bg">
-                                    <i class="fas fa-check-circle"></i> LUNAS
+                                    <x-heroicon-o-check-circle class="w-5 h-5 inline-block shrink-0" /> LUNAS
                                 </div>
                             @elseif($pesanan->status_pembayaran == 'dp')
                                 <div class="bg-blue-50 text-[#3B82F6] px-3 py-2 rounded-lg border border-blue-200 text-center font-bold text-sm print-bg">

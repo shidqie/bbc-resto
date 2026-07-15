@@ -13,26 +13,37 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['"Outfit"', '"Plus Jakarta Sans"', 'Inter', ...defaultTheme.fontFamily.sans],
+                serif: ['"Playfair Display"', '"Libre Caslon Text"', ...defaultTheme.fontFamily.serif],
                 mono: ['"Anonymous Pro"', ...defaultTheme.fontFamily.mono],
             },
             colors: {
-                primary: '#EA580C', // Orange (Warna Resto)
-                secondary: '#16A34A', // Green
-                success: '#10B981',
-                warning: '#F59E0B',
-                danger: '#EF4444',
+                // Design tokens — Landing (hijau-emas)
+                primary: {
+                    DEFAULT: '#0D3024',
+                    container: '#0a2219',
+                },
+                secondary: {
+                    DEFAULT: '#B8860B',
+                    container: '#d4a843',
+                },
+                accent: '#D4A843',
+                canvas: '#FAFAF7',
                 surface: '#FFFFFF',
-                text: '#111827',
-                neutral: '#FFFFFF',
+                body: '#3D3D3D',
+
+                // Admin panel tokens (tetap biru)
+                admin: {
+                    primary: '#3B82F6',
+                    secondary: '#8B5CF6',
+                },
+                success: '#16A34A',
+                warning: '#D97706',
+                danger: '#DC2626',
             },
             borderRadius: {
                 'sm': '4px',
                 'md': '8px',
             },
-            spacing: {
-                'sm': '4px',
-                'md': '8px',
-            }
         },
     },
 

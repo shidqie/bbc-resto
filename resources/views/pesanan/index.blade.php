@@ -32,7 +32,7 @@
                     <div class="relative min-w-[250px] flex-1 sm:flex-none">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No Pesanan / Pelanggan..." 
                                class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm transition-all bg-white">
-                        <i class="fas fa-search absolute left-3.5 top-2.5 text-gray-400 text-sm"></i>
+                        <x-heroicon-o-magnifying-glass class="absolute left-3.5 top-2.5 text-gray-400 text-sm w-5 h-5 inline-block shrink-0" />
                     </div>
                     <select name="jenis" onchange="this.form.submit()" class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm bg-white min-w-[150px]">
                         <option value="">Semua Jenis</option>

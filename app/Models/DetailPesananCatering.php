@@ -8,8 +8,8 @@ class DetailPesananCatering extends Model
 {
     protected $fillable = [
         'pesanan_catering_id',
-        'bahan_baku_id',
-        'jumlah_digunakan',
+        'komponen_paket_id',
+        'menu_id',
     ];
 
     public function pesananCatering()
@@ -17,8 +17,13 @@ class DetailPesananCatering extends Model
         return $this->belongsTo(PesananCatering::class);
     }
 
-    public function bahanBaku()
+    public function komponenPaket()
     {
-        return $this->belongsTo(BahanBaku::class);
+        return $this->belongsTo(KomponenPaket::class);
+    }
+
+    public function menu()
+    {
+        return $this->belongsTo(Menu::class);
     }
 }

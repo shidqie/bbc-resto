@@ -28,7 +28,7 @@
                         <img src="{{ Storage::url($menu->foto) }}" class="w-full h-64 object-cover">
                     @else
                         <div class="w-full h-64 bg-gray-100 flex flex-col items-center justify-center text-gray-400">
-                            <i class="fas fa-image text-4xl mb-2"></i>
+                            <x-heroicon-o-photo class="text-4xl mb-2 w-[1em] h-[1em] inline-block shrink-0" />
                             <span class="text-sm font-medium">Tidak ada foto</span>
                         </div>
                     @endif
@@ -71,7 +71,7 @@
                     <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                         <h2 class="text-lg font-bold text-gray-900">Komposisi Resep</h2>
                         <a href="{{ route('resep.create', $menu->id) }}" class="inline-flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-xl font-medium text-sm transition-colors">
-                            <i class="fas fa-list"></i> Atur Resep
+                            <x-heroicon-o-list-bullet class="w-5 h-5 inline-block shrink-0" /> Atur Resep
                         </a>
                     </div>
                     

@@ -34,7 +34,7 @@
             <x-slot:toolbar>
                 <form action="{{ route('menu.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     <div class="relative w-full sm:w-64">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <x-heroicon-o-magnifying-glass class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 inline-block shrink-0" />
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama menu..." class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
                     </div>
                     
@@ -80,7 +80,7 @@
                                         <img src="{{ Storage::url($menu->foto) }}" class="w-12 h-12 rounded-lg object-cover border border-gray-200" alt="{{ $menu->nama }}">
                                     @else
                                         <div class="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
-                                            <i class="fas fa-image"></i>
+                                            <x-heroicon-o-photo class="w-5 h-5 inline-block shrink-0" />
                                         </div>
                                     @endif
                                     <div>
@@ -97,15 +97,15 @@
                             <td class="px-6 py-4">
                                 @if($menu->jenis_menu == 'dine_in')
                                     <span class="inline-flex items-center gap-1 text-xs font-medium text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200/50">
-                                        <i class="fas fa-store text-[10px]"></i> Dine-in
+                                        <x-heroicon-o-building-storefront class="text-[10px] w-5 h-5 inline-block shrink-0" /> Dine-in
                                     </span>
                                 @elseif($menu->jenis_menu == 'catering')
                                     <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/50">
-                                        <i class="fas fa-concierge-bell text-[10px]"></i> Catering
+                                        <x-heroicon-o-bell-alert class="text-[10px] w-5 h-5 inline-block shrink-0" /> Catering
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1 text-xs font-medium text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200/50">
-                                        <i class="fas fa-box text-[10px]"></i> Nasi Box
+                                        <x-heroicon-o-cube class="text-[10px] w-5 h-5 inline-block shrink-0" /> Nasi Box
                                     </span>
                                 @endif
                             </td>
@@ -128,16 +128,16 @@
                             </td>
                             <td class="px-6 py-4 text-right space-x-1">
                                 <a href="{{ route('menu.show', $menu->id) }}" class="inline-block p-2 px-3 text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors font-medium text-xs" title="Detail & Resep">
-                                    <i class="fas fa-list mr-1"></i> Resep
+                                    <x-heroicon-o-list-bullet class="mr-1 w-5 h-5 inline-block shrink-0" /> Resep
                                 </a>
                                 <a href="{{ route('menu.edit', $menu->id) }}" class="inline-block p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors" title="Edit">
-                                    <i class="fas fa-edit"></i>
+                                    <x-heroicon-o-pencil-square class="w-5 h-5 inline-block shrink-0" />
                                 </a>
                                 <form action="{{ route('menu.destroy', $menu->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus menu ini?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors" title="Hapus">
-                                        <i class="fas fa-trash-alt"></i>
+                                        <x-heroicon-o-trash class="w-5 h-5 inline-block shrink-0" />
                                     </button>
                                 </form>
                             </td>

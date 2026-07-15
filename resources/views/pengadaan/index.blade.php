@@ -33,7 +33,7 @@
                     <div class="relative min-w-[250px]">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Kode PO..." 
                                class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm transition-all bg-white">
-                        <i class="fas fa-search absolute left-3.5 top-2.5 text-gray-400 text-sm"></i>
+                        <x-heroicon-o-magnifying-glass class="absolute left-3.5 top-2.5 text-gray-400 text-sm w-5 h-5 inline-block shrink-0" />
                     </div>
                     <select name="status" onchange="this.form.submit()" class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm bg-white min-w-[150px]">
                         <option value="">Semua Status</option>
@@ -79,7 +79,7 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <a href="{{ route('pengadaan.show', $po->id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors" title="Detail Pengadaan">
-                                    <i class="fas fa-eye"></i>
+                                    <x-heroicon-o-eye class="w-5 h-5 inline-block shrink-0" />
                                 </a>
                             </td>
                         </tr>
