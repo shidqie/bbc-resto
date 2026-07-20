@@ -14,9 +14,9 @@
             @csrf
 
             <div>
-                <x-primary-button>
+                <x-ui.button variant="primary">
                     {{ __('Resend Verification Email') }}
-                </x-primary-button>
+                </x-ui.button>
             </div>
         </form>
 

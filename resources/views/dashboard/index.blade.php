@@ -12,7 +12,7 @@
         {{-- Header --}}
         <x-ui.page-header title="Dashboard" subtitle="Ringkasan aktivitas hari ini, {{ date('d F Y') }}">
             <x-slot:actions>
-                <x-ui.button href="{{ route('pesanan.create') }}" icon="fa-plus">Buat Pesanan Baru</x-ui.button>
+                <x-ui.button href="{{ route('pos.dinein.index') }}" icon="fa-plus">Buat Pesanan Baru</x-ui.button>
             </x-slot:actions>
         </x-ui.page-header>
 
@@ -71,17 +71,20 @@
                         @forelse($pesananTerbaru as $p)
                             <div class="p-4 hover:bg-gray-50/50 transition-colors">
                                 <div class="flex justify-between items-start mb-1">
-                                    <a href="{{ route('pesanan.show', $p->id) }}" class="font-bold text-[#3B82F6] text-sm hover:underline">{{ $p->no_pesanan }}</a>
-                                    <span class="text-[10px] text-gray-500">{{ $p->tanggal_pesanan->diffForHumans() }}</span>
+                                    <div>
+                                        <a href="{{ $p->url }}" class="font-bold text-[#3B82F6] text-sm hover:underline">{{ $p->no }}</a>
+                                        <span class="text-[10px] text-gray-500 ml-1">({{ $p->jenis }})</span>
+                                    </div>
+                                    <span class="text-[10px] text-gray-500">{{ \Carbon\Carbon::parse($p->tanggal)->diffForHumans() }}</span>
                                 </div>
                                 <div class="flex justify-between items-center mt-2">
-                                    <span class="text-xs text-gray-600 font-medium">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</span>
-                                    @if($p->status_pesanan == 'baru')
+                                    <span class="text-xs text-gray-600 font-medium">Rp {{ number_format($p->total, 0, ',', '.') }}</span>
+                                    @if(in_array($p->status, ['baru', 'menunggu_dp', 'menunggu_konfirmasi']))
                                         <x-ui.badge color="gray" size="sm">BARU</x-ui.badge>
-                                    @elseif($p->status_pesanan == 'diproses')
+                                    @elseif(in_array($p->status, ['diproses', 'dikirim']))
                                         <x-ui.badge color="warning" size="sm">DIPROSES</x-ui.badge>
                                     @else
-                                        <x-ui.badge color="success" size="sm">SELESAI</x-ui.badge>
+                                        <x-ui.badge color="success" size="sm">{{ strtoupper(str_replace('_', ' ', $p->status)) }}</x-ui.badge>
                                     @endif
                                 </div>
                             </div>

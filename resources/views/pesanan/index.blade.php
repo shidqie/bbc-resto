@@ -11,7 +11,7 @@
         {{-- Header --}}
         <x-ui.page-header title="Daftar Pesanan" subtitle="Kelola seluruh transaksi pesanan pelanggan">
             <x-slot:actions>
-                <x-ui.button href="{{ route('pesanan.create') }}" icon="fa-plus">Pesanan Baru</x-ui.button>
+                <x-ui.button href="{{ route('pos.dinein.index') }}" icon="fa-plus">Pesanan Baru</x-ui.button>
             </x-slot:actions>
         </x-ui.page-header>
 
@@ -71,9 +71,18 @@
                                 <div class="text-xs text-[#3B82F6] font-medium capitalize mt-0.5">{{ str_replace('_', ' ', $p->jenis_pesanan) }}</div>
                             </td>
                             <td class="px-6 py-4">
-                                <div class="text-gray-900 font-medium">{{ $p->nama_pelanggan ?? 'Walk-in Customer' }}</div>
+                                @php
+                                    $namaPelanggan = $p->nama_pelanggan ?? 'Pelanggan Umum';
+                                    $parts = explode(' - ', $namaPelanggan);
+                                    $nama = $parts[0];
+                                    $phone = isset($parts[1]) ? $parts[1] : null;
+                                @endphp
+                                <div class="text-gray-900 font-medium">{{ $nama }}</div>
+                                @if($phone)
+                                    <div class="text-xs text-gray-500 mt-0.5"><i class="ph-fill ph-phone mr-1"></i>{{ $phone }}</div>
+                                @endif
                                 @if($p->no_meja)
-                                    <div class="text-xs text-gray-500">Meja: {{ $p->no_meja }}</div>
+                                    <div class="text-xs text-gray-500 mt-0.5">Meja: {{ $p->no_meja }}</div>
                                 @endif
                             </td>
                             <td class="px-6 py-4">

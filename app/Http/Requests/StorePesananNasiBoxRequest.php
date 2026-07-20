@@ -21,13 +21,16 @@ class StorePesananNasiBoxRequest extends FormRequest
             'kontak' => ['required', 'string', 'max:20'],
             'alamat' => ['required', 'string'],
             'tanggal_acara' => ['required', 'date', 'after_or_equal:' . $minDate],
-            'menu_id' => ['required', 'exists:menus,id'], // Harus dicek di controller bahwa kategorinya "Nasi Box"
+            'paket_id' => ['required', 'exists:paket_caterings,id'],
+            'komponen' => ['required', 'array'],
+            'komponen.*' => ['required', 'exists:menus,id'],
             'jumlah_box' => ['required', 'integer', 'min:10'],
             'catatan' => ['nullable', 'string'],
             'metode_pengiriman' => ['required', 'in:pickup,delivery'],
             'latitude' => ['required_if:metode_pengiriman,delivery', 'nullable', 'string'],
             'longitude' => ['required_if:metode_pengiriman,delivery', 'nullable', 'string'],
-            'jarak_km' => ['required_if:metode_pengiriman,delivery', 'nullable', 'numeric', 'min:0']
+            'jarak_km' => ['required_if:metode_pengiriman,delivery', 'nullable', 'numeric', 'min:0'],
+            'opsi_pembayaran' => ['required', 'in:dp,lunas']
         ];
     }
 
@@ -36,7 +39,8 @@ class StorePesananNasiBoxRequest extends FormRequest
         return [
             'tanggal_acara.after_or_equal' => 'Pesanan nasi box maksimal H-2 sebelum acara.',
             'jumlah_box.min' => 'Minimal order 10 box.',
-            'menu_id.exists' => 'Varian Nasi Box tidak valid.'
+            'paket_id.exists' => 'Paket Nasi Box tidak valid.',
+            'komponen.required' => 'Pilihan menu komponen wajib diisi lengkap.'
         ];
     }
 }

@@ -13,10 +13,10 @@
     @endif
     <div class="relative z-10 max-w-[1280px] mx-auto px-6">
         @if($title)
-            <h2 class="text-2xl md:text-3xl text-center mb-3 {{ $bgImage ? 'text-primary' : '' }}">{{ $title }}</h2>
+            <x-typography.h2 class="text-center mb-3 {{ $bgImage ? 'text-primary' : '' }}">{{ $title }}</x-typography.h2>
         @endif
         @if($subtitle)
-            <p class="text-body text-center text-sm mb-10 max-w-2xl mx-auto">{{ $subtitle }}</p>
+            <x-typography.p class="text-center mb-10 max-w-2xl mx-auto">{{ $subtitle }}</x-typography.p>
         @endif
         
         {{ $slot }}

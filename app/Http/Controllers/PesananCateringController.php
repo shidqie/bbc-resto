@@ -91,7 +91,7 @@ class PesananCateringController extends Controller
                 'paket_id'      => $validated['paket_id'],
                 'jumlah_porsi'  => $validated['jumlah_porsi'],
                 'total_tagihan' => $hitung['total'],
-                'dp_amount'     => $hitung['dp'],
+                'dp_amount'     => $validated['opsi_pembayaran'] === 'lunas' ? $hitung['total'] : $hitung['dp'],
                 'status'        => 'menunggu_dp',
                 'catatan'       => $validated['catatan'] ?? null,
             ]);
@@ -113,6 +113,9 @@ class PesananCateringController extends Controller
             return $pesanan;
         });
 
+        // Generate Midtrans Snap Token
+        \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, 'catering');
+
         return redirect()->route('pesanan.bayar', $pesanan->kode_pesanan)
             ->with('success', 'Pesanan berhasil dibuat! Silakan lanjutkan ke pembayaran DP.');
     }
@@ -133,6 +136,7 @@ class PesananCateringController extends Controller
         $status = $request->input('status', 'all');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
+        $search = $request->input('search');
 
         $query = PesananCatering::with('paket')->latest();
 
@@ -145,9 +149,23 @@ class PesananCateringController extends Controller
         if ($tanggalSampai) {
             $query->where('tanggal_acara', '<=', $tanggalSampai);
         }
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('kode_pesanan', 'like', "%{$search}%")
+                  ->orWhere('nama_pemesan', 'like', "%{$search}%");
+            });
+        }
 
-        $pesanans = $query->get();
-        return view('admin.pesanan.catering.index', compact('pesanans', 'status'));
+        // Pagination with query string persistence
+        $pesanans = $query->paginate(10)->withQueryString();
+
+        $stats = [
+            'baru' => PesananCatering::whereIn('status', ['menunggu_dp', 'menunggu_konfirmasi'])->count(),
+            'diproses' => PesananCatering::whereIn('status', ['terkonfirmasi', 'diproses', 'dikirim'])->count(),
+            'selesai' => PesananCatering::where('status', 'selesai')->count(),
+        ];
+
+        return view('admin.pesanan.catering.index', compact('pesanans', 'status', 'stats'));
     }
 
     /** GET /admin/pesanan/catering/{id} */
@@ -180,10 +198,34 @@ class PesananCateringController extends Controller
 
         if ($result === true) {
             $pesanan->update(['status' => 'terkonfirmasi']);
+            // Kirim Email Konfirmasi Pembayaran
+            if ($pesanan->email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($pesanan->email)->send(new \App\Mail\PaymentReceiptMail($pesanan));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Gagal mengirim email konfirmasi: ' . $e->getMessage());
+                }
+            }
             return back()->with('success', 'Pesanan dikonfirmasi dan stok telah dipotong.');
         }
 
         return back()->with('kekurangan_stok', $result)
             ->with('error', 'Stok tidak mencukupi. Silakan buat pengadaan terlebih dahulu.');
+    }
+
+    public function updateStatus(Request $request, PesananCatering $pesanan)
+    {
+        $request->validate([
+            'status' => 'required|in:terkonfirmasi,diproses,dikirim,selesai,lunas,dibatalkan',
+            'alasan_batal' => 'nullable|string'
+        ]);
+
+        $pesanan->status = $request->status;
+        if ($request->status === 'dibatalkan') {
+            $pesanan->alasan_batal = $request->alasan_batal;
+        }
+        $pesanan->save();
+
+        return back()->with('success', 'Status pesanan berhasil diperbarui.');
     }
 }

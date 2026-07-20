@@ -8,6 +8,7 @@ class Pengadaan extends Model
 {
     protected $fillable = [
         'kode_pengadaan',
+        'pesanan_catering_id',
         'supplier_id',
         'tanggal_pengadaan',
         'total_biaya',
@@ -33,5 +34,10 @@ class Pengadaan extends Model
     public function details()
     {
         return $this->hasMany(DetailPengadaan::class);
+    }
+
+    public function pesananCatering()
+    {
+        return $this->belongsTo(PesananCatering::class, 'pesanan_catering_id');
     }
 }

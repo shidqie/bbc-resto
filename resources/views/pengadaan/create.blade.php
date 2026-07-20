@@ -21,6 +21,9 @@
 
         <form action="{{ route('pengadaan.store') }}" method="POST" id="pengadaan-form">
             @csrf
+            @if(isset($pesananId) && $pesananId)
+                <input type="hidden" name="pesanan_catering_id" value="{{ $pesananId }}">
+            @endif
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {{-- Data Pengadaan --}}
@@ -118,7 +121,7 @@
             </div>
         </td>
         <td class="px-2 py-3 align-top">
-            <input type="number" name="harga_satuan[]" required min="0" step="1" class="harga-input w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm transition-all" oninput="calculateSubtotal(this)">
+            <input type="number" name="harga_satuan[]" min="0" step="1" class="harga-input w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm transition-all" placeholder="Opsional" oninput="calculateSubtotal(this)">
         </td>
         <td class="px-2 py-3 align-top">
             <input type="text" readonly class="subtotal-display w-full px-3 py-2 bg-gray-100 border border-transparent rounded-xl text-gray-500 font-medium text-sm outline-none cursor-not-allowed" value="Rp 0">
@@ -149,7 +152,6 @@
         const row = element.closest('tr');
         const jumlah = parseFloat(row.querySelector('.jumlah-input').value) || 0;
         const harga = parseFloat(row.querySelector('.harga-input').value) || 0;
-        
         const subtotal = jumlah * harga;
         
         row.querySelector('.subtotal-hidden').value = subtotal;
@@ -207,6 +209,12 @@
                     
                     const jumlahInput = row.querySelector('.jumlah-input');
                     jumlahInput.value = item.jumlah;
+                    
+                    if(item.harga_estimasi !== undefined) {
+                        const hargaInput = row.querySelector('.harga-input');
+                        hargaInput.value = item.harga_estimasi;
+                    }
+
                     calculateSubtotal(jumlahInput);
                 }
             });

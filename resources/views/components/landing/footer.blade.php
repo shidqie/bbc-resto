@@ -3,13 +3,13 @@
         <div>
             <h3 class="font-serif text-2xl font-bold text-secondary-container mb-4">Saung Babakan Cinta</h3>
             <p class="text-sm text-white/70 leading-relaxed">
-                Menyajikan hidangan Nusantara otentik dengan cita rasa tradisional yang dipadukan dengan pelayanan premium untuk setiap momen spesial Anda.
+                Menyajikan hidangan Sunda otentik dengan cita rasa tradisional yang dipadukan dengan pelayanan premium untuk setiap momen spesial Anda.
             </p>
         </div>
         <div>
             <h4 class="font-bold mb-4 uppercase tracking-wider text-sm text-secondary-container">Layanan Kami</h4>
             <ul class="space-y-3 text-sm text-white/70">
-                <li><a href="{{ route('home') }}#menu-dinein" class="hover:text-secondary-container transition-colors">Menu Dine-in</a></li>
+                <li><a href="{{ route('home') }}#menu-dinein" class="hover:text-secondary-container transition-colors">Menu</a></li>
                 <li><a href="{{ route('home') }}#catering" class="hover:text-secondary-container transition-colors">Catering</a></li>
                 <li><a href="{{ route('home') }}#nasi-box" class="hover:text-secondary-container transition-colors">Nasi Box</a></li>
             </ul>

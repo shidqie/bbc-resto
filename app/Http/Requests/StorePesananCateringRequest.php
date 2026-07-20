@@ -31,7 +31,8 @@ class StorePesananCateringRequest extends FormRequest
             'metode_pengiriman' => ['required', 'in:pickup,delivery'],
             'latitude' => ['required_if:metode_pengiriman,delivery', 'nullable', 'string'],
             'longitude' => ['required_if:metode_pengiriman,delivery', 'nullable', 'string'],
-            'jarak_km' => ['required_if:metode_pengiriman,delivery', 'nullable', 'numeric', 'min:0']
+            'jarak_km' => ['required_if:metode_pengiriman,delivery', 'nullable', 'numeric', 'min:0'],
+            'opsi_pembayaran' => ['required', 'in:dp,lunas']
         ];
     }
 

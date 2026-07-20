@@ -11,21 +11,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
-        /* Override primary colors back to blue for admin panel */
-        .admin-shell { --tw-primary: #3B82F6; }
-        .admin-shell .bg-primary { background-color: #3B82F6 !important; }
-        .admin-shell .text-primary { color: #3B82F6 !important; }
-        .admin-shell .border-primary { border-color: #3B82F6 !important; }
-        .admin-shell .focus\:border-primary:focus { border-color: #3B82F6 !important; }
-        .admin-shell .focus\:ring-primary:focus { --tw-ring-color: #3B82F6 !important; }
-        .admin-shell .hover\:bg-primary:hover { background-color: #3B82F6 !important; }
-        .admin-shell .hover\:text-primary:hover { color: #3B82F6 !important; }
-    </style>
+
 </head>
 <body class="admin-shell font-sans antialiased bg-[#f8f9fa] text-gray-800 h-screen overflow-hidden flex" x-data="{ sidebarOpen: window.innerWidth > 1024 }" @resize.window="sidebarOpen = window.innerWidth > 1024">
 
@@ -46,5 +37,7 @@
             scrollbar-width: none;
         }
     </style>
+
+    @stack('scripts')
 </body>
 </html>

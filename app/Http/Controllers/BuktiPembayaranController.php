@@ -23,6 +23,10 @@ class BuktiPembayaranController extends Controller
 
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
 
+        if (empty($pesanan->snap_token) && $pesanan->status == 'menunggu_dp') {
+            $pesanan->snap_token = \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, $type);
+        }
+
         return view('pesanan.bayar', compact('pesanan', 'type', 'kodePesanan'));
     }
 
@@ -79,5 +83,24 @@ class BuktiPembayaranController extends Controller
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
 
         return view('pesanan.status', compact('pesanan', 'type', 'kodePesanan'));
+    }
+
+    public function invoicePdf($kodePesanan)
+    {
+        $pesanan = \App\Models\PesananCatering::with('buktiPembayarans', 'paket')
+            ->where('kode_pesanan', $kodePesanan)->first();
+        $type = 'catering';
+
+        if (!$pesanan) {
+            $pesanan = \App\Models\PesananNasiBox::with('buktiPembayarans', 'menu')
+                ->where('kode_pesanan', $kodePesanan)->first();
+            $type = 'nasi_box';
+        }
+
+        abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pesanan.invoice-pdf', compact('pesanan', 'type', 'kodePesanan'));
+        
+        return $pdf->download("Invoice-{$kodePesanan}.pdf");
     }
 }

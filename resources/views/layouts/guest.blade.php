@@ -15,20 +15,14 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-        <style>
-            .admin-shell .bg-primary { background-color: #3B82F6 !important; }
-            .admin-shell .text-primary { color: #3B82F6 !important; }
-            .admin-shell .border-primary { border-color: #3B82F6 !important; }
-            .admin-shell .focus\:border-primary:focus { border-color: #3B82F6 !important; }
-            .admin-shell .focus\:ring-primary:focus { --tw-ring-color: #3B82F6 !important; }
-        </style>
+
     </head>
     <body class="admin-shell font-sans antialiased bg-[#111827] text-gray-300 min-h-screen flex">
         
         <!-- Layar Kiri: Gambar & Branding (Sembunyi di HP) -->
         <div class="hidden lg:flex lg:w-1/2 relative items-center justify-center border-r border-gray-800">
             <!-- Background Image -->
-            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');">
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ asset('images/homepage.webp') }}');">
                 <!-- Overlay Gradient agar teks terbaca -->
                 <div class="absolute inset-0 bg-gradient-to-t from-[#111827] via-[#111827]/80 to-[#111827]/40"></div>
                 <div class="absolute inset-0 bg-primary/10 mix-blend-overlay"></div>
@@ -39,7 +33,7 @@
                 <x-heroicon-s-building-storefront class="w-24 h-24 text-primary mx-auto mb-6 drop-shadow-xl" />
                 <h1 class="text-4xl font-bold text-white mb-4 tracking-tight">Saung Babakan Cinta</h1>
                 <p class="text-gray-300 text-lg leading-relaxed">
-                    Sistem Point of Sale modern untuk mengelola pesanan, meja, dan laporan dengan lebih mudah dan elegan.
+                    Sistem terpadu untuk kemudahan pemesanan menu favorit Anda, serta kelola operasional restoran secara modern dan elegan.
                 </p>
             </div>
         </div>

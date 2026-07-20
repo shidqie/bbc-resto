@@ -12,12 +12,11 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['"Outfit"', '"Plus Jakarta Sans"', 'Inter', ...defaultTheme.fontFamily.sans],
+                sans: ['"Google Sans"', '"Outfit"', 'Inter', ...defaultTheme.fontFamily.sans],
                 serif: ['"Playfair Display"', '"Libre Caslon Text"', ...defaultTheme.fontFamily.serif],
                 mono: ['"Anonymous Pro"', ...defaultTheme.fontFamily.mono],
             },
             colors: {
-                // Design tokens — Landing (hijau-emas)
                 primary: {
                     DEFAULT: '#0D3024',
                     container: '#0a2219',
@@ -30,12 +29,6 @@ export default {
                 canvas: '#FAFAF7',
                 surface: '#FFFFFF',
                 body: '#3D3D3D',
-
-                // Admin panel tokens (tetap biru)
-                admin: {
-                    primary: '#3B82F6',
-                    secondary: '#8B5CF6',
-                },
                 success: '#16A34A',
                 warning: '#D97706',
                 danger: '#DC2626',

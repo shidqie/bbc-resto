@@ -21,7 +21,7 @@
         {{-- Summary Cards --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <x-ui.stat-card label="Total Menu" :value="$stats['total']" icon="fa-utensils" color="blue" />
-            <x-ui.stat-card label="Menu Dine-in" :value="$stats['dine_in']" icon="fa-store" color="orange" />
+            <x-ui.stat-card label="Menu" :value="$stats['dine_in']" icon="fa-store" color="orange" />
             <x-ui.stat-card label="Menu Catering" :value="$stats['catering']" icon="fa-concierge-bell" color="green" />
             <x-ui.stat-card label="Menu Nasi Box" :value="$stats['nasi_box']" icon="fa-box" color="purple" />
         </div>

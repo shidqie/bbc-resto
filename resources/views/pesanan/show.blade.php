@@ -36,9 +36,22 @@
             </div>
             <div class="mt-4 sm:mt-0 flex gap-2">
                 <x-ui.button href="{{ route('pesanan.index') }}" variant="outline" icon="fa-arrow-left">Kembali</x-ui.button>
-                <button onclick="window.print()" class="inline-flex items-center gap-2 text-white bg-gray-800 hover:bg-gray-900 px-5 py-2.5 rounded-xl font-medium text-sm transition-colors shadow-sm">
-                    <x-heroicon-o-printer class="w-5 h-5 inline-block shrink-0" /> Cetak Struk
-                </button>
+                <div x-data="{ open: false }" class="relative">
+                    <button @click="open = !open" @click.away="open = false" class="inline-flex items-center gap-2 text-white bg-gray-800 hover:bg-gray-900 px-5 py-2.5 rounded-xl font-medium text-sm transition-colors shadow-sm">
+                        <x-heroicon-o-printer class="w-5 h-5 inline-block shrink-0" /> Cetak Struk <x-heroicon-o-chevron-down class="w-4 h-4 ml-1" />
+                    </button>
+                    <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                        <a href="{{ route('pesanan.cetak', ['pesanan' => $pesanan->id, 'type' => 'konsumen']) }}" target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                            <i class="fa-solid fa-receipt mr-2"></i> Struk Konsumen
+                        </a>
+                        <a href="{{ route('pesanan.cetak', ['pesanan' => $pesanan->id, 'type' => 'dapur']) }}" target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600">
+                            <i class="fa-solid fa-fire-burner mr-2"></i> Struk Dapur
+                        </a>
+                        <a href="{{ route('pesanan.cetak', ['pesanan' => $pesanan->id, 'type' => 'meja']) }}" target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-purple-600">
+                            <i class="fa-solid fa-hashtag mr-2"></i> Nomor Meja
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 

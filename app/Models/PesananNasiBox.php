@@ -12,7 +12,7 @@ class PesananNasiBox extends Model
         'kontak',
         'alamat',
         'tanggal_acara',
-        'menu_id',
+        'paket_id',
         'jumlah_box',
         'alamat',
         'metode_pengiriman',
@@ -30,9 +30,14 @@ class PesananNasiBox extends Model
         'tanggal_acara' => 'date',
     ];
 
-    public function menu()
+    public function paket()
     {
-        return $this->belongsTo(Menu::class, 'menu_id');
+        return $this->belongsTo(PaketCatering::class, 'paket_id');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(PesananNasiBoxDetail::class, 'pesanan_nasi_box_id');
     }
 
     public function buktiPembayarans()

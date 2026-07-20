@@ -1,7 +1,7 @@
 @props(['paket', 'type'])
 
 <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col shadow-sm">
-    <h3 class="text-xl font-serif text-primary mb-2">{{ $paket->nama_paket ?? $paket->nama }}</h3>
+    <x-typography.h3 class="text-primary mb-2">{{ $paket->nama_paket ?? $paket->nama }}</x-typography.h3>
     <div class="text-secondary font-bold mb-1">
         @if($paket->harga > 0)
             Rp {{ number_format($paket->harga, 0, ',', '.') }}/{{ $type === 'catering' ? 'porsi' : 'box' }}
@@ -15,7 +15,7 @@
         <div class="mb-3"></div>
     @endif
     @if($paket->deskripsi)
-        <p class="text-body text-sm leading-relaxed mb-4 flex-1">{{ $paket->deskripsi }}</p>
+        <x-typography.p variant="small" class="leading-relaxed mb-4 flex-1">{{ $paket->deskripsi }}</x-typography.p>
     @endif
     @if($type === 'catering' && $paket->komponens && $paket->komponens->count() > 0)
         <ul class="space-y-1.5 mb-4 text-sm text-body">

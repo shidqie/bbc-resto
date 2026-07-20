@@ -161,4 +161,15 @@ class PesananController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    public function cetak(Pesanan $pesanan, $type)
+    {
+        if (!in_array($type, ['konsumen', 'dapur', 'meja'])) {
+            abort(404);
+        }
+        
+        $pesanan->load(['details.menu', 'pembayarans', 'user']);
+        
+        return view("pesanan.print.{$type}", compact('pesanan'));
+    }
 }

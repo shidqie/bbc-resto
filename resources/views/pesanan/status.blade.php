@@ -23,21 +23,30 @@
                             <p class="text-sm text-secondary font-semibold mb-1">Kode Pesanan</p>
                             <p class="text-2xl font-bold text-primary tracking-wider">{{ $pesanan->kode_pesanan }}</p>
                         </div>
-                        <div class="text-right">
-                            <p class="text-sm text-secondary font-semibold mb-1">Status Saat Ini</p>
-                            @php
-                                $statusColors = [
-                                    'menunggu_dp' => 'bg-yellow-100 text-yellow-800',
-                                    'menunggu_konfirmasi' => 'bg-blue-100 text-blue-800',
-                                    'terkonfirmasi' => 'bg-green-100 text-green-800',
-                                    'lunas' => 'bg-green-200 text-green-900',
-                                    'dibatalkan' => 'bg-red-100 text-red-800',
-                                ];
-                                $color = $statusColors[$pesanan->status] ?? 'bg-gray-100 text-gray-800';
-                            @endphp
-                            <span class="px-3 py-1 {{ $color }} rounded-full text-xs font-bold uppercase tracking-wider">
-                                {{ str_replace('_', ' ', $pesanan->status) }}
-                            </span>
+                        <div class="text-right flex flex-col gap-2 items-end">
+                            <div>
+                                <p class="text-sm text-secondary font-semibold mb-1">Status Saat Ini</p>
+                                @php
+                                    $statusColors = [
+                                        'menunggu_dp' => 'bg-yellow-100 text-yellow-800',
+                                        'menunggu_konfirmasi' => 'bg-blue-100 text-blue-800',
+                                        'terkonfirmasi' => 'bg-green-100 text-green-800',
+                                        'lunas' => 'bg-green-200 text-green-900',
+                                        'dibatalkan' => 'bg-red-100 text-red-800',
+                                    ];
+                                    $color = $statusColors[$pesanan->status] ?? 'bg-gray-100 text-gray-800';
+                                @endphp
+                                <span class="px-3 py-1 {{ $color }} rounded-full text-xs font-bold uppercase tracking-wider">
+                                    {{ str_replace('_', ' ', $pesanan->status) }}
+                                </span>
+                            </div>
+                            
+                            @if(in_array($pesanan->status, ['terkonfirmasi', 'lunas']))
+                                <a href="{{ route('pesanan.invoice', $pesanan->kode_pesanan) }}" target="_blank" class="inline-flex items-center gap-2 mt-2 px-4 py-2 bg-white border border-primary text-primary hover:bg-primary hover:text-white rounded-lg text-sm font-semibold transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    Unduh Invoice PDF
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -103,21 +112,9 @@
                     @if($pesanan->status === 'terkonfirmasi')
                         <div class="mt-6 border-t border-gray-100 pt-6">
                             <h3 class="font-serif text-lg text-primary mb-4">Pelunasan</h3>
-                            <p class="text-sm text-body mb-4">Silakan lakukan pelunasan maksimal H-1 sebelum acara ke rekening Bank BCA <strong>1234 5678 90</strong> (a.n. Saung Babakan Cinta) dan unggah buktinya di bawah ini.</p>
+                            <p class="text-sm text-body mb-4">Silakan lakukan pelunasan maksimal H-1 sebelum acara. (Pembayaran akan diproses melalui sistem Payment Gateway)</p>
                             
-                            <form action="{{ route('pesanan.bukti.store') }}" method="POST" enctype="multipart/form-data">
-                                @csrf
-                                <input type="hidden" name="kode_pesanan" value="{{ $pesanan->kode_pesanan }}">
-                                <input type="hidden" name="jenis_pembayaran" value="pelunasan">
-                                
-                                <div class="mb-4">
-                                    <input type="file" name="file_bukti" accept=".jpg,.jpeg,.png,.pdf" required
-                                           class="w-full text-sm text-body file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20">
-                                </div>
-                                <button type="submit" class="w-full bg-secondary hover:bg-secondary/90 text-white font-bold py-2.5 rounded-xl transition-all duration-200">
-                                    Unggah Bukti Pelunasan
-                                </button>
-                            </form>
+                            {{-- Todo: Tambahkan tombol bayar Midtrans pelunasan di sini jika diperlukan --}}
                         </div>
                     @endif
 

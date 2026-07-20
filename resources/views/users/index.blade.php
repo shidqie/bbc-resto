@@ -14,13 +14,15 @@
     <!-- Header Area -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Data Pengguna</h1>
-            <p class="text-gray-500 text-sm mt-1">Kelola akun staf, kasir, dan admin.</p>
+            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">{{ $pageTitle }}</h1>
+            <p class="text-gray-500 text-sm mt-1">{{ $pageDescription }}</p>
         </div>
+        @if($type !== 'pelanggan')
         <button @click="showCreateModal = true" class="bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
             <x-heroicon-o-plus class="w-4 h-4" />
             Tambah Pengguna
         </button>
+        @endif
     </div>
 
     <!-- Alert Messages -->
@@ -50,6 +52,7 @@
         <!-- Toolbar -->
         <div class="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-start items-start md:items-center gap-4 bg-white">
             <form action="{{ route('users.index') }}" method="GET" class="relative w-full md:w-72">
+                <input type="hidden" name="type" value="{{ $type }}">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau email..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
                 <button type="submit" class="absolute left-3 top-2.5">
                     <x-heroicon-o-magnifying-glass class="w-5 h-5 text-gray-400 hover:text-primary transition-colors" />
@@ -72,10 +75,18 @@
                         <th class="px-6 py-4 cursor-pointer hover:bg-gray-100 transition-colors group bg-[#F8FAFC]">
                             <div class="flex items-center gap-1 text-center">Nomor HP <x-heroicon-m-chevron-up-down class="w-4 h-4 text-gray-400 group-hover:text-gray-600" /></div>
                         </th>
+                        @if($type !== 'pelanggan')
                         <th class="px-6 py-4 cursor-pointer hover:bg-gray-100 transition-colors group bg-[#F8FAFC]">
                             <div class="flex items-center gap-1 text-center">Role <x-heroicon-m-chevron-up-down class="w-4 h-4 text-gray-400 group-hover:text-gray-600" /></div>
                         </th>
+                        @else
+                        <th class="px-6 py-4 cursor-pointer hover:bg-gray-100 transition-colors group bg-[#F8FAFC]">
+                            <div class="flex items-center gap-1 text-center">Bergabung Sejak <x-heroicon-m-chevron-up-down class="w-4 h-4 text-gray-400 group-hover:text-gray-600" /></div>
+                        </th>
+                        @endif
+                        @if($type !== 'pelanggan')
                         <th class="px-6 py-4 text-center bg-[#F8FAFC]">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -93,6 +104,7 @@
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-600">{{ $user->phone_number ?? '-' }}</div>
                         </td>
+                        @if($type !== 'pelanggan')
                         <td class="px-6 py-4">
                             @if($user->role && strtolower($user->role->name) === 'admin')
                                 <span class="bg-rose-100 text-rose-700 py-1 px-3 rounded-full text-xs font-medium">{{ $user->role->name }}</span>
@@ -102,6 +114,12 @@
                                 <span class="bg-teal-100 text-teal-700 py-1 px-3 rounded-full text-xs font-medium">{{ $user->role ? $user->role->name : 'Kasir' }}</span>
                             @endif
                         </td>
+                        @else
+                        <td class="px-6 py-4">
+                            <span class="text-sm text-gray-500">{{ $user->created_at->format('d M Y') }}</span>
+                        </td>
+                        @endif
+                        @if($type !== 'pelanggan')
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-center gap-3">
                                 <button @click="showEditModal = true; editForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}', email: '{{ addslashes($user->email) }}', phone_number: '{{ addslashes($user->phone_number) }}', role_id: '{{ $user->role_id }}' }" class="text-gray-400 hover:text-blue-600 transition-colors" title="Edit">
@@ -112,6 +130,7 @@
                                 </button>
                             </div>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
@@ -131,6 +150,8 @@
                 <!-- Card Header -->
                 <div class="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
                     <div class="font-bold text-gray-800 text-sm truncate pr-2">No. {{ $users->firstItem() + $loop->index }}</div>
+                    
+                    @if($type !== 'pelanggan')
                     <div class="flex items-center gap-2 shrink-0">
                         <button @click="showEditModal = true; editForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}', email: '{{ addslashes($user->email) }}', phone_number: '{{ addslashes($user->phone_number) }}', role_id: '{{ $user->role_id }}' }" class="p-1.5 text-blue-500 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors">
                             <x-heroicon-o-pencil-square class="w-4 h-4" />
@@ -139,6 +160,7 @@
                             <x-heroicon-o-trash class="w-4 h-4" />
                         </button>
                     </div>
+                    @endif
                 </div>
                 
                 <!-- Card Body -->
@@ -158,6 +180,7 @@
                         <div class="text-gray-500">:</div>
                         <div class="text-gray-700">{{ $user->phone_number ?? '-' }}</div>
                     </div>
+                    @if($type !== 'pelanggan')
                     <div class="grid grid-cols-[100px_10px_1fr] text-sm">
                         <div class="text-gray-500">Role</div>
                         <div class="text-gray-500">:</div>
@@ -171,6 +194,13 @@
                             @endif
                         </div>
                     </div>
+                    @else
+                    <div class="grid grid-cols-[100px_10px_1fr] text-sm">
+                        <div class="text-gray-500">Bergabung</div>
+                        <div class="text-gray-500">:</div>
+                        <div class="text-gray-700">{{ $user->created_at->format('d M Y') }}</div>
+                    </div>
+                    @endif
                 </div>
             </div>
             @empty

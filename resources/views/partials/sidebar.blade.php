@@ -33,12 +33,12 @@
             'active' => request()->routeIs('dashboard'),
         ])
 
-        {{-- POS Kasir --}}
+        {{-- Point of Sale (Dine-In Only) --}}
         @include('partials.sidebar-link', [
-            'route' => 'pesanan.create',
+            'route' => 'pos.dinein.index',
             'icon' => 'o-computer-desktop',
-            'label' => 'POS Kasir',
-            'active' => request()->routeIs('pesanan.create'),
+            'label' => 'Point of Sale',
+            'active' => request()->routeIs('pos.dinein.*'),
         ])
 
         {{-- Divider --}}
@@ -48,13 +48,13 @@
         @include('partials.sidebar-submenu', [
             'icon' => 'o-clipboard-document-list',
             'label' => 'Pesanan',
-            'isOpen' => request()->routeIs('pesanan.*'),
+            'isOpen' => request()->routeIs('pesanan.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.jadwal.*'),
             'items' => [
                 ['label' => 'Semua Pesanan',    'url' => route('pesanan.index'), 'active' => request()->routeIs('pesanan.index') && !request()->query('jenis') && !request()->query('status')],
-                ['label' => 'Dine-in',          'url' => route('pesanan.index', ['jenis' => 'dine_in']),    'active' => request()->query('jenis') == 'dine_in'],
-                ['label' => 'Take Away',        'url' => route('pesanan.index', ['jenis' => 'take_away']), 'active' => request()->query('jenis') == 'take_away'],
-                ['label' => 'Catering / Nasi Box', 'url' => route('pesanan.index', ['jenis' => 'catering']), 'active' => request()->query('jenis') == 'catering'],
-                ['label' => 'Pembatalan',       'url' => route('pesanan.index', ['status' => 'dibatalkan']), 'active' => request()->query('status') == 'dibatalkan'],
+                ['label' => 'Dine-in',          'url' => route('pesanan.index', ['jenis' => 'dine_in']), 'active' => request()->query('jenis') == 'dine_in'],
+                ['label' => 'Catering',         'url' => route('admin.pesanan.catering.index'),  'active' => request()->routeIs('admin.pesanan.catering.*')],
+                ['label' => 'Nasi Box',         'url' => route('admin.pesanan.nasibox.index'),   'active' => request()->routeIs('admin.pesanan.nasibox.*')],
+                ['label' => 'Jadwal Pengantaran', 'url' => route('admin.jadwal.index'),  'active' => request()->routeIs('admin.jadwal.*')],
             ],
         ])
 
@@ -64,8 +64,10 @@
             'label' => 'Menu',
             'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*'),
             'items' => [
-                ['label' => 'Daftar Menu',    'url' => route('menu.index'),          'active' => request()->routeIs('menu.*')],
-                ['label' => 'Kategori Menu',  'url' => route('kategori-menu.index'), 'active' => request()->routeIs('kategori-menu.*')],
+                ['label' => 'Daftar Menu Resto',   'url' => route('menu.index'),          'active' => request()->routeIs('menu.*')],
+                ['label' => 'Daftar Menu Catering', 'url' => route('paket-catering.index', ['jenis' => 'catering']), 'active' => request()->fullUrlIs(route('paket-catering.index', ['jenis' => 'catering']))],
+                ['label' => 'Daftar Menu Nasi Box', 'url' => route('paket-catering.index', ['jenis' => 'nasi_box']), 'active' => request()->fullUrlIs(route('paket-catering.index', ['jenis' => 'nasi_box']))],
+                ['label' => 'Kategori Menu', 'url' => route('kategori-menu.index'), 'active' => request()->routeIs('kategori-menu.*')],
             ],
         ])
 
@@ -92,17 +94,6 @@
             ],
         ])
 
-        {{-- Catering & Nasi Box (Submenu) --}}
-        @include('partials.sidebar-submenu', [
-            'icon' => 'o-cake',
-            'label' => 'Catering',
-            'isOpen' => request()->routeIs('paket-catering.*') || request()->routeIs('pesanan-catering.*'),
-            'items' => [
-                ['label' => 'Paket Catering',     'url' => route('paket-catering.index'),    'active' => request()->routeIs('paket-catering.*')],
-                ['label' => 'Pesanan Masuk',       'url' => route('pesanan-catering.index'),  'active' => request()->routeIs('pesanan-catering.*')],
-            ],
-        ])
-
         {{-- Laporan (Submenu) --}}
         @include('partials.sidebar-submenu', [
             'icon' => 'o-chart-bar',
@@ -111,6 +102,8 @@
             'items' => [
                 ['label' => 'Lap. Penjualan', 'url' => route('laporan.penjualan'), 'active' => request()->routeIs('laporan.penjualan')],
                 ['label' => 'Lap. Stok',      'url' => route('laporan.stok'),       'active' => request()->routeIs('laporan.stok')],
+                ['label' => 'Lap. Catering',  'url' => route('laporan.catering'),   'active' => request()->routeIs('laporan.catering')],
+                ['label' => 'Lap. Nasi Box',  'url' => route('laporan.nasibox'),    'active' => request()->routeIs('laporan.nasibox')],
             ],
         ])
 
@@ -120,7 +113,8 @@
             'label' => 'Pengguna',
             'isOpen' => request()->routeIs('users.*'),
             'items' => [
-                ['label' => 'Data Pengguna', 'url' => route('users.index'), 'active' => request()->routeIs('users.*')],
+                ['label' => 'Data Pegawai', 'url' => route('users.index', ['type' => 'pegawai']), 'active' => request('type') !== 'pelanggan' && request()->routeIs('users.*')],
+                ['label' => 'Data Pelanggan', 'url' => route('users.index', ['type' => 'pelanggan']), 'active' => request('type') === 'pelanggan' && request()->routeIs('users.*')],
             ],
         ])
 

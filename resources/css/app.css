@@ -1,5 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&family=Google+Sans:wght@100..600&family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #0D3024;
+    --color-primary-container: #0a2219;
+    --color-secondary: #B8860B;
+    --color-secondary-container: #d4a843;
+    --color-accent: #D4A843;
+    --color-canvas: #FAFAF7;
+    --color-surface: #FFFFFF;
+    --color-body: #3D3D3D;
+    --color-success: #16A34A;
+    --color-warning: #D97706;
+    --color-danger: #DC2626;
+  }
+}

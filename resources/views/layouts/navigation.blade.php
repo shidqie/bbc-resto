@@ -16,13 +16,13 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     
-                    @if(auth()->user()->role->name === 'Admin' || auth()->user()->role->name === 'Kasir' || auth()->user()->role->name === 'Manajer')
+                    @if(in_array(auth()->user()->role->name, ['Admin', 'Super Admin', 'Kasir', 'Manajer']))
                     <x-nav-link :href="route('laporan.penjualan')" :active="request()->routeIs('laporan.penjualan')">
                         {{ __('Lap. Penjualan') }}
                     </x-nav-link>
                     @endif
 
-                    @if(auth()->user()->role->name === 'Admin' || auth()->user()->role->name === 'Manajer')
+                    @if(in_array(auth()->user()->role->name, ['Admin', 'Super Admin', 'Manajer']))
                     <x-nav-link :href="route('laporan.stok')" :active="request()->routeIs('laporan.stok')">
                         {{ __('Lap. Stok') }}
                     </x-nav-link>

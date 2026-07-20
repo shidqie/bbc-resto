@@ -28,15 +28,15 @@ class PesananNasiBoxController extends Controller
     public function preview(Request $request)
     {
         $request->validate([
-            'menu_id' => 'required|exists:menus,id',
-            'jumlah_box' => 'required|integer|min:1',
+            'paket_id' => 'required|exists:paket_caterings,id',
+            'jumlah_box' => 'required|integer|min:10',
             'metode_pengiriman' => 'required|in:pickup,delivery',
             'jarak_km' => 'required_if:metode_pengiriman,delivery|nullable|numeric|min:0'
         ]);
         
         try {
             $ongkir = PesananNasiBoxService::hitungOngkir($request->jumlah_box, $request->jarak_km, $request->metode_pengiriman);
-            $result = PesananNasiBoxService::hitungTotal($request->menu_id, $request->jumlah_box, $ongkir);
+            $result = PesananNasiBoxService::hitungTotal($request->paket_id, $request->jumlah_box, $ongkir);
             return response()->json($result);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -48,15 +48,9 @@ class PesananNasiBoxController extends Controller
     {
         $validated = $request->validated();
 
-        // Pastikan menu tersebut merupakan nasi box (berdasarkan KategoriMenu)
-        $menu = Menu::with('kategori')->findOrFail($validated['menu_id']);
-        if (!$menu->kategori || strtolower($menu->kategori->nama) !== 'nasi box') {
-            return back()->withErrors(['menu_id' => 'Varian yang dipilih bukan menu Nasi Box.'])->withInput();
-        }
-
         try {
             $ongkir = PesananNasiBoxService::hitungOngkir($validated['jumlah_box'], $validated['jarak_km'] ?? null, $validated['metode_pengiriman']);
-            $hitung = PesananNasiBoxService::hitungTotal($validated['menu_id'], $validated['jumlah_box'], $ongkir);
+            $hitung = PesananNasiBoxService::hitungTotal($validated['paket_id'], $validated['jumlah_box'], $ongkir);
         } catch (\Exception $e) {
             return back()->withErrors(['metode_pengiriman' => $e->getMessage()])->withInput();
         }
@@ -72,13 +66,25 @@ class PesananNasiBoxController extends Controller
             'latitude'      => $validated['latitude'] ?? null,
             'longitude'     => $validated['longitude'] ?? null,
             'tanggal_acara' => $validated['tanggal_acara'],
-            'menu_id'       => $validated['menu_id'],
+            'paket_id'      => $validated['paket_id'],
             'jumlah_box'    => $validated['jumlah_box'],
             'total_tagihan' => $hitung['total'],
-            'dp_amount'     => $hitung['dp'],
+            'dp_amount'     => $validated['opsi_pembayaran'] === 'lunas' ? $hitung['total'] : $hitung['dp'],
             'status'        => 'menunggu_dp',
             'catatan'       => $validated['catatan'] ?? null,
+            'user_id'       => \Illuminate\Support\Facades\Auth::id() ?? null,
         ]);
+
+        foreach ($validated['komponen'] as $komponenId => $menuId) {
+            \App\Models\PesananNasiBoxDetail::create([
+                'pesanan_nasi_box_id' => $pesanan->id,
+                'komponen_paket_id'   => $komponenId,
+                'menu_id'             => $menuId
+            ]);
+        }
+
+        // Generate Midtrans Snap Token
+        \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, 'nasi_box');
 
         return redirect()->route('pesanan.bayar', $pesanan->kode_pesanan)
             ->with('success', 'Pesanan berhasil dibuat! Silakan lanjutkan ke pembayaran DP.');
@@ -90,20 +96,35 @@ class PesananNasiBoxController extends Controller
     public function index(Request $request)
     {
         $status = $request->input('status', 'all');
-        $query = PesananNasiBox::with('menu')->latest();
+        $search = $request->input('search');
+
+        $query = PesananNasiBox::with('paket')->latest();
 
         if ($status !== 'all') {
             $query->where('status', $status);
         }
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('kode_pesanan', 'like', "%{$search}%")
+                  ->orWhere('nama_pemesan', 'like', "%{$search}%");
+            });
+        }
 
-        $pesanans = $query->get();
-        return view('admin.pesanan.nasibox.index', compact('pesanans', 'status'));
+        $pesanans = $query->paginate(10)->withQueryString();
+
+        $stats = [
+            'baru' => PesananNasiBox::whereIn('status', ['menunggu_dp', 'menunggu_konfirmasi'])->count(),
+            'diproses' => PesananNasiBox::whereIn('status', ['terkonfirmasi', 'diproses', 'dikirim'])->count(),
+            'selesai' => PesananNasiBox::where('status', 'selesai')->count(),
+        ];
+
+        return view('admin.pesanan.nasibox.index', compact('pesanans', 'status', 'stats'));
     }
 
     /** GET /admin/pesanan/nasi-box/{id} */
     public function show(PesananNasiBox $pesanan)
     {
-        $pesanan->load(['menu', 'buktiPembayarans']);
+        $pesanan->load(['paket', 'details.komponenPaket', 'details.menu', 'buktiPembayarans']);
         return view('admin.pesanan.nasibox.show', compact('pesanan'));
     }
 
@@ -118,10 +139,34 @@ class PesananNasiBoxController extends Controller
 
         if ($result === true) {
             $pesanan->update(['status' => 'terkonfirmasi']);
+            // Kirim Email Konfirmasi Pembayaran
+            if ($pesanan->email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($pesanan->email)->send(new \App\Mail\PaymentReceiptMail($pesanan));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Gagal mengirim email konfirmasi: ' . $e->getMessage());
+                }
+            }
             return back()->with('success', 'Pesanan dikonfirmasi dan stok telah dipotong.');
         }
 
         return back()->with('kekurangan_stok', $result)
             ->with('error', 'Stok tidak mencukupi. Silakan buat pengadaan terlebih dahulu.');
+    }
+
+    public function updateStatus(Request $request, PesananNasiBox $pesanan)
+    {
+        $request->validate([
+            'status' => 'required|in:terkonfirmasi,diproses,dikirim,selesai,lunas,dibatalkan',
+            'alasan_batal' => 'nullable|string'
+        ]);
+
+        $pesanan->status = $request->status;
+        if ($request->status === 'dibatalkan') {
+            $pesanan->alasan_batal = $request->alasan_batal;
+        }
+        $pesanan->save();
+
+        return back()->with('success', 'Status pesanan berhasil diperbarui.');
     }
 }

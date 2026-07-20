@@ -12,7 +12,25 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        $type = $request->get('type', 'pegawai');
+        
         $query = User::with('role')->orderBy('created_at', 'desc');
+
+        if ($type === 'pelanggan') {
+            // Only Konsumen
+            $query->whereHas('role', function($q) {
+                $q->where('name', 'Konsumen');
+            });
+            $pageTitle = 'Data Pelanggan';
+            $pageDescription = 'Kelola akun pelanggan yang terdaftar di sistem.';
+        } else {
+            // pegawai: all except Konsumen
+            $query->whereHas('role', function($q) {
+                $q->where('name', '!=', 'Konsumen');
+            });
+            $pageTitle = 'Data Pegawai';
+            $pageDescription = 'Kelola akun staf, kasir, dan admin.';
+        }
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -24,9 +42,11 @@ class UserController extends Controller
         }
 
         $users = $query->paginate(10)->withQueryString();
+        
+        // Roles for the create/edit modal
         $roles = Role::orderBy('id')->get();
         
-        return view('users.index', compact('users', 'roles'));
+        return view('users.index', compact('users', 'roles', 'type', 'pageTitle', 'pageDescription'));
     }
 
     public function store(Request $request)

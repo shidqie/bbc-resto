@@ -13,10 +13,17 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $userRole = $user->role->name ?? null;
+
+        if (!in_array($userRole, ['Admin', 'Super Admin', 'Manajer', 'Kasir'])) {
+            return redirect()->route('member.dashboard');
+        }
+
         // 1. Statistik Hari Ini
         $today = Carbon::today();
         
-        $pesananHariIni = Pesanan::whereDate('tanggal_pesanan', $today)->count();
+        $pesananHariIni = Pesanan::whereDate('tanggal_pesanan', $today)->count() + PesananCatering::whereDate('created_at', $today)->count() + PesananNasiBox::whereDate('created_at', $today)->count();
         $pendapatanHariIni = Pesanan::whereDate('tanggal_pesanan', $today)
                                     ->where('status_pesanan', 'selesai')
                                     ->sum('total_harga');
@@ -47,7 +54,46 @@ class DashboardController extends Controller
                                     ->get();
 
         // 4. Pesanan Terbaru
-        $pesananTerbaru = Pesanan::with('user')->latest()->take(5)->get();
+        // Menggabungkan pesanan terbaru dari 3 tabel menjadi format yang sama
+        $pesananTerbaru = collect();
+        
+        foreach(Pesanan::latest()->take(5)->get() as $p) { 
+            $pesananTerbaru->push((object)[
+                'id' => $p->id,
+                'no' => $p->no_pesanan,
+                'tanggal' => $p->tanggal_pesanan,
+                'total' => $p->total_harga,
+                'status' => $p->status_pesanan,
+                'jenis' => 'Resto',
+                'url' => route('pesanan.show', $p->id)
+            ]); 
+        }
+        
+        foreach(PesananCatering::latest()->take(5)->get() as $p) { 
+            $pesananTerbaru->push((object)[
+                'id' => $p->id,
+                'no' => $p->kode_pesanan,
+                'tanggal' => $p->created_at,
+                'total' => $p->total_harga,
+                'status' => $p->status,
+                'jenis' => 'Catering',
+                'url' => route('admin.pesanan.catering.show', $p->id)
+            ]); 
+        }
+        
+        foreach(PesananNasiBox::latest()->take(5)->get() as $p) { 
+            $pesananTerbaru->push((object)[
+                'id' => $p->id,
+                'no' => $p->kode_pesanan,
+                'tanggal' => $p->created_at,
+                'total' => $p->total_harga,
+                'status' => $p->status,
+                'jenis' => 'Nasi Box',
+                'url' => route('admin.pesanan.nasibox.show', $p->id)
+            ]); 
+        }
+        
+        $pesananTerbaru = $pesananTerbaru->sortByDesc('tanggal')->take(5);
 
         // 5. Pesanan Catering & Nasi Box Menunggu Konfirmasi
         $cateringMenunggu = PesananCatering::with('paket')

@@ -30,10 +30,10 @@
     $base = 'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]';
 
     $variants = [
-        'primary'   => 'bg-[#3B82F6] text-white hover:bg-[#2563EB] focus:ring-blue-200 shadow-sm',
-        'secondary' => 'bg-[#8B5CF6] text-white hover:bg-[#7C3AED] focus:ring-purple-200 shadow-sm',
-        'danger'    => 'bg-[#DC2626] text-white hover:bg-[#B91C1C] focus:ring-red-200 shadow-sm',
-        'success'   => 'bg-[#16A34A] text-white hover:bg-[#15803D] focus:ring-green-200 shadow-sm',
+        'primary'   => 'bg-primary text-white hover:bg-primary-container focus:ring-primary/30 shadow-sm',
+        'secondary' => 'bg-secondary text-white hover:bg-secondary-container focus:ring-secondary/30 shadow-sm',
+        'danger'    => 'bg-danger text-white hover:bg-red-700 focus:ring-danger/30 shadow-sm',
+        'success'   => 'bg-success text-white hover:bg-green-700 focus:ring-success/30 shadow-sm',
         'outline'   => 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 focus:ring-gray-100 shadow-sm',
         'ghost'     => 'bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:ring-gray-100',
     ];

@@ -40,10 +40,10 @@ class PesananNasiBoxService
         return $ongkir;
     }
 
-    public static function hitungTotal($menuId, $jumlahBox, $ongkir = 0)
+    public static function hitungTotal($paketId, $jumlahBox, $ongkir = 0)
     {
-        $menu = Menu::findOrFail($menuId);
-        $hargaPerBox = $menu->harga;
+        $paket = \App\Models\PaketCatering::findOrFail($paketId);
+        $hargaPerBox = $paket->harga;
         
         $subtotal = $hargaPerBox * $jumlahBox;
         $total = $subtotal + $ongkir;
@@ -63,18 +63,21 @@ class PesananNasiBoxService
         $kebutuhan = [];
         $kekurangan = [];
         
-        // 1. Kumpulkan kebutuhan bahan berdasarkan BOM menu yang dipilih
-        $menuId = $pesanan->menu_id;
-        $reseps = ResepMenu::where('menu_id', $menuId)->get();
+        // 1. Kumpulkan kebutuhan bahan berdasarkan komponen menu yang dipilih
+        $details = $pesanan->details()->with('menu.reseps')->get();
         
-        foreach ($reseps as $resep) {
-            $bahanId = $resep->bahan_baku_id;
-            $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_box;
-            
-            if (isset($kebutuhan[$bahanId])) {
-                $kebutuhan[$bahanId] += $qty;
-            } else {
-                $kebutuhan[$bahanId] = $qty;
+        foreach ($details as $detail) {
+            $reseps = $detail->menu->reseps ?? [];
+            foreach ($reseps as $resep) {
+                $bahanId = $resep->bahan_baku_id;
+                // Nasi Box -> setiap box mendapatkan 1 porsi dari masing-masing komponen
+                $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_box;
+                
+                if (isset($kebutuhan[$bahanId])) {
+                    $kebutuhan[$bahanId] += $qty;
+                } else {
+                    $kebutuhan[$bahanId] = $qty;
+                }
             }
         }
         

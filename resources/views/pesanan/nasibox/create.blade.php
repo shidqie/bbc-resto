@@ -4,82 +4,108 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <style>
-        /* Custom Geocoder Search Bar */
+        /* Custom Geocoder Search Bar (Google Maps Style) */
         .leaflet-control-geocoder {
-            border-radius: 12px !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
-            border: 1px solid #e5e7eb !important;
+            position: absolute !important;
+            top: 16px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 1000 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+            border: none !important;
             overflow: hidden;
+            background: white !important;
+            margin: 0 !important;
+            display: flex;
+            align-items: center;
+            pointer-events: auto; /* Required since parent pointer-events is none */
+        }
+        .leaflet-control-geocoder-form {
+            display: flex;
+            align-items: center;
         }
         .leaflet-control-geocoder-form input {
-            border-radius: 12px !important;
-            padding: 10px 16px !important;
-            font-size: 13px !important;
-            width: 260px !important;
-            background: white !important;
+            border: none !important;
+            padding: 12px 16px 12px 0 !important;
+            font-size: 14px !important;
+            width: 280px !important;
+            background: transparent !important;
+            color: #374151 !important;
+        }
+        .leaflet-control-geocoder-form input:focus {
+            outline: none !important;
+            box-shadow: none !important;
         }
         .leaflet-control-geocoder-icon {
-            background-color: #3B82F6 !important;
-            border-radius: 10px !important;
+            background-color: transparent !important;
+            border-radius: 0 !important;
+            width: 40px !important;
+            height: 40px !important;
+            background-size: 20px 20px !important;
+            opacity: 0.6;
         }
-        .leaflet-tooltip.address-tooltip {
-            background: #3B82F6; /* Primary */
-            color: white;
-            font-weight: 700;
-            font-size: 13px;
-            border: none;
-            border-radius: 20px;
-            padding: 6px 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            white-space: nowrap;
+        .leaflet-tooltip.address-tooltip, .leaflet-tooltip.resto-tooltip {
+            background: white;
+            color: #111827;
+            font-weight: 600;
+            font-size: 12px;
+            border: 1px solid #F3F4F6;
+            border-radius: 8px;
+            padding: 6px 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             text-align: center;
         }
-        .leaflet-tooltip.address-tooltip::before {
-            border-top-color: #3B82F6;
-        }
-        .leaflet-tooltip.resto-tooltip {
-            background: #8B5CF6; /* Secondary */
-            color: white;
-            font-weight: 700;
-            font-size: 12px;
-            border: none;
-            border-radius: 20px;
-            padding: 5px 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-        }
-        .leaflet-tooltip.resto-tooltip::before {
-            border-top-color: #8B5CF6;
+        .leaflet-tooltip.address-tooltip::before, .leaflet-tooltip.resto-tooltip::before {
+            border-top-color: white;
         }
         #map-container { position: relative; }
         #map-address-card {
             position: absolute;
-            top: 12px;
+            bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
             background: white;
-            border-radius: 16px;
-            padding: 10px 18px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.18);
-            min-width: 220px;
+            border-radius: 12px;
+            padding: 14px 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            min-width: 280px;
             max-width: 90%;
-            text-align: left;
+            text-align: center;
             pointer-events: none;
+            border: 1px solid #E5E7EB;
         }
         #map-address-card .card-label {
             font-size: 11px;
             color: #6B7280;
             font-weight: 600;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         #map-address-card .card-address {
             font-size: 14px;
             font-weight: 700;
             color: #111827;
+            line-height: 1.4;
         }
     </style>
     <section class="py-16 bg-canvas min-h-screen">
         <div class="max-w-4xl mx-auto px-4">
+
+            @guest
+            <div class="bg-primary/5 border border-primary/20 text-primary rounded-xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                <div>
+                    <h3 class="font-bold text-sm mb-1 text-gray-900">Pesan lebih cepat, pantau lebih mudah!</h3>
+                    <p class="text-xs text-gray-600">Anda dapat checkout sebagai tamu, namun mendaftar akun akan menyimpan riwayat pesanan Anda.</p>
+                </div>
+                <div class="flex gap-2 shrink-0">
+                    <a href="{{ route('login') }}" class="text-xs font-semibold bg-white border-2 border-primary text-primary px-4 py-1.5 rounded-md hover:bg-primary/5 transition-all shadow-sm">Login</a>
+                    <a href="{{ route('register') }}" class="text-xs font-semibold bg-primary text-white border-2 border-primary px-4 py-1.5 rounded-md hover:opacity-90 transition-all shadow-sm">Daftar Sekarang</a>
+                </div>
+            </div>
+            @endguest
 
             {{-- Header --}}
             <div class="text-center mb-10">
@@ -108,25 +134,29 @@
                         Pilih Varian Nasi Box
                     </h2>
                     <div class="grid md:grid-cols-3 gap-4">
-                        @php
-                            // Ambil menu Nasi Box dari relasi KategoriMenu
-                            $nasiBoxMenus = \App\Models\Menu::whereHas('kategori', function($q) {
-                                $q->where('nama', 'like', '%Nasi Box%');
-                            })->where('status', 'tersedia')->where('jenis_menu', 'nasi_box')->get();
-                        @endphp
-                        
-                        @foreach($nasiBoxMenus as $menu)
+                        @foreach($pakets as $paket)
                             <label class="paket-card cursor-pointer border-2 rounded-xl p-5 transition-all duration-200 hover:border-primary border-gray-200"
-                                   data-menu-id="{{ $menu->id }}" data-harga="{{ $menu->harga }}">
-                                <input type="radio" name="menu_id" value="{{ $menu->id }}" class="hidden paket-radio" {{ old('menu_id') == $menu->id ? 'checked' : '' }} required>
+                                   data-paket-id="{{ $paket->id }}" data-harga="{{ $paket->harga }}">
+                                <input type="radio" name="paket_id" value="{{ $paket->id }}" class="sr-only paket-radio" {{ old('paket_id') == $paket->id ? 'checked' : '' }} required>
                                 <div class="mb-3">
-                                    <h3 class="text-lg font-serif text-primary font-semibold">{{ $menu->nama }}</h3>
-                                    <span class="text-secondary font-bold text-lg">Rp {{ number_format($menu->harga, 0, ',', '.') }}<span class="text-sm font-normal text-body">/box</span></span>
+                                    <h3 class="text-lg font-serif text-primary font-semibold">{{ $paket->nama_paket }}</h3>
+                                    <span class="text-secondary font-bold text-lg">Rp {{ number_format($paket->harga, 0, ',', '.') }}<span class="text-sm font-normal text-body">/box</span></span>
                                 </div>
-                                <p class="text-body text-xs mb-3">{{ $menu->deskripsi }}</p>
+                                <p class="text-body text-xs mb-3">{{ $paket->deskripsi }}</p>
                                 <div class="mt-3 text-xs font-semibold text-primary opacity-0 selected-indicator transition-opacity">✓ Dipilih</div>
                             </label>
                         @endforeach
+                    </div>
+                </div>
+
+                {{-- SECTION 1.5: Pilih Komponen Lauk --}}
+                <div id="sec-komponen" class="bg-surface rounded-2xl border border-primary/10 p-6 mb-6 shadow-sm hidden">
+                    <h2 class="text-lg font-serif text-primary mb-4 flex items-center gap-2">
+                        <span class="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold">✓</span>
+                        Pilih Menu Lauk
+                    </h2>
+                    <div id="komponen-container" class="space-y-4">
+                        <!-- Komponen radio buttons will be loaded here via JS -->
                     </div>
                 </div>
 
@@ -153,7 +183,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-body mb-1">Nama Pemesan <span class="text-red-500">*</span></label>
-                            <input type="text" name="nama_pemesan" value="{{ old('nama_pemesan') }}"
+                            <input type="text" name="nama_pemesan" value="{{ old('nama_pemesan', auth()->user()->name ?? '') }}"
                                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition" required>
                         </div>
                         <div>
@@ -162,9 +192,15 @@
                                 <span class="inline-flex items-center px-4 font-semibold text-gray-600 bg-gray-50 border border-r-0 border-gray-200 rounded-l-xl">
                                     +62
                                 </span>
-                                <input type="number" inputmode="numeric" name="kontak" value="{{ old('kontak') }}" placeholder="81234567890"
+                                <input type="number" inputmode="numeric" name="kontak" value="{{ old('kontak', auth()->user()->phone_number ?? '') }}" placeholder="81234567890"
                                        class="w-full border border-gray-200 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition [&::-webkit-inner-spin-button]:appearance-none" required>
                             </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-body mb-1">Email Pemesan <span class="text-red-500">*</span></label>
+                            <input type="email" name="email" value="{{ old('email', auth()->user()->email ?? '') }}" placeholder="contoh@gmail.com"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition" required>
+                            <p class="text-xs text-gray-500 mt-1">Kami akan mengirimkan detail dan tanda terima ke email ini.</p>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-semibold text-body mb-2">Metode Pengiriman <span class="text-red-500">*</span></label>
@@ -185,12 +221,12 @@
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-body mb-1">Alamat Lengkap Pengiriman <span class="text-red-500">*</span></label>
                                 <textarea name="alamat" id="alamatDelivery" rows="2"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition">{{ old('alamat') }}</textarea>
+                                        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition">{{ old('alamat', auth()->user()->alamat ?? '') }}</textarea>
                                 <p class="text-xs text-body/60 mt-1">💡 Tip: Cari alamat lewat ikon 🔍 di peta, lalu geser pin ke titik yang tepat.</p>
                             </div>
 
                             {{-- Map Container --}}
-                            <div id="map-container" class="rounded-2xl overflow-hidden border border-gray-200 shadow-md mb-3" style="height: 340px; position:relative;">
+                            <div id="map-container" class="rounded-2xl overflow-hidden border border-gray-200 shadow-md mb-3 z-0" style="height: 340px; position:relative;">
                                 {{-- Address Card Overlay --}}
                                 <div id="map-address-card">
                                     <div class="card-label">📍 Alamat Kamu</div>
@@ -202,28 +238,28 @@
                                 <div id="map" style="width:100%; height:100%;"></div>
                             </div>
                             
-                            <input type="hidden" name="latitude" id="inputLat">
-                            <input type="hidden" name="longitude" id="inputLng">
+                            <input type="hidden" name="latitude" id="inputLat" value="{{ old('latitude', auth()->user()->latitude ?? '') }}">
+                            <input type="hidden" name="longitude" id="inputLng" value="{{ old('longitude', auth()->user()->longitude ?? '') }}">
                             <input type="hidden" name="jarak_km" id="inputJarak">
                             
-                            {{-- Jarak Info Card --}}
-                            <div class="grid grid-cols-2 gap-3 mb-3">
-                                <div class="bg-secondary/5 p-3 rounded-xl border border-secondary/10 flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-white flex-shrink-0">
-                                        <i class="ph-fill ph-storefront text-lg"></i>
+                            {{-- Jarak Info Card Minimalist --}}
+                            <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                                <div class="flex-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 flex-shrink-0">
+                                        <i class="ph ph-storefront text-lg"></i>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-secondary font-semibold">Titik Resto</p>
-                                        <p class="text-xs font-bold text-gray-700">Saung Babakan Cinta</p>
+                                        <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Titik Resto</p>
+                                        <p class="text-xs font-bold text-gray-800">Saung Babakan Cinta</p>
                                     </div>
                                 </div>
-                                <div class="bg-primary/5 p-3 rounded-xl border border-primary/10 flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white flex-shrink-0">
-                                        <i class="ph-fill ph-truck text-lg"></i>
+                                <div class="flex-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 flex-shrink-0">
+                                        <i class="ph ph-truck text-lg"></i>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-primary font-semibold">Jarak Pengiriman</p>
-                                        <p class="text-sm font-bold text-gray-700" id="textJarak">– km</p>
+                                        <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Jarak Pengiriman</p>
+                                        <p class="text-xs font-bold text-gray-800" id="textJarak">– km</p>
                                     </div>
                                 </div>
                             </div>
@@ -245,10 +281,34 @@
                     </div>
                 </div>
 
-                {{-- SECTION 3: Ringkasan & Submit --}}
+                {{-- SECTION 3: Opsi Pembayaran --}}
+                <div class="bg-surface rounded-2xl border border-primary/10 p-6 mb-6 shadow-sm">
+                    <h2 class="text-lg font-serif text-primary mb-4 flex items-center gap-2">
+                        <span class="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                        Opsi Pembayaran
+                    </h2>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <label class="flex-1 flex items-center gap-3 border border-primary bg-primary/5 rounded-xl px-4 py-3 cursor-pointer transition">
+                            <input type="radio" name="opsi_pembayaran" value="dp" checked class="w-5 h-5 accent-primary" onchange="updatePaymentLabel(this.value)">
+                            <div>
+                                <p class="text-sm font-semibold text-body">Bayar DP (50%)</p>
+                                <p class="text-xs text-secondary">Sisa pelunasan dibayar nanti</p>
+                            </div>
+                        </label>
+                        <label class="flex-1 flex items-center gap-3 border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary/50 transition">
+                            <input type="radio" name="opsi_pembayaran" value="lunas" class="w-5 h-5 accent-primary" onchange="updatePaymentLabel(this.value)">
+                            <div>
+                                <p class="text-sm font-semibold text-body">Bayar Lunas (100%)</p>
+                                <p class="text-xs text-gray-500">Bayar penuh di awal</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {{-- SECTION 4: Ringkasan & Submit --}}
                 <div class="bg-primary text-white rounded-2xl p-6 shadow-md">
                     <h2 class="text-lg font-serif mb-4 flex items-center gap-2">
-                        <span class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                        <span class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">4</span>
                         Ringkasan Pesanan
                     </h2>
                     <div class="space-y-2 text-sm mb-4">
@@ -289,7 +349,7 @@
     <script>
         const minDate = "{{ \Carbon\Carbon::today()->addDays(2)->format('Y-m-d') }}";
         let hargaMenu = 0;
-        let selectedMenuId = null;
+        let selectedPaketId = null;
         let metodePengiriman = 'pickup';
         let jarakKm = 0;
 
@@ -300,31 +360,41 @@
 
         function initMap() {
             if(map) return;
-            map = L.map('map').setView([bbcLat, bbcLng], 12);
+            // Initialize Map
+            map = L.map('map', {
+                zoomControl: false // Disable default zoom control
+            }).setView([bbcLat, bbcLng], 14);
+
+            // Add Zoom Control to Bottom Left
+            L.control.zoom({
+                position: 'bottomleft'
+            }).addTo(map);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap'
             }).addTo(map);
 
             const restoIcon = L.divIcon({
-                html: '<i class="ph-fill ph-storefront text-[#8B5CF6] text-4xl drop-shadow-md"></i>',
+                html: '<div class="w-8 h-8 bg-white border border-gray-200 shadow-sm rounded-full flex items-center justify-center text-gray-600"><i class="ph ph-storefront text-lg"></i></div>',
                 className: '',
-                iconSize: [36, 36],
-                iconAnchor: [18, 36],
-                tooltipAnchor: [0, -28]
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+                tooltipAnchor: [0, -20]
             });
             const userIcon = L.divIcon({
-                html: '<i class="ph-fill ph-map-pin text-[#3B82F6] text-4xl drop-shadow-md"></i>',
+                html: '<div class="w-8 h-8 bg-primary shadow-md shadow-primary/30 rounded-full flex items-center justify-center text-white"><i class="ph-bold ph-map-pin text-lg"></i></div>',
                 className: '',
-                iconSize: [36, 36],
-                iconAnchor: [18, 36],
-                tooltipAnchor: [0, -28]
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+                tooltipAnchor: [0, -20]
             });
 
             restoMarker = L.marker([bbcLat, bbcLng], {icon: restoIcon}).addTo(map);
             restoMarker.bindTooltip("Saung Babakan Cinta", {permanent: true, direction: 'top', offset: [0, -10], className: 'resto-tooltip'}).openTooltip();
 
-            marker = L.marker([bbcLat, bbcLng], {icon: userIcon, draggable: true}).addTo(map);
+            let initLat = document.getElementById('inputLat').value || bbcLat;
+            let initLng = document.getElementById('inputLng').value || bbcLng;
+            marker = L.marker([initLat, initLng], {icon: userIcon, draggable: true}).addTo(map);
             marker.bindTooltip("Alamatmu di sini", {permanent: true, direction: 'top', offset: [0, -10], className: 'address-tooltip'}).openTooltip();
 
             marker.on('dragend', function(e) {
@@ -335,15 +405,26 @@
                 updateAlamatText(pos.lat, pos.lng);
             });
 
-            // Coba dapatkan lokasi pengguna saat ini (GPS) secara otomatis
-            locateUser(false);
+            if (document.getElementById('inputLat').value) {
+                map.setView([initLat, initLng], 14);
+                hitungJarakOSRM(bbcLat, bbcLng, initLat, initLng);
+            } else {
+                // Coba dapatkan lokasi pengguna saat ini (GPS) secara otomatis
+                locateUser(false);
+            }
 
-            // Add Search Bar
-            L.Control.geocoder({
+            // Add Search Control (Geocoder)
+            const geocoder = L.Control.geocoder({
                 defaultMarkGeocode: false,
-                placeholder: "Cari lokasi atau alamat..."
-            })
-            .on('markgeocode', function(e) {
+                placeholder: 'Cari lokasi atau alamat...'
+            }).addTo(map);
+
+            // Detach and move to map container for perfect absolute centering
+            const mapContainer = document.getElementById('map');
+            const geocoderContainer = geocoder.getContainer();
+            mapContainer.appendChild(geocoderContainer);
+
+            geocoder.on('markgeocode', function(e) {
                 const bbox = e.geocode.bbox;
                 const poly = L.polygon([
                     bbox.getSouthEast(),
@@ -462,7 +543,7 @@
             });
         });
 
-        // Pilih Varian
+                // Pilih Varian
         document.querySelectorAll('.paket-card').forEach(card => {
             card.addEventListener('click', () => {
                 document.querySelectorAll('.paket-card').forEach(c => {
@@ -475,14 +556,85 @@
                 card.querySelector('.selected-indicator').style.opacity = '1';
                 card.querySelector('.paket-radio').checked = true;
                 
-                selectedMenuId = card.dataset.menuId;
+                selectedPaketId = card.dataset.paketId;
                 hargaMenu = parseInt(card.dataset.harga);
+                loadKomponen(selectedPaketId);
                 hitungTotalPreview();
             });
         });
 
+        async function loadKomponen(paketId) {
+            const sec = document.getElementById('sec-komponen');
+            const container = document.getElementById('komponen-container');
+            sec.classList.remove('hidden');
+            container.innerHTML = '<p class="text-body text-sm">Memuat komponen...</p>';
+
+            const res = await fetch(`/pesan/catering/komponen/${paketId}`);
+            const komponens = await res.json();
+
+            container.innerHTML = '';
+            komponens.forEach(komp => {
+                const div = document.createElement('div');
+                div.className = 'border border-gray-100 rounded-xl p-4 bg-canvas';
+                
+                if (komp.tipe === 'fixed') {
+                    div.innerHTML = `
+                        <p class="text-sm font-semibold text-body mb-2">${komp.nama_komponen}</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${komp.opsi.map(o => `
+                                <div class="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">
+                                    ${o.menu.foto ? `<img src="/storage/${o.menu.foto}" alt="${o.menu.nama}" class="w-5 h-5 rounded-full object-cover">` : ''}
+                                    <span>${o.menu.nama} ✓</span>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                } else {
+                    div.innerHTML = `
+                        <p class="text-sm font-semibold text-body mb-2">${komp.nama_komponen} <span class="text-secondary text-xs">(pilih 1)</span></p>
+                        <div class="flex flex-wrap gap-2">
+                            ${komp.opsi.map(o => `
+                                <label class="cursor-pointer group relative">
+                                    <input type="radio" name="komponen[${komp.id}]" value="${o.menu.id}" class="opacity-0 absolute w-0 h-0 peer" required>
+                                    <div class="flex items-center gap-2 px-3 py-1.5 border border-gray-200 bg-white rounded-full font-medium text-body text-xs peer-checked:bg-primary peer-checked:border-primary peer-checked:text-white transition-all group-hover:border-primary/50">
+                                        ${o.menu.foto ? `<img src="/storage/${o.menu.foto}" alt="${o.menu.nama}" class="w-5 h-5 rounded-full object-cover">` : ''}
+                                        <span>${o.menu.nama}</span>
+                                    </div>
+                                </label>`).join('')}
+                        </div>`;
+                }
+                container.appendChild(div);
+            });
+        }
+
         function formatRp(n) {
             return 'Rp ' + n.toLocaleString('id-ID');
+        }
+
+        let currentTotal = 0;
+        let currentDp = 0;
+
+        function updatePaymentLabel(val) {
+            const label = document.getElementById('label-payment');
+            const amount = document.getElementById('dp-amount');
+            if (val === 'lunas') {
+                label.innerHTML = 'Total yang Harus Dibayar <span class="text-white/70 text-xs">(100%)</span>';
+                amount.textContent = formatRp(currentTotal);
+            } else {
+                label.innerHTML = 'DP yang Harus Dibayar <span class="text-white/70 text-xs">(50%)</span>';
+                amount.textContent = formatRp(currentDp);
+            }
+            
+            // update styling borders
+            document.querySelectorAll('input[name="opsi_pembayaran"]').forEach(el => {
+                const parent = el.closest('label');
+                if(el.checked) {
+                    parent.classList.add('border-primary', 'bg-primary/5');
+                    parent.classList.remove('border-gray-200', 'bg-white');
+                } else {
+                    parent.classList.remove('border-primary', 'bg-primary/5');
+                    parent.classList.add('border-gray-200', 'bg-white');
+                }
+            });
         }
 
         async function hitungTotalPreview() {
@@ -492,14 +644,14 @@
             document.getElementById('harga-per-box').textContent = formatRp(hargaMenu);
             document.getElementById('summary-jumlah').textContent = jumlah;
             
-            if(!selectedMenuId) return;
+            if(!selectedPaketId) return;
 
             try {
                 const res = await fetch("{{ route('pesan.nasibox.preview') }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({
-                        menu_id: selectedMenuId,
+                        paket_id: selectedPaketId,
                         jumlah_box: jumlah,
                         metode_pengiriman: metodePengiriman,
                         jarak_km: jarakKm
@@ -510,7 +662,9 @@
                 if(res.ok) {
                     document.getElementById('summary-ongkir').textContent = formatRp(data.ongkir || 0);
                     document.getElementById('total-tagihan').textContent = formatRp(data.total);
-                    document.getElementById('dp-amount').textContent = formatRp(data.dp);
+                    currentTotal = data.total;
+                    currentDp = data.dp;
+                    updatePaymentLabel(document.querySelector('input[name="opsi_pembayaran"]:checked').value);
                     
                     if(data.ongkir === 0 && metodePengiriman === 'delivery' && jumlah >= 25) {
                          document.getElementById('summary-ongkir').textContent = 'GRATIS (Tier Tercapai)';

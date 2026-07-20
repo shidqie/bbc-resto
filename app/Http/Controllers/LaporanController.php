@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Pesanan;
 use App\Models\MutasiStok;
+use App\Models\PesananCatering;
+use App\Models\PesananNasiBox;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -69,5 +71,73 @@ class LaporanController extends Controller
 
         $pdf = Pdf::loadView('laporan.pdf-stok', compact('mutasis', 'startDate', 'endDate'));
         return $pdf->stream('laporan-mutasi-stok-' . $startDate . '-sd-' . $endDate . '.pdf');
+    }
+
+    public function catering(Request $request)
+    {
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+
+        $query = PesananCatering::with(['paket'])
+            ->whereIn('status', ['terkonfirmasi', 'lunas'])
+            ->whereBetween('tanggal_acara', [$startDate, $endDate]);
+
+        $pesanans = $query->latest()->get();
+        
+        $totalPendapatan = $pesanans->sum('total_tagihan');
+        $totalTransaksi = $pesanans->count();
+
+        return view('laporan.catering', compact('pesanans', 'totalPendapatan', 'totalTransaksi', 'startDate', 'endDate'));
+    }
+
+    public function cetakCatering(Request $request)
+    {
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+
+        $pesanans = PesananCatering::with(['paket'])
+            ->whereIn('status', ['terkonfirmasi', 'lunas'])
+            ->whereBetween('tanggal_acara', [$startDate, $endDate])
+            ->latest()
+            ->get();
+            
+        $totalPendapatan = $pesanans->sum('total_tagihan');
+
+        $pdf = Pdf::loadView('laporan.pdf-catering', compact('pesanans', 'totalPendapatan', 'startDate', 'endDate'));
+        return $pdf->stream('laporan-catering-' . $startDate . '-sd-' . $endDate . '.pdf');
+    }
+
+    public function nasibox(Request $request)
+    {
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+
+        $query = PesananNasiBox::with(['menu'])
+            ->whereIn('status', ['terkonfirmasi', 'lunas'])
+            ->whereBetween('tanggal_acara', [$startDate, $endDate]);
+
+        $pesanans = $query->latest()->get();
+        
+        $totalPendapatan = $pesanans->sum('total_tagihan');
+        $totalTransaksi = $pesanans->count();
+
+        return view('laporan.nasibox', compact('pesanans', 'totalPendapatan', 'totalTransaksi', 'startDate', 'endDate'));
+    }
+
+    public function cetakNasiBox(Request $request)
+    {
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+
+        $pesanans = PesananNasiBox::with(['menu'])
+            ->whereIn('status', ['terkonfirmasi', 'lunas'])
+            ->whereBetween('tanggal_acara', [$startDate, $endDate])
+            ->latest()
+            ->get();
+            
+        $totalPendapatan = $pesanans->sum('total_tagihan');
+
+        $pdf = Pdf::loadView('laporan.pdf-nasibox', compact('pesanans', 'totalPendapatan', 'startDate', 'endDate'));
+        return $pdf->stream('laporan-nasibox-' . $startDate . '-sd-' . $endDate . '.pdf');
     }
 }

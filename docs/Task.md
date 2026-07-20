@@ -1,355 +1,194 @@
-Task List — Form Publik Catering & Nasi Box (v2)
+# Prompt: Bangun Fitur POS Dine In — Sistem Katering & Nasi Box (SBC)
 
-BBC Resto — Lanjutan setelah menu selesai diinput
+## Konteks Proyek
 
-Tanggal: 13 Juli 2026
-Status menu: ✅ Sudah diinput (varian nasi box + menu isi komponen catering)
-Yang di-skip: Semua task seed/input menu (sudah selesai)
+Aplikasi ini adalah sistem manajemen restoran/katering bernama **SBC** dengan modul yang sudah ada: Dashboard, POS Kasir, Pesanan, Pesanan Khusus, Menu, Bahan Baku, Pengadaan, Laporan, dan Pengguna (Data Pegawai & Data Pelanggan). Sistem ini melayani 3 jenis transaksi: **Dine In**, **Nasi Box**, dan **Catering**, masing-masing dengan alur bisnis berbeda.
 
-⚠️ Cek dulu sebelum mulai coding
+Tugas kamu: implementasikan modul **POS Dine In** sesuai spesifikasi di bawah, terintegrasi dengan modul Bahan Baku (potong stok) dan Pengguna (role & permission) yang sudah ada.
 
-#CekStatus1BOM tiap varian nasi box sudah diisi?Cek di tabel menu_ingredients2BOM tiap menu isi komponen catering (Rendang, Sup Kimlo, dst) sudah diisi?Cek di tabel menu_ingredients3Flag/kategori "Nasi Box" & "Catering Only" sudah ada di tabel menus?Pastikan tidak muncul di POS4Tabel paket_catering, komponen_paket, opsi_komponen sudah ada & ter-seed?Paket A (9 komponen) & Paket B5Kebijakan pembatalan nasi box sudah diputuskan?Dibutuhkan di task E-2
+---
 
-Jangan lanjut ke bagian A jika poin 1–4 belum ✅ — backend logic bergantung ke data ini.
+## 1. Model Bisnis: Bayar Dulu, Terpusat di Kasir
 
-BAGIAN A — Database & Model
+Dine In di sistem ini pakai **Model A (pay first)**, TAPI dengan pembagian tugas berikut:
 
-A-1 — Migrasi tabel pesanan
+- **Input pesanan**: FLEKSIBEL, bisa dilakukan oleh Kasir maupun Pelayan (dari tablet/HP masing-masing)
+- **Pembayaran**: TERPUSAT, hanya bisa diproses di satu titik yaitu Kasir
 
-Buat migrasi tabel pesanan_catering:
+Pesanan **tidak** dikirim ke dapur sebelum pembayaran selesai. Ini pilihan sadar demi kontrol keuangan yang ketat (semua uang lewat satu pintu), dengan trade-off tamu/pelayan tetap perlu ke kasir untuk menuntaskan pembayaran.
 
-id, kode_pesanan (unique, auto-generate),
-nama_pemesan, kontak, lokasi_acara,
-paket_id (FK), jumlah_porsi,
-total_tagihan, dp_amount,
-status (enum: menunggu_dp, menunggu_konfirmasi,
-terkonfirmasi, lunas, dibatalkan),
-catatan, created_at, updated_at
+---
 
-Buat migrasi tabel pesanan_catering_detail:
+## 2. Konsep Inti: Manajemen Meja (Table Management)
 
-id, pesanan_id (FK), komponen_id (FK), menu_id_terpilih (FK ke menus)
+Satu meja = satu tab pesanan yang menampung item-item sebelum dibayar sekali di kasir.
 
-Buat migrasi tabel pesanan_catering_addon:
+### Status Meja
 
-id, pesanan_id (FK), layanan_tambahan_id (FK), catatan
+- `kosong` — siap dipakai
+- `menunggu_pembayaran` — sudah ada pesanan tercatat, belum dibayar
+- `terisi` — sudah dibayar, makanan diproses/disajikan, tamu masih di tempat
 
-Buat migrasi tabel layanan_tambahan:
+Tidak ada fitur reservasi/booking meja di versi ini — status meja hanya mengikuti siklus transaksi aktual.
 
-id, nama, harga
+### Siklus Status Meja
 
-Seed tabel layanan_tambahan:
-Peralatan Prasmanan, Dekorasi, Pramusaji, Pengantaran (isi harga sesuai kebijakan)
-Buat migrasi tabel pesanan_nasi_box:
+```
+kosong
+  → (pesanan pertama diinput, oleh kasir ATAU pelayan) → menunggu_pembayaran
+menunggu_pembayaran
+  → (kasir proses pembayaran) → terisi
+terisi
+  → (tamu selesai & pergi) → kosong lagi
+```
 
-id, kode_pesanan (unique, auto-generate),
-nama_pemesan, kontak, alamat,
-menu_id (FK ke menus — varian yang dipilih), jumlah_box,
-total_tagihan, dp_amount,
-status (enum sama seperti catering),
-catatan, created_at, updated_at
+Catatan: kalau tamu mau nambah pesanan setelah pembayaran pertama selesai, itu dianggap **transaksi baru** yang juga harus dibayar di kasir sebelum dikirim ke dapur (karena stok baru terpotong saat bayar, bukan saat input).
 
-Buat migrasi tabel bukti_pembayaran:
+---
 
-id, pesanan_type (catering/nasi_box), pesanan_id,
-jenis_pembayaran (dp/pelunasan),
-file_path, status (menunggu_verifikasi/verified/ditolak),
-catatan_admin, created_at
+## 3. Role & Permission
 
-A-2 — Model & Relasi (Eloquent)
+| Role        | Buka Meja | Input Pesanan | Proses Pembayaran | Cetak Struk | Void/Refund |
+| ----------- | --------- | ------------- | ----------------- | ----------- | ----------- |
+| **Kasir**   | ✅        | ✅            | ✅                | ✅          | ✅          |
+| **Pelayan** | ✅        | ✅            | ❌                | ❌          | ❌          |
 
-Model PesananCatering:
+Sistem harus mendukung skenario campuran: kadang kasir yang input pesanan sendiri (tamu datang langsung ke kasir), kadang pelayan yang input dari meja (tamu dilayani di tempat duduk). Keduanya sah, gate lewat permission role, bukan lewat device.
 
-hasMany PesananCateringDetail
-hasMany PesananCateringAddon
-hasMany BuktiPembayaran (morphMany)
-belongsTo PaketCatering
-Method: generateKodePesanan(), hitungDP()
+### Requirement teknis penting: Real-time sync & audit log
 
-Model PesananCateringDetail:
+- Kalau pesanan diinput pelayan dari tablet, kasir harus langsung melihat pesanan itu muncul di sistem (real-time/polling pendek) begitu tamu/pelayan datang untuk bayar — tidak perlu input ulang manual.
+- Setiap item pesanan menyimpan `diinput_oleh` (staff_id) untuk audit/tracing.
+- Setiap pembayaran menyimpan `diproses_oleh` (staff_id, harus role kasir) untuk kontrol kas.
 
-belongsTo KomponenPaket
-belongsTo Menu (menu_id_terpilih)
+---
 
-Model PesananCateringAddon:
+## 4. Alur Lengkap Dine In
 
-belongsTo LayananTambahan
+```
+1. Staf (kasir ATAU pelayan) pilih/buka meja → input item pesanan ke tab meja
+   → status meja: "menunggu_pembayaran"
+   → pesanan BELUM terkirim ke dapur di titik ini
 
-Model PesananNasiBox:
+2. Tamu (atau pelayan yang mewakili) menuju KASIR untuk menuntaskan pembayaran
+   → Kasir cari nomor meja di sistem, tagihan otomatis muncul
+     (tidak perlu input ulang item)
 
-belongsTo Menu
-hasMany BuktiPembayaran (morphMany)
-Method: generateKodePesanan(), hitungDP()
+3. Kasir proses pembayaran: cash / QRIS / kartu
 
-Model LayananTambahan
-Model BuktiPembayaran (polymorphic — dipakai oleh catering & nasi box)
+4. Begitu status pembayaran = lunas, sistem generate 3 jenis struk sekaligus
+   (lihat detail di bagian 4a) dan otomatis:
+   → Potong stok bahan baku, dihitung dari resep tiap menu di tagihan
+     dikali qty (integrasi ke modul Bahan Baku)
+   → Status meja berubah jadi "terisi" (makanan sedang diproses/disajikan)
 
-BAGIAN B — Backend: Validasi & Helper
+5. Kalau tamu mau nambah pesanan → ulangi dari langkah 1 sebagai
+   transaksi baru terhubung ke meja yang sama
 
-B-1 — FormRequest: StorePesananCateringRequest
+6. Tamu selesai & pergi → staf reset status meja jadi "kosong"
+```
 
-tanggal_acara ≥ Carbon::today()->addDays(14) — tolak jika kurang
-jumlah_porsi required, integer, min:1
-paket_id required, exists di tabel paket_catering
-Untuk tiap komponen choice di paket yang dipilih: wajib ada pilihan menu yang valid
-nama_pemesan, kontak required
-layanan_tambahan optional, array, tiap item exists di tabel layanan_tambahan
-Custom error message dalam Bahasa Indonesia
+### Poin kritis yang jangan sampai terlewat:
 
-B-2 — FormRequest: StorePesananNasiBoxRequest
+- Stok **hanya** terpotong setelah status pembayaran = lunas, dikonfirmasi oleh Kasir. Tidak ada potong stok di titik input pesanan.
+- Kalau kitchen printer gagal cetak (mati/kertas habis), sistem harus punya fallback notifikasi ke kasir (alert di UI POS Kasir) supaya order tidak "hilang" di dapur tanpa disadari.
+- Void/refund transaksi HANYA bisa dilakukan oleh role Kasir, tidak oleh Pelayan.
 
-tanggal_acara ≥ Carbon::today()->addDays(2) — minimal 2 hari dari sekarang
-jumlah_box required, integer, min:10
-menu_id required, exists di tabel menus, kategori = "Nasi Box"
-nama_pemesan, kontak required
-Custom error message dalam Bahasa Indonesia
+---
 
-B-3 — Helper: Hitung total & DP catering
+## 4a. Tiga Jenis Struk (Dicetak Bersamaan Saat Pembayaran Lunas)
 
-php// PesananCateringService::hitungTotal($paketId, $jumlahPorsi, $layananTambahanIds)
-// Return: ['subtotal_menu' => X, 'subtotal_addon' => Y, 'total' => Z, 'dp' => W]
+Begitu kasir menyelesaikan pembayaran, sistem generate & cetak **3 dokumen berbeda sekaligus**, dari 1 titik cetak (kasir) kecuali disebutkan lain:
 
-Ambil harga_per_porsi dari paket_catering
-Subtotal menu = harga_per_porsi × jumlah_porsi
-Subtotal addon = SUM harga layanan_tambahan yang dipilih
-Total = subtotal_menu + subtotal_addon
-DP = ceil(total × 0.5) — bulatkan ke atas
+| #   | Nama Struk               | Isi                                                                                         | Dicetak di                 | Diserahkan ke             |
+| --- | ------------------------ | ------------------------------------------------------------------------------------------- | -------------------------- | ------------------------- |
+| 1   | **Struk Pemesanan**      | Rincian item, harga, total, metode bayar — bukti transaksi resmi                            | Printer kasir              | Konsumen                  |
+| 2   | **Struk Meja / Checker** | Nomor meja + ringkasan item (tanpa harga) — dipakai untuk pencocokan saat makanan diantar   | Printer kasir              | Konsumen (dibawa ke meja) |
+| 3   | **Struk Dapur (KOT)**    | Nomor meja + daftar item yang perlu dimasak + catatan (misal "pedas level 2") — TANPA harga | Kitchen printer (di dapur) | Dapur (tidak ke konsumen) |
 
-B-4 — Helper: Hitung total & DP nasi box
+### Alur distribusi struk:
 
-php// PesananNasiBoxService::hitungTotal($menuId, $jumlahBox)
-// Return: ['harga_per_box' => X, 'total' => Y, 'dp' => Z]
+```
+Kasir selesaikan pembayaran
+        ↓
+Sistem cetak 3 struk sekaligus (2 di printer kasir, 1 otomatis ke kitchen printer)
+        ↓
+Kasir serahkan ke konsumen: Struk Pemesanan + Struk Meja/Checker
+        ↓
+Konsumen bawa Struk Meja/Checker ke meja duduknya
+        ↓
+Pelayan/pengantar makanan mencocokkan Struk Meja/Checker (yang dipegang
+konsumen di meja) dengan pesanan yang siap diantar dari dapur,
+supaya makanan sampai ke meja yang benar
+```
 
-Ambil harga dari menus
-Total = harga × jumlah_box
-DP = ceil(total × 0.25)
+### Fungsi tiap struk secara spesifik:
 
-B-5 — Helper: Potong stok saat konfirmasi catering
+- **Struk Pemesanan** = bukti transaksi finansial untuk konsumen (kalau butuh reimburse/komplain harga)
+- **Struk Meja/Checker** = alat bantu operasional supaya pelayan tidak salah antar makanan ke meja lain, terutama saat restoran ramai dan banyak meja aktif bersamaan
+- **Struk Dapur (KOT)** = instruksi masak untuk dapur, tidak memuat info harga sama sekali
 
-php// PesananCateringService::potongStok($pesananId)
-// Return: true | array bahan yang kurang
+### Requirement teknis:
 
-Loop tiap pesanan_catering_detail → ambil menu_id_terpilih
-Ambil BOM menu tersebut dari menu_ingredients
-Hitung kebutuhan = qty_bom × jumlah_porsi pesanan
-Tambah kebutuhan komponen fixed (nasi putih, kerupuk, air mineral) × jumlah_porsi
-Bandingkan total kebutuhan vs stok saat ini
-Jika ada yang kurang → return array kekurangan (jangan potong dulu)
-Jika semua cukup → kurangi stok, catat mutasi stok, return true
+- Kasir idealnya punya 1 printer struk (untuk Struk Pemesanan & Struk Meja/Checker — bisa 2 lembar terpisah atau dari 1 printer yang sama, cetak 2x)
+- Kitchen printer terpisah secara fisik/network dari printer kasir, otomatis terima print job begitu status pembayaran = lunas
+- Struk Meja/Checker sebaiknya punya nomor meja dalam font besar/mencolok di bagian atas, supaya gampang terlihat sekilas oleh pelayan yang sedang sibuk
 
-B-6 — Helper: Potong stok saat konfirmasi nasi box
+---
 
-php// PesananNasiBoxService::potongStok($pesananId)
-// Return: true | array bahan yang kurang
+## 5. Fungsi POS Kasir (Peran sebagai Hub)
 
-Ambil menu_id dari pesanan
-Ambil BOM dari menu_ingredients
-Kebutuhan = qty_bom × jumlah_box
-Cek stok → potong atau return kekurangan
+POS Kasir bukan cuma titik transaksi, tapi juga pusat kontrol:
 
-B-7 — Controller: PesananCateringController (publik)
+1. **Transaksi langsung** — untuk tamu yang datang sendiri ke kasir / takeaway
+2. **Cari & proses tagihan meja** — dari pesanan yang sudah diinput pelayan
+3. **Peta status semua meja** — grid visual dengan warna sesuai status (kosong/menunggu_pembayaran/terisi), supaya kasir tahu meja mana yang perlu segera diproses pembayarannya
+4. **Void/refund** — kalau ada kesalahan transaksi
+5. **Rekap harian** — sumber data ke modul Laporan
 
-index() — GET /pesan/catering → load view form + data paket
-getKomponen($paketId) — GET /pesan/catering/komponen/{paketId} → return JSON komponen + opsi (untuk dynamic load)
- preview(Request) — POST /pesan/catering/preview → return JSON total tagihan (dipanggil saat form berubah, tanpa simpan ke DB)
- store(StorePesananCateringRequest) → simpan pesanan + detail + addon, generate kode pesanan, redirect ke halaman DP
- cekStatus($kodePesanan) — GET /pesan/status/{kode} → tampilkan status pesanan (publik)
+---
 
-B-8 — Controller: PesananNasiBoxController (publik)
+## 6. Struktur Data yang Disarankan
 
-index() — GET /pesan/nasi-box → load view + data varian nasi box
-preview(Request) — POST /pesan/nasi-box/preview → return JSON total + DP
-store(StorePesananNasiBoxRequest) → simpan pesanan, redirect ke halaman DP
-(Cek status pakai controller yang sama dengan catering via route /pesan/status/{kode})
+```
+tabel: meja
+- id, nomor_meja, kapasitas, status (enum: kosong/menunggu_pembayaran/terisi/reserved)
 
-B-9 — Controller: BuktiPembayaranController (publik)
+tabel: pesanan_dinein  (satu row = satu transaksi per meja, bisa lebih dari satu per hari)
+- id, meja_id, status (enum: menunggu_pembayaran/lunas/selesai), dibuka_oleh (staff_id),
+  dibuka_pada (timestamp), dibayar_pada (timestamp, nullable)
 
-store(Request) — POST /pesan/bukti → upload file, simpan ke storage, update status pesanan ke menunggu_konfirmasi
-Validasi file: mimes jpeg,png,pdf, max 2MB
-Simpan path file ke tabel bukti_pembayaran
+tabel: item_pesanan_dinein
+- id, pesanan_dinein_id, menu_id, qty, catatan (misal "pedas level 2, tanpa bawang"),
+  diinput_oleh (staff_id), diinput_pada (timestamp)
 
-BAGIAN C — Frontend: Form Catering
+tabel: pembayaran_dinein
+- id, pesanan_dinein_id, metode_bayar (enum: cash/qris/kartu), total,
+  diproses_oleh (staff_id, WAJIB role kasir), diproses_pada (timestamp),
+  status (enum: lunas/void/refund)
+```
 
-C-1 — Layout & struktur halaman /pesan/catering
+Trigger saat `pembayaran_dinein.status = lunas` tersimpan:
 
-Navbar publik (logo + link ke menu & nasi box)
-Section 1: pilih paket (card Paket A vs B, tampilkan harga & deskripsi singkat)
-Section 2: komponen (muncul setelah paket dipilih)
-Section 3: detail acara
-Section 4: layanan tambahan
-Section 5: ringkasan + total + tombol lanjut
-Mobile-responsive (single column di mobile)
+1. Update `pesanan_dinein.status` → `lunas`, isi `dibayar_pada`
+2. Generate & kirim KOT ke kitchen printer
+3. Potong stok bahan baku (bedah resep tiap `menu_id` di `item_pesanan_dinein` dikali `qty`)
+4. Update `meja.status` → `terisi`
 
-C-2 — Pilih paket (Section 1)
+---
 
-2 card: Paket A & Paket B
-Tampilkan: nama paket, harga per porsi, daftar komponen fixed sebagai preview
-Klik card → selected state (border highlight), trigger load komponen via fetch/AJAX
+## 7. UI/UX yang Dibutuhkan
 
-C-3 — Komponen dinamis (Section 2)
+1. **Halaman Peta Meja** — grid visual semua meja dengan warna sesuai status, dipakai baik oleh kasir maupun pelayan (dengan tampilan/permission berbeda sesuai role)
+2. **Halaman Input Pesanan** (kasir & pelayan) — pilih menu dari katalog (grid dengan gambar/kategori), tambahkan ke tab meja, kolom catatan per item
+3. **Halaman Kasir: Cari & Bayar Tagihan** (khusus kasir) — cari nomor meja, tampilkan rekap item, pilih metode bayar, tombol proses pembayaran & cetak struk
+4. Desain mengikuti gaya existing sistem: sidebar dark navy, konten area putih, komponen rounded dengan aksen biru untuk elemen interaktif.
 
-Fetch ke /pesan/catering/komponen/{paketId} saat paket dipilih
-Render tiap komponen:
+---
 
-fixed → tampil sebagai badge/chip (tidak bisa diklik): "Nasi putih ✓"
-choice → tampil sebagai radio group dengan label nama komponen
+## 8. Out of Scope (catat sebagai future enhancement)
 
-Urutan sesuai field urutan
-Validasi: semua choice harus dipilih sebelum bisa lanjut
-
-C-4 — Detail acara (Section 3)
-
-Input tanggal acara (date, min = hari ini + 14)
-Saat tanggal < H-14: border merah + pesan error "Pemesanan catering minimal H-14 sebelum acara"
-Input jumlah porsi (number, min 1)
-Input nama pemesan, nomor kontak, lokasi acara
-
-C-5 — Layanan tambahan (Section 4)
-
-Checkbox list dengan harga tiap item
-Saat dicentang/uncentang → panggil preview endpoint → update subtotal addon & total di Section 5
-
-C-6 — Ringkasan real-time (Section 5)
-
-Tampilkan:
-
-Subtotal menu : Rp X (harga_per_porsi × jumlah_porsi)
-Layanan tambahan : Rp Y
-Total tagihan : Rp Z
-DP yang dibayar : Rp W (50% dari total)
-
-Update otomatis saat jumlah porsi atau layanan tambahan berubah
-Tombol "Lanjut ke Pembayaran" — disabled jika ada validasi yang belum terpenuhi
-Saat tombol diklik: POST form ke /pesan/catering
-
-BAGIAN D — Frontend: Form Nasi Box
-
-D-1 — Layout halaman /pesan/nasi-box
-
-Info minimal order 10 box di bagian atas (banner/alert)
-Grid varian: Paket A / B / C sebagai card
-Tiap card: nama varian, harga per box, isi paket (list item)
-Mobile-responsive
-
-D-2 — Pilih varian
-
-Klik card → selected state
-Tampilkan harga per box yang terpilih di section ringkasan
-
-D-3 — Detail pesanan
-
-Input jumlah box (number, min 10)
-Warning real-time jika < 10: "Minimal order 10 box"
-Input tanggal acara (date, min = hari ini + 2)
-Warning jika tanggal < H+2: "Pesanan nasi box maksimal H-2 sebelum acara"
-Input nama pemesan, nomor kontak
-
-D-4 — Ringkasan real-time
-
-Tampilkan:
-
-Harga per box : Rp X
-Jumlah box : N
-Total tagihan : Rp Y
-DP yang dibayar: Rp Z (25% dari total)
-
-Update saat jumlah box berubah (perkalian di JS, tidak perlu hit server)
-Tombol "Lanjut ke Pembayaran"
-
-BAGIAN E — Halaman Pembayaran DP
-
-E-1 — Halaman instruksi DP (shared catering & nasi box)
-
-URL: /pesan/bayar/{kodePesanan}
-Tampilkan ringkasan pesanan + nominal DP
-Kode unik pesanan yang harus dicantumkan di keterangan transfer
-Pilihan metode: Transfer Bank / QRIS (tab atau radio)
-Jika Transfer Bank: tampilkan nomor rekening + nama bank + nama penerima
-Jika QRIS: placeholder dulu (integrasi payment gateway menyusul — Task 8)
-
-E-2 — Upload bukti transfer
-
-Form upload (jpg/png/pdf, max 2MB)
-Preview file sebelum submit
-POST ke /pesan/bukti
-Setelah berhasil: tampilkan halaman sukses + kode pesanan untuk cek status
-
-E-3 — Halaman cek status pesanan (/pesan/status/{kodePesanan})
-
-Input kode pesanan (jika akses langsung tanpa redirect)
-Tampilkan: status pesanan, tanggal acara, nominal DP, nominal pelunasan
-Badge status berwarna sesuai: kuning (menunggu), biru (menunggu konfirmasi), hijau (terkonfirmasi/lunas)
-Jika status terkonfirmasi: tampilkan countdown H-3 pelunasan
-Jika status menunggu_konfirmasi: tampilkan "Sedang diverifikasi oleh admin"
-
-BAGIAN F — Sisi Admin (Pemilik)
-
-F-1 — Halaman daftar pesanan catering
-
-Route: /admin/pesanan/catering (auth: Pemilik)
-Tabel: kode, nama pemesan, paket, jumlah porsi, tanggal acara, total, status
-Filter: by status, by range tanggal acara
-Baris mendekati H-3 → highlight/warning otomatis
-Klik baris → ke halaman detail (F-2)
-
-F-2 — Detail & aksi pesanan catering
-
-Tampilkan semua komponen + pilihan menu konsumen
-Layanan tambahan yang dipilih
-Preview bukti pembayaran DP
-Tombol "Verifikasi DP" → update status bukti ke verified, update pesanan ke menunggu_konfirmasi
-Tombol "Konfirmasi Pesanan" (muncul setelah DP verified):
-
-Panggil PesananCateringService::potongStok()
-Jika return array kekurangan → tampilkan modal: tabel bahan yang kurang + jumlah kekurangan + tombol "Ke Halaman Pengadaan"
-Jika return true → update status ke terkonfirmasi, tampilkan success
-
-F-3 — Halaman daftar pesanan nasi box
-
-Route: /admin/pesanan/nasi-box (auth: Pemilik)
-Sama seperti F-1 tapi untuk nasi box
-
-F-4 — Detail & aksi pesanan nasi box
-
-Sama seperti F-2 tapi potong stok menggunakan PesananNasiBoxService::potongStok()
-
-F-5 — Notifikasi dashboard H-3 (extend yang sudah ada)
-
-Pastikan notifikasi yang sudah ada di dashboard cover nasi box juga (bukan cuma catering)
-Cek query: WHERE tanggal_acara <= today + 3 AND status IN ('menunggu_konfirmasi') — berlaku untuk kedua tabel
-
-BAGIAN G — Testing
-
-G-1 — Validasi form
-
-Catering: tanggal < H-14 → ditolak di frontend + backend
-Nasi box: jumlah < 10 → ditolak
-Nasi box: tanggal < H+2 → ditolak
-Catering: ada komponen choice yang belum dipilih → ditolak
-
-G-2 — Kalkulasi total
-
-Paket A, 100 porsi, + 1 layanan tambahan → cek subtotal menu, addon, total, DP 50%
-Nasi Box B, 25 box → cek total, DP 25%
-Pastikan format Rupiah tampil benar di semua angka
-
-G-3 — Alur submit → DP → konfirmasi → potong stok
-
-Catering: submit form → redirect ke halaman DP → upload bukti → Pemilik verifikasi → Pemilik konfirmasi → stok terpotong sesuai BOM komponen yang dipilih × porsi
-Nasi box: submit → DP → konfirmasi → stok terpotong sesuai BOM varian × jumlah box
-Coba konfirmasi saat stok kurang → warning muncul, stok tidak terpotong
-
-G-4 — Status flow
-
-Pesanan tidak bisa loncat status (misal konfirmasi tanpa DP terverifikasi → harus ditolak)
-Cek status via /pesan/status/{kode} dari sisi konsumen
-
-Urutan Pengerjaan
-
-A-1 → A-2 database & model dulu
-B-1 → B-9 semua backend logic & controller
-C-1 → C-6 frontend form catering
-D-1 → D-4 frontend form nasi box (lebih cepat)
-E-1 → E-3 halaman DP & cek status
-F-1 → F-5 sisi admin
-G-1 → G-4 testing
+- Split bill per orang/per item
+- Reservasi/booking meja — TIDAK termasuk di versi ini sama sekali, jangan bangun tabel/status terkait reservasi
+- Pembayaran langsung di meja (portable payment/printer) — versi ini sengaja disentralisasi ke kasir; bisa di-extend nanti tanpa merombak struktur data di atas
+- Integrasi payment gateway spesifik — baru ditentukan metode (cash/QRIS/kartu), provider belum dipilih

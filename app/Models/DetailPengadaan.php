@@ -12,7 +12,13 @@ class DetailPengadaan extends Model
         'jumlah',
         'satuan',
         'harga_satuan',
-        'subtotal'
+        'subtotal',
+        'jumlah_estimasi',
+        'harga_estimasi',
+        'subtotal_estimasi',
+        'jumlah_real',
+        'harga_real',
+        'subtotal_real'
     ];
 
     public function pengadaan()

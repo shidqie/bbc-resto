@@ -28,9 +28,10 @@ class LandingController extends Controller
             ->where('jenis_paket', 'catering')
             ->get();
 
-        $paketNasiBox = Menu::whereHas('kategori', function($q) {
-            $q->where('nama', 'like', '%Nasi Box%');
-        })->where('status', 'tersedia')->where('jenis_menu', 'nasi_box')->get();
+        $paketNasiBox = PaketCatering::with('komponens.opsi.menu')
+            ->where('is_active', true)
+            ->where('jenis_paket', 'nasi_box')
+            ->get();
 
         return view('landing', compact('kategoris', 'semuaMenu', 'paketCatering', 'paketNasiBox'));
     }

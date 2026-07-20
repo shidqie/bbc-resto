@@ -44,7 +44,7 @@
                         @else
                             <div class="flex justify-between">
                                 <span>Varian Nasi Box</span>
-                                <span class="font-medium">{{ $pesanan->menu->nama }} ({{ $pesanan->jumlah_box }} box)</span>
+                                <span class="font-medium">{{ $pesanan->paket->nama_paket }} ({{ $pesanan->jumlah_box }} box)</span>
                             </div>
                         @endif
                         <div class="flex justify-between">
@@ -73,47 +73,82 @@
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-6">
-                {{-- Instruksi Pembayaran --}}
-                <div class="bg-surface rounded-2xl border border-primary/10 p-6 shadow-sm h-fit">
-                    <h3 class="font-serif text-lg text-primary mb-4">Instruksi Pembayaran</h3>
-                    <p class="text-sm text-body mb-4">Silakan transfer sesuai nominal DP ke rekening berikut:</p>
+            <div class="max-w-2xl mx-auto">
+                {{-- Pembayaran Midtrans --}}
+                <div class="bg-surface rounded-2xl border border-primary/10 p-6 shadow-sm text-center">
+                    <h3 class="font-serif text-2xl text-primary mb-4">Pilih Metode Pembayaran</h3>
+                    <p class="text-sm text-body mb-6">Selesaikan pembayaran secara aman dan otomatis melalui Midtrans.</p>
                     
-                    <div class="bg-primary/5 rounded-xl p-4 mb-4 border border-primary/10 text-center">
-                        <p class="text-sm font-semibold text-body mb-1">Bank BCA</p>
-                        <p class="text-2xl font-bold tracking-widest text-primary mb-1">1234 5678 90</p>
-                        <p class="text-sm text-secondary">a.n. Saung Babakan Cinta</p>
-                    </div>
-                    
-                    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs p-3 rounded-xl flex gap-2">
-                        <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        <p>Mohon cantumkan <strong>Kode Pesanan</strong> pada berita acara transfer untuk memudahkan proses verifikasi.</p>
-                    </div>
-                </div>
+                    <div id="snap-container" class="w-full"></div>
 
-                {{-- Form Upload Bukti --}}
-                <div class="bg-surface rounded-2xl border border-primary/10 p-6 shadow-sm">
-                    <h3 class="font-serif text-lg text-primary mb-4">Konfirmasi Pembayaran</h3>
-                    
-                    <form action="{{ route('pesanan.bukti.store') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        <input type="hidden" name="kode_pesanan" value="{{ $pesanan->kode_pesanan }}">
-                        <input type="hidden" name="jenis_pembayaran" value="dp">
-                        
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold text-body mb-2">Upload Bukti Transfer</label>
-                            <input type="file" name="file_bukti" accept=".jpg,.jpeg,.png,.pdf" required
-                                   class="w-full text-sm text-body file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20">
-                            <p class="text-xs text-secondary mt-2">Format: JPG, PNG, PDF. Maks 2MB.</p>
+                    @if(config('app.env') === 'local')
+                        <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
+                            <p class="text-sm text-yellow-800 font-bold mb-2">🛠️ Mode Developer (Localhost)</p>
+                            <p class="text-xs text-yellow-700 mb-3">Karena webhook otomatis Midtrans tidak bisa masuk ke localhost, silakan klik tombol di bawah ini jika kamu sudah menyelesaikan pembayaran di simulator agar status pesanan berubah.</p>
+                            <button onclick="triggerLocalhostSuccess()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition-colors text-sm">
+                                Simulasikan Webhook Sukses
+                            </button>
                         </div>
-                        
-                        <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 rounded-xl transition-all duration-200">
-                            Kirim Bukti Pembayaran
-                        </button>
-                    </form>
+                    @endif
                 </div>
             </div>
 
         </div>
     </section>
+
+    @push('scripts')
+    <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            snap.embed('{{ $pesanan->snap_token }}', {
+                embedId: 'snap-container',
+                onSuccess: function (result) {
+                    // Fallback khusus localhost karena webhook Midtrans tidak bisa menembus PC lokal
+                    fetch('/api/midtrans/localhost-fallback', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ kode_pesanan: '{{ $pesanan->kode_pesanan }}' })
+                    }).then(() => {
+                        window.location.href = "{{ route('pesanan.status', $pesanan->kode_pesanan) }}";
+                    });
+                },
+                onPending: function (result) {
+                    // Fallback khusus localhost untuk mempermudah testing meskipun statusnya masih pending
+                    fetch('/api/midtrans/localhost-fallback', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ kode_pesanan: '{{ $pesanan->kode_pesanan }}' })
+                    }).then(() => {
+                        window.location.href = "{{ route('pesanan.status', $pesanan->kode_pesanan) }}";
+                    });
+                },
+                onError: function (result) {
+                    alert("Pembayaran gagal!");
+                },
+                onClose: function () {
+                    // Canceled
+                }
+            });
+        });
+
+        function triggerLocalhostSuccess() {
+            fetch('/api/midtrans/localhost-fallback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ kode_pesanan: '{{ $pesanan->kode_pesanan }}' })
+            }).then(() => {
+                window.location.href = "{{ route('pesanan.status', $pesanan->kode_pesanan) }}";
+            });
+        }
+    </script>
+    @endpush
 </x-layouts.landing>

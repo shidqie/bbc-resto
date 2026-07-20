@@ -18,9 +18,15 @@
         </div>
 
         <!-- Password -->
-        <div class="mt-5">
+        <div class="mt-5" x-data="{ show: false }">
             <label for="password" class="block font-medium text-sm text-gray-300 mb-2">Password</label>
-            <x-ui.input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••" />
+            <div class="relative">
+                <input id="password" :type="show ? 'text' : 'password'" name="password" required autocomplete="current-password" placeholder="••••••••" class="block w-full rounded-xl border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-500 shadow-sm focus:border-primary focus:bg-gray-700 focus:ring-4 focus:ring-primary/10 transition-all duration-300 outline-none text-sm sm:text-base">
+                <button type="button" @click="show = !show" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none">
+                    <i class="fa-solid fa-eye" x-show="!show"></i>
+                    <i class="fa-solid fa-eye-slash" x-show="show" style="display: none;"></i>
+                </button>
+            </div>
             <x-input-error :messages="$errors->get('password')" class="mt-2 text-danger" />
         </div>
 
@@ -32,21 +38,21 @@
             </label>
 
             @if (Route::has('password.request'))
-                <a class="text-sm text-primary hover:text-white transition-colors" href="{{ route('password.request') }}">
+                <a class="text-sm text-green-400 hover:text-green-300 transition-colors" href="{{ route('password.request') }}">
                     Lupa password?
                 </a>
             @endif
         </div>
 
         <div class="mt-8">
-            <x-ui.button type="submit" class="w-full py-3 text-base justify-center">
+            <button type="submit" class="w-full py-3 px-4 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl shadow-lg shadow-green-500/30 transition-all duration-300 flex justify-center items-center">
                 Log In
-            </x-ui.button>
+            </button>
         </div>
         
         <div class="mt-6 text-center text-sm text-gray-400">
             Belum punya akun? 
-            <a href="{{ route('register') }}" class="text-primary hover:text-white transition-colors font-medium">Daftar sekarang</a>
+            <a href="{{ route('register') }}" class="text-green-400 hover:text-green-300 transition-colors font-medium">Daftar sekarang</a>
         </div>
     </form>
 </x-guest-layout>
