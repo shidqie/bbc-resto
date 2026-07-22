@@ -39,6 +39,11 @@ class DineInPaymentController extends Controller
             $totalTagihan += ($item->qty * $item->menu->harga);
         }
 
+        if (!$pesanan->snap_token && $totalTagihan > 0) {
+            $snapToken = \App\Http\Controllers\MidtransController::generateSnapToken($pesanan);
+            // $pesanan->snap_token already updated inside generateSnapToken
+        }
+
         return view('pos.dinein.checkout', compact('meja', 'pesanan', 'totalTagihan'));
     }
 
@@ -58,10 +63,16 @@ class DineInPaymentController extends Controller
                 auth()->id()
             );
 
-            // Redirect ke POS dengan flash message untuk buka modal struk
+            if ($request->metode_bayar == 'cash') {
+                return redirect()->route('pos.dinein.index')
+                                 ->with('print_nota_id', $request->pesanan_id)
+                                 ->with('success', 'Pembayaran tunai berhasil! Silakan cetak nota.');
+            }
+
+            // Jika qris/kartu dari Midtrans Popup berhasil:
             return redirect()->route('pos.dinein.index')
-                             ->with('print_receipt_id', $request->pesanan_id)
-                             ->with('success', 'Pembayaran berhasil! Silakan cetak struk.');
+                             ->with('print_nota_id', $request->pesanan_id)
+                             ->with('success', 'Pembayaran non-tunai berhasil diverifikasi! Silakan cetak nota.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

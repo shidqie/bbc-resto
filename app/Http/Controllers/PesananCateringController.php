@@ -171,8 +171,36 @@ class PesananCateringController extends Controller
     /** GET /admin/pesanan/catering/{id} */
     public function show(PesananCatering $pesanan)
     {
-        $pesanan->load(['paket.komponens.opsi.menu', 'details.komponen', 'details.menu', 'addons.layananTambahan', 'buktiPembayarans']);
-        return view('admin.pesanan.catering.show', compact('pesanan'));
+        $pesanan->load([
+            'paket.komponens.opsi.menu', 
+            'details.komponen', 
+            'details.menu.resep.bahanBaku.satuan', 
+            'addons.layananTambahan', 
+            'buktiPembayarans'
+        ]);
+
+        // Hitung kebutuhan BOM Bahan Baku khusus pesanan catering ini
+        $kebutuhanBahan = [];
+        foreach ($pesanan->details as $detail) {
+            if ($detail->menu && $detail->menu->resep) {
+                foreach ($detail->menu->resep as $resep) {
+                    $bahanId = $resep->bahan_baku_id;
+                    $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_porsi;
+                    if (!isset($kebutuhanBahan[$bahanId])) {
+                        $kebutuhanBahan[$bahanId] = [
+                            'bahan_id' => $bahanId,
+                            'nama_bahan' => $resep->bahanBaku->nama_bahan ?? 'Bahan Baku',
+                            'satuan' => $resep->bahanBaku->satuan->nama_satuan ?? '',
+                            'stok_sekarang' => $resep->bahanBaku->stok ?? 0,
+                            'total_kebutuhan' => 0,
+                        ];
+                    }
+                    $kebutuhanBahan[$bahanId]['total_kebutuhan'] += $qty;
+                }
+            }
+        }
+
+        return view('admin.pesanan.catering.show', compact('pesanan', 'kebutuhanBahan'));
     }
 
     /** PATCH /admin/pesanan/catering/{id}/verifikasi-dp */

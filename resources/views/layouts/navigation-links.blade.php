@@ -1,5 +1,5 @@
 @php
-    $role = auth()->user()?->role?->nama ?? 'pemilik'; // Default placeholder
+    $role = auth()->user()?->role?->name ?? 'Pemilik'; // Default placeholder
     $isMobile = $mobile ?? false;
 
     // Helper function for active state

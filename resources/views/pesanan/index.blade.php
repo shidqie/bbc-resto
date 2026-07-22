@@ -9,7 +9,7 @@
     <div class="p-4 md:p-6 lg:p-8 max-w-[1200px] mx-auto space-y-6">
         
         {{-- Header --}}
-        <x-ui.page-header title="Daftar Pesanan" subtitle="Kelola seluruh transaksi pesanan pelanggan">
+        <x-ui.page-header title="Daftar Pesanan Dine-In" subtitle="Kelola seluruh transaksi pesanan dine-in pelanggan">
             <x-slot:actions>
                 <x-ui.button href="{{ route('pos.dinein.index') }}" icon="fa-plus">Pesanan Baru</x-ui.button>
             </x-slot:actions>
@@ -37,7 +37,6 @@
                     <select name="jenis" onchange="this.form.submit()" class="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm bg-white min-w-[150px]">
                         <option value="">Semua Jenis</option>
                         <option value="dine_in" {{ request('jenis') == 'dine_in' ? 'selected' : '' }}>Dine In</option>
-                        <option value="take_away" {{ request('jenis') == 'take_away' ? 'selected' : '' }}>Take Away</option>
                         <option value="catering" {{ request('jenis') == 'catering' ? 'selected' : '' }}>Catering</option>
                         <option value="nasi_box" {{ request('jenis') == 'nasi_box' ? 'selected' : '' }}>Nasi Box</option>
                     </select>

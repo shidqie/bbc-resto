@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Mutasi Stok</title>
+    <title>Laporan Persediaan Bahan Baku</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,7 +16,7 @@
         }
         .header h2 {
             margin: 0 0 5px 0;
-            color: #16A34A; /* Hijau */
+            color: #0F2E23; /* Hijau BBC Resto */
         }
         .header p {
             margin: 0;
@@ -47,7 +47,7 @@
 <body>
     <div class="header">
         <h2>SAUNG BABAKAN CINTA (BBC RESTO)</h2>
-        <p>Laporan Penggunaan & Mutasi Bahan Baku</p>
+        <p>Laporan Persediaan & Mutasi Bahan Baku</p>
         <p>Periode: {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</p>
     </div>
 

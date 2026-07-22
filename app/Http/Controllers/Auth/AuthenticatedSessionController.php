@@ -25,16 +25,22 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-        $request->session()->regenerate();
 
         $user = \Illuminate\Support\Facades\Auth::user();
         $role = $user->role->name ?? '';
 
-        if ($role === 'Konsumen') {
-            return redirect()->intended(route('member.dashboard', absolute: false));
+        if ($role !== 'Konsumen') {
+            \Illuminate\Support\Facades\Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'login' => 'Silakan gunakan Portal Admin untuk masuk sebagai Karyawan/Staff.',
+            ]);
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $request->session()->regenerate();
+        return redirect()->intended(route('member.dashboard', absolute: false));
     }
 
     /**

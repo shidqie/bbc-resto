@@ -7,6 +7,7 @@ use Midtrans\Config;
 use Midtrans\Snap;
 use App\Models\PesananCatering;
 use App\Models\PesananNasiBox;
+use App\Models\PesananDinein;
 use Illuminate\Support\Facades\Log;
 
 class MidtransController extends Controller
@@ -26,22 +27,35 @@ class MidtransController extends Controller
         Config::$isSanitized = config('midtrans.is_sanitized');
         Config::$is3ds = config('midtrans.is_3ds');
 
-        // We use dp_amount if status is menunggu_dp, else total_tagihan if lunas/etc.
-        // Based on the DB structure, payment is usually DP first.
-        $gross_amount = $order->dp_amount;
-        if($order->status == 'menunggu_pelunasan' || $order->status == 'terkonfirmasi') {
-             // For simplicity, we just charge dp_amount. 
-             // In a full implementation, pelunasan logic handles the rest.
+        $gross_amount = 0;
+        $order_id_prefix = $order->kode_pesanan;
+
+        if ($order instanceof \App\Models\PesananDinein) {
+            // Untuk Dine-In, hitung total tagihan dari item
+            foreach ($order->items as $item) {
+                $gross_amount += ($item->qty * $item->menu->harga);
+            }
+            $firstName = $order->nama_konsumen ?? 'Pelanggan Dine-In';
+            $phone = '080000000000'; // Dummy phone since dine-in might not have it
+        } else {
+            // We use dp_amount if status is menunggu_dp, else total_tagihan if lunas/etc.
+            $gross_amount = $order->dp_amount;
+            if($order->status == 'menunggu_pelunasan' || $order->status == 'terkonfirmasi') {
+                 // For simplicity, we just charge dp_amount. 
+                 // In a full implementation, pelunasan logic handles the rest.
+            }
+            $firstName = $order->nama_pemesan;
+            $phone = $order->kontak;
         }
 
         $params = [
             'transaction_details' => [
-                'order_id' => $order->kode_pesanan . '-' . time(), // append time to avoid duplicate order id on midtrans if retried
+                'order_id' => $order_id_prefix . '-' . time(), // append time to avoid duplicate order id on midtrans if retried
                 'gross_amount' => $gross_amount,
             ],
             'customer_details' => [
-                'first_name' => $order->nama_pemesan,
-                'phone' => $order->kontak,
+                'first_name' => $firstName,
+                'phone' => $phone,
             ],
         ];
 
@@ -77,6 +91,8 @@ class MidtransController extends Controller
             $order = PesananCatering::where('kode_pesanan', $orderId)->first();
         } else if (strpos($orderId, 'NBX') === 0) {
             $order = PesananNasiBox::where('kode_pesanan', $orderId)->first();
+        } else if (strpos($orderId, 'DIN') === 0) {
+            $order = PesananDinein::with('items.menu')->where('kode_pesanan', $orderId)->first();
         }
 
         if (!$order) {
@@ -93,6 +109,19 @@ class MidtransController extends Controller
                     \App\Services\PesananCateringService::potongStok($order);
                 } else if ($order instanceof \App\Models\PesananNasiBox) {
                     \App\Services\PesananNasiBoxService::potongStok($order);
+                } else if ($order instanceof \App\Models\PesananDinein) {
+                    // Stok sudah dipotong saat input order, cukup catat pembayaran
+                    $totalHarga = 0;
+                    foreach ($order->items as $item) {
+                        $totalHarga += ($item->qty * $item->menu->harga);
+                    }
+                    
+                    app(\App\Services\DineInService::class)->prosesPembayaran(
+                        $order->id,
+                        'qris', // Default to qris or get from midtrans
+                        $totalHarga,
+                        $order->dibuka_oleh
+                    );
                 }
 
                 // Send Email Notification

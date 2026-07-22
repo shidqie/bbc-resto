@@ -15,23 +15,57 @@
         <x-ui.alert />
 
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-            <h2 class="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">Informasi Acara Catering</h2>
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                <h2 class="text-base font-extrabold text-[#0F2E23]">Informasi Order Pengadaan ({{ $pengadaan->jenis_label }})</h2>
+                @if($pengadaan->status === 'diterima')
+                    <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-200">✓ Barang Diterima & Stok Diperbarui</span>
+                @elseif($pengadaan->status === 'dibatalkan')
+                    <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-red-100 text-red-900 border border-red-200">✕ Pengadaan Dibatalkan</span>
+                @else
+                    <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300">⏳ Pending Penerimaan Supplier</span>
+                @endif
+            </div>
+
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                    <div class="text-xs text-gray-500">Kode PO</div>
-                    <div class="font-bold text-gray-900">{{ $pengadaan->kode_pengadaan }}</div>
+                    <div class="text-xs text-gray-500 font-bold uppercase">Kode PO</div>
+                    <div class="font-mono font-bold text-gray-900">{{ $pengadaan->kode_pengadaan }}</div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-500">Pesanan Catering</div>
-                    <div class="font-bold text-[#3B82F6]">{{ $pengadaan->pesananCatering->nama_pemesan ?? '-' }}</div>
+                    <div class="text-xs text-gray-500 font-bold uppercase">Pesanan Terkait</div>
+                    <div class="font-bold text-[#0F2E23]">
+                        @if($pengadaan->pesananCatering)
+                            Catering: {{ $pengadaan->pesananCatering->nama_pemesan }}
+                        @elseif($pengadaan->pesananNasiBox)
+                            Nasi Box: {{ $pengadaan->pesananNasiBox->nama_pemesan }}
+                        @else
+                            Pengadaan Umum
+                        @endif
+                    </div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-500">Tanggal Acara</div>
-                    <div class="font-bold text-gray-900">{{ $pengadaan->pesananCatering ? $pengadaan->pesananCatering->tanggal_acara->format('d M Y') : '-' }}</div>
+                    <div class="text-xs text-gray-500 font-bold uppercase">Tanggal Acara</div>
+                    <div class="font-bold text-gray-900">
+                        @if($pengadaan->pesananCatering)
+                            {{ $pengadaan->pesananCatering->tanggal_acara->format('d M Y') }}
+                        @elseif($pengadaan->pesananNasiBox)
+                            {{ \Carbon\Carbon::parse($pengadaan->pesananNasiBox->tanggal_acara)->format('d M Y') }}
+                        @else
+                            -
+                        @endif
+                    </div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-500">Porsi</div>
-                    <div class="font-bold text-gray-900">{{ $pengadaan->pesananCatering->jumlah_porsi ?? 0 }} Pax</div>
+                    <div class="text-xs text-gray-500 font-bold uppercase">Jumlah Order</div>
+                    <div class="font-extrabold text-gray-900">
+                        @if($pengadaan->pesananCatering)
+                            {{ $pengadaan->pesananCatering->jumlah_porsi }} Porsi
+                        @elseif($pengadaan->pesananNasiBox)
+                            {{ $pengadaan->pesananNasiBox->jumlah_box }} Box
+                        @else
+                            -
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

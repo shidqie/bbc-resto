@@ -11,6 +11,9 @@ Route::post('/pesan/catering', [\App\Http\Controllers\PesananCateringController:
 Route::get('/pesan/catering/komponen/{paketId}', [\App\Http\Controllers\PesananCateringController::class, 'getKomponen'])->name('pesan.catering.komponen');
 Route::post('/pesan/catering/preview', [\App\Http\Controllers\PesananCateringController::class, 'preview'])->name('pesan.catering.preview');
 
+// ─── PUBLIK — QR Menu ───────────────────────────────────────────────────
+Route::get('/qr-menu', [\App\Http\Controllers\QrMenuController::class, 'index'])->name('qr.menu');
+
 // ─── PUBLIK — Form Nasi Box ───────────────────────────────────────────────────
 Route::get('/pesan/nasi-box', [\App\Http\Controllers\PesananNasiBoxController::class, 'create'])->name('pesan.nasibox');
 Route::post('/pesan/nasi-box', [\App\Http\Controllers\PesananNasiBoxController::class, 'store'])->name('pesan.nasibox.store');
@@ -54,54 +57,56 @@ Route::middleware('auth')->group(function () {
         Route::resource('products', \App\Http\Controllers\ProductController::class)->except(['create', 'show', 'edit']);
     });
 
-    // Route Manajer (Gudang, Menu & Semua Laporan) - Admin otomatis bisa akses
-    Route::middleware(['role:Manajer'])->group(function () {
+    // ─── MASTER DATA (Menu, Bahan Baku, Paket) ───
+    Route::middleware(['role:Manajer,Pemilik'])->group(function () {
         Route::resource('bahan-baku', \App\Http\Controllers\BahanBakuController::class);
+        Route::resource('kategori-menu', \App\Http\Controllers\KategoriMenuController::class)->except(['create', 'show', 'edit']);
+        Route::resource('menu', \App\Http\Controllers\MenuController::class);
+        Route::patch('/menu/{menu}/toggle', [\App\Http\Controllers\MenuController::class, 'toggleStatus'])->name('menu.toggle');
+        Route::get('/menu/{menu}/resep/create', [\App\Http\Controllers\ResepController::class, 'create'])->name('resep.create');
+        Route::post('/menu/{menu}/resep', [\App\Http\Controllers\ResepController::class, 'store'])->name('resep.store');
+        
+        Route::resource('paket-catering', \App\Http\Controllers\PaketCateringController::class);
+        Route::patch('/paket-catering/{paketCatering}/toggle', [\App\Http\Controllers\PaketCateringController::class, 'toggleActive'])->name('paket-catering.toggle');
+    });
+
+    // ─── PENGGUNAAN BAHAN BAKU HARIAN ───
+    Route::middleware(['role:Manajer,Tim Dapur'])->group(function () {
         Route::get('/mutasi-stok', [\App\Http\Controllers\MutasiStokController::class, 'index'])->name('mutasi-stok.index');
         Route::get('/stok-menipis', [\App\Http\Controllers\StokMenipisController::class, 'index'])->name('stok-menipis.index');
-        
-        // Pengadaan Routes
+    });
+
+    // ─── PENGADAAN & MANAJEMEN PESANAN ───
+    Route::middleware(['role:Pemilik'])->group(function () {
+        // Pengadaan
         Route::resource('pengadaan', \App\Http\Controllers\PengadaanController::class)->except(['edit', 'update', 'destroy']);
         Route::patch('/pengadaan/{pengadaan}/status', [\App\Http\Controllers\PengadaanController::class, 'updateStatus'])->name('pengadaan.update-status');
         Route::post('/pengadaan/{pengadaan}/realisasi', [\App\Http\Controllers\PengadaanController::class, 'realisasi'])->name('pengadaan.realisasi');
         
-        // Menu & Resep Routes
-        Route::resource('kategori-menu', \App\Http\Controllers\KategoriMenuController::class)->except(['create', 'show', 'edit']);
-        Route::resource('menu', \App\Http\Controllers\MenuController::class);
-        Route::get('/menu/{menu}/resep/create', [\App\Http\Controllers\ResepController::class, 'create'])->name('resep.create');
-        Route::post('/menu/{menu}/resep', [\App\Http\Controllers\ResepController::class, 'store'])->name('resep.store');
-
-        // Laporan Stok (Hanya Manajer & Admin)
-        Route::get('/laporan/stok', [\App\Http\Controllers\LaporanController::class, 'stok'])->name('laporan.stok');
-        Route::get('/laporan/stok/cetak', [\App\Http\Controllers\LaporanController::class, 'cetakStok'])->name('laporan.stok.cetak');
-
-        // Paket Catering & Nasi Box CRUD
-        Route::resource('paket-catering', \App\Http\Controllers\PaketCateringController::class);
-        Route::patch('/paket-catering/{paketCatering}/toggle', [\App\Http\Controllers\PaketCateringController::class, 'toggleActive'])->name('paket-catering.toggle');
-
-        // Manajemen Pesanan Catering (Admin — new schema)
+        // Pesanan Catering
         Route::get('/admin/pesanan/catering', [\App\Http\Controllers\PesananCateringController::class, 'index'])->name('admin.pesanan.catering.index');
         Route::get('/admin/pesanan/catering/{pesanan}', [\App\Http\Controllers\PesananCateringController::class, 'show'])->name('admin.pesanan.catering.show');
         Route::patch('/admin/pesanan/catering/{pesanan}/konfirmasi', [\App\Http\Controllers\PesananCateringController::class, 'konfirmasi'])->name('admin.pesanan.catering.konfirmasi');
         Route::patch('/admin/pesanan/catering/{pesanan}/update-status', [\App\Http\Controllers\PesananCateringController::class, 'updateStatus'])->name('admin.pesanan.catering.update-status');
         Route::patch('/admin/bukti/{buktiId}/verifikasi-dp', [\App\Http\Controllers\PesananCateringController::class, 'verifikasiDp'])->name('admin.bukti.verifikasi-dp');
 
-        // Manajemen Pesanan Nasi Box (Admin)
+        // Pesanan Nasi Box
         Route::get('/admin/pesanan/nasi-box', [\App\Http\Controllers\PesananNasiBoxController::class, 'index'])->name('admin.pesanan.nasibox.index');
         Route::get('/admin/pesanan/nasi-box/{pesanan}', [\App\Http\Controllers\PesananNasiBoxController::class, 'show'])->name('admin.pesanan.nasibox.show');
         Route::patch('/admin/pesanan/nasi-box/{pesanan}/konfirmasi', [\App\Http\Controllers\PesananNasiBoxController::class, 'konfirmasi'])->name('admin.pesanan.nasibox.konfirmasi');
         Route::patch('/admin/pesanan/nasi-box/{pesanan}/update-status', [\App\Http\Controllers\PesananNasiBoxController::class, 'updateStatus'])->name('admin.pesanan.nasibox.update-status');
-
-        // Manajemen Jadwal Pengantaran (Admin & Manajer)
-        Route::get('/admin/jadwal', [\App\Http\Controllers\JadwalPengantaranController::class, 'index'])->name('admin.jadwal.index');
-        Route::patch('/admin/jadwal/{jenis}/{id}/status', [\App\Http\Controllers\JadwalPengantaranController::class, 'updateStatus'])->name('admin.jadwal.update-status');
-
     });
 
-    // Route Kasir (POS, Pembayaran, Laporan Penjualan) - Admin & Manajer otomatis bisa akses (karena Manajer butuh laporan penjualan juga)
-    // TAPI tunggu, Kasir itu role tersendiri. Manajer tidak punya akses ke Kasir routes secara default kecuali kita tambahkan.
-    // Solusi: Buat group gabungan untuk Laporan Penjualan yang bisa diakses Kasir dan Manajer.
-    Route::middleware(['role:Kasir,Manajer'])->group(function () {
+    // ─── JADWAL PENGANTARAN ───
+    Route::middleware(['role:Tim Pengantaran'])->group(function () {
+        Route::get('/admin/jadwal', [\App\Http\Controllers\JadwalPengantaranController::class, 'index'])->name('admin.jadwal.index');
+        Route::patch('/admin/jadwal/{jenis}/{id}/status', [\App\Http\Controllers\JadwalPengantaranController::class, 'updateStatus'])->name('admin.jadwal.update-status');
+    });
+
+    // ─── LAPORAN ───
+    Route::middleware(['role:Manajer,Pemilik'])->group(function () {
+        Route::get('/laporan/stok', [\App\Http\Controllers\LaporanController::class, 'stok'])->name('laporan.stok');
+        Route::get('/laporan/stok/cetak', [\App\Http\Controllers\LaporanController::class, 'cetakStok'])->name('laporan.stok.cetak');
         Route::get('/laporan/penjualan', [\App\Http\Controllers\LaporanController::class, 'penjualan'])->name('laporan.penjualan');
         Route::get('/laporan/penjualan/cetak', [\App\Http\Controllers\LaporanController::class, 'cetakPenjualan'])->name('laporan.penjualan.cetak');
         Route::get('/laporan/catering', [\App\Http\Controllers\LaporanController::class, 'catering'])->name('laporan.catering');
@@ -110,23 +115,30 @@ Route::middleware('auth')->group(function () {
         Route::get('/laporan/nasi-box/cetak', [\App\Http\Controllers\LaporanController::class, 'cetakNasiBox'])->name('laporan.nasibox.cetak');
     });
 
-    Route::middleware(['role:Kasir,Admin'])->group(function () {
-        Route::resource('pesanan', \App\Http\Controllers\PesananController::class)->except(['create', 'edit', 'update', 'destroy']);
-        Route::patch('/pesanan/{pesanan}/status', [\App\Http\Controllers\PesananController::class, 'updateStatus'])
-            ->name('pesanan.update-status');
-        Route::get('/pesanan/{pesanan}/cetak/{type}', [\App\Http\Controllers\PesananController::class, 'cetak'])->name('pesanan.cetak');
-        
-        // POS Dine-In: Kasir Payment (Admin bisa masuk melalui role check/gate atau biarkan eksplisit)
-        Route::get('/pos/dinein/meja/{meja}/checkout', [\App\Http\Controllers\Pos\DineInPaymentController::class, 'checkout'])->name('pos.dinein.checkout');
-        Route::post('/pos/dinein/meja/{meja}/checkout', [\App\Http\Controllers\Pos\DineInPaymentController::class, 'processPayment'])->name('pos.dinein.processPayment');
-        Route::get('/pos/dinein/pesanan/{pesananId}/receipts', [\App\Http\Controllers\Pos\DineInPaymentController::class, 'receipts'])->name('pos.dinein.receipts');
-    });
-
-    // POS Dine-In: Kasir & Pelayan
-    Route::middleware(['role:Kasir,Pelayan,Admin'])->group(function () {
+    // ─── KASIR & MANAJEMEN (DINE-IN & PESANAN) ───
+    Route::middleware(['role:Kasir,Manajer,Pemilik'])->group(function () {
+        // Dine-In Table Management
         Route::get('/pos/dinein', [\App\Http\Controllers\Pos\DineInController::class, 'index'])->name('pos.dinein.index');
         Route::post('/pos/dinein/store', [\App\Http\Controllers\Pos\DineInController::class, 'storePosOrder'])->name('pos.dinein.store-pos');
         Route::patch('/pos/dinein/meja/{meja}/clear', [\App\Http\Controllers\Pos\DineInController::class, 'clearTable'])->name('pos.dinein.clear-table');
+        
+        // Kas Modal Awal & Shift Kasir
+        Route::post('/pos/shift/buka', [\App\Http\Controllers\Pos\DineInController::class, 'bukaShift'])->name('pos.shift.buka');
+        Route::post('/pos/shift/tutup', [\App\Http\Controllers\Pos\DineInController::class, 'tutupShift'])->name('pos.shift.tutup');
+        
+        // Dine-In Checkout / Payment
+        Route::get('/pos/dinein/meja/{meja}/checkout', [\App\Http\Controllers\Pos\DineInPaymentController::class, 'checkout'])->name('pos.dinein.checkout');
+        Route::post('/pos/dinein/meja/{meja}/checkout', [\App\Http\Controllers\Pos\DineInPaymentController::class, 'processPayment'])->name('pos.dinein.processPayment');
+        
+        // Cetak Struk Dine In
+        Route::get('/pos/dinein/pesanan/{pesananId}/print-dapur', [\App\Http\Controllers\Pos\DineInController::class, 'printDapur'])->name('pos.dinein.print-dapur');
+        Route::get('/pos/dinein/pesanan/{pesananId}/print-meja', [\App\Http\Controllers\Pos\DineInController::class, 'printMeja'])->name('pos.dinein.print-meja');
+        Route::get('/pos/dinein/pesanan/{pesananId}/print-nota', [\App\Http\Controllers\Pos\DineInController::class, 'printNota'])->name('pos.dinein.print-nota');
+        
+        // Pesanan CRUD (Update Status)
+        Route::resource('pesanan', \App\Http\Controllers\PesananController::class)->except(['create', 'edit', 'update', 'destroy']);
+        Route::patch('/pesanan/{pesanan}/status', [\App\Http\Controllers\PesananController::class, 'updateStatus'])->name('pesanan.update-status');
+        Route::get('/pesanan/{pesanan}/cetak/{type}', [\App\Http\Controllers\PesananController::class, 'cetak'])->name('pesanan.cetak');
     });
 
     // Keep dummy route for other dummy pages
@@ -168,24 +180,40 @@ Route::post('/api/midtrans/localhost-fallback', function(\Illuminate\Http\Reques
     $order = null;
     if (strpos($kode, 'CTR') === 0) {
         $order = \App\Models\PesananCatering::where('kode_pesanan', $kode)->first();
-    } else {
+    } else if (strpos($kode, 'NBX') === 0) {
         $order = \App\Models\PesananNasiBox::where('kode_pesanan', $kode)->first();
+    } else if (strpos($kode, 'DIN') === 0) {
+        $order = \App\Models\PesananDinein::with('items.menu')->where('kode_pesanan', $kode)->first();
     }
 
     if ($order && $order->status !== 'terkonfirmasi' && $order->status !== 'diproses' && $order->status !== 'dikirim' && $order->status !== 'selesai' && $order->status !== 'lunas') {
-        $order->update(['status' => 'terkonfirmasi']);
         
-        if ($order instanceof \App\Models\PesananCatering) {
-            \App\Services\PesananCateringService::potongStok($order);
-        } else if ($order instanceof \App\Models\PesananNasiBox) {
-            \App\Services\PesananNasiBoxService::potongStok($order);
-        }
+        if ($order instanceof \App\Models\PesananDinein) {
+            $totalHarga = 0;
+            foreach ($order->items as $item) {
+                $totalHarga += ($item->qty * $item->menu->harga);
+            }
+            app(\App\Services\DineInService::class)->prosesPembayaran(
+                $order->id,
+                'qris',
+                $totalHarga,
+                $order->dibuka_oleh
+            );
+        } else {
+            $order->update(['status' => 'terkonfirmasi']);
+            
+            if ($order instanceof \App\Models\PesananCatering) {
+                \App\Services\PesananCateringService::potongStok($order);
+            } else if ($order instanceof \App\Models\PesananNasiBox) {
+                \App\Services\PesananNasiBoxService::potongStok($order);
+            }
 
-        if ($order->email) {
-            try {
-                \Illuminate\Support\Facades\Mail::to($order->email)->send(new \App\Mail\PaymentReceiptMail($order));
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Localhost Fallback Email Error: ' . $e->getMessage());
+            if ($order->email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($order->email)->send(new \App\Mail\PaymentReceiptMail($order));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Localhost Fallback Email Error: ' . $e->getMessage());
+                }
             }
         }
     }

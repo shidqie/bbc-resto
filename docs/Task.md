@@ -1,194 +1,138 @@
-# Prompt: Bangun Fitur POS Dine In — Sistem Katering & Nasi Box (SBC)
+# PRD: Sistem POS Restoran dengan QR Menu Digital
 
-## Konteks Proyek
-
-Aplikasi ini adalah sistem manajemen restoran/katering bernama **SBC** dengan modul yang sudah ada: Dashboard, POS Kasir, Pesanan, Pesanan Khusus, Menu, Bahan Baku, Pengadaan, Laporan, dan Pengguna (Data Pegawai & Data Pelanggan). Sistem ini melayani 3 jenis transaksi: **Dine In**, **Nasi Box**, dan **Catering**, masing-masing dengan alur bisnis berbeda.
-
-Tugas kamu: implementasikan modul **POS Dine In** sesuai spesifikasi di bawah, terintegrasi dengan modul Bahan Baku (potong stok) dan Pengguna (role & permission) yang sudah ada.
+**Versi:** 1.0
+**Tanggal:** 21 Juli 2026
+**Status:** Draft
 
 ---
 
-## 1. Model Bisnis: Bayar Dulu, Terpusat di Kasir
+## 1. Latar Belakang
 
-Dine In di sistem ini pakai **Model A (pay first)**, TAPI dengan pembagian tugas berikut:
+Restoran membutuhkan sistem pemesanan yang menggabungkan kenyamanan menu digital (QR code) dengan pengalaman layanan manual melalui pelayan, tanpa menghilangkan sentuhan personal antara pelayan dan konsumen. Selain itu, sistem perlu menjamin akurasi pesanan sampai ke dapur, mencegah kesalahan antar makanan, serta secara otomatis mengelola stok bahan baku setiap kali transaksi terjadi.
 
-- **Input pesanan**: FLEKSIBEL, bisa dilakukan oleh Kasir maupun Pelayan (dari tablet/HP masing-masing)
-- **Pembayaran**: TERPUSAT, hanya bisa diproses di satu titik yaitu Kasir
+## 2. Tujuan
 
-Pesanan **tidak** dikirim ke dapur sebelum pembayaran selesai. Ini pilihan sadar demi kontrol keuangan yang ketat (semua uang lewat satu pintu), dengan trade-off tamu/pelayan tetap perlu ke kasir untuk menuntaskan pembayaran.
+- Menyediakan menu digital via QR code sebagai katalog interaktif bagi konsumen.
+- Memastikan pesanan konsumen tercatat akurat dari pelayan hingga ke sistem.
+- Mencegah kesalahan antar makanan melalui mekanisme verifikasi di meja.
+- Mengotomasi pengurangan stok bahan baku berdasarkan resep tiap menu.
+- Menghasilkan 3 jenis struk dengan fungsi berbeda: struk dapur, struk meja (konsumen), dan struk pembayaran (nota).
 
----
+## 3. Aktor Sistem
 
-## 2. Konsep Inti: Manajemen Meja (Table Management)
+| Aktor                                                                                  | Peran                                                                                  |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| -------------------------------------------------------------------------------------- |
+| Konsumen                                                                               | Melihat menu via QR, menerima struk meja, melakukan pembayaran                         |
+| Pelayan                                                                                | Mencatat pesanan manual dari konsumen, menyerahkan ke kasir, mengantar struk & makanan |
+| Kasir                                                                                  | Menginput pesanan ke sistem POS, memproses pembayaran                                  |
+| Dapur                                                                                  | Mengolah pesanan berdasarkan struk dapur                                               |
+| Sistem POS                                                                             | Mencatat transaksi, mencetak struk, mengurangi stok otomatis                           |
 
-Satu meja = satu tab pesanan yang menampung item-item sebelum dibayar sekali di kasir.
+## 4. Ruang Lingkup (Scope)
 
-### Status Meja
+**Termasuk dalam scope:**
 
-- `kosong` — siap dipakai
-- `menunggu_pembayaran` — sudah ada pesanan tercatat, belum dibayar
-- `terisi` — sudah dibayar, makanan diproses/disajikan, tamu masih di tempat
+- Menu digital via QR code (read-only, tanpa self-order)
+- Pencatatan manual pesanan oleh pelayan
+- Input pesanan oleh kasir ke sistem
+- Cetak otomatis 3 jenis struk
+- Pengurangan stok otomatis berbasis resep (BOM)
+- Proses pembayaran dan status transaksi pembayaran menggunaka paymnt gateaway midtrans
 
-Tidak ada fitur reservasi/booking meja di versi ini — status meja hanya mengikuti siklus transaksi aktual.
+**Tidak termasuk dalam scope (fase ini):**
 
-### Siklus Status Meja
+- Self-order langsung dari HP konsumen
+- Sistem reservasi meja
+- Program loyalty/membership terintegrasi
 
-```
-kosong
-  → (pesanan pertama diinput, oleh kasir ATAU pelayan) → menunggu_pembayaran
-menunggu_pembayaran
-  → (kasir proses pembayaran) → terisi
-terisi
-  → (tamu selesai & pergi) → kosong lagi
-```
+## 5. Alur Proses (User Flow)
 
-Catatan: kalau tamu mau nambah pesanan setelah pembayaran pertama selesai, itu dianggap **transaksi baru** yang juga harus dibayar di kasir sebelum dikirim ke dapur (karena stok baru terpotong saat bayar, bukan saat input).
+### 5.1 Alur Pemesanan
 
----
+1. Konsumen duduk di meja, scan QR code, melihat menu digital.
+2. Konsumen memanggil pelayan dan menyebutkan pesanan.
+3. Pelayan mencatat manual, mencakup: hari/tanggal, nomor meja, nama konsumen, dan detail pesanan (termasuk catatan khusus per item).
+4. Pelayan menyerahkan catatan ke kasir.
+5. Kasir menginput data ke sistem POS: nomor meja, nama konsumen, item pesanan beserta catatan khusus.
+6. Sistem menghasilkan:
+    - Struk dapur (item + catatan khusus, tanpa harga)
+    - Struk meja (tanggal, nama, nomor meja, item + jumlah)
+    - Pengurangan stok bahan baku otomatis berdasarkan resep tiap menu
+7. Pelayan mengantar struk meja ke konsumen sebagai bukti pesanan masuk.
 
-## 3. Role & Permission
+### 5.2 Alur Produksi & Verifikasi
 
-| Role        | Buka Meja | Input Pesanan | Proses Pembayaran | Cetak Struk | Void/Refund |
-| ----------- | --------- | ------------- | ----------------- | ----------- | ----------- |
-| **Kasir**   | ✅        | ✅            | ✅                | ✅          | ✅          |
-| **Pelayan** | ✅        | ✅            | ❌                | ❌          | ❌          |
+8. Dapur mengolah pesanan sesuai instruksi di struk dapur.
+9. Pelayan mengantar makanan ke meja.
+10. Pelayan memverifikasi kesesuaian makanan dengan struk meja sebelum diantar ke konsumen.
 
-Sistem harus mendukung skenario campuran: kadang kasir yang input pesanan sendiri (tamu datang langsung ke kasir), kadang pelayan yang input dari meja (tamu dilayani di tempat duduk). Keduanya sah, gate lewat permission role, bukan lewat device.
+### 5.3 Alur Pembayaran
 
-### Requirement teknis penting: Real-time sync & audit log
+11. Konsumen selesai makan, langsung mendatangi kasir untuk membayar.
+12. Kasir membuka kembali data order berdasarkan nomor meja/nama konsumen.
+13. Konsumen melakukan pembayaran (tunai/kartu/QRIS).
+14. Sistem mencetak struk konsumen (nota) berisi rincian harga dan total, serta mengubah status transaksi menjadi lunas.
 
-- Kalau pesanan diinput pelayan dari tablet, kasir harus langsung melihat pesanan itu muncul di sistem (real-time/polling pendek) begitu tamu/pelayan datang untuk bayar — tidak perlu input ulang manual.
-- Setiap item pesanan menyimpan `diinput_oleh` (staff_id) untuk audit/tracing.
-- Setiap pembayaran menyimpan `diproses_oleh` (staff_id, harus role kasir) untuk kontrol kas.
+## 6. Spesifikasi 3 Jenis Struk
 
----
+| Struk                 | Waktu cetak             | Pemegang                 | Isi                                                             |
+| --------------------- | ----------------------- | ------------------------ | --------------------------------------------------------------- |
+| Struk dapur           | Saat kasir submit order | Dapur                    | Item, jumlah, catatan khusus (tanpa harga, tanpa nama konsumen) |
+| Struk meja            | Saat kasir submit order | Konsumen (di meja)       | Tanggal, nama konsumen, nomor meja, item + jumlah               |
+| Struk konsumen (nota) | Saat pembayaran selesai | Konsumen (dibawa pulang) | Tanggal, nama, rincian item, harga, total, metode pembayaran    |
 
-## 4. Alur Lengkap Dine In
+## 7. Kebutuhan Data (Data Requirements)
 
-```
-1. Staf (kasir ATAU pelayan) pilih/buka meja → input item pesanan ke tab meja
-   → status meja: "menunggu_pembayaran"
-   → pesanan BELUM terkirim ke dapur di titik ini
+### 7.1 Data Master
 
-2. Tamu (atau pelayan yang mewakili) menuju KASIR untuk menuntaskan pembayaran
-   → Kasir cari nomor meja di sistem, tagihan otomatis muncul
-     (tidak perlu input ulang item)
+- **Menu**: nama, kategori, harga, deskripsi
+- **Resep/BOM**: daftar bahan baku dan takaran per menu
+- **Bahan baku**: nama, satuan, stok saat ini, ambang batas minimum
 
-3. Kasir proses pembayaran: cash / QRIS / kartu
+### 7.2 Data Transaksi
 
-4. Begitu status pembayaran = lunas, sistem generate 3 jenis struk sekaligus
-   (lihat detail di bagian 4a) dan otomatis:
-   → Potong stok bahan baku, dihitung dari resep tiap menu di tagihan
-     dikali qty (integrasi ke modul Bahan Baku)
-   → Status meja berubah jadi "terisi" (makanan sedang diproses/disajikan)
+- Nomor meja
+- Nama konsumen
+- Tanggal/waktu transaksi
+- Daftar item pesanan (menu, jumlah, catatan khusus)
+- Status transaksi (baru, diproses, selesai, lunas)
+- Metode pembayaran
 
-5. Kalau tamu mau nambah pesanan → ulangi dari langkah 1 sebagai
-   transaksi baru terhubung ke meja yang sama
+## 8. Kebutuhan Fungsional
 
-6. Tamu selesai & pergi → staf reset status meja jadi "kosong"
-```
+| ID   | Kebutuhan                                                                         |
+| ---- | --------------------------------------------------------------------------------- |
+| F-01 | Sistem dapat menampilkan menu digital saat QR di-scan                             |
+| F-02 | Kasir dapat menginput pesanan berdasarkan catatan pelayan                         |
+| F-03 | Sistem mencetak struk dapur otomatis setelah input pesanan                        |
+| F-04 | Sistem mencetak struk meja otomatis setelah input pesanan                         |
+| F-05 | Sistem mengurangi stok bahan baku otomatis berdasarkan resep saat pesanan diinput |
+| F-06 | Sistem dapat memanggil kembali data order berdasarkan nomor meja/nama konsumen    |
+| F-07 | Sistem mencetak struk konsumen (nota) setelah pembayaran dikonfirmasi             |
+| F-08 | Sistem memberikan peringatan jika stok bahan baku di bawah ambang batas minimum   |
 
-### Poin kritis yang jangan sampai terlewat:
+## 9. Kebutuhan Non-Fungsional
 
-- Stok **hanya** terpotong setelah status pembayaran = lunas, dikonfirmasi oleh Kasir. Tidak ada potong stok di titik input pesanan.
-- Kalau kitchen printer gagal cetak (mati/kertas habis), sistem harus punya fallback notifikasi ke kasir (alert di UI POS Kasir) supaya order tidak "hilang" di dapur tanpa disadari.
-- Void/refund transaksi HANYA bisa dilakukan oleh role Kasir, tidak oleh Pelayan.
+- Waktu cetak struk tidak lebih dari 5 detik setelah submit.
+- Sistem harus tetap dapat mencatat transaksi meski printer dapur/kasir sedang offline (antrian cetak).
+- Data transaksi tersimpan minimal 1 tahun untuk keperluan audit/laporan.
 
----
+## 10. Pertanyaan Terbuka (Open Questions)
 
-## 4a. Tiga Jenis Struk (Dicetak Bersamaan Saat Pembayaran Lunas)
+Hal-hal berikut masih perlu diputuskan sebelum masuk ke tahap desain teknis:
 
-Begitu kasir menyelesaikan pembayaran, sistem generate & cetak **3 dokumen berbeda sekaligus**, dari 1 titik cetak (kasir) kecuali disebutkan lain:
+1. Apakah nama konsumen wajib diisi setiap transaksi, atau opsional? wajib
+2. Apakah struk meja mencantumkan harga, atau murni tanpa harga? murni tanpa harga
+3. Bagaimana prosedur jika terjadi ketidaksesuaian antara makanan yang diantar dengan struk meja (revisi pesanan, komplain langsung, dsb)? komplain langsung
+4. Apakah diperlukan mekanisme cetak ulang struk jika terjadi perubahan pesanan setelah struk pertama tercetak? tidak
 
-| #   | Nama Struk               | Isi                                                                                         | Dicetak di                 | Diserahkan ke             |
-| --- | ------------------------ | ------------------------------------------------------------------------------------------- | -------------------------- | ------------------------- |
-| 1   | **Struk Pemesanan**      | Rincian item, harga, total, metode bayar — bukti transaksi resmi                            | Printer kasir              | Konsumen                  |
-| 2   | **Struk Meja / Checker** | Nomor meja + ringkasan item (tanpa harga) — dipakai untuk pencocokan saat makanan diantar   | Printer kasir              | Konsumen (dibawa ke meja) |
-| 3   | **Struk Dapur (KOT)**    | Nomor meja + daftar item yang perlu dimasak + catatan (misal "pedas level 2") — TANPA harga | Kitchen printer (di dapur) | Dapur (tidak ke konsumen) |
+## 11. Metrik Keberhasilan (Success Metrics)
 
-### Alur distribusi struk:
-
-```
-Kasir selesaikan pembayaran
-        ↓
-Sistem cetak 3 struk sekaligus (2 di printer kasir, 1 otomatis ke kitchen printer)
-        ↓
-Kasir serahkan ke konsumen: Struk Pemesanan + Struk Meja/Checker
-        ↓
-Konsumen bawa Struk Meja/Checker ke meja duduknya
-        ↓
-Pelayan/pengantar makanan mencocokkan Struk Meja/Checker (yang dipegang
-konsumen di meja) dengan pesanan yang siap diantar dari dapur,
-supaya makanan sampai ke meja yang benar
-```
-
-### Fungsi tiap struk secara spesifik:
-
-- **Struk Pemesanan** = bukti transaksi finansial untuk konsumen (kalau butuh reimburse/komplain harga)
-- **Struk Meja/Checker** = alat bantu operasional supaya pelayan tidak salah antar makanan ke meja lain, terutama saat restoran ramai dan banyak meja aktif bersamaan
-- **Struk Dapur (KOT)** = instruksi masak untuk dapur, tidak memuat info harga sama sekali
-
-### Requirement teknis:
-
-- Kasir idealnya punya 1 printer struk (untuk Struk Pemesanan & Struk Meja/Checker — bisa 2 lembar terpisah atau dari 1 printer yang sama, cetak 2x)
-- Kitchen printer terpisah secara fisik/network dari printer kasir, otomatis terima print job begitu status pembayaran = lunas
-- Struk Meja/Checker sebaiknya punya nomor meja dalam font besar/mencolok di bagian atas, supaya gampang terlihat sekilas oleh pelayan yang sedang sibuk
-
----
-
-## 5. Fungsi POS Kasir (Peran sebagai Hub)
-
-POS Kasir bukan cuma titik transaksi, tapi juga pusat kontrol:
-
-1. **Transaksi langsung** — untuk tamu yang datang sendiri ke kasir / takeaway
-2. **Cari & proses tagihan meja** — dari pesanan yang sudah diinput pelayan
-3. **Peta status semua meja** — grid visual dengan warna sesuai status (kosong/menunggu_pembayaran/terisi), supaya kasir tahu meja mana yang perlu segera diproses pembayarannya
-4. **Void/refund** — kalau ada kesalahan transaksi
-5. **Rekap harian** — sumber data ke modul Laporan
+- Penurunan tingkat kesalahan antar makanan (dibandingkan sebelum ada struk meja).
+- Akurasi stok bahan baku (selisih stok fisik vs sistem mendekati 0%).
+- Waktu rata-rata dari pesanan masuk hingga struk dapur tercetak.
 
 ---
 
-## 6. Struktur Data yang Disarankan
-
-```
-tabel: meja
-- id, nomor_meja, kapasitas, status (enum: kosong/menunggu_pembayaran/terisi/reserved)
-
-tabel: pesanan_dinein  (satu row = satu transaksi per meja, bisa lebih dari satu per hari)
-- id, meja_id, status (enum: menunggu_pembayaran/lunas/selesai), dibuka_oleh (staff_id),
-  dibuka_pada (timestamp), dibayar_pada (timestamp, nullable)
-
-tabel: item_pesanan_dinein
-- id, pesanan_dinein_id, menu_id, qty, catatan (misal "pedas level 2, tanpa bawang"),
-  diinput_oleh (staff_id), diinput_pada (timestamp)
-
-tabel: pembayaran_dinein
-- id, pesanan_dinein_id, metode_bayar (enum: cash/qris/kartu), total,
-  diproses_oleh (staff_id, WAJIB role kasir), diproses_pada (timestamp),
-  status (enum: lunas/void/refund)
-```
-
-Trigger saat `pembayaran_dinein.status = lunas` tersimpan:
-
-1. Update `pesanan_dinein.status` → `lunas`, isi `dibayar_pada`
-2. Generate & kirim KOT ke kitchen printer
-3. Potong stok bahan baku (bedah resep tiap `menu_id` di `item_pesanan_dinein` dikali `qty`)
-4. Update `meja.status` → `terisi`
-
----
-
-## 7. UI/UX yang Dibutuhkan
-
-1. **Halaman Peta Meja** — grid visual semua meja dengan warna sesuai status, dipakai baik oleh kasir maupun pelayan (dengan tampilan/permission berbeda sesuai role)
-2. **Halaman Input Pesanan** (kasir & pelayan) — pilih menu dari katalog (grid dengan gambar/kategori), tambahkan ke tab meja, kolom catatan per item
-3. **Halaman Kasir: Cari & Bayar Tagihan** (khusus kasir) — cari nomor meja, tampilkan rekap item, pilih metode bayar, tombol proses pembayaran & cetak struk
-4. Desain mengikuti gaya existing sistem: sidebar dark navy, konten area putih, komponen rounded dengan aksen biru untuk elemen interaktif.
-
----
-
-## 8. Out of Scope (catat sebagai future enhancement)
-
-- Split bill per orang/per item
-- Reservasi/booking meja — TIDAK termasuk di versi ini sama sekali, jangan bangun tabel/status terkait reservasi
-- Pembayaran langsung di meja (portable payment/printer) — versi ini sengaja disentralisasi ke kasir; bisa di-extend nanti tanpa merombak struktur data di atas
-- Integrasi payment gateway spesifik — baru ditentukan metode (cash/QRIS/kartu), provider belum dipilih
+_Dokumen ini adalah draft awal dan dapat berkembang seiring pembahasan lebih lanjut mengenai desain teknis dan implementasi sistem._

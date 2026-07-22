@@ -7,6 +7,13 @@
 --}}
 
 <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#111827] text-gray-400 flex flex-col shrink-0 transition-all duration-300 relative z-20">
+    @php
+        $userRole = auth()->user()->role->name ?? '';
+        $hasRole = function(...$roles) use ($userRole) {
+            if ($userRole === 'Admin' || $userRole === 'Super Admin') return true;
+            return in_array($userRole, $roles);
+        };
+    @endphp
     
     {{-- Logo & Toggle --}}
     <div class="h-16 flex items-center justify-between px-4 border-b border-gray-800 shrink-0 transition-all duration-300">
@@ -34,31 +41,41 @@
         ])
 
         {{-- Point of Sale (Dine-In Only) --}}
+        @if($hasRole('Kasir'))
         @include('partials.sidebar-link', [
             'route' => 'pos.dinein.index',
             'icon' => 'o-computer-desktop',
             'label' => 'Point of Sale',
             'active' => request()->routeIs('pos.dinein.*'),
         ])
+        @endif
 
         {{-- Divider --}}
         <div class="py-2" x-show="sidebarOpen"><div class="h-px w-full bg-gray-800"></div></div>
 
         {{-- Pesanan (Submenu) --}}
+        @php
+            $pesananItems = [];
+            if ($hasRole('Kasir', 'Manajer', 'Pemilik')) {
+                $pesananItems[] = ['label' => 'Daftar Pesanan Dine-In',  'url' => route('pesanan.index'), 'active' => request()->routeIs('pesanan.index')];
+                $pesananItems[] = ['label' => 'Daftar Pesanan Catering', 'url' => route('admin.pesanan.catering.index'),  'active' => request()->routeIs('admin.pesanan.catering.*')];
+                $pesananItems[] = ['label' => 'Daftar Pesanan Nasi Box', 'url' => route('admin.pesanan.nasibox.index'),   'active' => request()->routeIs('admin.pesanan.nasibox.*')];
+            }
+            if ($hasRole('Tim Pengantaran')) {
+                $pesananItems[] = ['label' => 'Jadwal Pengantaran',      'url' => route('admin.jadwal.index'),  'active' => request()->routeIs('admin.jadwal.*')];
+            }
+        @endphp
+        @if(count($pesananItems) > 0)
         @include('partials.sidebar-submenu', [
             'icon' => 'o-clipboard-document-list',
             'label' => 'Pesanan',
             'isOpen' => request()->routeIs('pesanan.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.jadwal.*'),
-            'items' => [
-                ['label' => 'Semua Pesanan',    'url' => route('pesanan.index'), 'active' => request()->routeIs('pesanan.index') && !request()->query('jenis') && !request()->query('status')],
-                ['label' => 'Dine-in',          'url' => route('pesanan.index', ['jenis' => 'dine_in']), 'active' => request()->query('jenis') == 'dine_in'],
-                ['label' => 'Catering',         'url' => route('admin.pesanan.catering.index'),  'active' => request()->routeIs('admin.pesanan.catering.*')],
-                ['label' => 'Nasi Box',         'url' => route('admin.pesanan.nasibox.index'),   'active' => request()->routeIs('admin.pesanan.nasibox.*')],
-                ['label' => 'Jadwal Pengantaran', 'url' => route('admin.jadwal.index'),  'active' => request()->routeIs('admin.jadwal.*')],
-            ],
+            'items' => $pesananItems,
         ])
+        @endif
 
         {{-- Menu (Submenu) --}}
+        @if($hasRole('Manajer', 'Pemilik'))
         @include('partials.sidebar-submenu', [
             'icon' => 'o-book-open',
             'label' => 'Menu',
@@ -70,20 +87,30 @@
                 ['label' => 'Kategori Menu', 'url' => route('kategori-menu.index'), 'active' => request()->routeIs('kategori-menu.*')],
             ],
         ])
+        @endif
 
         {{-- Bahan Baku (Submenu) --}}
+        @php
+            $bahanBakuItems = [];
+            if ($hasRole('Manajer', 'Pemilik')) {
+                $bahanBakuItems[] = ['label' => 'Daftar Bahan Baku', 'url' => route('bahan-baku.index'),   'active' => request()->routeIs('bahan-baku.*')];
+            }
+            if ($hasRole('Manajer', 'Tim Dapur')) {
+                $bahanBakuItems[] = ['label' => 'Stok Masuk / Keluar','url' => route('mutasi-stok.index'),  'active' => request()->routeIs('mutasi-stok.*')];
+                $bahanBakuItems[] = ['label' => 'Stok Menipis',       'url' => route('stok-menipis.index'), 'active' => request()->routeIs('stok-menipis.*')];
+            }
+        @endphp
+        @if(count($bahanBakuItems) > 0)
         @include('partials.sidebar-submenu', [
             'icon' => 'o-cube',
             'label' => 'Bahan Baku',
             'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('stok-menipis.*'),
-            'items' => [
-                ['label' => 'Daftar Bahan Baku', 'url' => route('bahan-baku.index'),   'active' => request()->routeIs('bahan-baku.*')],
-                ['label' => 'Stok Masuk / Keluar','url' => route('mutasi-stok.index'),  'active' => request()->routeIs('mutasi-stok.*')],
-                ['label' => 'Stok Menipis',       'url' => route('stok-menipis.index'), 'active' => request()->routeIs('stok-menipis.*')],
-            ],
+            'items' => $bahanBakuItems,
         ])
+        @endif
 
         {{-- Pengadaan (Submenu) --}}
+        @if($hasRole('Pemilik'))
         @include('partials.sidebar-submenu', [
             'icon' => 'o-truck',
             'label' => 'Pengadaan',
@@ -93,21 +120,25 @@
                 ['label' => 'Riwayat Pengadaan', 'url' => route('pengadaan.index'),  'active' => request()->routeIs('pengadaan.index') || request()->routeIs('pengadaan.show')],
             ],
         ])
+        @endif
 
         {{-- Laporan (Submenu) --}}
+        @if($hasRole('Manajer', 'Pemilik'))
         @include('partials.sidebar-submenu', [
             'icon' => 'o-chart-bar',
             'label' => 'Laporan',
             'isOpen' => request()->routeIs('laporan.*'),
             'items' => [
                 ['label' => 'Lap. Penjualan', 'url' => route('laporan.penjualan'), 'active' => request()->routeIs('laporan.penjualan')],
-                ['label' => 'Lap. Stok',      'url' => route('laporan.stok'),       'active' => request()->routeIs('laporan.stok')],
+                ['label' => 'Lap. Persediaan Bahan Baku', 'url' => route('laporan.stok'), 'active' => request()->routeIs('laporan.stok')],
                 ['label' => 'Lap. Catering',  'url' => route('laporan.catering'),   'active' => request()->routeIs('laporan.catering')],
                 ['label' => 'Lap. Nasi Box',  'url' => route('laporan.nasibox'),    'active' => request()->routeIs('laporan.nasibox')],
             ],
         ])
+        @endif
 
         {{-- Pengguna (Submenu) --}}
+        @if($hasRole('Admin'))
         @include('partials.sidebar-submenu', [
             'icon' => 'o-users',
             'label' => 'Pengguna',
@@ -117,6 +148,7 @@
                 ['label' => 'Data Pelanggan', 'url' => route('users.index', ['type' => 'pelanggan']), 'active' => request('type') === 'pelanggan' && request()->routeIs('users.*')],
             ],
         ])
+        @endif
 
     </nav>
 
@@ -128,7 +160,7 @@
             </div>
             <div class="flex-1 min-w-0" x-show="sidebarOpen" x-transition:enter="transition delay-100 duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                 <div class="text-sm font-bold text-white truncate">{{ auth()->user()->name ?? 'Kasir 1' }}</div>
-                <div class="text-[10px] text-gray-400 truncate">Administrator</div>
+                <div class="text-[10px] text-gray-400 truncate">{{ $userRole ?: 'User' }}</div>
             </div>
         </div>
         

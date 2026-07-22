@@ -14,6 +14,7 @@ class BahanBaku extends Model
         'kategori_bahan_id',
         'supplier_id',
         'nama_bahan',
+        'jenis_penggunaan',
         'satuan_id',
         'stok',
         'stok_minimum',
@@ -39,8 +40,11 @@ class BahanBaku extends Model
         return $this->belongsTo(Supplier::class);
     }
 
-    public function mutasiStoks()
+    public function getJenisPenggunaanLabelAttribute()
     {
-        return $this->hasMany(MutasiStok::class);
+        return match($this->jenis_penggunaan) {
+            'catering' => 'Catering',
+            default => 'Resto & Nasi Box',
+        };
     }
 }

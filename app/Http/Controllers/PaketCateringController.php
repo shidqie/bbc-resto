@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PaketCatering;
 use App\Models\DetailPaketCatering;
 use App\Models\BahanBaku;
+use App\Models\Menu;
 use Illuminate\Http\Request;
 
 class PaketCateringController extends Controller
@@ -22,10 +23,11 @@ class PaketCateringController extends Controller
         return view('catering.paket.index', compact('pakets', 'jenis'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $menus = \App\Models\Menu::where('jenis_menu', 'catering')->get();
-        return view('catering.paket.create', compact('menus'));
+        $jenis = $request->query('jenis', 'catering');
+        $menus = Menu::all();
+        return view('catering.paket.create', compact('menus', 'jenis'));
     }
 
     public function store(Request $request)
@@ -66,7 +68,7 @@ class PaketCateringController extends Controller
             }
         }
 
-        return redirect()->route('paket-catering.index')->with('success', 'Paket berhasil ditambahkan!');
+        return redirect()->route('paket-catering.index', ['jenis' => $request->jenis_paket])->with('success', 'Paket berhasil ditambahkan!');
     }
 
     public function show(PaketCatering $paketCatering)
@@ -78,7 +80,7 @@ class PaketCateringController extends Controller
     public function edit(PaketCatering $paketCatering)
     {
         $paketCatering->load('komponens.opsi');
-        $menus = \App\Models\Menu::where('jenis_menu', 'catering')->get();
+        $menus = Menu::all();
         return view('catering.paket.edit', compact('paketCatering', 'menus'));
     }
 
@@ -104,7 +106,6 @@ class PaketCateringController extends Controller
             'deskripsi' => $request->deskripsi,
         ]);
 
-        // Hapus komponen lama
         $paketCatering->komponens()->delete();
 
         foreach ($request->komponen as $komp) {
@@ -123,19 +124,20 @@ class PaketCateringController extends Controller
             }
         }
 
-        return redirect()->route('paket-catering.index')->with('success', 'Paket berhasil diperbarui!');
+        return redirect()->route('paket-catering.index', ['jenis' => $paketCatering->jenis_paket])->with('success', 'Paket berhasil diperbarui!');
     }
 
     public function destroy(PaketCatering $paketCatering)
     {
+        $jenis = $paketCatering->jenis_paket;
         $paketCatering->komponens()->delete();
         $paketCatering->delete();
-        return redirect()->route('paket-catering.index')->with('success', 'Paket berhasil dihapus!');
+        return redirect()->route('paket-catering.index', ['jenis' => $jenis])->with('success', 'Paket berhasil dihapus!');
     }
 
     public function toggleActive(PaketCatering $paketCatering)
     {
         $paketCatering->update(['is_active' => !$paketCatering->is_active]);
-        return redirect()->back()->with('success', 'Status paket diperbarui!');
+        return redirect()->back()->with('success', 'Status website diperbarui!');
     }
 }

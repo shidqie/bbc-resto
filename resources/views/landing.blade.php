@@ -85,7 +85,7 @@
     </x-landing.section>
 
     {{-- 6. PAKET NASI BOX --}}
-    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Pemesanan min. H-2. DP 25%.">
+    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Pemesanan min. H-2. DP 25%." bgBatik="true">
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
             @forelse($paketNasiBox as $paket)
                 <x-landing.package-card :paket="$paket" type="nasi_box" />

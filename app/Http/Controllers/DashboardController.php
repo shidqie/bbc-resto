@@ -16,7 +16,7 @@ class DashboardController extends Controller
         $user = \Illuminate\Support\Facades\Auth::user();
         $userRole = $user->role->name ?? null;
 
-        if (!in_array($userRole, ['Admin', 'Super Admin', 'Manajer', 'Kasir'])) {
+        if ($userRole === 'Konsumen' || empty($userRole)) {
             return redirect()->route('member.dashboard');
         }
 

@@ -97,9 +97,66 @@
                             <ul class="list-disc list-inside text-sm text-gray-600">
                                 @foreach($pesanan->addons as $addon)
                                     <li>{{ $addon->layananTambahan->nama }}</li>
-                                @endforeach
-                            </ul>
                         @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- ── TABEL ANALISIS STOK BAHAN BAKU CATERING INI ── --}}
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 mb-4 gap-2">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <x-heroicon-o-cube class="w-5 h-5 text-emerald-700" />
+                                Rincian & Analisis Stok Bahan Baku Catering Ini
+                            </h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Kebutuhan resep untuk {{ $pesanan->jumlah_porsi }} porsi pesanan catering ini</p>
+                        </div>
+                        <a href="{{ route('pengadaan.create', ['pesanan_id' => $pesanan->id]) }}" class="inline-flex items-center gap-2 bg-[#0F2E23] hover:bg-[#0a1f17] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">
+                            <x-heroicon-o-plus class="w-4 h-4" />
+                            Buat Pengadaan Catering
+                        </a>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b">
+                                    <th class="px-4 py-3 font-semibold">Bahan Baku</th>
+                                    <th class="px-4 py-3 font-semibold">Stok Resto Saat Ini</th>
+                                    <th class="px-4 py-3 font-semibold">Total Kebutuhan Acara</th>
+                                    <th class="px-4 py-3 font-semibold">Status Ketersediaan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($kebutuhanBahan as $item)
+                                    @php $kurang = max(0, $item['total_kebutuhan'] - $item['stok_sekarang']); @endphp
+                                    <tr class="hover:bg-gray-50/50">
+                                        <td class="px-4 py-3 font-bold text-gray-900">{{ $item['nama_bahan'] }}</td>
+                                        <td class="px-4 py-3 font-medium text-gray-700">{{ number_format($item['stok_sekarang'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
+                                        <td class="px-4 py-3 font-bold text-blue-700">{{ number_format($item['total_kebutuhan'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
+                                        <td class="px-4 py-3">
+                                            @if($kurang > 0)
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+                                                    Kurang {{ number_format($kurang, 2, ',', '.') }} {{ $item['satuan'] }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                    ✓ Stok Cukup
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">
+                                            Belum ada resep bahan baku yang terdaftar pada menu paket terpilih.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

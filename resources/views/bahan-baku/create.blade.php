@@ -42,8 +42,16 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Bahan Baku <span class="text-red-500">*</span></label>
                             <input type="text" name="nama_bahan" value="{{ old('nama_bahan') }}" required 
-                                   class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none placeholder-gray-400" 
+                                   class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#0F2E23]/10 focus:border-[#0F2E23] block w-full p-3 transition-colors outline-none placeholder-gray-400 font-medium" 
                                    placeholder="Contoh: Beras Premium">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Peruntukan Penggunaan <span class="text-red-500">*</span></label>
+                            <select name="jenis_penggunaan" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm font-semibold rounded-xl focus:ring-2 focus:ring-[#0F2E23]/10 focus:border-[#0F2E23] block w-full p-3 outline-none">
+                                <option value="resto_nasibox" {{ old('jenis_penggunaan', 'resto_nasibox') == 'resto_nasibox' ? 'selected' : '' }}>Resto & Nasi Box (Stok Harian Resto)</option>
+                                <option value="catering" {{ old('jenis_penggunaan') == 'catering' ? 'selected' : '' }}>Catering (Stok Khusus Catering)</option>
+                            </select>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">

@@ -26,7 +26,7 @@ class PesananDinein extends Model
         return $this->belongsTo(Meja::class);
     }
 
-    public function pelayan()
+    public function kasir()
     {
         return $this->belongsTo(User::class, 'dibuka_oleh');
     }

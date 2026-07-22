@@ -7,6 +7,7 @@ use App\Models\MutasiStok;
 use App\Models\PesananCatering;
 use App\Models\PesananNasiBox;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -56,7 +57,25 @@ class LaporanController extends Controller
             ->latest()
             ->get();
 
-        return view('laporan.stok', compact('mutasis', 'startDate', 'endDate'));
+        // Rekap Penggunaan Harian Stok (Grouped per tanggal & bahan baku)
+        $penggunaanHarian = MutasiStok::with(['bahanBaku.satuan'])
+            ->selectRaw('DATE(created_at) as tanggal, bahan_baku_id, SUM(ABS(jumlah)) as total_penggunaan')
+            ->where('jenis_mutasi', 'keluar')
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->groupBy(DB::raw('DATE(created_at)'), 'bahan_baku_id')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
+        // Total akumulasi penggunaan per bahan baku
+        $totalPenggunaanPerBahan = MutasiStok::with(['bahanBaku.satuan'])
+            ->selectRaw('bahan_baku_id, SUM(ABS(jumlah)) as total_penggunaan')
+            ->where('jenis_mutasi', 'keluar')
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->groupBy('bahan_baku_id')
+            ->orderBy('total_penggunaan', 'desc')
+            ->get();
+
+        return view('laporan.stok', compact('mutasis', 'penggunaanHarian', 'totalPenggunaanPerBahan', 'startDate', 'endDate'));
     }
 
     public function cetakStok(Request $request)
@@ -69,7 +88,23 @@ class LaporanController extends Controller
             ->latest()
             ->get();
 
-        $pdf = Pdf::loadView('laporan.pdf-stok', compact('mutasis', 'startDate', 'endDate'));
+        $penggunaanHarian = MutasiStok::with(['bahanBaku.satuan'])
+            ->selectRaw('DATE(created_at) as tanggal, bahan_baku_id, SUM(ABS(jumlah)) as total_penggunaan')
+            ->where('jenis_mutasi', 'keluar')
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->groupBy(DB::raw('DATE(created_at)'), 'bahan_baku_id')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
+        $totalPenggunaanPerBahan = MutasiStok::with(['bahanBaku.satuan'])
+            ->selectRaw('bahan_baku_id, SUM(ABS(jumlah)) as total_penggunaan')
+            ->where('jenis_mutasi', 'keluar')
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->groupBy('bahan_baku_id')
+            ->orderBy('total_penggunaan', 'desc')
+            ->get();
+
+        $pdf = Pdf::loadView('laporan.pdf-stok', compact('mutasis', 'penggunaanHarian', 'totalPenggunaanPerBahan', 'startDate', 'endDate'));
         return $pdf->stream('laporan-mutasi-stok-' . $startDate . '-sd-' . $endDate . '.pdf');
     }
 
