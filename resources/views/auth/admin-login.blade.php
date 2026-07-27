@@ -84,7 +84,7 @@
                 {{-- Heading --}}
                 <div class="mb-8 fu d1">
                     <h2 class="text-2xl font-bold text-[#111827] tracking-tight mb-1">Masuk Portal Staff</h2>
-                    <p class="text-sm text-gray-500 font-medium">Gunakan email & password akun staff Anda.</p>
+                    <p class="text-sm text-gray-500 font-medium">Gunakan nomor HP & password akun staff Anda.</p>
                 </div>
 
                 <x-auth-session-status class="mb-5 text-sm" :status="session('status')" />
@@ -100,10 +100,10 @@
 
                     {{-- Email / HP --}}
                     <div class="fu d2">
-                        <label for="login" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Email / No. HP</label>
+                        <label for="login" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Nomor HP</label>
                         <input id="login" type="text" name="login" value="{{ old('login') }}"
                                required autofocus autocomplete="username"
-                               placeholder="staff@bbc.com"
+                               placeholder="08xxxxxxxxxx"
                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0F2E23]">
                     </div>
 

@@ -32,7 +32,12 @@
             </ul>
         </div>
     </div>
-    <div class="max-w-[1280px] mx-auto px-6 text-center text-xs text-white/40">
-        &copy; {{ date('Y') }} Saung Babakan Cinta. All rights reserved.
+    <div class="max-w-[1280px] mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-xs text-white/40 gap-4">
+        <div>
+            &copy; {{ date('Y') }} Saung Babakan Cinta. All rights reserved.
+        </div>
+        <div>
+            <a href="{{ route('admin.login') }}" class="hover:text-secondary-container transition-colors">Portal Admin</a>
+        </div>
     </div>
 </footer>
