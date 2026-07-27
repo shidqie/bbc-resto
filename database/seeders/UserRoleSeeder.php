@@ -17,93 +17,65 @@ class UserRoleSeeder extends Seeder
         $rolePemilik = Role::firstOrCreate(['name' => 'Pemilik'], ['description' => 'Pemilik Restoran']);
         $roleManajer = Role::firstOrCreate(['name' => 'Manajer'], ['description' => 'Manajer Operasional']);
         $roleKasir = Role::firstOrCreate(['name' => 'Kasir'], ['description' => 'Kasir Restoran']);
-        $roleTimPengantaran = Role::firstOrCreate(['name' => 'Tim Pengantaran'], ['description' => 'Tim Pengantaran Pesanan']);
         $roleTimDapur = Role::firstOrCreate(['name' => 'Tim Dapur'], ['description' => 'Tim Dapur / Produksi']);
+        $roleTimPengantaran = Role::firstOrCreate(['name' => 'Tim Pengantaran'], ['description' => 'Tim Pengantaran Pesanan']);
         $roleKonsumen = Role::firstOrCreate(['name' => 'Konsumen'], ['description' => 'Pelanggan / Konsumen']);
 
-        // 2. Set all users' passwords to 'password'
+        // 2. Wipe existing users (Disable FK checks temporarily to avoid constraint errors)
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        User::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $password = Hash::make('password');
-        User::query()->update(['password' => $password]);
 
-        // 3. Create or Update Dummy Users
-        User::updateOrCreate(
-            ['email' => 'admin@bbc.com'],
-            [
-                'name' => 'Admin BBC',
-                'password' => $password,
-                'role_id' => $roleAdmin->id,
-                'phone_number' => '08110000001',
-            ]
-        );
+        // 3. Create New Users
+        User::create([
+            'name' => 'Admin System',
+            'email' => 'admin@bbc.com',
+            'password' => $password,
+            'role_id' => $roleAdmin->id,
+            'phone_number' => '08110000000',
+        ]);
 
-        User::updateOrCreate(
-            ['email' => 'manajer@bbc.com'],
-            [
-                'name' => 'Manajer BBC',
-                'password' => $password,
-                'role_id' => $roleManajer->id,
-                'phone_number' => '08110000002',
-            ]
-        );
+        User::create([
+            'name' => 'Pemilik BBC',
+            'email' => 'pemilik@bbc.com',
+            'password' => $password,
+            'role_id' => $rolePemilik->id,
+            'phone_number' => '08110000001',
+        ]);
 
-        User::updateOrCreate(
-            ['email' => 'kasir@bbc.com'],
-            [
-                'name' => 'Kasir BBC',
-                'password' => $password,
-                'role_id' => $roleKasir->id,
-                'phone_number' => '08110000003',
-            ]
-        );
+        User::create([
+            'name' => 'Manager BBC',
+            'email' => 'manager@bbc.com',
+            'password' => $password,
+            'role_id' => $roleManajer->id,
+            'phone_number' => '08110000002',
+        ]);
 
-        User::updateOrCreate(
-            ['email' => 'konsumen@bbc.com'],
-            [
-                'name' => 'Konsumen Demo',
-                'password' => $password,
-                'role_id' => $roleKonsumen->id,
-                'phone_number' => '08110000004',
-            ]
-        );
+        User::create([
+            'name' => 'Kasir BBC',
+            'email' => 'kasir@bbc.com',
+            'password' => $password,
+            'role_id' => $roleKasir->id,
+            'phone_number' => '08110000003',
+        ]);
 
-        User::updateOrCreate(
-            ['email' => 'pemilik@bbc.com'],
-            [
-                'name' => 'Pemilik BBC',
-                'password' => $password,
-                'role_id' => $rolePemilik->id,
-                'phone_number' => '08110000005',
-            ]
-        );
-
-        User::updateOrCreate(
-            ['email' => 'pengantaran@bbc.com'],
-            [
-                'name' => 'Tim Pengantaran BBC',
-                'password' => $password,
-                'role_id' => $roleTimPengantaran->id,
-                'phone_number' => '08110000006',
-            ]
-        );
-
-        User::updateOrCreate(
-            ['email' => 'dapur@bbc.com'],
-            [
-                'name' => 'Tim Dapur BBC',
-                'password' => $password,
-                'role_id' => $roleTimDapur->id,
-                'phone_number' => '08110000007',
-            ]
-        );
+        User::create([
+            'name' => 'Tim Dapur BBC',
+            'email' => 'dapur@bbc.com',
+            'password' => $password,
+            'role_id' => $roleTimDapur->id,
+            'phone_number' => '08110000004',
+        ]);
         
-        $this->command->info('Akun dummy berhasil dibuat / di-reset:');
-        $this->command->info('- admin@bbc-resto.com (Role: Admin)');
-        $this->command->info('- pemilik@bbc-resto.com (Role: Pemilik)');
-        $this->command->info('- manajer@bbc-resto.com (Role: Manajer)');
-        $this->command->info('- kasir@bbc-resto.com (Role: Kasir)');
-        $this->command->info('- pengantaran@bbc-resto.com (Role: Tim Pengantaran)');
-        $this->command->info('- dapur@bbc-resto.com (Role: Tim Dapur)');
-        $this->command->info('- konsumen@bbc-resto.com (Role: Konsumen)');
-        $this->command->info('Password untuk semua akun di sistem telah diubah menjadi: password');
+        $this->command->info('Semua data pengguna lama telah dihapus.');
+        $this->command->info('Data pengguna baru berhasil dibuat:');
+        $this->command->info('- Admin (08110000000)');
+        $this->command->info('- Pemilik (08110000001)');
+        $this->command->info('- Manager (08110000002)');
+        $this->command->info('- Kasir (08110000003)');
+        $this->command->info('- Tim Dapur (08110000004)');
+        $this->command->info('Password untuk semua akun: password');
     }
 }
