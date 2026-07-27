@@ -144,13 +144,7 @@
                     </div>
                 </form>
 
-                {{-- Divider --}}
-                <div class="mt-8 pt-6 border-t border-gray-200 fu d4">
-                    <p class="text-center text-xs text-gray-300 font-medium">
-                        Bukan karyawan?
-                        <a href="{{ route('login') }}" class="text-gray-400 font-semibold hover:text-[#0F2E23] transition-colors ml-1">Portal Customer</a>
-                    </p>
-                </div>
+
 
             </div>
         </div>

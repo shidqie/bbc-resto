@@ -94,18 +94,7 @@
     <section class="py-16 bg-canvas min-h-screen">
         <div class="max-w-4xl mx-auto px-4">
 
-            @guest
-            <div class="bg-primary/5 border border-primary/20 text-primary rounded-xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-                <div>
-                    <h3 class="font-bold text-sm mb-1 text-gray-900">Pesan lebih cepat, pantau lebih mudah!</h3>
-                    <p class="text-xs text-gray-600">Anda dapat checkout sebagai tamu, namun mendaftar akun akan menyimpan riwayat pesanan Anda.</p>
-                </div>
-                <div class="flex gap-2 shrink-0">
-                    <a href="{{ route('login') }}" class="text-xs font-semibold bg-white border-2 border-primary text-primary px-4 py-1.5 rounded-md hover:bg-primary/5 transition-all shadow-sm">Login</a>
-                    <a href="{{ route('register') }}" class="text-xs font-semibold bg-primary text-white border-2 border-primary px-4 py-1.5 rounded-md hover:opacity-90 transition-all shadow-sm">Daftar Sekarang</a>
-                </div>
-            </div>
-            @endguest
+
 
             {{-- Header --}}
             <div class="text-center mb-10">

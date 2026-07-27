@@ -39,20 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::patch('/pos/menu/{menu}/toggle-status', [\App\Http\Controllers\Pos\DineInController::class, 'toggleMenuStatus'])->name('pos.menu.toggle-status');
     
-    // Route Khusus Konsumen
-    Route::middleware(['role:Konsumen'])->group(function () {
-        Route::get('/member/dashboard', [\App\Http\Controllers\MemberDashboardController::class, 'index'])->name('member.dashboard');
-        
-        // Portal Member Baru
-        Route::get('/member/profile', [\App\Http\Controllers\MemberDashboardController::class, 'profile'])->name('member.profile');
-        Route::patch('/member/profile', [\App\Http\Controllers\MemberDashboardController::class, 'updateProfile'])->name('member.profile.update');
-        Route::get('/member/alamat', [\App\Http\Controllers\MemberDashboardController::class, 'alamat'])->name('member.alamat');
-        Route::patch('/member/alamat', [\App\Http\Controllers\MemberDashboardController::class, 'updateAlamat'])->name('member.alamat.update');
-        Route::get('/member/password', [\App\Http\Controllers\MemberDashboardController::class, 'password'])->name('member.password');
-        Route::patch('/member/password', [\App\Http\Controllers\MemberDashboardController::class, 'updatePassword'])->name('member.password.update');
-        Route::get('/member/pesanan-aktif', [\App\Http\Controllers\MemberDashboardController::class, 'pesananAktif'])->name('member.pesanan.aktif');
-        Route::get('/member/riwayat', [\App\Http\Controllers\MemberDashboardController::class, 'riwayat'])->name('member.pesanan.riwayat');
-    });
+
 
     // Route Khusus Admin
     Route::middleware(['role:Admin'])->group(function () {
