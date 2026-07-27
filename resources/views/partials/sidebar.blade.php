@@ -92,7 +92,7 @@
         ])
         @endif
 
-        {{-- Bahan Baku (Submenu) --}}
+        {{-- Bahan Baku & Pengadaan (Submenu) --}}
         @php
             $bahanBakuItems = [];
             if ($hasRole('Manajer', 'Pemilik')) {
@@ -102,26 +102,17 @@
                 $bahanBakuItems[] = ['label' => 'Stok Masuk / Keluar','url' => route('mutasi-stok.index'),  'active' => request()->routeIs('mutasi-stok.*')];
                 $bahanBakuItems[] = ['label' => 'Stok Menipis',       'url' => route('stok-menipis.index'), 'active' => request()->routeIs('stok-menipis.*')];
             }
+            if ($hasRole('Pemilik')) {
+                $bahanBakuItems[] = ['label' => 'Buat Pengadaan',    'url' => route('pengadaan.create'), 'active' => request()->routeIs('pengadaan.create')];
+                $bahanBakuItems[] = ['label' => 'Riwayat Pengadaan', 'url' => route('pengadaan.index'),  'active' => request()->routeIs('pengadaan.index') || request()->routeIs('pengadaan.show')];
+            }
         @endphp
         @if(count($bahanBakuItems) > 0)
         @include('partials.sidebar-submenu', [
             'icon' => 'fa-boxes-stacked',
             'label' => 'Bahan Baku',
-            'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('stok-menipis.*'),
+            'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('stok-menipis.*') || request()->routeIs('pengadaan.*'),
             'items' => $bahanBakuItems,
-        ])
-        @endif
-
-        {{-- Pengadaan (Submenu) --}}
-        @if($hasRole('Pemilik'))
-        @include('partials.sidebar-submenu', [
-            'icon' => 'fa-truck-field',
-            'label' => 'Pengadaan',
-            'isOpen' => request()->routeIs('pengadaan.*'),
-            'items' => [
-                ['label' => 'Buat Pengadaan',    'url' => route('pengadaan.create'), 'active' => request()->routeIs('pengadaan.create')],
-                ['label' => 'Riwayat Pengadaan', 'url' => route('pengadaan.index'),  'active' => request()->routeIs('pengadaan.index') || request()->routeIs('pengadaan.show')],
-            ],
         ])
         @endif
 
