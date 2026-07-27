@@ -9,58 +9,46 @@
         {{-- ── 2. HIGH-CONTRAST STAT CARDS ── --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {{-- Stat 1: Pesanan Hari Ini --}}
-            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition-all flex items-center justify-between">
-                <div class="space-y-1">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pesanan Hari Ini</p>
-                    <p class="text-2xl font-black text-slate-900">{{ $pesananHariIni }}</p>
-                    <p class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-arrow-up text-[9px]"></i> Aktif hari ini
-                    </p>
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md hover:border-gray-200">
+                <div class="flex items-center justify-between text-gray-500">
+                    <p class="text-xs font-semibold">Pesanan Hari Ini</p>
+                    <i class="ph-bold ph-shopping-bag text-lg"></i>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-[#0F2E23] flex items-center justify-center text-xl shrink-0">
-                    <i class="fa-solid fa-bag-shopping"></i>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ $pesananHariIni }}</p>
                 </div>
             </div>
 
             {{-- Stat 2: Pendapatan Hari Ini --}}
-            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition-all flex items-center justify-between">
-                <div class="space-y-1">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pendapatan Hari Ini</p>
-                    <p class="text-2xl font-black text-[#0F2E23]">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-[#0F2E23] fa-circle-check text-[9px]"></i> Omset terverifikasi
-                    </p>
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md hover:border-gray-200">
+                <div class="flex items-center justify-between text-gray-500">
+                    <p class="text-xs font-semibold">Pendapatan Hari Ini</p>
+                    <i class="ph-bold ph-wallet text-lg text-emerald-600"></i>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-[#0F2E23] text-emerald-300 flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    <i class="fa-solid fa-wallet"></i>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</p>
                 </div>
             </div>
 
             {{-- Stat 3: Pesanan Pending --}}
-            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition-all flex items-center justify-between">
-                <div class="space-y-1">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pesanan Pending</p>
-                    <p class="text-2xl font-black text-amber-600">{{ $pesananPending }}</p>
-                    <p class="text-[11px] text-amber-600 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-clock text-[9px]"></i> Menunggu bayar
-                    </p>
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md hover:border-gray-200">
+                <div class="flex items-center justify-between text-gray-500">
+                    <p class="text-xs font-semibold">Pesanan Pending</p>
+                    <i class="ph-bold ph-hourglass-high text-lg text-amber-500"></i>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
-                    <i class="fa-solid fa-hourglass-half"></i>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ $pesananPending }}</p>
                 </div>
             </div>
 
             {{-- Stat 4: Stok Menipis --}}
-            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition-all flex items-center justify-between">
-                <div class="space-y-1">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Stok Menipis</p>
-                    <p class="text-2xl font-black text-red-600">{{ $stokMenipis }}</p>
-                    <p class="text-[11px] text-red-500 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-triangle-exclamation text-[9px]"></i> Perlu pengadaan
-                    </p>
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col gap-3 transition-all hover:shadow-md hover:border-gray-200">
+                <div class="flex items-center justify-between text-gray-500">
+                    <p class="text-xs font-semibold">Stok Menipis</p>
+                    <i class="ph-bold ph-package text-lg text-red-500"></i>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-xl shrink-0">
-                    <i class="fa-solid fa-boxes-stacked"></i>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ $stokMenipis }}</p>
                 </div>
             </div>
         </div>
