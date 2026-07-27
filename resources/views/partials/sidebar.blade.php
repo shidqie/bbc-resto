@@ -43,12 +43,12 @@
             'active' => request()->routeIs('dashboard'),
         ])
 
-        {{-- Point of Sale (Dine-In Only) --}}
+        {{-- Pesanan Baru (Dine-In Only) --}}
         @if($hasRole('Kasir'))
         @include('partials.sidebar-link', [
             'route' => 'pos.dinein.index',
             'icon' => 'fa-cash-register',
-            'label' => 'Point of Sale',
+            'label' => 'Pesanan Baru',
             'active' => request()->routeIs('pos.dinein.*'),
         ])
         @endif
