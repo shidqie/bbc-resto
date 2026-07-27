@@ -4,34 +4,7 @@
 <div class="min-h-screen bg-[#F8FAFC] text-[#111827] font-sans p-6 md:p-8 space-y-6">
     <div class="max-w-7xl mx-auto space-y-6">
 
-        {{-- ── 1. GREETING BANNER (Sama seperti Desain Login BBC Resto #0F2E23) ── --}}
-        <div class="bg-[#0F2E23] text-white rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            {{-- Dark gradient & pattern overlays --}}
-            <div class="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 pointer-events-none"></div>
-            
-            <div class="relative z-10 space-y-2">
-                <div class="flex items-center gap-2.5">
-                    <span class="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold text-emerald-300 tracking-wider uppercase border border-white/10">
-                        <i class="fa-solid fa-crown text-[10px] mr-1"></i> Admin Dashboard
-                    </span>
-                    <span class="text-white/40 text-xs font-mono">• {{ now()->format('d F Y') }}</span>
-                </div>
-                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-white leading-tight">
-                    Selamat Datang, {{ auth()->user()->name ?? 'Admin BBC Resto' }}! 👋
-                </h1>
-                <p class="text-xs md:text-sm text-white/70 max-w-xl leading-relaxed">
-                    Pantau aktivitas transaksi resto, pendapatan harian, pesanan terbaru, dan ketersediaan stok bahan baku secara real-time.
-                </p>
-            </div>
 
-            <div class="relative z-10 flex items-center gap-3 shrink-0">
-                <a href="{{ route('pos.dinein.index') }}" 
-                   class="px-5 py-3 bg-white text-[#0F2E23] hover:bg-emerald-50 rounded-2xl text-xs font-extrabold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-cash-register text-sm"></i>
-                    <span>Buka POS Kasir</span>
-                </a>
-            </div>
-        </div>
 
         {{-- ── 2. HIGH-CONTRAST STAT CARDS ── --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
