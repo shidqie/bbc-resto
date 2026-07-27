@@ -6,7 +6,7 @@
 | Menggunakan Alpine.js untuk toggle open/close dan submenu.
 --}}
 
-<aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#111827] text-gray-400 flex flex-col shrink-0 transition-all duration-300 relative z-20">
+<aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="no-print bg-[#111827] text-gray-400 flex flex-col shrink-0 transition-all duration-300 relative z-20">
     @php
         $userRole = auth()->user()->role->name ?? '';
         $hasRole = function(...$roles) use ($userRole) {
@@ -14,18 +14,21 @@
             return in_array($userRole, $roles);
         };
     @endphp
-    
+
     {{-- Logo & Toggle --}}
     <div class="h-16 flex items-center justify-between px-4 border-b border-gray-800 shrink-0 transition-all duration-300">
         <div class="flex items-center gap-3 overflow-hidden" x-show="sidebarOpen" x-transition:enter="transition delay-100 duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-            <x-heroicon-s-building-storefront class="w-7 h-7 text-primary shrink-0" />
-            <span class="font-bold text-white text-sm tracking-widest whitespace-nowrap">SBC.</span>
+            <div class="w-8 h-8 rounded-xl bg-[#0F2E23] flex items-center justify-center text-emerald-400 shrink-0">
+                <i class="fa-solid fa-utensils text-sm"></i>
+            </div>
+            <span class="font-extrabold text-white text-sm tracking-widest whitespace-nowrap">SBC RESTO</span>
         </div>
         <button @click="sidebarOpen = !sidebarOpen" 
                 class="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors focus:outline-none"
-                x-bind:class="sidebarOpen ? '' : 'mx-auto w-full'">
-            <x-heroicon-o-bars-3-bottom-left class="w-6 h-6" x-show="!sidebarOpen" style="display: none;" />
-            <x-heroicon-o-chevron-double-left class="w-5 h-5" x-show="sidebarOpen" />
+                x-bind:class="sidebarOpen ? '' : 'mx-auto'"
+                title="Toggle Sidebar">
+            <i class="fa-solid fa-indent text-lg transition-transform duration-200" x-show="!sidebarOpen"></i>
+            <i class="fa-solid fa-dedent text-lg transition-transform duration-200" x-show="sidebarOpen"></i>
         </button>
     </div>
 
@@ -35,7 +38,7 @@
         {{-- Dashboard --}}
         @include('partials.sidebar-link', [
             'route' => 'dashboard',
-            'icon' => 'o-squares-2x2',
+            'icon' => 'fa-gauge-high',
             'label' => 'Dashboard',
             'active' => request()->routeIs('dashboard'),
         ])
@@ -44,7 +47,7 @@
         @if($hasRole('Kasir'))
         @include('partials.sidebar-link', [
             'route' => 'pos.dinein.index',
-            'icon' => 'o-computer-desktop',
+            'icon' => 'fa-cash-register',
             'label' => 'Point of Sale',
             'active' => request()->routeIs('pos.dinein.*'),
         ])
@@ -56,7 +59,7 @@
         {{-- Pesanan (Submenu) --}}
         @php
             $pesananItems = [];
-            if ($hasRole('Kasir', 'Manajer', 'Pemilik')) {
+            if ($hasRole('Manajer', 'Pemilik')) {
                 $pesananItems[] = ['label' => 'Daftar Pesanan Dine-In',  'url' => route('pesanan.index'), 'active' => request()->routeIs('pesanan.index')];
                 $pesananItems[] = ['label' => 'Daftar Pesanan Catering', 'url' => route('admin.pesanan.catering.index'),  'active' => request()->routeIs('admin.pesanan.catering.*')];
                 $pesananItems[] = ['label' => 'Daftar Pesanan Nasi Box', 'url' => route('admin.pesanan.nasibox.index'),   'active' => request()->routeIs('admin.pesanan.nasibox.*')];
@@ -67,7 +70,7 @@
         @endphp
         @if(count($pesananItems) > 0)
         @include('partials.sidebar-submenu', [
-            'icon' => 'o-clipboard-document-list',
+            'icon' => 'fa-clipboard-list',
             'label' => 'Pesanan',
             'isOpen' => request()->routeIs('pesanan.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.jadwal.*'),
             'items' => $pesananItems,
@@ -77,7 +80,7 @@
         {{-- Menu (Submenu) --}}
         @if($hasRole('Manajer', 'Pemilik'))
         @include('partials.sidebar-submenu', [
-            'icon' => 'o-book-open',
+            'icon' => 'fa-utensils',
             'label' => 'Menu',
             'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*'),
             'items' => [
@@ -102,7 +105,7 @@
         @endphp
         @if(count($bahanBakuItems) > 0)
         @include('partials.sidebar-submenu', [
-            'icon' => 'o-cube',
+            'icon' => 'fa-boxes-stacked',
             'label' => 'Bahan Baku',
             'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('stok-menipis.*'),
             'items' => $bahanBakuItems,
@@ -112,7 +115,7 @@
         {{-- Pengadaan (Submenu) --}}
         @if($hasRole('Pemilik'))
         @include('partials.sidebar-submenu', [
-            'icon' => 'o-truck',
+            'icon' => 'fa-truck-field',
             'label' => 'Pengadaan',
             'isOpen' => request()->routeIs('pengadaan.*'),
             'items' => [
@@ -125,7 +128,7 @@
         {{-- Laporan (Submenu) --}}
         @if($hasRole('Manajer', 'Pemilik'))
         @include('partials.sidebar-submenu', [
-            'icon' => 'o-chart-bar',
+            'icon' => 'fa-chart-pie',
             'label' => 'Laporan',
             'isOpen' => request()->routeIs('laporan.*'),
             'items' => [
@@ -140,7 +143,7 @@
         {{-- Pengguna (Submenu) --}}
         @if($hasRole('Admin'))
         @include('partials.sidebar-submenu', [
-            'icon' => 'o-users',
+            'icon' => 'fa-users-gear',
             'label' => 'Pengguna',
             'isOpen' => request()->routeIs('users.*'),
             'items' => [
@@ -152,22 +155,12 @@
 
     </nav>
 
-    {{-- Footer Profile --}}
+    {{-- Footer Actions --}}
     <div class="p-3 border-t border-gray-800 shrink-0">
-        <div class="flex items-center gap-3 px-3 py-2 bg-gray-800/50 rounded-xl mb-2 overflow-hidden transition-all duration-300">
-            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                {{ substr(auth()->user()->name ?? 'K', 0, 1) }}
-            </div>
-            <div class="flex-1 min-w-0" x-show="sidebarOpen" x-transition:enter="transition delay-100 duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-                <div class="text-sm font-bold text-white truncate">{{ auth()->user()->name ?? 'Kasir 1' }}</div>
-                <div class="text-[10px] text-gray-400 truncate">{{ $userRole ?: 'User' }}</div>
-            </div>
-        </div>
-        
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition group" title="Logout">
-                <x-heroicon-o-arrow-right-on-rectangle class="w-6 h-6 shrink-0 group-hover:text-white" />
+                <i class="fa-solid fa-right-from-bracket text-[16px] w-6 text-center shrink-0 text-red-400 group-hover:text-red-300"></i>
                 <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-200">Log Out</span>
             </button>
         </form>

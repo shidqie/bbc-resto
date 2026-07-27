@@ -94,6 +94,7 @@ class PesananCateringController extends Controller
                 'dp_amount'     => $validated['opsi_pembayaran'] === 'lunas' ? $hitung['total'] : $hitung['dp'],
                 'status'        => 'menunggu_dp',
                 'catatan'       => $validated['catatan'] ?? null,
+                'user_id'       => \Illuminate\Support\Facades\Auth::id() ?? null,
             ]);
 
             foreach ($validated['komponen'] as $komponenId => $menuId) {
@@ -112,6 +113,14 @@ class PesananCateringController extends Controller
 
             return $pesanan;
         });
+
+        // Notifikasi Admin
+        \App\Models\NotifikasiAdmin::buatNotifikasi(
+            'Pesanan Catering Baru #' . $pesanan->kode_pesanan,
+            "Pesanan Catering baru dari {$pesanan->nama_pemesan} sejumlah {$pesanan->jumlah_porsi} porsi (Total: Rp " . number_format($pesanan->total_tagihan, 0, ',', '.') . ").",
+            'pesanan_baru',
+            '/admin/pesanan/catering/' . $pesanan->id
+        );
 
         // Generate Midtrans Snap Token
         \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, 'catering');
@@ -138,7 +147,7 @@ class PesananCateringController extends Controller
         $tanggalSampai = $request->input('tanggal_sampai');
         $search = $request->input('search');
 
-        $query = PesananCatering::with('paket')->latest();
+        $query = PesananCatering::with(['paket', 'details.menu'])->latest();
 
         if ($status !== 'all') {
             $query->where('status', $status);
@@ -203,16 +212,26 @@ class PesananCateringController extends Controller
         return view('admin.pesanan.catering.show', compact('pesanan', 'kebutuhanBahan'));
     }
 
-    /** PATCH /admin/pesanan/catering/{id}/verifikasi-dp */
     public function verifikasiDp(Request $request, $buktiId)
     {
         $bukti = \App\Models\BuktiPembayaran::findOrFail($buktiId);
-        $bukti->update(['status' => 'verified', 'catatan_admin' => $request->catatan_admin]);
+        $catatan = $request->input('catatan_admin', 'Diverifikasi oleh Admin');
+        $bukti->update(['status' => 'verified', 'catatan_admin' => $catatan]);
+        
         $pesanan = $bukti->pesanan;
-        if ($pesanan->status === 'menunggu_dp') {
-            $pesanan->update(['status' => 'menunggu_konfirmasi']);
+        if ($pesanan) {
+            if ($bukti->jenis_pembayaran === 'pelunasan') {
+                $pesanan->update(['status' => 'lunas']);
+                $msg = 'Bukti Pelunasan berhasil diverifikasi. Status pesanan kini LUNAS dan siap diproduksi / diantar!';
+            } else {
+                $pesanan->update(['status' => 'terkonfirmasi']);
+                $msg = 'Bukti DP berhasil diverifikasi. Status pesanan Terkonfirmasi & menunggu pelunasan.';
+            }
+        } else {
+            $msg = 'Bukti pembayaran berhasil diverifikasi.';
         }
-        return back()->with('success', 'Bukti DP berhasil diverifikasi.');
+        
+        return back()->with('success', $msg);
     }
 
     /** PATCH /admin/pesanan/catering/{id}/konfirmasi */

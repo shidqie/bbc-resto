@@ -42,6 +42,11 @@ class AdminAuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+
+        if ($role === 'Kasir') {
+            return redirect()->intended(route('pos.dinein.index', absolute: false));
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 }

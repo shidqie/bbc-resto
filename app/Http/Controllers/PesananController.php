@@ -15,7 +15,7 @@ class PesananController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pesanan::with('user')->latest();
+        $query = Pesanan::with(['user', 'details.menu', 'pembayarans'])->latest();
 
         if ($request->has('search') && $request->search != '') {
             $query->where('no_pesanan', 'like', "%{$request->search}%")

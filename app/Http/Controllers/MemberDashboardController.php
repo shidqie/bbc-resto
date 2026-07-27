@@ -87,32 +87,70 @@ class MemberDashboardController extends Controller
     public function pesananAktif()
     {
         $user = Auth::user();
+        $userMatch = array_filter([$user->id, $user->name, $user->email, $user->phone_number]);
         
-        // Ambil pesanan yang belum selesai/batal
-        $cateringOrders = \App\Models\PesananCatering::where('user_id', $user->id)
+        // Ambil pesanan Catering yang belum selesai/batal
+        $cateringOrders = \App\Models\PesananCatering::where(function($q) use ($user, $userMatch) {
+                                $q->where('user_id', $user->id)
+                                  ->orWhereIn('nama_pemesan', $userMatch)
+                                  ->orWhereIn('kontak', $userMatch);
+                            })
                             ->whereNotIn('status', ['selesai', 'dibatalkan'])
                             ->latest()->get();
                             
-        $nasiboxOrders = \App\Models\PesananNasiBox::where('user_id', $user->id)
+        // Ambil pesanan Nasi Box yang belum selesai/batal
+        $nasiboxOrders = \App\Models\PesananNasiBox::where(function($q) use ($user, $userMatch) {
+                                $q->where('user_id', $user->id)
+                                  ->orWhereIn('nama_pemesan', $userMatch)
+                                  ->orWhereIn('kontak', $userMatch);
+                            })
                             ->whereNotIn('status', ['selesai', 'dibatalkan'])
                             ->latest()->get();
+
+        // Ambil pesanan Dine-In / Resto yang belum selesai/batal
+        $dineinOrders = \App\Models\Pesanan::where(function($q) use ($user, $userMatch) {
+                                $q->where('user_id', $user->id)
+                                  ->orWhereIn('nama_pelanggan', $userMatch)
+                                  ->orWhere('nama_pelanggan', 'LIKE', '%' . $user->name . '%');
+                            })
+                            ->whereNotIn('status_pesanan', ['selesai', 'dibatalkan'])
+                            ->latest()->get();
                             
-        return view('member.pesanan-aktif', compact('cateringOrders', 'nasiboxOrders'));
+        return view('member.pesanan-aktif', compact('cateringOrders', 'nasiboxOrders', 'dineinOrders'));
     }
 
     public function riwayat()
     {
         $user = Auth::user();
+        $userMatch = array_filter([$user->id, $user->name, $user->email, $user->phone_number]);
         
-        // Ambil pesanan yang sudah selesai/batal
-        $cateringOrders = \App\Models\PesananCatering::where('user_id', $user->id)
+        // Ambil pesanan Catering yang sudah selesai/batal
+        $cateringOrders = \App\Models\PesananCatering::where(function($q) use ($user, $userMatch) {
+                                $q->where('user_id', $user->id)
+                                  ->orWhereIn('nama_pemesan', $userMatch)
+                                  ->orWhereIn('kontak', $userMatch);
+                            })
                             ->whereIn('status', ['selesai', 'dibatalkan'])
                             ->latest()->get();
                             
-        $nasiboxOrders = \App\Models\PesananNasiBox::where('user_id', $user->id)
+        // Ambil pesanan Nasi Box yang sudah selesai/batal
+        $nasiboxOrders = \App\Models\PesananNasiBox::where(function($q) use ($user, $userMatch) {
+                                $q->where('user_id', $user->id)
+                                  ->orWhereIn('nama_pemesan', $userMatch)
+                                  ->orWhereIn('kontak', $userMatch);
+                            })
                             ->whereIn('status', ['selesai', 'dibatalkan'])
                             ->latest()->get();
+
+        // Ambil pesanan Dine-In / Resto yang sudah selesai/batal
+        $dineinOrders = \App\Models\Pesanan::where(function($q) use ($user, $userMatch) {
+                                $q->where('user_id', $user->id)
+                                  ->orWhereIn('nama_pelanggan', $userMatch)
+                                  ->orWhere('nama_pelanggan', 'LIKE', '%' . $user->name . '%');
+                            })
+                            ->whereIn('status_pesanan', ['selesai', 'dibatalkan'])
+                            ->latest()->get();
                             
-        return view('member.riwayat', compact('cateringOrders', 'nasiboxOrders'));
+        return view('member.riwayat', compact('cateringOrders', 'nasiboxOrders', 'dineinOrders'));
     }
 }

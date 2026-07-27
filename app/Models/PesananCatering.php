@@ -22,12 +22,18 @@ class PesananCatering extends Model
         'total_tagihan',
         'dp_amount',
         'status',
-        'catatan'
+        'catatan',
+        'user_id'
     ];
 
     protected $casts = [
         'tanggal_acara' => 'date',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function paket()
     {

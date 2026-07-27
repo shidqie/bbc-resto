@@ -2,22 +2,7 @@
 |--------------------------------------------------------------------------
 | Page Header Component
 |--------------------------------------------------------------------------
-| Komponen untuk menampilkan judul halaman, breadcrumb, dan tombol aksi.
-|
-| Props:
-|   - title       (string)  : Judul halaman utama
-|   - subtitle    (string)  : Deskripsi singkat di bawah judul (opsional)
-|   - breadcrumbs (array)   : Array string untuk breadcrumb, item terakhir = aktif
-|
-| Slots:
-|   - actions : Tempat untuk tombol-tombol aksi (kanan atas)
-|
-| Contoh Pemakaian:
-|   <x-ui.page-header title="Daftar Menu" subtitle="Kelola menu" :breadcrumbs="['Menu', 'Daftar']">
-|       <x-slot:actions>
-|           <x-ui.button href="/menu/create" icon="fa-plus">Tambah</x-ui.button>
-|       </x-slot:actions>
-|   </x-ui.page-header>
+| Menampilkan judul halaman, breadcrumbs, dan tombol aksi spesifik halaman.
 --}}
 
 @props([
@@ -26,7 +11,7 @@
     'breadcrumbs' => [],
 ])
 
-<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
     <div>
         {{-- Breadcrumb --}}
         @if(count($breadcrumbs) > 0)
@@ -38,7 +23,7 @@
                         @endif
                         @if($i === count($breadcrumbs) - 1)
                             {{-- Item terakhir = halaman aktif --}}
-                            <li class="text-gray-900 font-medium">{{ $crumb }}</li>
+                            <li class="text-gray-900 font-bold">{{ $crumb }}</li>
                         @else
                             <li class="inline-flex items-center">{{ $crumb }}</li>
                         @endif
@@ -48,15 +33,15 @@
         @endif
 
         {{-- Judul --}}
-        <h1 class="text-2xl font-bold text-gray-900">{{ $title }}</h1>
+        <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">{{ $title }}</h1>
 
         {{-- Subtitle --}}
         @if($subtitle)
-            <p class="text-[13px] text-gray-500 mt-1">{{ $subtitle }}</p>
+            <p class="text-[13px] text-gray-500 mt-1 font-medium">{{ $subtitle }}</p>
         @endif
     </div>
 
-    {{-- Tombol Aksi (kanan) --}}
+    {{-- Tombol Aksi Halaman (kanan) --}}
     @if(isset($actions))
         <div class="flex items-center gap-2 shrink-0">
             {{ $actions }}

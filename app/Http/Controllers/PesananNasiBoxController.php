@@ -83,6 +83,14 @@ class PesananNasiBoxController extends Controller
             ]);
         }
 
+        // Notifikasi Admin
+        \App\Models\NotifikasiAdmin::buatNotifikasi(
+            'Pesanan Nasi Box Baru #' . $pesanan->kode_pesanan,
+            "Pesanan Nasi Box baru dari {$pesanan->nama_pemesan} sejumlah {$pesanan->jumlah_box} box (Total: Rp " . number_format($pesanan->total_tagihan, 0, ',', '.') . ").",
+            'pesanan_baru',
+            '/admin/pesanan/nasi-box/' . $pesanan->id
+        );
+
         // Generate Midtrans Snap Token
         \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, 'nasi_box');
 

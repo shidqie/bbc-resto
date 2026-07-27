@@ -11,6 +11,7 @@ class PesananDinein extends Model
         'nama_konsumen',
         'jumlah_tamu',
         'status',
+        'sub_status',
         'dibuka_oleh',
         'dibuka_pada',
         'dibayar_pada',

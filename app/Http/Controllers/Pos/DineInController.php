@@ -32,39 +32,21 @@ class DineInController extends Controller
         $kategoriIds = $menus->pluck('kategori_menu_id')->filter()->unique();
         $kategoris = KategoriMenu::whereIn('id', $kategoriIds)->get();
 
-        // Shift Kasir Aktif
-        $activeShift = \App\Models\ShiftKasir::where('user_id', auth()->id())
-            ->where('status', 'buka')
-            ->latest()
-            ->first();
-
         // Open Bills (Pesanan Menggantung Menunggu Pembayaran)
         $openBills = PesananDinein::with(['meja', 'items.menu'])
             ->where('status', 'menunggu_pembayaran')
             ->orderBy('dibuka_pada', 'desc')
             ->get();
-        
-        return view('pos.dinein.index', compact('mejas', 'menus', 'kategoris', 'activeShift', 'openBills'));
-    }
 
-    public function order($mejaId)
-    {
-        $meja = Meja::findOrFail($mejaId);
-        $menus = Menu::with(['kategori', 'resep.bahanBaku'])
-            ->where(function($query) {
-                $query->where('jenis_menu', 'dine_in')
-                      ->orWhereNull('jenis_menu');
-            })
+        // Riwayat Transaksi Lunas & Void Kasir (200 Transaksi Terakhir)
+        $riwayatTransaksi = PesananDinein::with(['meja', 'items.menu', 'pembayaran.diprosesOleh', 'kasir'])
+            ->orderBy('updated_at', 'desc')
+            ->take(200)
             ->get();
-        
-        // Buka meja jika masih kosong
-        try {
-            $pesanan = $this->dineInService->bukaMeja($meja->id, auth()->id());
-        } catch (\Exception $e) {
-            return redirect()->route('pos.dinein.index')->with('error', $e->getMessage());
-        }
 
-        return view('pos.dinein.order', compact('meja', 'menus', 'pesanan'));
+        $cashiers = \App\Models\User::orderBy('name')->get(['id', 'name']);
+        
+        return view('pos.dinein.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'riwayatTransaksi', 'cashiers'));
     }
 
     public function storePosOrder(Request $request)
@@ -88,10 +70,13 @@ class DineInController extends Controller
                 auth()->id()
             );
 
+            $pesanan->load(['meja', 'items.menu']);
+
             return response()->json([
                 'success' => true, 
                 'message' => 'Pesanan berhasil disimpan.',
-                'pesanan_id' => $pesanan->id
+                'pesanan_id' => $pesanan->id,
+                'pesanan' => $pesanan
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -102,10 +87,14 @@ class DineInController extends Controller
     {
         $meja = Meja::findOrFail($mejaId);
         
-        // Batalkan pesanan gantung jika meja dikosongkan
-        PesananDinein::where('meja_id', $mejaId)
+        // Cek apakah ada pesanan aktif yang belum dibayar
+        $unpaidOrder = PesananDinein::where('meja_id', $mejaId)
             ->where('status', 'menunggu_pembayaran')
-            ->update(['status' => 'batal']);
+            ->first();
+
+        if ($unpaidOrder) {
+            return redirect()->back()->with('error', 'Meja ' . $meja->nomor_meja . ' tidak dapat dikosongkan karena masih memiliki tagihan aktif yang BELUM DIBAYAR! Silakan lakukan pembayaran terlebih dahulu.');
+        }
 
         $meja->update(['status' => 'kosong']);
         return redirect()->back()->with('success', 'Meja ' . $meja->nomor_meja . ' berhasil dikosongkan.');
@@ -123,49 +112,87 @@ class DineInController extends Controller
         return view('pos.dinein.print-meja', compact('pesanan'));
     }
 
+    public function printGabungan($pesananId)
+    {
+        $pesanan = PesananDinein::with('items.menu', 'meja')->findOrFail($pesananId);
+        return view('pos.dinein.print-gabungan', compact('pesanan'));
+    }
+
     public function printNota($pesananId)
     {
         $pesanan = PesananDinein::with('items.menu', 'meja', 'pembayaran')->findOrFail($pesananId);
         return view('pos.dinein.print-nota', compact('pesanan'));
     }
 
-    public function bukaShift(Request $request)
+    public function printQrMeja()
+    {
+        $mejas = Meja::orderBy('id', 'asc')->get();
+        return view('pos.dinein.qr-meja', compact('mejas'));
+    }
+
+    public function updateSubStatus(Request $request, $pesananId)
     {
         $request->validate([
-            'modal_awal' => 'required|numeric|min:0'
+            'sub_status' => 'required|string|in:diproses,siap_diantar,sudah_diantar,menunggu_bayar'
         ]);
 
-        $shift = \App\Models\ShiftKasir::create([
-            'user_id' => auth()->id(),
-            'modal_awal' => $request->modal_awal,
-            'status' => 'buka',
-            'dibuka_pada' => now(),
-        ]);
+        $pesanan = PesananDinein::findOrFail($pesananId);
+        $pesanan->update(['sub_status' => $request->sub_status]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Shift Kasir & Modal Awal berhasil dibuka.',
-            'shift' => $shift
+            'message' => 'Sub-status progress pesanan berhasil diperbarui.',
+            'sub_status' => $pesanan->sub_status
         ]);
     }
 
-    public function tutupShift(Request $request)
+    public function voidOrder(Request $request, $pesananId)
     {
-        $shift = \App\Models\ShiftKasir::where('user_id', auth()->id())
-            ->where('status', 'buka')
-            ->first();
+        $request->validate([
+            'alasan_void' => 'required|string',
+            'catatan' => 'nullable|string'
+        ]);
 
-        if ($shift) {
-            $shift->update([
-                'status' => 'tutup',
-                'ditutup_pada' => now(),
-                'kas_akhir' => $request->kas_akhir ?? 0
-            ]);
+        $pesanan = PesananDinein::with('meja', 'pembayaran')->findOrFail($pesananId);
+
+        if ($pesanan->status === 'void') {
+            return response()->json(['success' => false, 'message' => 'Pesanan ini sudah dibatalkan/void.'], 400);
         }
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($pesanan, $request) {
+            $pesanan->update([
+                'status' => 'void',
+                'sub_status' => 'batal'
+            ]);
+
+            if ($pesanan->pembayaran) {
+                $pesanan->pembayaran->update([
+                    'status' => 'void'
+                ]);
+            }
+
+            if ($pesanan->meja) {
+                $pesanan->meja->update(['status' => 'kosong']);
+            }
+        });
 
         return response()->json([
             'success' => true,
-            'message' => 'Shift Kasir berhasil ditutup.'
+            'message' => 'Pesanan #' . ($pesanan->kode_pesanan ?? ('DIN-' . $pesanan->id)) . ' berhasil dibatalkan (Void).'
+        ]);
+    }
+
+    public function toggleMenuStatus($menuId)
+    {
+        $menu = Menu::findOrFail($menuId);
+        $newStatus = ($menu->status === 'aktif' || $menu->status === 'tersedia') ? 'habis' : 'aktif';
+        $menu->update(['status' => $newStatus]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status menu ' . $menu->nama . ' berhasil diubah menjadi ' . strtoupper($newStatus) . '.',
+            'status' => $newStatus,
+            'is_habis' => $menu->isHabis()
         ]);
     }
 }

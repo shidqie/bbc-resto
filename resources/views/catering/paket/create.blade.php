@@ -22,7 +22,7 @@
         <x-ui.alert />
 
         <div class="bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-6 space-y-6">
-            <form action="{{ route('paket-catering.store') }}" method="POST" id="paketForm" class="space-y-6">
+            <form action="{{ route('paket-catering.store') }}" method="POST" enctype="multipart/form-data" id="paketForm" class="space-y-6">
                 @csrf
 
                 {{-- Informasi Utama Paket --}}
@@ -51,6 +51,12 @@
                         </div>
 
                         <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Foto Paket</label>
+                            <input type="file" name="foto" accept="image/*"
+                                   class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-700">
+                        </div>
+
+                        <div class="md:col-span-2">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Deskripsi Singkat</label>
                             <input type="text" name="deskripsi" value="{{ old('deskripsi') }}" placeholder="Contoh: Cocok untuk santap siang kantor…" 
                                    class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F2E23]/10 focus:border-[#0F2E23] outline-none text-xs font-medium">

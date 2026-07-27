@@ -14,4 +14,8 @@ class PembayaranDinein extends Model
         'diproses_pada',
         'status',
     ];
+    public function diprosesOleh()
+    {
+        return $this->belongsTo(User::class, 'diproses_oleh');
+    }
 }

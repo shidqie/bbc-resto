@@ -6,13 +6,13 @@
 
 @section('content')
 <div class="flex-1 overflow-auto bg-gray-50/50 text-gray-800 font-sans">
-    <div class="p-4 md:p-6 lg:p-8 max-w-[1300px] mx-auto space-y-6">
+    <div class="p-6 md:p-8 w-full space-y-6">
         
         {{-- Header --}}
         <x-ui.page-header 
             title="Daftar Menu Resto & Paket" 
             subtitle="Kelola data menu resto, catering, nasi box beserta komposisi bahan baku (BOM)"
-            :breadcrumbs="['Menu', 'Daftar Menu']">
+            :breadcrumbs="['Menu', 'Daftar Menu Resto']">
             <x-slot:actions>
                 <button onclick="openModalTambah()" class="inline-flex items-center gap-2 bg-[#0F2E23] hover:bg-[#0a1f17] text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95">
                     <x-heroicon-o-plus class="w-5 h-5 inline-block shrink-0" /> Tambah Menu Baru

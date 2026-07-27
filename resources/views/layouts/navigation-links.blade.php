@@ -1,5 +1,5 @@
 @php
-    $role = auth()->user()?->role?->name ?? 'Pemilik'; // Default placeholder
+    $role = strtolower(auth()->user()?->role?->name ?? 'pemilik');
     $isMobile = $mobile ?? false;
 
     // Helper function for active state
@@ -25,50 +25,38 @@
 
 <!-- Dashboard (Semua Role) -->
 <a href="{{ route('dashboard') }}" class="{{ $baseClass }} {{ $isActive('dashboard') ? $activeClass : $inactiveClass }}">
-    <span class="{{ $iconClass }}">⌂</span>
+    <i class="fa-solid fa-house {{ $iconClass }}"></i>
     <span>Dashboard</span>
 </a>
 
-@if(in_array($role, ['pemilik']))
-<!-- Menu (Pemilik) -->
-<a href="{{ route('menus.index') }}" class="{{ $baseClass }} {{ $isActive('menus.*') || $isActive('kategori.*') ? $activeClass : $inactiveClass }}">
-    <span class="{{ $iconClass }}">🍽</span>
+@if(in_array($role, ['pemilik', 'admin', 'manajer']))
+<!-- Menu (Pemilik / Manajer) -->
+<a href="{{ route('menu.index') }}" class="{{ $baseClass }} {{ $isActive('menu.*') || $isActive('kategori-menu.*') ? $activeClass : $inactiveClass }}">
+    <i class="fa-solid fa-utensils {{ $iconClass }}"></i>
     <span>Menu</span>
 </a>
 @endif
 
-@if(in_array($role, ['pemilik', 'kasir']))
+@if(in_array($role, ['pemilik', 'admin', 'kasir']))
 <!-- Meja / POS (Kasir / Pemilik) -->
-<a href="#" class="{{ $baseClass }} {{ $isActive('pos.*') ? $activeClass : $inactiveClass }}">
-    <span class="{{ $iconClass }}">🪑</span>
+<a href="{{ route('pos.dinein.index') }}" class="{{ $baseClass }} {{ $isActive('pos.*') ? $activeClass : $inactiveClass }}">
+    <i class="fa-solid fa-chair {{ $iconClass }}"></i>
     <span>Meja</span>
 </a>
 @endif
 
-@if(in_array($role, ['pemilik', 'dapur']))
-<!-- Pesanan Dapur (Dapur / Pemilik) -->
-<a href="#" class="{{ $baseClass }} {{ $isActive('dapur.*') ? $activeClass : $inactiveClass }}">
-    <span class="{{ $iconClass }}">🔥</span>
+@if(in_array($role, ['pemilik', 'admin', 'dapur', 'manajer']))
+<!-- Pesanan Dapur -->
+<a href="{{ route('pesanan.index') }}" class="{{ $baseClass }} {{ $isActive('pesanan.*') ? $activeClass : $inactiveClass }}">
+    <i class="fa-solid fa-clipboard-list {{ $iconClass }}"></i>
     <span>Pesanan</span>
 </a>
 @endif
 
-@if(in_array($role, ['pemilik']))
-<!-- Jadwal Catering/Box (Pemilik) -->
-<a href="#" class="{{ $baseClass }} {{ $isActive('jadwal.*') ? $activeClass : $inactiveClass }}">
-    <span class="{{ $iconClass }}">📅</span>
-    <span>Jadwal</span>
-</a>
-
-<!-- Pengguna (Pemilik) -->
+@if(in_array($role, ['pemilik', 'admin']))
+<!-- Pengguna -->
 <a href="{{ route('users.index') }}" class="{{ $baseClass }} {{ $isActive('users.*') ? $activeClass : $inactiveClass }}">
-    <span class="{{ $iconClass }}">👥</span>
+    <i class="fa-solid fa-users {{ $iconClass }}"></i>
     <span>Pengguna</span>
-</a>
-
-<!-- Lainnya (Pemilik) -->
-<a href="#" class="{{ $baseClass }} {{ $isActive('lainnya.*') ? $activeClass : $inactiveClass }}">
-    <span class="{{ $iconClass }}">⋯</span>
-    <span>Lainnya</span>
 </a>
 @endif

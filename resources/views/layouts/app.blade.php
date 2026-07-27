@@ -5,34 +5,74 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'Saung Babakan Cinta') }}</title>
 
         <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+
+        <!-- Tailwind CSS CDN Fallback for LAN/Wi-Fi Access -->
+        <script src="https://cdn.tailwindcss.com"></script>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+
+        <style>
+            #nprogress .bar { background: #0F2E23 !important; height: 3px !important; z-index: 99999 !important; }
+            .page-fade-in { animation: fadeInPage 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+            @keyframes fadeInPage { from { opacity: 0.85; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+        </style>
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
+    <body class="font-sans antialiased bg-[#F8FAFC]">
+        <div class="min-h-screen bg-[#F8FAFC]">
             @include('layouts.navigation')
 
             <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
+            @if(isset($header) && !empty($header))
+                <header class="bg-white shadow-xs">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
-            @endisset
+            @endif
 
             <!-- Page Content -->
-            <main>
-                {{ $slot }}
+            <main class="page-fade-in">
+                @if(isset($slot) && !empty($slot))
+                    {{ $slot }}
+                @else
+                    @yield('content')
+                @endif
             </main>
         </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof NProgress !== 'undefined') NProgress.configure({ showSpinner: false, speed: 300 });
+
+            const prefetchedUrls = new Set();
+            document.addEventListener('mouseover', function(e) {
+                const link = e.target.closest('a');
+                if (link && link.href && link.origin === location.origin && !link.hash && !link.target && !prefetchedUrls.has(link.href)) {
+                    prefetchedUrls.add(link.href);
+                    const prefetchLink = document.createElement('link');
+                    prefetchLink.rel = 'prefetch';
+                    prefetchLink.href = link.href;
+                    document.head.appendChild(prefetchLink);
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (link && link.href && link.origin === location.origin && !link.hash && link.target !== '_blank' && !e.ctrlKey && !e.metaKey) {
+                    if (typeof NProgress !== 'undefined') NProgress.start();
+                }
+            });
+        });
+        </script>
     </body>
 </html>

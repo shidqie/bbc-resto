@@ -17,6 +17,15 @@ class Menu extends Model
         'status'
     ];
 
+    protected $appends = [
+        'is_habis'
+    ];
+
+    public function getIsHabisAttribute()
+    {
+        return $this->isHabis();
+    }
+
     public function kategori()
     {
         return $this->belongsTo(KategoriMenu::class, 'kategori_menu_id');
@@ -48,22 +57,35 @@ class Menu extends Model
     }
 
     /**
+     * Cek ketersediaan bahan baku (BOM) untuk menu ini
+     *
+     * @param int $menuId
+     * @param int $jumlahPesan
+     * @return bool
+     */
+    public static function cekKetersediaanBahan($menuId, $jumlahPesan = 1)
+    {
+        return \App\Services\BOMService::cekKetersediaanBahan($menuId, $jumlahPesan);
+    }
+
+    /**
+     * Kurangi stok bahan baku (BOM) secara otomatis dan atomik
+     *
+     * @param int $menuId
+     * @param int $jumlahPesan
+     * @param int|null $pesananId
+     * @return bool
+     */
+    public static function kurangiStokBahan($menuId, $jumlahPesan = 1, $pesananId = null)
+    {
+        return \App\Services\BOMService::kurangiStokBahan($menuId, $jumlahPesan, $pesananId);
+    }
+
+    /**
      * Cek apakah menu habis berdasarkan status atau ketersediaan stok bahan baku (BOM)
      */
     public function isHabis()
     {
-        if ($this->status === 'nonaktif' || $this->status === 'habis') {
-            return true;
-        }
-
-        if ($this->resep && $this->resep->count() > 0) {
-            foreach ($this->resep as $r) {
-                if ($r->bahanBaku && $r->bahanBaku->stok < $r->jumlah_kebutuhan) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return !self::cekKetersediaanBahan($this->id, 1);
     }
 }

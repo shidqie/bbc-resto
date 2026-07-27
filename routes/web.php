@@ -11,8 +11,12 @@ Route::post('/pesan/catering', [\App\Http\Controllers\PesananCateringController:
 Route::get('/pesan/catering/komponen/{paketId}', [\App\Http\Controllers\PesananCateringController::class, 'getKomponen'])->name('pesan.catering.komponen');
 Route::post('/pesan/catering/preview', [\App\Http\Controllers\PesananCateringController::class, 'preview'])->name('pesan.catering.preview');
 
-// ─── PUBLIK — QR Menu ───────────────────────────────────────────────────
+// ─── PUBLIK — QR Menu & Scan ───────────────────────────────────────────────────
 Route::get('/qr-menu', [\App\Http\Controllers\QrMenuController::class, 'index'])->name('qr.menu');
+Route::get('/menu/scan', [\App\Http\Controllers\QrMenuController::class, 'index'])->name('menu.scan');
+Route::get('/scan-qr', [\App\Http\Controllers\QrMenuController::class, 'scanner'])->name('qr.scanner');
+Route::post('/qr-menu/order', [\App\Http\Controllers\QrMenuController::class, 'storeOrder'])->name('qr.menu.order');
+Route::post('/qr-menu/panggil-pelayan', [\App\Http\Controllers\QrMenuController::class, 'panggilPelayan'])->name('qr.menu.panggil-pelayan');
 
 // ─── PUBLIK — Form Nasi Box ───────────────────────────────────────────────────
 Route::get('/pesan/nasi-box', [\App\Http\Controllers\PesananNasiBoxController::class, 'create'])->name('pesan.nasibox');
@@ -33,6 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::patch('/pos/menu/{menu}/toggle-status', [\App\Http\Controllers\Pos\DineInController::class, 'toggleMenuStatus'])->name('pos.menu.toggle-status');
     
     // Route Khusus Konsumen
     Route::middleware(['role:Konsumen'])->group(function () {
@@ -95,6 +100,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/pesanan/nasi-box/{pesanan}', [\App\Http\Controllers\PesananNasiBoxController::class, 'show'])->name('admin.pesanan.nasibox.show');
         Route::patch('/admin/pesanan/nasi-box/{pesanan}/konfirmasi', [\App\Http\Controllers\PesananNasiBoxController::class, 'konfirmasi'])->name('admin.pesanan.nasibox.konfirmasi');
         Route::patch('/admin/pesanan/nasi-box/{pesanan}/update-status', [\App\Http\Controllers\PesananNasiBoxController::class, 'updateStatus'])->name('admin.pesanan.nasibox.update-status');
+
+        // Notifikasi Admin
+        Route::get('/admin/notifikasi', function() {
+            $notifikasis = \App\Models\NotifikasiAdmin::latest()->paginate(15);
+            \App\Models\NotifikasiAdmin::where('is_read', false)->update(['is_read' => true]);
+            return view('admin.notifikasi.index', compact('notifikasis'));
+        })->name('admin.notifikasi.index');
+
+        Route::post('/admin/notifikasi/read-all', function() {
+            \App\Models\NotifikasiAdmin::where('is_read', false)->update(['is_read' => true]);
+            return back()->with('success', 'Semua notifikasi telah ditandai dibaca.');
+        })->name('admin.notifikasi.read-all');
     });
 
     // ─── JADWAL PENGANTARAN ───
@@ -122,24 +139,29 @@ Route::middleware('auth')->group(function () {
         Route::post('/pos/dinein/store', [\App\Http\Controllers\Pos\DineInController::class, 'storePosOrder'])->name('pos.dinein.store-pos');
         Route::patch('/pos/dinein/meja/{meja}/clear', [\App\Http\Controllers\Pos\DineInController::class, 'clearTable'])->name('pos.dinein.clear-table');
         
-        // Kas Modal Awal & Shift Kasir
-        Route::post('/pos/shift/buka', [\App\Http\Controllers\Pos\DineInController::class, 'bukaShift'])->name('pos.shift.buka');
-        Route::post('/pos/shift/tutup', [\App\Http\Controllers\Pos\DineInController::class, 'tutupShift'])->name('pos.shift.tutup');
-        
         // Dine-In Checkout / Payment
         Route::get('/pos/dinein/meja/{meja}/checkout', [\App\Http\Controllers\Pos\DineInPaymentController::class, 'checkout'])->name('pos.dinein.checkout');
         Route::post('/pos/dinein/meja/{meja}/checkout', [\App\Http\Controllers\Pos\DineInPaymentController::class, 'processPayment'])->name('pos.dinein.processPayment');
         
-        // Cetak Struk Dine In
+        // Cetak Struk Dine In & QR Meja & Sub Status Update
+        Route::get('/pos/dinein/qr-codes', [\App\Http\Controllers\Pos\DineInController::class, 'printQrMeja'])->name('pos.dinein.print-qr');
         Route::get('/pos/dinein/pesanan/{pesananId}/print-dapur', [\App\Http\Controllers\Pos\DineInController::class, 'printDapur'])->name('pos.dinein.print-dapur');
         Route::get('/pos/dinein/pesanan/{pesananId}/print-meja', [\App\Http\Controllers\Pos\DineInController::class, 'printMeja'])->name('pos.dinein.print-meja');
+        Route::get('/pos/dinein/pesanan/{pesananId}/print-gabungan', [\App\Http\Controllers\Pos\DineInController::class, 'printGabungan'])->name('pos.dinein.print-gabungan');
         Route::get('/pos/dinein/pesanan/{pesananId}/print-nota', [\App\Http\Controllers\Pos\DineInController::class, 'printNota'])->name('pos.dinein.print-nota');
+        Route::patch('/pos/dinein/pesanan/{pesananId}/sub-status', [\App\Http\Controllers\Pos\DineInController::class, 'updateSubStatus'])->name('pos.dinein.sub-status');
+        Route::post('/pos/dinein/pesanan/{pesananId}/void', [\App\Http\Controllers\Pos\DineInController::class, 'voidOrder'])->name('pos.dinein.void');
         
         // Pesanan CRUD (Update Status)
         Route::resource('pesanan', \App\Http\Controllers\PesananController::class)->except(['create', 'edit', 'update', 'destroy']);
         Route::patch('/pesanan/{pesanan}/status', [\App\Http\Controllers\PesananController::class, 'updateStatus'])->name('pesanan.update-status');
         Route::get('/pesanan/{pesanan}/cetak/{type}', [\App\Http\Controllers\PesananController::class, 'cetak'])->name('pesanan.cetak');
     });
+
+    // ─── MIDTRANS PAYMENT API ROUTES ───
+    Route::post('/api/payment/qris', [\App\Http\Controllers\PaymentController::class, 'createQris']);
+    Route::get('/api/payment/status/{orderId}', [\App\Http\Controllers\PaymentController::class, 'checkStatus']);
+    Route::post('/api/payment/notification', [\App\Http\Controllers\PaymentController::class, 'handleNotification']);
 
     // Keep dummy route for other dummy pages
     Route::get('/dummy/{page}', function ($page) {
@@ -174,6 +196,9 @@ require __DIR__.'/auth.php';
 // Midtrans Webhook
 Route::post('/api/midtrans/callback', [\App\Http\Controllers\MidtransController::class, 'notificationCallback']);
 
+// Alternate Flow 6a: Fallback Polling / Manual Check Route
+Route::get('/pesan/check-midtrans-status/{kodePesanan}', [\App\Http\Controllers\MidtransController::class, 'checkStatusManual'])->name('pesanan.check-midtrans-status');
+
 // Fallback untuk Localhost (karena webhook Midtrans tidak bisa masuk ke localhost)
 Route::post('/api/midtrans/localhost-fallback', function(\Illuminate\Http\Request $request) {
     $kode = $request->kode_pesanan;
@@ -186,8 +211,7 @@ Route::post('/api/midtrans/localhost-fallback', function(\Illuminate\Http\Reques
         $order = \App\Models\PesananDinein::with('items.menu')->where('kode_pesanan', $kode)->first();
     }
 
-    if ($order && $order->status !== 'terkonfirmasi' && $order->status !== 'diproses' && $order->status !== 'dikirim' && $order->status !== 'selesai' && $order->status !== 'lunas') {
-        
+    if ($order) {
         if ($order instanceof \App\Models\PesananDinein) {
             $totalHarga = 0;
             foreach ($order->items as $item) {
@@ -200,21 +224,7 @@ Route::post('/api/midtrans/localhost-fallback', function(\Illuminate\Http\Reques
                 $order->dibuka_oleh
             );
         } else {
-            $order->update(['status' => 'terkonfirmasi']);
-            
-            if ($order instanceof \App\Models\PesananCatering) {
-                \App\Services\PesananCateringService::potongStok($order);
-            } else if ($order instanceof \App\Models\PesananNasiBox) {
-                \App\Services\PesananNasiBoxService::potongStok($order);
-            }
-
-            if ($order->email) {
-                try {
-                    \Illuminate\Support\Facades\Mail::to($order->email)->send(new \App\Mail\PaymentReceiptMail($order));
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Localhost Fallback Email Error: ' . $e->getMessage());
-                }
-            }
+            app(\App\Http\Controllers\MidtransController::class)->processSuccessPayment($order, $kode . ($order->status === 'terkonfirmasi' ? '-LNS-' : '-DP-'));
         }
     }
 

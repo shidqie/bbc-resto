@@ -23,7 +23,8 @@ class BuktiPembayaranController extends Controller
 
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
 
-        if (empty($pesanan->snap_token) && $pesanan->status == 'menunggu_dp') {
+        // Generate/Refresh Snap Token untuk DP atau Pelunasan
+        if (in_array($pesanan->status, ['menunggu_dp', 'terkonfirmasi', 'menunggu_pelunasan'])) {
             $pesanan->snap_token = \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, $type);
         }
 
@@ -62,6 +63,15 @@ class BuktiPembayaranController extends Controller
 
         // Update status pesanan
         $pesanan->update(['status' => 'menunggu_konfirmasi']);
+
+        // Notifikasi Admin
+        $jenisStr = strtoupper($request->jenis_pembayaran);
+        \App\Models\NotifikasiAdmin::buatNotifikasi(
+            "Upload Bukti {$jenisStr} #" . $request->kode_pesanan,
+            "Pelanggan {$pesanan->nama_pemesan} telah mengunggah bukti transfer {$request->jenis_pembayaran} untuk pesanan #{$request->kode_pesanan}. Silakan lakukan verifikasi.",
+            $request->jenis_pembayaran === 'pelunasan' ? 'pelunasan' : 'bukti_pembayaran',
+            '/pesan/status/' . $request->kode_pesanan
+        );
 
         return redirect()->route('pesanan.status', $request->kode_pesanan)
             ->with('success', 'Bukti pembayaran berhasil dikirim! Kami akan memverifikasi dalam 1×24 jam.');

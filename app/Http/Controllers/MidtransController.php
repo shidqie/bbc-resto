@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Midtrans\Config;
 use Midtrans\Snap;
+use Midtrans\Transaction;
 use App\Models\PesananCatering;
 use App\Models\PesananNasiBox;
 use App\Models\PesananDinein;
+use App\Models\BuktiPembayaran;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class MidtransController extends Controller
 {
@@ -20,6 +23,10 @@ class MidtransController extends Controller
         Config::$is3ds = config('midtrans.is_3ds');
     }
 
+    /**
+     * Generate Midtrans Snap Token
+     * Dynamically calculates gross_amount for DP or Pelunasan (Sisa Tagihan)
+     */
     public static function generateSnapToken($order, $type = 'catering')
     {
         Config::$serverKey = config('midtrans.server_key');
@@ -30,19 +37,21 @@ class MidtransController extends Controller
         $gross_amount = 0;
         $order_id_prefix = $order->kode_pesanan;
 
-        if ($order instanceof \App\Models\PesananDinein) {
-            // Untuk Dine-In, hitung total tagihan dari item
+        if ($order instanceof PesananDinein) {
             foreach ($order->items as $item) {
                 $gross_amount += ($item->qty * $item->menu->harga);
             }
             $firstName = $order->nama_konsumen ?? 'Pelanggan Dine-In';
-            $phone = '080000000000'; // Dummy phone since dine-in might not have it
+            $phone = '080000000000';
         } else {
-            // We use dp_amount if status is menunggu_dp, else total_tagihan if lunas/etc.
-            $gross_amount = $order->dp_amount;
-            if($order->status == 'menunggu_pelunasan' || $order->status == 'terkonfirmasi') {
-                 // For simplicity, we just charge dp_amount. 
-                 // In a full implementation, pelunasan logic handles the rest.
+            // Jika status terkonfirmasi/menunggu_pelunasan -> Nominal = Sisa Tagihan Pelunasan
+            if (in_array($order->status, ['terkonfirmasi', 'menunggu_pelunasan'])) {
+                $gross_amount = max(0, $order->total_tagihan - $order->dp_amount);
+                $order_id_prefix .= '-LNS';
+            } else {
+                // Nominal = DP Amount
+                $gross_amount = $order->dp_amount;
+                $order_id_prefix .= '-DP';
             }
             $firstName = $order->nama_pemesan;
             $phone = $order->kontak;
@@ -50,8 +59,8 @@ class MidtransController extends Controller
 
         $params = [
             'transaction_details' => [
-                'order_id' => $order_id_prefix . '-' . time(), // append time to avoid duplicate order id on midtrans if retried
-                'gross_amount' => $gross_amount,
+                'order_id' => $order_id_prefix . '-' . time(),
+                'gross_amount' => (int) $gross_amount,
             ],
             'customer_details' => [
                 'first_name' => $firstName,
@@ -69,6 +78,9 @@ class MidtransController extends Controller
         }
     }
 
+    /**
+     * Webhook Callback dari Midtrans (Main Flow Step 7 & 8)
+     */
     public function notificationCallback(Request $request)
     {
         $payload = $request->getContent();
@@ -82,17 +94,18 @@ class MidtransController extends Controller
 
         $transaction = $notification->transaction_status;
         $type = $notification->payment_type;
-        $orderIdArray = explode('-', $notification->order_id);
-        $orderId = $orderIdArray[0];
+        $orderIdFull = $notification->order_id;
+        $orderIdArray = explode('-', $orderIdFull);
+        $kodePesanan = $orderIdArray[0];
         $fraud = $notification->fraud_status;
 
         $order = null;
-        if (strpos($orderId, 'CTR') === 0) {
-            $order = PesananCatering::where('kode_pesanan', $orderId)->first();
-        } else if (strpos($orderId, 'NBX') === 0) {
-            $order = PesananNasiBox::where('kode_pesanan', $orderId)->first();
-        } else if (strpos($orderId, 'DIN') === 0) {
-            $order = PesananDinein::with('items.menu')->where('kode_pesanan', $orderId)->first();
+        if (strpos($kodePesanan, 'CTR') === 0) {
+            $order = PesananCatering::where('kode_pesanan', $kodePesanan)->first();
+        } else if (strpos($kodePesanan, 'NBX') === 0) {
+            $order = PesananNasiBox::where('kode_pesanan', $kodePesanan)->first();
+        } else if (strpos($kodePesanan, 'DIN') === 0) {
+            $order = PesananDinein::with('items.menu')->where('kode_pesanan', $kodePesanan)->first();
         }
 
         if (!$order) {
@@ -100,45 +113,135 @@ class MidtransController extends Controller
         }
 
         if (($transaction == 'capture' && $type == 'credit_card' && $fraud != 'challenge') || $transaction == 'settlement') {
-            // Check if already confirmed to prevent double processing
-            if ($order->status !== 'terkonfirmasi' && $order->status !== 'diproses' && $order->status !== 'dikirim' && $order->status !== 'selesai' && $order->status !== 'lunas') {
-                $order->update(['status' => 'terkonfirmasi']);
-                
-                // Deduct stock if Catering
-                if ($order instanceof \App\Models\PesananCatering) {
-                    \App\Services\PesananCateringService::potongStok($order);
-                } else if ($order instanceof \App\Models\PesananNasiBox) {
-                    \App\Services\PesananNasiBoxService::potongStok($order);
-                } else if ($order instanceof \App\Models\PesananDinein) {
-                    // Stok sudah dipotong saat input order, cukup catat pembayaran
-                    $totalHarga = 0;
-                    foreach ($order->items as $item) {
-                        $totalHarga += ($item->qty * $item->menu->harga);
-                    }
-                    
-                    app(\App\Services\DineInService::class)->prosesPembayaran(
-                        $order->id,
-                        'qris', // Default to qris or get from midtrans
-                        $totalHarga,
-                        $order->dibuka_oleh
-                    );
-                }
-
-                // Send Email Notification
-                if ($order->email) {
-                    try {
-                        \Illuminate\Support\Facades\Mail::to($order->email)->send(new \App\Mail\PaymentReceiptMail($order));
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Midtrans Webhook Email Error: ' . $e->getMessage());
-                    }
-                }
-            }
-        } else if ($transaction == 'pending') {
-            // $order->update(['status' => 'menunggu_dp']);
+            $this->processSuccessPayment($order, $orderIdFull);
         } else if ($transaction == 'deny' || $transaction == 'expire' || $transaction == 'cancel') {
-            $order->update(['status' => 'dibatalkan']);
+            // Alternate Flow 5a: Jika pembayaran DP gagal/expired -> batalkan. Jika pelunasan gagal, tetap terkonfirmasi untuk retry.
+            if ($order->status === 'menunggu_dp') {
+                $order->update(['status' => 'dibatalkan']);
+            }
         }
 
         return response(['message' => 'Success']);
+    }
+
+    /**
+     * Helper untuk memproses pembayaran sukses (DP atau Pelunasan)
+     */
+    public function processSuccessPayment($order, $orderIdFull = '')
+    {
+        $isPelunasan = strpos($orderIdFull, '-LNS-') !== false || in_array($order->status, ['terkonfirmasi', 'menunggu_pelunasan']);
+
+        if ($isPelunasan) {
+            if ($order->status !== 'lunas') {
+                $order->update(['status' => 'lunas']);
+
+                // Catat di Riwayat Pembayaran
+                BuktiPembayaran::create([
+                    'pesanan_id'       => $order->id,
+                    'pesanan_type'     => get_class($order),
+                    'jenis_pembayaran' => 'pelunasan',
+                    'file_path'        => 'midtrans_online',
+                    'status'           => 'verified',
+                    'catatan_admin'    => 'Pelunasan LUNAS via Payment Gateway (Midtrans)',
+                ]);
+
+                // Notifikasi Admin Pelunasan
+                \App\Models\NotifikasiAdmin::buatNotifikasi(
+                    'PELUNASAN DITERIMA #' . $order->kode_pesanan,
+                    "Pelunasan sebesar Rp " . number_format(max(0, $order->total_tagihan - $order->dp_amount), 0, ',', '.') . " untuk pesanan #{$order->kode_pesanan} atas nama {$order->nama_pemesan} telah LUNAS via Payment Gateway.",
+                    'pelunasan',
+                    '/pesan/status/' . $order->kode_pesanan
+                );
+
+                // Send Email Invoice / Notification Lunas (Main Flow Step 9)
+                if ($order->email) {
+                    try {
+                        Mail::to($order->email)->send(new \App\Mail\PaymentReceiptMail($order));
+                    } catch (\Exception $e) {
+                        Log::error('Midtrans Webhook Email Error: ' . $e->getMessage());
+                    }
+                }
+            }
+        } else {
+            if ($order->status !== 'terkonfirmasi' && $order->status !== 'lunas' && $order->status !== 'selesai') {
+                $order->update(['status' => 'terkonfirmasi']);
+
+                // Catat di Riwayat Pembayaran DP
+                BuktiPembayaran::create([
+                    'pesanan_id'       => $order->id,
+                    'pesanan_type'     => get_class($order),
+                    'jenis_pembayaran' => 'dp',
+                    'file_path'        => 'midtrans_online',
+                    'status'           => 'verified',
+                    'catatan_admin'    => 'DP Diterima via Payment Gateway (Midtrans)',
+                ]);
+
+                // Notifikasi Admin DP Diterima
+                \App\Models\NotifikasiAdmin::buatNotifikasi(
+                    'DP Diterima #' . $order->kode_pesanan,
+                    "Pembayaran DP sebesar Rp " . number_format($order->dp_amount, 0, ',', '.') . " untuk pesanan #{$order->kode_pesanan} atas nama {$order->nama_pemesan} telah diterima & terkonfirmasi.",
+                    'bukti_pembayaran',
+                    '/pesan/status/' . $order->kode_pesanan
+                );
+
+                if ($order instanceof PesananCatering) {
+                    \App\Services\PesananCateringService::potongStok($order);
+                } else if ($order instanceof PesananNasiBox) {
+                    \App\Services\PesananNasiBoxService::potongStok($order);
+                }
+
+                if ($order->email) {
+                    try {
+                        Mail::to($order->email)->send(new \App\Mail\PaymentReceiptMail($order));
+                    } catch (\Exception $e) {
+                        Log::error('Midtrans Webhook Email Error: ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Alternate Flow 6a: Pengecekan status manual ke API Payment Gateway (Polling Fallback)
+     */
+    public function checkStatusManual($kodePesanan)
+    {
+        $order = PesananCatering::where('kode_pesanan', $kodePesanan)->first();
+        if (!$order) {
+            $order = PesananNasiBox::where('kode_pesanan', $kodePesanan)->first();
+        }
+
+        if (!$order) {
+            return back()->with('error', 'Pesanan tidak ditemukan.');
+        }
+
+        // Simulasikan pengecekan jika di local
+        if (config('app.env') === 'local') {
+            $this->processSuccessPayment($order, $order->kode_pesanan . ($order->status === 'terkonfirmasi' ? '-LNS-' : '-DP-'));
+            return redirect()->route('pesanan.status', $kodePesanan)
+                ->with('success', 'Status pembayaran berhasil diverifikasi! Pesanan kini ' . strtoupper($order->fresh()->status));
+        }
+
+        try {
+            // Polling via Midtrans API
+            $midtransStatus = Transaction::status($order->kode_pesanan);
+            $transaction = $midtransStatus->transaction_status ?? '';
+
+            if (in_array($transaction, ['settlement', 'capture'])) {
+                $this->processSuccessPayment($order, $order->kode_pesanan);
+                return redirect()->route('pesanan.status', $kodePesanan)
+                    ->with('success', 'Status transaksi diverifikasi otomatis: LUNAS!');
+            } else if (in_array($transaction, ['deny', 'cancel', 'expire'])) {
+                return redirect()->route('pesanan.status', $kodePesanan)
+                    ->with('error', 'Pembayaran gagal atau expired. Silakan coba bayar ulang sisa tagihan.');
+            } else {
+                return redirect()->route('pesanan.status', $kodePesanan)
+                    ->with('info', 'Status pembayaran saat ini: ' . strtoupper($transaction));
+            }
+        } catch (\Exception $e) {
+            Log::error('Manual Midtrans Polling Error: ' . $e->getMessage());
+            return redirect()->route('pesanan.status', $kodePesanan)
+                ->with('error', 'Gagal memeriksa status ke Payment Gateway: ' . $e->getMessage());
+        }
     }
 }

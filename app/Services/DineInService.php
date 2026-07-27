@@ -32,6 +32,7 @@ class DineInService
                 $pesanan = PesananDinein::create([
                     'meja_id' => $meja->id,
                     'status' => 'menunggu_pembayaran',
+                    'sub_status' => 'diproses',
                     'dibuka_oleh' => $staffId,
                     'dibuka_pada' => now(),
                 ]);
@@ -57,9 +58,19 @@ class DineInService
         return DB::transaction(function () use ($pesananId, $items, $staffId) {
             $pesanan = PesananDinein::findOrFail($pesananId);
             if ($pesanan->status !== 'menunggu_pembayaran') {
-                throw new Exception("Tidak bisa menambah pesanan ke meja yang sudah dibayar/selesai.");
+                throw new \Exception("Tidak bisa menambah pesanan ke meja yang sudah dibayar/selesai.");
             }
 
+            // Validasi BOM ketersediaan bahan baku untuk item tambahan
+            foreach ($items as $item) {
+                if (!Menu::cekKetersediaanBahan($item['menu_id'], $item['qty'])) {
+                    $menu = Menu::find($item['menu_id']);
+                    $namaMenu = $menu ? $menu->nama : 'Menu';
+                    throw new \Exception("Gagal menambah item: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
+                }
+            }
+
+            // Buat item pesanan & potong stok BOM secara atomik
             foreach ($items as $item) {
                 ItemPesananDinein::create([
                     'pesanan_dinein_id' => $pesanan->id,
@@ -69,6 +80,8 @@ class DineInService
                     'diinput_oleh' => $staffId,
                     'diinput_pada' => now(),
                 ]);
+
+                Menu::kurangiStokBahan($item['menu_id'], $item['qty'], $pesanan->id);
             }
 
             return true;
@@ -121,49 +134,18 @@ class DineInService
                 ]);
             }
 
-            // --- POTONG STOK BAHAN BAKU LANGSUNG SAAT INPUT ORDER ---
-            $bahanKebutuhan = [];
+            // --- VALIDASI TERLEBIH DAHULU: Cek Ketersediaan Bahan Baku (BOM) ---
             foreach ($items as $item) {
-                $qtyPesan = $item['qty'];
-                $menu = Menu::with('resep')->find($item['menu_id']);
-
-                if ($menu && $menu->resep) {
-                    foreach ($menu->resep as $resep) {
-                        $bahanId = $resep->bahan_baku_id;
-                        $jumlahKebutuhan = $resep->jumlah_kebutuhan * $qtyPesan;
-
-                        if (isset($bahanKebutuhan[$bahanId])) {
-                            $bahanKebutuhan[$bahanId] += $jumlahKebutuhan;
-                        } else {
-                            $bahanKebutuhan[$bahanId] = $jumlahKebutuhan;
-                        }
-                    }
+                if (!Menu::cekKetersediaanBahan($item['menu_id'], $item['qty'])) {
+                    $menu = Menu::find($item['menu_id']);
+                    $namaMenu = $menu ? $menu->nama : 'Menu';
+                    throw new \Exception("Pesanan gagal: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
                 }
             }
 
-            // Eksekusi potong stok bahan baku
-            foreach ($bahanKebutuhan as $bahanId => $totalKebutuhan) {
-                $bahanBaku = BahanBaku::find($bahanId);
-                if ($bahanBaku) {
-                    $stokAwal = $bahanBaku->stok;
-                    
-                    // Cek ketersediaan stok
-                    if ($stokAwal < $totalKebutuhan) {
-                         throw new \Exception("Stok untuk bahan baku '{$bahanBaku->nama_bahan}' tidak mencukupi. Sisa stok: {$stokAwal}, Kebutuhan: {$totalKebutuhan}.");
-                    }
-                    
-                    $bahanBaku->stok -= $totalKebutuhan;
-                    $bahanBaku->save();
-
-                    // Rekam mutasi stok
-                    MutasiStok::create([
-                        'bahan_baku_id' => $bahanBaku->id,
-                        'jenis' => 'keluar',
-                        'jumlah' => $totalKebutuhan,
-                        'keterangan' => 'Terjual via POS Dine-In (Order #' . $pesanan->id . ')',
-                        'tanggal' => now()->format('Y-m-d'),
-                    ]);
-                }
+            // --- EKSEKUSI PENGURANGAN STOK ATOMIK VIA BOM ---
+            foreach ($items as $item) {
+                Menu::kurangiStokBahan($item['menu_id'], $item['qty'], $pesanan->id);
             }
 
             // --- SYNC KE MASTER PESANAN (Global Order List) ---
@@ -188,7 +170,7 @@ class DineInService
                     'tanggal_pesanan' => now(),
                     'jumlah_porsi' => collect($items)->sum('qty'),
                     'status_pesanan' => 'baru',
-                    'user_id' => $staffId,
+                    'user_id' => auth()->check() ? auth()->id() : $staffId,
                     'total_harga' => $totalHarga,
                     'keterangan' => 'Order_ID_Dinein:' . $pesanan->id
                 ]);
@@ -210,6 +192,14 @@ class DineInService
                     'catatan' => $item['catatan'] ?? null
                 ]);
             }
+
+            // Notifikasi Admin
+            \App\Models\NotifikasiAdmin::buatNotifikasi(
+                'Pesanan Resto Baru #' . $pesanan->kode_pesanan,
+                "Pesanan Resto/Dine-In baru di Meja {$meja->nomor_meja} atas nama {$namaKonsumen} (Total: Rp " . number_format($totalHarga, 0, ',', '.') . ").",
+                'pesanan_baru',
+                '/pos/dine-in'
+            );
 
             return $pesanan;
         });
@@ -243,7 +233,7 @@ class DineInService
                 'dibayar_pada' => now(),
             ]);
 
-            $pesanan->meja->update(['status' => 'terisi']);
+            $pesanan->meja->update(['status' => 'kosong']);
 
             // Update status Master Pesanan
             $masterPesanan = Pesanan::where('keterangan', 'Order_ID_Dinein:' . $pesanan->id)->first();

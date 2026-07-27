@@ -19,29 +19,41 @@ class DineInPaymentController extends Controller
         // (asumsi middleware ditambahkan di route, tidak di konstruktor)
     }
 
-    public function checkout($mejaId)
+    public function checkout($id)
     {
-        $meja = Meja::findOrFail($mejaId);
-        
-        $pesanan = PesananDinein::with('items.menu')
-            ->where('meja_id', $meja->id)
+        // 1. Cari pesanan aktif langsung berdasarkan ID Pesanan atau ID Meja
+        $pesanan = PesananDinein::with(['items.menu', 'meja'])
+            ->where('id', $id)
             ->where('status', 'menunggu_pembayaran')
-            ->latest()
             ->first();
 
         if (!$pesanan) {
-            return redirect()->route('pos.dinein.index')->with('error', 'Tidak ada pesanan aktif yang belum dibayar di meja ini.');
+            $pesanan = PesananDinein::with(['items.menu', 'meja'])
+                ->where('meja_id', $id)
+                ->where('status', 'menunggu_pembayaran')
+                ->latest()
+                ->first();
         }
 
-        // Kalkulasi Total
+        if (!$pesanan) {
+            return redirect()->route('pos.dinein.index')->with('error', 'Pesanan tidak ditemukan atau tagihan sudah lunas.');
+        }
+
+        $meja = $pesanan->meja;
+
+        // Kalkulasi Total Tagihan (Aman terhadap null menu)
         $totalTagihan = 0;
         foreach ($pesanan->items as $item) {
-            $totalTagihan += ($item->qty * $item->menu->harga);
+            $hargaSatuan = $item->menu->harga ?? $item->harga_satuan ?? 0;
+            $totalTagihan += ($item->qty * $hargaSatuan);
         }
 
         if (!$pesanan->snap_token && $totalTagihan > 0) {
-            $snapToken = \App\Http\Controllers\MidtransController::generateSnapToken($pesanan);
-            // $pesanan->snap_token already updated inside generateSnapToken
+            try {
+                \App\Http\Controllers\MidtransController::generateSnapToken($pesanan);
+            } catch (\Exception $e) {
+                // Abaikan kesalahan Midtrans jika offline agar pembayaran Tunai tetap bisa dilakukan kasir
+            }
         }
 
         return view('pos.dinein.checkout', compact('meja', 'pesanan', 'totalTagihan'));
@@ -49,9 +61,10 @@ class DineInPaymentController extends Controller
 
     public function processPayment(Request $request, $mejaId)
     {
+
         $request->validate([
             'pesanan_id' => 'required|exists:pesanan_dineins,id',
-            'metode_bayar' => 'required|in:cash,qris,kartu',
+            'metode_bayar' => 'required|in:cash,qris,kartu,nontunai,promo',
             'total_tagihan' => 'required|numeric'
         ]);
 

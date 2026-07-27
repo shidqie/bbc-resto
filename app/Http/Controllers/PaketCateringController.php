@@ -37,6 +37,7 @@ class PaketCateringController extends Controller
             'jenis_paket' => 'required|in:catering,nasi_box',
             'harga' => 'required|numeric|min:0',
             'deskripsi' => 'nullable|string',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'komponen' => 'required|array|min:1',
             'komponen.*.nama_komponen' => 'required|string',
             'komponen.*.tipe' => 'required|in:fixed,choice',
@@ -45,11 +46,17 @@ class PaketCateringController extends Controller
             'komponen.*.menu_id.*' => 'exists:menus,id',
         ]);
 
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('paket', 'public');
+        }
+
         $paket = PaketCatering::create([
             'nama_paket' => $request->nama_paket,
             'jenis_paket' => $request->jenis_paket,
             'harga' => $request->harga,
             'deskripsi' => $request->deskripsi,
+            'foto' => $fotoPath,
         ]);
 
         foreach ($request->komponen as $komp) {
@@ -91,6 +98,7 @@ class PaketCateringController extends Controller
             'jenis_paket' => 'required|in:catering,nasi_box',
             'harga' => 'required|numeric|min:0',
             'deskripsi' => 'nullable|string',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'komponen' => 'required|array|min:1',
             'komponen.*.nama_komponen' => 'required|string',
             'komponen.*.tipe' => 'required|in:fixed,choice',
@@ -99,12 +107,18 @@ class PaketCateringController extends Controller
             'komponen.*.menu_id.*' => 'exists:menus,id',
         ]);
 
-        $paketCatering->update([
+        $data = [
             'nama_paket' => $request->nama_paket,
             'jenis_paket' => $request->jenis_paket,
             'harga' => $request->harga,
             'deskripsi' => $request->deskripsi,
-        ]);
+        ];
+
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('paket', 'public');
+        }
+
+        $paketCatering->update($data);
 
         $paketCatering->komponens()->delete();
 

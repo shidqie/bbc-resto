@@ -1,65 +1,162 @@
-<x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Masuk · BBC Resto</title>
 
-    <div class="mb-8 text-center">
-        <h2 class="text-3xl font-bold text-[#111827] mb-2 tracking-tight">Customer Login</h2>
-        <p class="text-gray-500 text-sm">Masuk untuk memesan dan melacak pesanan Anda.</p>
-    </div>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
+    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-        <!-- Email or Phone -->
-        <div>
-            <x-ui.input id="login" label="Email atau Nomor HP" type="text" name="login" :value="old('login')" required autofocus autocomplete="username" placeholder="Contoh: user@bbc.com atau 0812..." :error="$errors->first('login')" />
-        </div>
+    <style>
+        *, body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        input:focus { outline: none; box-shadow: 0 0 0 3px rgba(15,46,35,0.08); }
 
-        <!-- Password -->
-        <div class="mt-5" x-data="{ show: false }">
-            <label for="password" class="block text-sm font-semibold text-gray-700 font-sans mb-1.5">
-                Password
-            </label>
-            <div class="relative">
-                <input id="password" :type="show ? 'text' : 'password'" name="password" required autocomplete="current-password" placeholder="••••••••" class="block w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 shadow-sm focus:border-success focus:bg-white focus:ring-4 focus:ring-success/10 transition-all duration-300 outline-none text-sm sm:text-base pr-12 {{ $errors->has('password') ? 'border-danger focus:border-danger focus:ring-danger/20' : '' }}">
-                <button type="button" @click="show = !show" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-success transition-colors focus:outline-none flex items-center justify-center w-6 h-6">
-                    <i class="fa-solid fa-eye" x-show="!show"></i>
-                    <i class="fa-solid fa-eye-slash" x-show="show" style="display: none;"></i>
-                </button>
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fu  { animation: fadeUp .45s ease both; }
+        .d1  { animation-delay: .08s; }
+        .d2  { animation-delay: .16s; }
+        .d3  { animation-delay: .24s; }
+        .d4  { animation-delay: .32s; }
+    </style>
+</head>
+<body class="min-h-screen bg-[#f5f5f0] flex antialiased text-[#111827]">
+
+    <div class="flex min-h-screen w-full">
+
+        {{-- ── LEFT PANEL ── --}}
+        <div class="hidden lg:flex lg:w-2/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden">
+
+            {{-- Full photo background --}}
+            <div class="absolute inset-0" style="background-image: url('{{ asset('images/taman_kafe.webp') }}'); background-size: cover; background-position: center;"></div>
+            {{-- Dark gradient overlay --}}
+            <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/75"></div>
+            {{-- Color tint --}}
+            <div class="absolute inset-0 bg-[#0F2E23]/30"></div>
+
+            {{-- Top: Logo --}}
+            <div class="relative z-10 flex items-center gap-2.5">
+                <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-lg object-contain bg-white/10 p-0.5">
+                <span class="text-white/80 text-sm font-semibold tracking-wide">BBC Resto</span>
             </div>
-            @if($errors->has('password'))
-                <p class="text-xs font-medium text-danger mt-1">{{ $errors->first('password') }}</p>
-            @endif
+
+            {{-- Middle: Tagline --}}
+            <div class="relative z-10">
+                <p class="text-white/50 text-[11px] font-semibold uppercase tracking-[0.15em] mb-4">Saung Babakan Cinta</p>
+                <h1 class="text-3xl xl:text-4xl font-bold text-white leading-snug mb-4">
+                    Selamat datang<br>kembali.
+                </h1>
+                <p class="text-white/60 text-sm leading-relaxed max-w-xs">
+                    Pesan menu favorit, pantau status pesanan, dan nikmati pengalaman kuliner bersama kami.
+                </p>
+            </div>
+
+            {{-- Bottom --}}
+            <div class="relative z-10">
+                <p class="text-white/30 text-xs">© 2026 Saung Babakan Cinta</p>
+            </div>
         </div>
 
-        <!-- Remember Me & Forgot Password -->
-        <div class="flex items-center justify-between mt-5">
-            <label for="remember_me" class="inline-flex items-center cursor-pointer group">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 bg-white text-success shadow-sm focus:ring-success focus:ring-offset-white w-4 h-4 transition-all" name="remember">
-                <span class="ms-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Ingat saya</span>
-            </label>
+        {{-- ── RIGHT: FORM ── --}}
+        <div class="flex-1 flex items-center justify-center px-6 py-16 sm:px-12 bg-[#f5f5f0]">
+            <div class="w-full max-w-[360px]">
 
-            @if (Route::has('password.request'))
-                <a class="text-sm font-medium text-success hover:text-green-700 transition-colors" href="{{ route('password.request') }}">
-                    Lupa password?
-                </a>
-            @endif
-        </div>
+                {{-- Mobile logo --}}
+                <div class="lg:hidden flex items-center gap-2.5 mb-10">
+                    <div class="w-8 h-8 rounded-lg bg-[#0F2E23] flex items-center justify-center">
+                        <i class="fa-solid fa-utensils text-white text-xs"></i>
+                    </div>
+                    <span class="text-sm font-bold text-[#111827] tracking-wide">BBC Resto</span>
+                </div>
 
-        <div class="mt-8">
-            <x-ui.button type="submit" variant="success" class="w-full py-3.5 shadow-lg shadow-success/20">
-                Log In
-            </x-ui.button>
+                {{-- Heading --}}
+                <div class="mb-8 fu d1">
+                    <h2 class="text-2xl font-bold text-[#111827] tracking-tight mb-1">Masuk Akun</h2>
+                    <p class="text-sm text-gray-500 font-medium">Masuk menggunakan email atau nomor HP Anda.</p>
+                </div>
+
+                <x-auth-session-status class="mb-5 text-sm" :status="session('status')" />
+
+                @if($errors->any())
+                    <div class="mb-5 p-3.5 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 font-medium fu d1">
+                        <i class="fa-solid fa-circle-exclamation mr-2 text-red-400"></i>{{ $errors->first() }}
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                    @csrf
+
+                    {{-- Email / HP --}}
+                    <div class="fu d2">
+                        <label for="login" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Email / No. HP</label>
+                        <input id="login" type="text" name="login" value="{{ old('login') }}"
+                               required autofocus autocomplete="username"
+                               placeholder="contoh@email.com"
+                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0F2E23]">
+                    </div>
+
+                    {{-- Password --}}
+                    <div class="fu d3" x-data="{ show: false }">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label for="password" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-[0.1em]">Password</label>
+                            @if(Route::has('password.request'))
+                                <a href="{{ route('password.request') }}" class="text-[11px] font-semibold text-[#0F2E23] hover:opacity-70 transition-opacity">Lupa password?</a>
+                            @endif
+                        </div>
+                        <div class="relative">
+                            <input id="password" :type="show ? 'text' : 'password'" name="password"
+                                   required autocomplete="current-password"
+                                   placeholder="••••••••"
+                                   class="w-full px-4 py-3 pr-11 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0F2E23]">
+                            <button type="button" @click="show = !show"
+                                    class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                                <i class="fa-solid fa-eye text-sm" x-show="!show"></i>
+                                <i class="fa-solid fa-eye-slash text-sm" x-show="show" style="display:none"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Remember --}}
+                    <div class="flex items-center gap-2 fu d3">
+                        <input id="remember_me" type="checkbox" name="remember"
+                               class="w-4 h-4 rounded border-gray-300 text-[#0F2E23] focus:ring-[#0F2E23]/20 transition-all cursor-pointer">
+                        <label for="remember_me" class="text-sm text-gray-400 font-medium cursor-pointer select-none">Ingat saya</label>
+                    </div>
+
+                    {{-- Submit --}}
+                    <div class="pt-1 fu d4">
+                        <button type="submit"
+                                class="w-full py-3.5 bg-[#0F2E23] hover:bg-[#1a4a35] text-white font-semibold text-sm rounded-xl transition-all duration-200 active:scale-[0.99]">
+                            Masuk
+                        </button>
+                    </div>
+                </form>
+
+                {{-- Register link --}}
+                <p class="text-center text-sm text-gray-400 mt-6 fu d4">
+                    Belum punya akun?
+                    <a href="{{ route('register') }}" class="font-semibold text-[#0F2E23] hover:opacity-70 transition-opacity ml-1">Daftar</a>
+                </p>
+
+                {{-- Divider --}}
+                <div class="mt-8 pt-6 border-t border-gray-200 fu d4">
+                    <p class="text-center text-xs text-gray-300 font-medium">
+                        Karyawan / Staff?
+                        <a href="{{ route('admin.login') }}" class="text-gray-400 font-semibold hover:text-[#0F2E23] transition-colors ml-1">Portal Admin</a>
+                    </p>
+                </div>
+
+            </div>
         </div>
-        
-        <div class="mt-6 text-center text-sm text-gray-500">
-            Belum punya akun? 
-            <a href="{{ route('register') }}" class="font-semibold text-success hover:text-green-700 transition-colors">Daftar sekarang</a>
-        </div>
-        
-        <div class="mt-8 pt-6 border-t border-gray-100 text-center text-sm text-gray-500">
-            Karyawan / Staff? 
-            <a href="{{ route('admin.login') }}" class="font-semibold text-gray-700 hover:text-gray-900 transition-colors">Portal Admin</a>
-        </div>
-    </form>
-</x-guest-layout>
+    </div>
+</body>
+</html>

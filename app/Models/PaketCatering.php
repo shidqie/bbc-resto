@@ -11,6 +11,7 @@ class PaketCatering extends Model
         'jenis_paket',
         'harga',
         'deskripsi',
+        'foto',
         'is_active',
     ];
 
