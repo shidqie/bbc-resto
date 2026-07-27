@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BahanBaku;
+use App\Models\KategoriBahan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class StokMenipisController extends Controller
 {
@@ -20,7 +20,7 @@ class StokMenipisController extends Controller
         }
 
         if ($request->has('kategori') && $request->kategori != '') {
-            $query->where('kategori_id', $request->kategori);
+            $query->where('kategori_bahan_id', $request->kategori);
         }
         
         // Urutkan berdasarkan persentase sisa stok (stok / stok_minimum) dari yang terkecil (paling mendesak)
@@ -28,7 +28,7 @@ class StokMenipisController extends Controller
 
         $bahanBakus = $query->paginate(15)->withQueryString();
         
-        $kategoris = \App\Models\Category::all(); // Menggunakan Category model untuk kategori bahan baku
+        $kategoris = KategoriBahan::all();
 
         $stats = [
             'total_menipis' => BahanBaku::whereRaw('stok <= stok_minimum AND stok > 0')->count(),

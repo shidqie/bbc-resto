@@ -310,10 +310,11 @@ class DineInService
 
                     MutasiStok::create([
                         'bahan_baku_id' => $bahanBaku->id,
-                        'jenis' => 'masuk',
+                        'user_id' => auth()->check() ? auth()->id() : 1,
+                        'jenis_mutasi' => 'masuk',
                         'jumlah' => $totalKebutuhan,
+                        'sisa_stok' => $bahanBaku->stok,
                         'keterangan' => 'Void/Refund POS Dine-In (Order #' . $pesanan->id . ')',
-                        'tanggal' => now()->format('Y-m-d'),
                     ]);
                 }
             }

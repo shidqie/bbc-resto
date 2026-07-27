@@ -1,9 +1,0 @@
---- routes/web.php
-+++ routes/web.php
-@@ -73,6 +73,6 @@
-     } else {
-         \App\Models\PesananNasiBox::where('kode_pesanan', $kode)->update(['status' => 'terkonfirmasi']);
-     }
--    return response()->json(['success' => true]);
-+    return redirect()->route('pesanan.status', $kode);
- });

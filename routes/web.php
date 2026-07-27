@@ -58,8 +58,6 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['role:Admin'])->group(function () {
         Route::resource('users', \App\Http\Controllers\UserController::class)->except(['create', 'show', 'edit']);
         Route::resource('roles', \App\Http\Controllers\RoleController::class)->except(['create', 'show', 'edit']);
-        Route::resource('categories', \App\Http\Controllers\CategoryController::class)->except(['create', 'show', 'edit']);
-        Route::resource('products', \App\Http\Controllers\ProductController::class)->except(['create', 'show', 'edit']);
     });
 
     // ─── MASTER DATA (Menu, Bahan Baku, Paket) ───
