@@ -494,7 +494,7 @@
                                     ? 'opacity-50 cursor-not-allowed bg-slate-400'
                                     : 'bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] shadow-md'"
                                 class="flex-1 max-w-[260px] py-3.5 px-6 rounded-2xl text-white font-black text-sm flex items-center justify-between transition-all">
-                            <span x-text="metodeBayar === 'cash' && uangDiterima < totalTagihan ? 'Nominal Kurang' : 'Proses Bayar'">Proses Bayar</span>
+                            <span x-text="metodeBayar === 'cash' && uangDiterima < totalTagihan ? 'Nominal Kurang' : 'BAYAR'">BAYAR</span>
                             <i class="fa-solid fa-chevron-right text-xs"></i>
                         </button>
                     </div>

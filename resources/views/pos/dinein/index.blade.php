@@ -835,7 +835,7 @@ document.addEventListener('alpine:init', () => {
             <div class="pt-2 shrink-0">
               <a :href="'/pos/dinein/meja/' + bill.id + '/checkout'" 
                  class="w-full py-2.5 bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] text-white rounded-2xl text-xs font-black text-center transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
-                <span>Proses Bayar</span>
+                <span>BAYAR</span>
                 <i class="fa-solid fa-chevron-right text-[10px]"></i>
               </a>
             </div>
@@ -1197,11 +1197,11 @@ document.addEventListener('alpine:init', () => {
           <div class="grid grid-cols-2 gap-2 pt-1">
             <button type="button" @click="submitOrder('simpan')" :disabled="isSubmitting"
                     class="py-3.5 px-3 rounded-2xl border border-gray-300 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-xs transition-all shadow-2xs cursor-pointer">
-              Simpan Pesanan
+              SIMPAN
             </button>
             <button type="button" @click="submitOrder('bayar')" :disabled="isSubmitting"
                     class="py-3.5 px-3 rounded-2xl bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
-              <span>Proses Bayar</span>
+              <span>BAYAR</span>
               <i class="fa-solid fa-chevron-right text-[10px]"></i>
             </button>
           </div>
@@ -1382,7 +1382,7 @@ document.addEventListener('alpine:init', () => {
             </button>
             <a :href="'/pos/dinein/meja/' + (savedPesananObject ? savedPesananObject.meja_id : '') + '/checkout'"
                class="py-3 px-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-extrabold rounded-2xl text-xs transition-all flex items-center justify-center gap-1.5 text-center active:scale-95 cursor-pointer">
-              <span>Proses Bayar</span>
+              <span>BAYAR</span>
               <i class="fa-solid fa-chevron-right text-[10px]"></i>
             </a>
           </div>
@@ -1633,7 +1633,7 @@ document.addEventListener('alpine:init', () => {
           </button>
           <a :href="'/pos/dinein/meja/' + (savedPesananObject ? savedPesananObject.meja_id : '') + '/checkout'"
              class="py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold rounded-xl text-xs transition-colors text-center flex items-center justify-center gap-1 cursor-pointer">
-            <span>Proses Bayar</span>
+            <span>BAYAR</span>
             <i class="fa-solid fa-arrow-right text-[10px]"></i>
           </a>
         </div>
