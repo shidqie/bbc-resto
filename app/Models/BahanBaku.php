@@ -13,6 +13,7 @@ class BahanBaku extends Model
         'kode_bahan',
         'kategori_bahan_id',
         'supplier_id',
+        'supplier',
         'nama_bahan',
         'jenis_penggunaan',
         'satuan_id',
@@ -35,9 +36,14 @@ class BahanBaku extends Model
         return $this->belongsTo(Satuan::class);
     }
 
-    public function supplier()
+    public function supplierRelation()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function getNamaSupplierAttribute()
+    {
+        return $this->supplier ?: ($this->supplierRelation->nama_supplier ?? null);
     }
 
     public function getJenisPenggunaanLabelAttribute()

@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifikasi_admins', function (Blueprint $table) {
+        Schema::create('pesanan_status_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('judul');
-            $table->text('pesan');
-            $table->string('tipe')->default('pesanan_baru'); // pesanan_baru, pelunasan, bukti_pembayaran
-            $table->string('link')->nullable();
-            $table->boolean('is_read')->default(false);
+            $table->morphs('pesanan');
+            $table->string('status_lama')->nullable();
+            $table->string('status_baru');
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('catatan')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifikasi_admins');
+        Schema::dropIfExists('pesanan_status_logs');
     }
 };

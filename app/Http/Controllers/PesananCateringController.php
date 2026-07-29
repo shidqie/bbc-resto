@@ -92,7 +92,8 @@ class PesananCateringController extends Controller
                 'jumlah_porsi'  => $validated['jumlah_porsi'],
                 'total_tagihan' => $hitung['total'],
                 'dp_amount'     => $validated['opsi_pembayaran'] === 'lunas' ? $hitung['total'] : $hitung['dp'],
-                'status'        => 'menunggu_dp',
+                'status'        => 'ditinjau',
+                'status_bayar'  => 'belum_bayar',
                 'catatan'       => $validated['catatan'] ?? null,
                 'user_id'       => \Illuminate\Support\Facades\Auth::id() ?? null,
             ]);
@@ -114,13 +115,6 @@ class PesananCateringController extends Controller
             return $pesanan;
         });
 
-        // Notifikasi Admin
-        \App\Models\NotifikasiAdmin::buatNotifikasi(
-            'Pesanan Catering Baru #' . $pesanan->kode_pesanan,
-            "Pesanan Catering baru dari {$pesanan->nama_pemesan} sejumlah {$pesanan->jumlah_porsi} porsi (Total: Rp " . number_format($pesanan->total_tagihan, 0, ',', '.') . ").",
-            'pesanan_baru',
-            '/admin/pesanan/catering/' . $pesanan->id
-        );
 
         // Generate Midtrans Snap Token
         \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, 'catering');
@@ -129,13 +123,6 @@ class PesananCateringController extends Controller
             ->with('success', 'Pesanan berhasil dibuat! Silakan lanjutkan ke pembayaran DP.');
     }
 
-    /** GET /pesan/status/{kode} (Publik) */
-    public function cekStatus($kode)
-    {
-        $pesanan = PesananCatering::with(['paket', 'buktiPembayarans'])
-            ->where('kode_pesanan', $kode)->firstOrFail();
-        return view('pesanan.status', compact('pesanan'), ['type' => 'catering']);
-    }
 
     // ─── ADMIN ───────────────────────────────────────────────────────────────
 
@@ -169,9 +156,9 @@ class PesananCateringController extends Controller
         $pesanans = $query->paginate(10)->withQueryString();
 
         $stats = [
-            'baru' => PesananCatering::whereIn('status', ['menunggu_dp', 'menunggu_konfirmasi'])->count(),
-            'diproses' => PesananCatering::whereIn('status', ['terkonfirmasi', 'diproses', 'dikirim'])->count(),
-            'selesai' => PesananCatering::where('status', 'selesai')->count(),
+            'baru'     => PesananCatering::where('status', 'ditinjau')->count(),
+            'diproses' => PesananCatering::whereIn('status', ['dikonfirmasi', 'menunggu_pelunasan', 'diproses', 'menunggu_pengiriman', 'dikirim'])->count(),
+            'selesai'  => PesananCatering::where('status', 'selesai')->count(),
         ];
 
         return view('admin.pesanan.catering.index', compact('pesanans', 'status', 'stats'));
@@ -185,7 +172,8 @@ class PesananCateringController extends Controller
             'details.komponen', 
             'details.menu.resep.bahanBaku.satuan', 
             'addons.layananTambahan', 
-            'buktiPembayarans'
+            'buktiPembayarans',
+            'statusLogs.user'
         ]);
 
         // Hitung kebutuhan BOM Bahan Baku khusus pesanan catering ini
@@ -212,6 +200,39 @@ class PesananCateringController extends Controller
         return view('admin.pesanan.catering.show', compact('pesanan', 'kebutuhanBahan'));
     }
 
+    public function exportPdf(PesananCatering $pesanan)
+    {
+        $pesanan->load([
+            'paket.komponens.opsi.menu', 
+            'details.komponen', 
+            'details.menu.resep.bahanBaku.satuan', 
+            'addons.layananTambahan'
+        ]);
+
+        $kebutuhanBahan = [];
+        foreach ($pesanan->details as $detail) {
+            if ($detail->menu && $detail->menu->resep) {
+                foreach ($detail->menu->resep as $resep) {
+                    $bahanId = $resep->bahan_baku_id;
+                    $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_porsi;
+                    if (!isset($kebutuhanBahan[$bahanId])) {
+                        $kebutuhanBahan[$bahanId] = [
+                            'bahan_id' => $bahanId,
+                            'nama_bahan' => $resep->bahanBaku->nama_bahan ?? 'Bahan Baku',
+                            'satuan' => $resep->bahanBaku->satuan->nama_satuan ?? '',
+                            'total_kebutuhan' => 0,
+                        ];
+                    }
+                    $kebutuhanBahan[$bahanId]['total_kebutuhan'] += $qty;
+                }
+            }
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.pesanan.catering.pdf', compact('pesanan', 'kebutuhanBahan'));
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->download('Pesanan_Catering_' . $pesanan->kode_pesanan . '.pdf');
+    }
+
     public function verifikasiDp(Request $request, $buktiId)
     {
         $bukti = \App\Models\BuktiPembayaran::findOrFail($buktiId);
@@ -221,11 +242,16 @@ class PesananCateringController extends Controller
         $pesanan = $bukti->pesanan;
         if ($pesanan) {
             if ($bukti->jenis_pembayaran === 'pelunasan') {
-                $pesanan->update(['status' => 'lunas']);
+                $pesanan->update([
+                    'status_bayar' => 'lunas',
+                    'status' => in_array($pesanan->status, ['ditinjau', 'dikonfirmasi', 'terkonfirmasi', 'menunggu_pelunasan']) ? 'diproses' : $pesanan->status
+                ]);
                 $msg = 'Bukti Pelunasan berhasil diverifikasi. Status pesanan kini LUNAS dan siap diproduksi / diantar!';
             } else {
-                $pesanan->update(['status' => 'terkonfirmasi']);
-                $msg = 'Bukti DP berhasil diverifikasi. Status pesanan Terkonfirmasi & menunggu pelunasan.';
+                $pesanan->update([
+                    'status_bayar' => 'dp_terbayar',
+                ]);
+                $msg = 'Bukti DP berhasil diverifikasi.';
             }
         } else {
             $msg = 'Bukti pembayaran berhasil diverifikasi.';
@@ -237,15 +263,17 @@ class PesananCateringController extends Controller
     /** PATCH /admin/pesanan/catering/{id}/konfirmasi */
     public function konfirmasi(PesananCatering $pesanan)
     {
-        if ($pesanan->status !== 'menunggu_konfirmasi') {
-            return back()->with('error', 'Pesanan tidak bisa dikonfirmasi dalam status saat ini.');
+        if ($pesanan->status !== 'ditinjau') {
+            return back()->with('error', 'Pesanan tidak bisa dikonfirmasi dalam status saat ini. Harus berstatus Ditinjau.');
         }
 
         $result = PesananCateringService::potongStok($pesanan);
 
         if ($result === true) {
-            $pesanan->update(['status' => 'terkonfirmasi']);
-            // Kirim Email Konfirmasi Pembayaran
+            // PRD 3.4: jika lunas → diproses, jika DP → menunggu_pelunasan
+            $statusBerikutnya = ($pesanan->status_bayar === 'lunas') ? 'diproses' : 'menunggu_pelunasan';
+            $pesanan->update(['status' => $statusBerikutnya]);
+
             if ($pesanan->email) {
                 try {
                     \Illuminate\Support\Facades\Mail::to($pesanan->email)->send(new \App\Mail\PaymentReceiptMail($pesanan));
@@ -253,7 +281,12 @@ class PesananCateringController extends Controller
                     \Illuminate\Support\Facades\Log::error('Gagal mengirim email konfirmasi: ' . $e->getMessage());
                 }
             }
-            return back()->with('success', 'Pesanan dikonfirmasi dan stok telah dipotong.');
+
+            $msg = $statusBerikutnya === 'diproses'
+                ? 'Pesanan dikonfirmasi (pembayaran lunas). Status langsung Sedang Diproses.'
+                : 'Pesanan dikonfirmasi. Menunggu pelunasan DP dari konsumen.';
+
+            return back()->with('success', $msg);
         }
 
         return back()->with('kekurangan_stok', $result)
@@ -263,15 +296,47 @@ class PesananCateringController extends Controller
     public function updateStatus(Request $request, PesananCatering $pesanan)
     {
         $request->validate([
-            'status' => 'required|in:terkonfirmasi,diproses,dikirim,selesai,lunas,dibatalkan',
+            'status'      => 'required|in:ditinjau,dikonfirmasi,menunggu_pelunasan,diproses,menunggu_pengiriman,dikirim,selesai,dibatalkan',
             'alasan_batal' => 'nullable|string'
         ]);
 
-        $pesanan->status = $request->status;
-        if ($request->status === 'dibatalkan') {
+        $newStatus = $request->status;
+
+        // Validasi urutan status (PRD 7.5) — tidak boleh lompat
+        $urutan = [
+            'ditinjau'             => 0,
+            'menunggu_pelunasan'   => 1,
+            'terkonfirmasi'        => 1,
+            'dikonfirmasi'         => 1,
+            'diproses'             => 2,
+            'menunggu_pengiriman'  => 3,
+            'dikirim'              => 4,
+            'selesai'              => 5,
+            'dibatalkan'           => 99,
+        ];
+
+        $current = $urutan[$pesanan->status] ?? 0;
+        $target  = $urutan[$newStatus] ?? 0;
+
+        if ($newStatus !== 'dibatalkan' && $target > $current + 1) {
+            return back()->with('error', 'Status tidak bisa dilompati. Ikuti urutan status yang benar.');
+        }
+
+        $statusLama = $pesanan->status;
+        $pesanan->status = $newStatus;
+        if ($newStatus === 'dibatalkan') {
             $pesanan->alasan_batal = $request->alasan_batal;
         }
         $pesanan->save();
+
+        \App\Models\PesananStatusLog::create([
+            'pesanan_type' => PesananCatering::class,
+            'pesanan_id'   => $pesanan->id,
+            'status_lama'  => $statusLama,
+            'status_baru'  => $newStatus,
+            'user_id'      => \Illuminate\Support\Facades\Auth::id(),
+            'catatan'      => $newStatus === 'dibatalkan' ? $request->alasan_batal : null,
+        ]);
 
         return back()->with('success', 'Status pesanan berhasil diperbarui.');
     }

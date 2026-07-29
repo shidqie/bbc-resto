@@ -4,109 +4,121 @@
 --}}
 @extends('layouts.pos')
 
+@section('title', 'Kelola Kategori')
+
 @section('content')
-<div class="flex-1 overflow-auto bg-gray-50/50 text-gray-800 font-sans">
-    <div class="p-4 md:p-6 lg:p-8 max-w-[1200px] mx-auto space-y-6">
+<div class="flex-1 bg-gray-50 text-gray-800 font-sans">
+    <div class="w-full px-4 md:px-6 py-6 space-y-5">
         
-        {{-- Header --}}
-        <x-ui.page-header 
-            title="Kategori Menu" 
-            subtitle="Kelola daftar kategori menu Resto, Catering, dan Nasi Box"
-            :breadcrumbs="['Menu', 'Kategori Menu']">
-            <x-slot:actions>
-                <button onclick="document.getElementById('modalTambah').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-[#0F2E23] hover:bg-[#0a1f17] text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-sm active:scale-95">
-                    <x-heroicon-o-plus class="w-5 h-5 inline-block shrink-0" /> Tambah Kategori
+        {{-- PAGE HEADER --}}
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <h1 class="text-lg font-bold text-gray-900">Kategori Menu</h1>
+                <p class="text-xs text-gray-500 mt-0.5">Kelola daftar kategori menu Resto, Catering, dan Nasi Box</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="document.getElementById('modalTambah').classList.remove('hidden')" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah Kategori
                 </button>
-            </x-slot:actions>
-        </x-ui.page-header>
+            </div>
+        </div>
 
         <x-ui.alert />
 
-        {{-- Table --}}
-        <x-ui.data-table :paginator="$kategoris">
-            <x-slot:toolbar>
-                <div class="flex flex-col sm:flex-row gap-3 w-full justify-between items-center">
-                    <div class="relative w-full sm:w-72">
-                        <x-heroicon-o-magnifying-glass class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 inline-block shrink-0" />
-                        <form action="{{ route('kategori-menu.index') }}" method="GET">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama / kode kategori…" class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F2E23]/10 focus:border-[#0F2E23] outline-none bg-white transition-all">
-                        </form>
-                    </div>
-
-                    {{-- Filter Jenis Menu --}}
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Jenis:</span>
-                        <a href="{{ route('kategori-menu.index') }}" 
-                           class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ !request('jenis') ? 'bg-[#0F2E23] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">Semua</a>
-                        <a href="{{ route('kategori-menu.index', ['jenis' => 'dine_in']) }}" 
-                           class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ request('jenis') === 'dine_in' ? 'bg-emerald-800 text-white' : 'bg-emerald-50 text-emerald-900 border border-emerald-200' }}">Resto</a>
-                        <a href="{{ route('kategori-menu.index', ['jenis' => 'catering']) }}" 
-                           class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ request('jenis') === 'catering' ? 'bg-blue-800 text-white' : 'bg-blue-50 text-blue-900 border border-blue-200' }}">Catering</a>
-                        <a href="{{ route('kategori-menu.index', ['jenis' => 'nasi_box']) }}" 
-                           class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ request('jenis') === 'nasi_box' ? 'bg-purple-800 text-white' : 'bg-purple-50 text-purple-900 border border-purple-200' }}">Nasi Box</a>
-                    </div>
+        {{-- Filter Bar --}}
+        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
+            <form action="{{ route('kategori-menu.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:flex-none sm:w-56">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama / kode kategori…" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
+                    <input type="hidden" name="jenis" value="{{ request('jenis') }}">
                 </div>
-            </x-slot:toolbar>
+                <button type="submit" class="text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+            </form>
+            
+            <div class="flex items-center gap-1 text-xs font-medium overflow-x-auto no-scrollbar shrink-0">
+                <span class="text-gray-500 mr-1">Filter Jenis:</span>
+                <a href="{{ route('kategori-menu.index') }}" class="px-3 py-1.5 rounded-lg transition-colors {{ !request('jenis') ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Semua</a>
+                <a href="{{ route('kategori-menu.index', ['jenis' => 'dine_in']) }}" class="px-3 py-1.5 rounded-lg transition-colors {{ request('jenis') === 'dine_in' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Resto</a>
+                <a href="{{ route('kategori-menu.index', ['jenis' => 'catering']) }}" class="px-3 py-1.5 rounded-lg transition-colors {{ request('jenis') === 'catering' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Catering</a>
+                <a href="{{ route('kategori-menu.index', ['jenis' => 'nasi_box']) }}" class="px-3 py-1.5 rounded-lg transition-colors {{ request('jenis') === 'nasi_box' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Nasi Box</a>
+            </div>
+        </div>
 
-            <table class="w-full text-left border-collapse">
+        {{-- Table --}}
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+            <table class="w-full text-sm min-w-[700px]">
                 <thead>
-                    <tr class="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
-                        <th class="px-5 py-4 font-bold text-center w-12">No</th>
-                        <th class="px-5 py-4 font-bold">Kode Kategori</th>
-                        <th class="px-5 py-4 font-bold">Nama Kategori</th>
-                        <th class="px-5 py-4 font-bold">Jenis Menu</th>
-                        <th class="px-5 py-4 font-bold">Jumlah Menu</th>
-                        <th class="px-5 py-4 font-bold text-right">Aksi</th>
+                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        <th class="px-4 py-3 text-left w-12">No.</th>
+                        <th class="px-4 py-3 text-left">Kode</th>
+                        <th class="px-4 py-3 text-left">Nama Kategori</th>
+                        <th class="px-4 py-3 text-left">Jenis Menu</th>
+                        <th class="px-4 py-3 text-left">Jumlah Menu</th>
+                        <th class="px-4 py-3 text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 text-sm">
+                <tbody class="divide-y divide-gray-50">
                     @forelse($kategoris as $index => $kategori)
-                        <tr class="hover:bg-gray-50/50 transition-colors">
-                            <td class="px-5 py-4 text-center font-bold text-gray-500">
+                        <tr class="hover:bg-gray-50/60 transition-colors group align-middle">
+                            <td class="px-4 py-3 text-xs text-gray-500 font-medium">
                                 {{ $kategoris->firstItem() + $index }}
                             </td>
-                            <td class="px-5 py-4 font-mono font-bold text-[#0F2E23]">
-                                {{ $kategori->kode_kategori ?? ('KTG-' . str_pad($kategori->id, 2, '0', STR_PAD_LEFT)) }}
+                            <td class="px-4 py-3">
+                                <span class="font-mono text-xs font-semibold text-gray-600">
+                                    {{ $kategori->kode_kategori ?? ('KTG-' . str_pad($kategori->id, 2, '0', STR_PAD_LEFT)) }}
+                                </span>
                             </td>
-                            <td class="px-5 py-4 font-bold text-gray-900">
+                            <td class="px-4 py-3 font-bold text-gray-900">
                                 {{ $kategori->nama }}
                             </td>
-                            <td class="px-5 py-4">
-                                @if($kategori->jenis_menu === 'catering')
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">Catering</span>
-                                @elseif($kategori->jenis_menu === 'nasi_box')
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">Nasi Box</span>
-                                @else
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Resto</span>
-                                @endif
+                            <td class="px-4 py-3">
+                                @php
+                                    $jenisColor = ['catering' => 'bg-blue-50 text-blue-700', 'nasi_box' => 'bg-purple-50 text-purple-700', 'dine_in' => 'bg-emerald-50 text-emerald-700'];
+                                    $jenisLabel = ['catering' => 'Catering', 'nasi_box' => 'Nasi Box', 'dine_in' => 'Resto'];
+                                    $jColor = $jenisColor[$kategori->jenis_menu] ?? 'bg-gray-100 text-gray-600';
+                                    $jLabel = $jenisLabel[$kategori->jenis_menu] ?? $kategori->jenis_menu;
+                                @endphp
+                                <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md {{ $jColor }}">{{ $jLabel }}</span>
                             </td>
-                            <td class="px-5 py-4">
-                                <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-lg text-xs font-bold">{{ $kategori->menus_count ?? 0 }} menu</span>
+                            <td class="px-4 py-3">
+                                <span class="text-xs text-gray-700 font-medium">{{ $kategori->menus_count ?? 0 }} menu</span>
                             </td>
-                            <td class="px-5 py-4 text-right space-x-1.5">
-                                <button onclick="editKategori({{ $kategori->id }}, '{{ addslashes($kategori->nama) }}', '{{ $kategori->jenis_menu ?? 'dine_in' }}')" 
-                                        class="px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors inline-flex items-center gap-1">
-                                    <x-heroicon-o-pencil-square class="w-3.5 h-3.5" /> Edit
-                                </button>
-                                <form action="{{ route('kategori-menu.destroy', $kategori->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kategori {{ addslashes($kategori->nama) }}?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 transition-colors inline-flex items-center gap-1">
-                                        <x-heroicon-o-trash class="w-3.5 h-3.5" /> Hapus
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="editKategori({{ $kategori->id }}, '{{ addslashes($kategori->nama) }}', '{{ $kategori->jenis_menu ?? 'dine_in' }}')" 
+                                            class="p-1.5 rounded-md text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                     </button>
-                                </form>
+                                    <form action="{{ route('kategori-menu.destroy', $kategori->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kategori {{ addslashes($kategori->nama) }}?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-1.5 rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Hapus">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                <x-ui.empty-state icon="fa-folder-open" title="Belum ada kategori menu." />
+                            <td colspan="6" class="py-12 text-center text-gray-400">
+                                <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                                <p class="text-sm font-medium text-gray-500">Belum ada data kategori menu.</p>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
-        </x-ui.data-table>
+        </div>
+
+        {{-- Pagination --}}
+        @if($kategoris->hasPages())
+        <div class="mt-4">
+            {{ $kategoris->links('vendor.pagination.tailwind') }}
+        </div>
+        @endif
 
     </div>
 </div>
@@ -140,7 +152,7 @@
                 <button type="button" onclick="document.getElementById('modalTambah').classList.add('hidden')" class="px-4 py-2.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
                     Batal
                 </button>
-                <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-[#0F2E23] hover:bg-[#0a1f17] rounded-xl transition-all shadow-xs">
+                <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-[#0F2E23] hover:bg-[#0a1f17] rounded-xl transition-all shadow-xs cursor-pointer">
                     Simpan Kategori
                 </button>
             </div>
@@ -178,7 +190,7 @@
                 <button type="button" onclick="document.getElementById('modalEdit').classList.add('hidden')" class="px-4 py-2.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
                     Batal
                 </button>
-                <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-[#0F2E23] hover:bg-[#0a1f17] rounded-xl transition-all shadow-xs">
+                <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-[#0F2E23] hover:bg-[#0a1f17] rounded-xl transition-all shadow-xs cursor-pointer">
                     Simpan Perubahan
                 </button>
             </div>

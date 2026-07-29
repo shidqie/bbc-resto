@@ -70,7 +70,8 @@ class PesananNasiBoxController extends Controller
             'jumlah_box'    => $validated['jumlah_box'],
             'total_tagihan' => $hitung['total'],
             'dp_amount'     => $validated['opsi_pembayaran'] === 'lunas' ? $hitung['total'] : $hitung['dp'],
-            'status'        => 'menunggu_dp',
+            'status'        => 'ditinjau',
+            'status_bayar'  => 'belum_bayar',
             'catatan'       => $validated['catatan'] ?? null,
             'user_id'       => \Illuminate\Support\Facades\Auth::id() ?? null,
         ]);
@@ -83,13 +84,6 @@ class PesananNasiBoxController extends Controller
             ]);
         }
 
-        // Notifikasi Admin
-        \App\Models\NotifikasiAdmin::buatNotifikasi(
-            'Pesanan Nasi Box Baru #' . $pesanan->kode_pesanan,
-            "Pesanan Nasi Box baru dari {$pesanan->nama_pemesan} sejumlah {$pesanan->jumlah_box} box (Total: Rp " . number_format($pesanan->total_tagihan, 0, ',', '.') . ").",
-            'pesanan_baru',
-            '/admin/pesanan/nasi-box/' . $pesanan->id
-        );
 
         // Generate Midtrans Snap Token
         \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, 'nasi_box');
@@ -121,9 +115,9 @@ class PesananNasiBoxController extends Controller
         $pesanans = $query->paginate(10)->withQueryString();
 
         $stats = [
-            'baru' => PesananNasiBox::whereIn('status', ['menunggu_dp', 'menunggu_konfirmasi'])->count(),
-            'diproses' => PesananNasiBox::whereIn('status', ['terkonfirmasi', 'diproses', 'dikirim'])->count(),
-            'selesai' => PesananNasiBox::where('status', 'selesai')->count(),
+            'baru'     => PesananNasiBox::where('status', 'ditinjau')->count(),
+            'diproses' => PesananNasiBox::whereIn('status', ['dikonfirmasi', 'menunggu_pelunasan', 'diproses', 'menunggu_pengiriman', 'dikirim'])->count(),
+            'selesai'  => PesananNasiBox::where('status', 'selesai')->count(),
         ];
 
         return view('admin.pesanan.nasibox.index', compact('pesanans', 'status', 'stats'));
@@ -132,22 +126,23 @@ class PesananNasiBoxController extends Controller
     /** GET /admin/pesanan/nasi-box/{id} */
     public function show(PesananNasiBox $pesanan)
     {
-        $pesanan->load(['paket', 'details.komponenPaket', 'details.menu', 'buktiPembayarans']);
+        $pesanan->load(['paket', 'details.komponenPaket', 'details.menu', 'buktiPembayarans', 'statusLogs.user']);
         return view('admin.pesanan.nasibox.show', compact('pesanan'));
     }
 
-    /** PATCH /admin/pesanan/nasi-box/{id}/konfirmasi */
     public function konfirmasi(PesananNasiBox $pesanan)
     {
-        if ($pesanan->status !== 'menunggu_konfirmasi') {
-            return back()->with('error', 'Pesanan tidak bisa dikonfirmasi dalam status saat ini.');
+        if ($pesanan->status !== 'ditinjau') {
+            return back()->with('error', 'Pesanan tidak bisa dikonfirmasi dalam status saat ini. Harus berstatus Ditinjau.');
         }
 
         $result = PesananNasiBoxService::potongStok($pesanan);
 
         if ($result === true) {
-            $pesanan->update(['status' => 'terkonfirmasi']);
-            // Kirim Email Konfirmasi Pembayaran
+            // PRD 3.4: jika lunas → diproses, jika DP → menunggu_pelunasan
+            $statusBerikutnya = ($pesanan->status_bayar === 'lunas') ? 'diproses' : 'menunggu_pelunasan';
+            $pesanan->update(['status' => $statusBerikutnya]);
+
             if ($pesanan->email) {
                 try {
                     \Illuminate\Support\Facades\Mail::to($pesanan->email)->send(new \App\Mail\PaymentReceiptMail($pesanan));
@@ -155,7 +150,12 @@ class PesananNasiBoxController extends Controller
                     \Illuminate\Support\Facades\Log::error('Gagal mengirim email konfirmasi: ' . $e->getMessage());
                 }
             }
-            return back()->with('success', 'Pesanan dikonfirmasi dan stok telah dipotong.');
+
+            $msg = $statusBerikutnya === 'diproses'
+                ? 'Pesanan dikonfirmasi (pembayaran lunas). Status langsung Sedang Diproses.'
+                : 'Pesanan dikonfirmasi. Menunggu pelunasan DP dari konsumen.';
+
+            return back()->with('success', $msg);
         }
 
         return back()->with('kekurangan_stok', $result)
@@ -165,16 +165,82 @@ class PesananNasiBoxController extends Controller
     public function updateStatus(Request $request, PesananNasiBox $pesanan)
     {
         $request->validate([
-            'status' => 'required|in:terkonfirmasi,diproses,dikirim,selesai,lunas,dibatalkan',
+            'status'       => 'required|in:ditinjau,dikonfirmasi,menunggu_pelunasan,diproses,menunggu_pengiriman,dikirim,selesai,dibatalkan',
             'alasan_batal' => 'nullable|string'
         ]);
 
-        $pesanan->status = $request->status;
-        if ($request->status === 'dibatalkan') {
+        $newStatus = $request->status;
+
+        // Validasi urutan status (PRD 7.5) — tidak boleh lompat
+        $urutan = [
+            'ditinjau'             => 0,
+            'menunggu_pelunasan'   => 1,
+            'terkonfirmasi'        => 1,
+            'dikonfirmasi'         => 1,
+            'diproses'             => 2,
+            'menunggu_pengiriman'  => 3,
+            'dikirim'              => 4,
+            'selesai'              => 5,
+            'dibatalkan'           => 99,
+        ];
+
+        $current = $urutan[$pesanan->status] ?? 0;
+        $target  = $urutan[$newStatus] ?? 0;
+
+        if ($newStatus !== 'dibatalkan' && $target > $current + 1) {
+            return back()->with('error', 'Status tidak bisa dilompati. Ikuti urutan status yang benar.');
+        }
+
+        $statusLama = $pesanan->status;
+        $pesanan->status = $newStatus;
+        if ($newStatus === 'dibatalkan') {
             $pesanan->alasan_batal = $request->alasan_batal;
         }
         $pesanan->save();
 
+        \App\Models\PesananStatusLog::create([
+            'pesanan_type' => PesananNasiBox::class,
+            'pesanan_id'   => $pesanan->id,
+            'status_lama'  => $statusLama,
+            'status_baru'  => $newStatus,
+            'user_id'      => \Illuminate\Support\Facades\Auth::id(),
+            'catatan'      => $newStatus === 'dibatalkan' ? $request->alasan_batal : null,
+        ]);
+
         return back()->with('success', 'Status pesanan berhasil diperbarui.');
+    }
+
+    public function exportPdf(PesananNasiBox $pesanan)
+    {
+        $pesanan->load([
+            'paket', 
+            'details.komponenPaket',
+            'details.menu.resep.bahanBaku.satuan',
+            'buktiPembayarans',
+            'statusLogs.user'
+        ]);
+
+        $kebutuhanBahan = [];
+        foreach ($pesanan->details as $detail) {
+            if ($detail->menu && $detail->menu->resep) {
+                foreach ($detail->menu->resep as $resep) {
+                    $bahanId = $resep->bahan_baku_id;
+                    $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_box;
+                    if (!isset($kebutuhanBahan[$bahanId])) {
+                        $kebutuhanBahan[$bahanId] = [
+                            'bahan_id' => $bahanId,
+                            'nama_bahan' => $resep->bahanBaku->nama_bahan ?? 'Bahan Baku',
+                            'satuan' => $resep->bahanBaku->satuan->nama_satuan ?? '',
+                            'total_kebutuhan' => 0,
+                        ];
+                    }
+                    $kebutuhanBahan[$bahanId]['total_kebutuhan'] += $qty;
+                }
+            }
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.pesanan.nasibox.pdf', compact('pesanan', 'kebutuhanBahan'));
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->download('Pesanan_NasiBox_' . $pesanan->kode_pesanan . '.pdf');
     }
 }

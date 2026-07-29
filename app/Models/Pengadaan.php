@@ -7,14 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Pengadaan extends Model
 {
     protected $fillable = [
-        'kode_pengadaan',
-        'pesanan_catering_id',
-        'pesanan_nasi_box_id',
-        'jenis_pesanan',
-        'supplier_id',
+        'nomor_pengadaan',
+        'asal_pembelian',
         'tanggal_pengadaan',
         'total_biaya',
-        'status',
         'catatan',
         'user_id'
     ];
@@ -38,22 +34,5 @@ class Pengadaan extends Model
         return $this->hasMany(DetailPengadaan::class);
     }
 
-    public function pesananCatering()
-    {
-        return $this->belongsTo(PesananCatering::class, 'pesanan_catering_id');
-    }
 
-    public function pesananNasiBox()
-    {
-        return $this->belongsTo(PesananNasiBox::class, 'pesanan_nasi_box_id');
-    }
-
-    public function getJenisLabelAttribute()
-    {
-        return match($this->jenis_pesanan) {
-            'nasi_box' => 'Nasi Box',
-            'umum' => 'Umum / Resto',
-            default => 'Catering',
-        };
-    }
 }

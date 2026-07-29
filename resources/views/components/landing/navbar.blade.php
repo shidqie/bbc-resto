@@ -1,50 +1,169 @@
-<nav class="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-primary/10 shadow-sm" x-data="{ open: false, layanan: false }">
-    <div class="max-w-[1280px] mx-auto px-6 h-20 flex items-center justify-between">
-        <a href="{{ route('home') }}" class="font-serif text-2xl font-bold tracking-tight text-primary shrink-0">
-            Saung Babakan Cinta
-        </a>
-        <!-- Desktop -->
-        <div class="hidden lg:flex gap-6 items-center">
-            <a href="{{ route('home') }}#beranda" class="text-sm font-semibold hover:text-secondary transition-colors">Beranda</a>
-            <a href="{{ route('home') }}#tentang" class="text-sm font-semibold hover:text-secondary transition-colors">Tentang</a>
-            <a href="{{ route('home') }}#menu-dinein" class="text-sm font-semibold hover:text-secondary transition-colors">Menu</a>
-            <!-- Dropdown Layanan -->
-            <div class="relative" @mouseenter="layanan = true" @mouseleave="layanan = false">
-                <button @click="layanan = !layanan" class="text-sm font-semibold hover:text-secondary transition-colors flex items-center gap-1">
-                    Layanan
-                    <svg class="w-3 h-3 transition-transform" :class="layanan ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
-                <div x-show="layanan" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-44 bg-white rounded-lg shadow-xl border border-primary/10 py-1.5 z-50">
-                    <a href="{{ route('home') }}#catering" @click="layanan = false" class="block px-4 py-2 text-sm text-body hover:bg-primary/5 hover:text-primary transition">Catering</a>
-                    <a href="{{ route('home') }}#nasi-box" @click="layanan = false" class="block px-4 py-2 text-sm text-body hover:bg-primary/5 hover:text-primary transition">Nasi Box</a>
-                </div>
-            </div>
-            <a href="{{ route('home') }}#galeri" class="text-sm font-semibold hover:text-secondary transition-colors">Galeri</a>
-            <a href="{{ route('home') }}#kontak" class="text-sm font-semibold hover:text-secondary transition-colors">Kontak</a>
-            @auth
-                <a href="{{ route('dashboard') }}" class="border-2 border-primary text-primary px-4 py-1.5 rounded-md font-bold text-sm hover:bg-primary hover:text-white transition-all shadow-sm">
-                    Dasbor Admin
+<nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-primary/10 shadow-sm"
+     x-data="{ open: false, layanan: false }">
+
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="h-20 flex items-center justify-between">
+
+            <!-- Logo -->
+            <a href="{{ route('home') }}"
+               class="font-serif text-2xl font-bold tracking-tight text-primary">
+                Saung Babakan Cinta
+            </a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden lg:flex items-center gap-8">
+
+                <a href="{{ route('home') }}#beranda"
+                   class="text-sm font-semibold text-body hover:text-primary transition">
+                    Beranda
                 </a>
-            @endauth
+
+                <a href="{{ route('home') }}#tentang"
+                   class="text-sm font-semibold text-body hover:text-primary transition">
+                    Tentang
+                </a>
+
+                <a href="{{ route('home') }}#menu-dinein"
+                   class="text-sm font-semibold text-body hover:text-primary transition">
+                    Menu
+                </a>
+
+                <!-- Dropdown Layanan -->
+                <div class="relative"
+                     @mouseenter="layanan = true"
+                     @mouseleave="layanan = false">
+
+                    <button
+                        @click="layanan = !layanan"
+                        class="flex items-center gap-1 text-sm font-semibold text-body hover:text-primary transition">
+
+                        Layanan
+
+                        <svg class="w-4 h-4 transition-transform duration-200"
+                             :class="layanan ? 'rotate-180' : ''"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke="currentColor">
+
+                            <path stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="layanan"
+                         x-cloak
+                         x-transition
+                         class="absolute left-1/2 top-full -translate-x-1/2 mt-3 w-48 rounded-xl bg-white border border-primary/10 shadow-xl overflow-hidden">
+
+                        <a href="{{ route('home') }}#catering"
+                           class="block px-4 py-3 text-sm hover:bg-primary/5 hover:text-primary transition">
+                            Catering
+                        </a>
+
+                        <a href="{{ route('home') }}#nasi-box"
+                           class="block px-4 py-3 text-sm hover:bg-primary/5 hover:text-primary transition">
+                            Nasi Box
+                        </a>
+
+                        <a href="{{ route('qr.scanner') }}"
+                           class="block px-4 py-3 text-sm hover:bg-primary/5 hover:text-primary transition text-emerald-600 font-bold">
+                            <i class="fa-solid fa-qrcode mr-1"></i> QR Self Ordering
+                        </a>
+                    </div>
+                </div>
+
+                <a href="{{ route('home') }}#galeri"
+                   class="text-sm font-semibold text-body hover:text-primary transition">
+                    Galeri
+                </a>
+
+                <a href="{{ route('home') }}#kontak"
+                   class="text-sm font-semibold text-body hover:text-primary transition">
+                    Kontak
+                </a>
+
+                <a href="{{ route('home') }}#catering"
+                   class="px-5 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm shadow hover:scale-105 hover:bg-primary-container transition">
+                    Pesan Sekarang
+                </a>
+            </div>
+
+            <!-- Mobile Button -->
+            <button
+                class="lg:hidden p-2 rounded-lg text-primary hover:bg-primary/5"
+                @click="open = !open">
+
+                <svg x-show="!open"
+                     class="w-6 h-6"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+
+                <svg x-show="open"
+                     class="w-6 h-6"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
         </div>
-        <!-- Hamburger -->
-        <button class="lg:hidden p-2 text-primary" onclick="document.getElementById('mobileNav').classList.toggle('active')" aria-label="Menu">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
     </div>
-    <!-- Mobile Nav -->
-    <div id="mobileNav" class="mobile-nav flex-col lg:hidden bg-white border-t border-primary/10 px-6 pb-4 gap-1">
-        <a href="{{ route('home') }}#beranda" class="py-3 text-sm font-semibold hover:text-secondary transition-colors border-b border-primary/5" onclick="document.getElementById('mobileNav').classList.remove('active')">Beranda</a>
-        <a href="{{ route('home') }}#tentang" class="py-3 text-sm font-semibold hover:text-secondary transition-colors border-b border-primary/5" onclick="document.getElementById('mobileNav').classList.remove('active')">Tentang</a>
-        <a href="{{ route('home') }}#menu-dinein" class="py-3 text-sm font-semibold hover:text-secondary transition-colors border-b border-primary/5" onclick="document.getElementById('mobileNav').classList.remove('active')">Menu</a>
-        <a href="{{ route('home') }}#catering" class="py-3 text-sm font-semibold hover:text-secondary transition-colors border-b border-primary/5" onclick="document.getElementById('mobileNav').classList.remove('active')">Catering</a>
-        <a href="{{ route('home') }}#nasi-box" class="py-3 text-sm font-semibold hover:text-secondary transition-colors border-b border-primary/5" onclick="document.getElementById('mobileNav').classList.remove('active')">Nasi Box</a>
-        <a href="{{ route('home') }}#galeri" class="py-3 text-sm font-semibold hover:text-secondary transition-colors border-b border-primary/5" onclick="document.getElementById('mobileNav').classList.remove('active')">Galeri</a>
-        <a href="{{ route('home') }}#kontak" class="py-3 text-sm font-semibold hover:text-secondary transition-colors border-b border-primary/5" onclick="document.getElementById('mobileNav').classList.remove('active')">Kontak</a>
-        @auth
-            <a href="{{ route('dashboard') }}" class="mt-4 border-2 border-primary text-primary px-5 py-3 rounded-md font-bold text-sm hover:bg-primary hover:text-white transition-all shadow-sm w-full text-center" onclick="document.getElementById('mobileNav').classList.remove('active')">
+
+    <!-- Mobile Menu -->
+    <div x-show="open"
+         x-cloak
+         x-transition
+         class="lg:hidden bg-white border-t border-primary/10 shadow-sm">
+
+        <div class="px-6 py-4 flex flex-col">
+
+            <a href="{{ route('home') }}#beranda" class="py-3 border-b border-primary/5">Beranda</a>
+            <a href="{{ route('home') }}#tentang" class="py-3 border-b border-primary/5">Tentang</a>
+            <a href="{{ route('home') }}#menu-dinein" class="py-3 border-b border-primary/5">Menu</a>
+            <a href="{{ route('home') }}#catering" class="py-3 border-b border-primary/5">Catering</a>
+            <a href="{{ route('home') }}#nasi-box" class="py-3 border-b border-primary/5">Nasi Box</a>
+            <a href="{{ route('home') }}#galeri" class="py-3 border-b border-primary/5">Galeri</a>
+            <a href="{{ route('home') }}#lacak-pesanan" class="py-3 border-b border-primary/5">Lacak Pesanan</a>
+            <a href="{{ route('qr.scanner') }}" class="py-3 border-b border-primary/5 text-emerald-600 font-bold"><i class="fa-solid fa-qrcode mr-1"></i> QR Self Ordering</a>
+            <a href="{{ route('home') }}#kontak" class="py-3 border-b border-primary/5">Kontak</a>
+
+            <a href="{{ route('home') }}#catering"
+               class="mt-4 bg-primary text-white text-center py-3 rounded-xl font-semibold">
+                🍽️ Pesan Sekarang
+            </a>
+
+                @auth
+            <a href="{{ route('dashboard') }}"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-white transition-all duration-200">
+
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M3 12h18M12 3v18" />
+                </svg>
+
                 Dasbor Admin
             </a>
         @endauth
+
+        </div>
     </div>
+
 </nav>

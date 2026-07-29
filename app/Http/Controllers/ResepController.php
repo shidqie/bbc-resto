@@ -10,6 +10,22 @@ use Illuminate\Support\Facades\DB;
 
 class ResepController extends Controller
 {
+    public function index(Request $request)
+    {
+        $search = $request->search;
+        
+        $menus = Menu::with('kategori')
+            ->withCount('resep')
+            ->when($search, function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('kode_menu', 'like', "%{$search}%");
+            })
+            ->orderBy('nama', 'asc')
+            ->paginate(10)->withQueryString();
+            
+        return view('resep.index', compact('menus', 'search'));
+    }
+
     public function create(Menu $menu)
     {
         $menu->load('resep.bahanBaku.satuan');

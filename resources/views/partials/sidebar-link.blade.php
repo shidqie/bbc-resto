@@ -12,8 +12,16 @@
 --}}
 
 <a href="{{ route($route) }}" 
-   class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition group {{ $active ? 'bg-[#0F2E23] text-white font-extrabold shadow-sm border border-emerald-800/50' : 'text-gray-400 hover:text-white hover:bg-gray-800/50 font-medium' }}" 
+   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] transition-all duration-200 group relative overflow-hidden
+          {{ $active 
+              ? 'bg-gray-800 text-white font-semibold' 
+              : 'text-gray-500 hover:text-white hover:bg-gray-800/50 font-medium' }}" 
    x-bind:title="!sidebarOpen ? '{{ $label }}' : ''">
-    <i class="fa-solid {{ $icon }} w-6 text-center text-[16px] shrink-0 {{ $active ? 'text-emerald-400' : 'text-gray-400 group-hover:text-white' }}"></i>
-    <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-200">{{ $label }}</span>
+    {{-- Active left-border indicator --}}
+    @if($active)
+    <span class="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-white rounded-r-full"></span>
+    @endif
+    <i class="fa-solid {{ $icon }} w-4 text-center text-[13px] shrink-0 transition-colors duration-200
+              {{ $active ? 'text-white' : 'text-gray-500 group-hover:text-white' }}"></i>
+    <span x-show="sidebarOpen" class="whitespace-nowrap leading-none">{{ $label }}</span>
 </a>

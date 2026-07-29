@@ -4,7 +4,7 @@
     <!-- Midtrans Snap Script -->
     <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
 
-    <div class="h-[calc(100vh-65px)] flex flex-col bg-[#f5f5f0] overflow-hidden font-sans antialiased text-[#111827]"
+    <div class="h-[calc(100vh-65px)] flex flex-col bg-white overflow-hidden font-sans antialiased text-[#111827]"
          x-data="{
              totalTagihan: {{ $totalTagihan }},
              metodeBayar: 'cash',
@@ -26,69 +26,6 @@
 
              selectMetode(metode) {
                  this.metodeBayar = metode;
-                 if (metode === 'nontunai' && !this.qrisUrl && !this.qrisLoading) {
-                     this.generateQrisApi();
-                 }
-             },
-
-             async generateQrisApi() {
-                 this.qrisLoading = true;
-                 this.qrisError = null;
-                 try {
-                     const res = await fetch('/api/payment/qris', {
-                         method: 'POST',
-                         headers: {
-                             'Content-Type': 'application/json',
-                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                         },
-                         body: JSON.stringify({
-                             amount: this.totalTagihan,
-                             din_number: this.dinNumber,
-                             customer_name: '{{ addslashes($pesanan->nama_konsumen ?? "Pelanggan POS") }}'
-                         })
-                     });
-                     const json = await res.json();
-                     if (json.success && json.data) {
-                         this.qrisOrderId = json.data.order_id;
-                         this.qrisUrl = json.data.qr_url;
-                         this.qrisExpiryTime = json.data.expiry_time;
-                         this.startPollingStatus();
-                     } else {
-                         this.qrisError = json.message || 'Gagal membuat QRIS Midtrans.';
-                     }
-                 } catch (e) {
-                     this.qrisError = 'Terjadi kesalahan jaringan saat membuat QRIS.';
-                 } finally {
-                     this.qrisLoading = false;
-                 }
-             },
-
-             startPollingStatus() {
-                 if (this.pollingInterval) clearInterval(this.pollingInterval);
-                 this.pollingInterval = setInterval(async () => {
-                     if (!this.qrisOrderId || this.isPaymentSettled) return;
-                     try {
-                         const res = await fetch('/api/payment/status/' + this.qrisOrderId);
-                         const json = await res.json();
-                         if (json.success && json.data) {
-                             if (json.data.is_paid || ['settlement', 'capture'].includes(json.data.transaction_status)) {
-                                 this.isPaymentSettled = true;
-                                 clearInterval(this.pollingInterval);
-                                 Swal.fire({
-                                     icon: 'success',
-                                     title: 'Pembayaran QRIS Sukses! 🎉',
-                                     text: 'Pembayaran lunas terverifikasi. Memproses nota & mengosongkan meja...',
-                                     timer: 1800,
-                                     showConfirmButton: false
-                                 }).then(() => {
-                                     document.getElementById('checkout-form').submit();
-                                 });
-                             }
-                         }
-                     } catch(e) {
-                         console.error('Polling status error:', e);
-                     }
-                 }, 3000);
              },
 
              addShortcut(amount) {
@@ -168,25 +105,6 @@
 
              submitForm(e) {
                  e.preventDefault();
-                 const subStatus = '{{ $pesanan->sub_status ?? "diproses" }}';
-                 if (['diproses', 'siap_diantar'].includes(subStatus)) {
-                     Swal.fire({
-                         title: 'Konfirmasi Pembayaran',
-                         text: 'Pesanan ini masih berstatus [' + (subStatus === 'diproses' ? 'Diproses Dapur' : 'Siap Diantar') + ']. Yakin ingin memproses pembayaran sekarang?',
-                         icon: 'question',
-                         showCancelButton: true,
-                         confirmButtonColor: '#0F2E23',
-                         cancelButtonColor: '#64748b',
-                         confirmButtonText: 'Ya, Lanjutkan',
-                         cancelButtonText: 'Batal'
-                     }).then((result) => {
-                         if (result.isConfirmed) {
-                             this.proceedPayment();
-                         }
-                     });
-                     return;
-                 }
-
                  this.proceedPayment();
              }
          }" x-init="return () => { if (pollingInterval) clearInterval(pollingInterval); }">
@@ -204,11 +122,11 @@
             </script>
         @endif
 
-        {{-- ─── MAIN 2-COLUMN MINIMALIST POS CHECKOUT LAYOUT ─── --}}
-        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden p-4 lg:p-6 gap-6 max-w-7xl mx-auto w-full">
+        {{-- ─── MAIN 2-COLUMN MINIMALIST POS CHECKOUT LAYOUT (FLAT) ─── --}}
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden border-t border-slate-200">
 
             {{-- ═════════════════ LEFT COLUMN: RINGKASAN PESANAN ═════════════════ --}}
-            <div class="w-full lg:w-[360px] xl:w-[400px] bg-white border border-gray-200/80 rounded-3xl flex flex-col justify-between shrink-0 overflow-hidden shadow-xs">
+            <div class="w-full lg:w-[400px] xl:w-[480px] bg-slate-50/50 border-r border-slate-200 flex flex-col justify-between shrink-0 overflow-hidden">
 
                 {{-- Header & Items --}}
                 <div class="flex flex-col flex-1 overflow-hidden">
@@ -287,9 +205,9 @@
             </div>
 
             {{-- ═════════════════ RIGHT COLUMN: PROSES PEMBAYARAN ═════════════════ --}}
-            <div class="flex-1 bg-white border border-gray-200/80 rounded-3xl flex flex-col justify-between overflow-y-auto p-5 md:p-6 shadow-xs">
+            <div class="flex-1 bg-white flex flex-col justify-between overflow-y-auto p-6 md:p-10 lg:p-12">
 
-                <form id="checkout-form" action="{{ route('pos.dinein.processPayment', $meja->id) }}" method="POST" @submit="submitForm" class="flex flex-col flex-1 justify-between max-w-md mx-auto w-full space-y-5">
+                <form id="checkout-form" action="{{ route('pos.dinein.processPayment', $meja->id) }}" method="POST" @submit="submitForm" class="flex flex-col flex-1 justify-between max-w-xl mx-auto w-full space-y-6">
                     @csrf
                     <input type="hidden" name="pesanan_id" value="{{ $pesanan->id }}">
                     <input type="hidden" name="total_tagihan" value="{{ $totalTagihan }}">
@@ -297,28 +215,28 @@
 
                     <div class="space-y-4">
 
-                        {{-- ── 1. TOTAL TAGIHAN ── --}}
-                        <div class="text-center space-y-0.5 pt-1">
-                            <p class="text-[11px] font-extrabold text-slate-400 tracking-wider uppercase">Total Tagihan Kasir</p>
-                            <div class="flex items-baseline justify-center gap-1">
-                                <span class="text-2xl font-bold text-slate-400">Rp</span>
-                                <span class="text-4xl lg:text-5xl font-black text-[#0F2E23] tracking-tight">{{ number_format($totalTagihan, 0, ',', '.') }}</span>
+                        {{-- ── 1. SELECT PAYMENT METHOD & TOTAL ── --}}
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">Select Payment Method</h3>
+                            <div class="text-right">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Amount</p>
+                                <p class="text-2xl font-black text-[#0F2E23] leading-none mt-1">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</p>
                             </div>
                         </div>
 
-                        {{-- ── 2. TABS NAVIGASI (TUNAI & NONTUNAI DIGITAL) ── --}}
-                        <div class="border-b border-slate-200 flex justify-center gap-8 text-sm font-extrabold shrink-0">
+                        {{-- ── 2. TABS NAVIGASI (CASH, QRIS, BANK) ── --}}
+                        <div class="grid grid-cols-2 gap-2 mb-6">
                             <button type="button" @click="selectMetode('cash')"
-                                    :class="metodeBayar === 'cash' ? 'text-[#0F2E23] border-b-2 border-[#0F2E23] pb-2 font-black' : 'text-slate-400 hover:text-slate-600 pb-2'"
-                                    class="transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-money-bill-wave"></i>
-                                <span>Tunai (Cash)</span>
+                                    :class="metodeBayar === 'cash' ? 'bg-[#0F2E23] text-white border-[#0F2E23]' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'"
+                                    class="border rounded-2xl py-3 flex flex-col items-center justify-center gap-1.5 transition-all">
+                                <i class="ph ph-money text-2xl"></i>
+                                <span class="text-xs font-bold">TUNAI (CASH)</span>
                             </button>
                             <button type="button" @click="selectMetode('nontunai')"
-                                    :class="metodeBayar === 'nontunai' || metodeBayar === 'qris' || metodeBayar === 'kartu' ? 'text-[#0F2E23] border-b-2 border-[#0F2E23] pb-2 font-black' : 'text-slate-400 hover:text-slate-600 pb-2'"
-                                    class="transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-qrcode"></i>
-                                <span>Nontunai (QRIS / Card)</span>
+                                    :class="metodeBayar === 'nontunai' ? 'bg-[#0F2E23] text-white border-[#0F2E23]' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'"
+                                    class="border rounded-2xl py-3 flex flex-col items-center justify-center gap-1.5 transition-all">
+                                <i class="ph ph-qr-code text-2xl"></i>
+                                <span class="text-xs font-bold">MIDTRANS SNAP</span>
                             </button>
                         </div>
 
@@ -406,96 +324,25 @@
                             </div>
                         </div>
 
-                        {{-- ── 4. NONTUNAI / OFFICIAL STANDAR QRIS INDONESIA (ASPI / BI) ── --}}
-                        <div x-show="metodeBayar === 'nontunai' || metodeBayar === 'qris' || metodeBayar === 'kartu'" class="space-y-3">
-                            
-                            {{-- OFFICIAL STANDAR QRIS CARD CONTAINER --}}
-                            <div class="bg-white border-2 border-red-600 rounded-3xl p-5 text-center shadow-lg relative overflow-hidden space-y-4">
-                                
-                                {{-- QRIS Header Strip --}}
-                                <div class="flex items-center justify-between border-b-2 border-red-600 pb-3">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-2xl font-black text-red-600 tracking-tighter italic">QRIS</span>
-                                        <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200">Standar Nasional</span>
-                                    </div>
-                                    <div class="flex items-center gap-1">
-                                        <span class="text-[10px] font-black text-red-600 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">GPN</span>
-                                    </div>
-                                </div>
-
-                                {{-- Merchant Info & NMID --}}
-                                <div class="space-y-0.5 text-center">
-                                    <h4 class="text-base font-black text-slate-900 tracking-tight uppercase">SAUNG BABAKAN CINTA (BBC RESTO)</h4>
-                                    <p class="text-[11px] font-mono text-slate-500 font-bold">NMID: ID1024391823901</p>
-                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-[#0F2E23] border border-emerald-200 rounded-xl text-xs font-black mt-1">
-                                        <span>Tagihan: Rp {{ number_format($totalTagihan, 0, ',', '.') }}</span>
-                                    </div>
-                                </div>
-
-                                {{-- Loading State --}}
-                                <div x-show="qrisLoading" class="py-10 space-y-2">
-                                    <i class="fa-solid fa-spinner fa-spin text-3xl text-red-600"></i>
-                                    <p class="text-xs font-bold text-slate-600">Menghubungkan ke Standar Server QRIS...</p>
-                                </div>
-
-                                {{-- Error State --}}
-                                <div x-show="qrisError && !qrisLoading" class="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-bold">
-                                    <p x-text="qrisError"></p>
-                                    <button type="button" @click="generateQrisApi()" class="mt-2 px-4 py-1.5 bg-red-600 text-white rounded-xl text-xs font-extrabold shadow-2xs">Coba Lagi</button>
-                                </div>
-
-                                {{-- QR Code Image & Scanning Corners --}}
-                                <div x-show="!qrisLoading && !qrisError" class="space-y-3">
-                                    <div class="relative inline-block bg-white p-4 rounded-2xl border border-slate-200 shadow-md">
-                                        <template x-if="qrisUrl">
-                                            <img :src="qrisUrl" alt="QRIS Standar Nasional" class="w-48 h-48 lg:w-52 lg:h-52 object-contain mx-auto rounded-lg">
-                                        </template>
-                                        {{-- Corner Markers --}}
-                                        <div class="absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 border-red-600"></div>
-                                        <div class="absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 border-red-600"></div>
-                                        <div class="absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 border-red-600"></div>
-                                        <div class="absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 border-red-600"></div>
-                                    </div>
-
-                                    {{-- Live Status Indicator --}}
-                                    <div class="flex items-center justify-center gap-2 text-xs font-extrabold text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-200 max-w-xs mx-auto">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-                                        <span>Menunggu Scan & Pembayaran Realtime</span>
-                                    </div>
-                                </div>
-
-                                {{-- Footer Supported E-Wallets & Banks --}}
-                                <div class="pt-3 border-t border-slate-100 space-y-1.5">
-                                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Dukungan Pembayaran (Semua E-Wallet & M-Banking):</p>
-                                    <div class="flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold text-slate-600">
-                                        <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded border border-blue-100">GoPay</span>
-                                        <span class="px-2 py-0.5 bg-orange-50 text-orange-700 rounded border border-orange-100">ShopeePay</span>
-                                        <span class="px-2 py-0.5 bg-purple-50 text-purple-700 rounded border border-purple-100">OVO</span>
-                                        <span class="px-2 py-0.5 bg-sky-50 text-sky-700 rounded border border-sky-100">DANA</span>
-                                        <span class="px-2 py-0.5 bg-red-50 text-red-700 rounded border border-red-100">LinkAja</span>
-                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded border border-slate-200">m-Banking (BCA, Mandiri, BRI, BNI)</span>
-                                    </div>
-                                </div>
-
+                        {{-- ── 4. MIDTRANS SNAP SECTION ── --}}
+                        <div x-show="metodeBayar === 'nontunai'" class="space-y-3 text-center py-10 border-2 border-dashed border-gray-200 rounded-3xl">
+                            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="ph ph-credit-card text-3xl"></i>
                             </div>
+                            <h4 class="text-sm font-bold text-gray-800">Midtrans Snap</h4>
+                            <p class="text-xs text-gray-500 px-4">Pembayaran (QRIS, Transfer Bank, E-Wallet) akan diproses melalui Payment Gateway Midtrans. Silakan klik tombol "Proses Pembayaran" di bawah.</p>
                         </div>
-
                     </div>
 
-                    {{-- ── 5. BOTTOM ACTION BAR (Kembali & Proses Bayar) ── --}}
-                    <div class="border-t border-slate-200/80 pt-3 flex items-center justify-between gap-3 shrink-0">
-                        <a href="{{ route('pos.dinein.index') }}?view=open_bills" class="py-3 px-5 text-xs font-extrabold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-colors text-center flex items-center justify-center gap-2 border border-slate-200 shadow-2xs">
-                            <i class="fa-solid fa-arrow-left text-xs"></i>
-                            <span>Kembali ke Pesanan Belum Dibayar</span>
-                        </a>
+                    {{-- ── 6. BOTTOM ACTION BAR (Proses Bayar) ── --}}
+                    <div class="mt-4 pt-4 border-t border-slate-100 space-y-3">
                         <button type="submit"
                                 :disabled="metodeBayar === 'cash' && uangDiterima < totalTagihan"
                                 :class="metodeBayar === 'cash' && uangDiterima < totalTagihan
                                     ? 'opacity-50 cursor-not-allowed bg-slate-400'
                                     : 'bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] shadow-md'"
-                                class="flex-1 max-w-[260px] py-3.5 px-6 rounded-2xl text-white font-black text-sm flex items-center justify-between transition-all">
-                            <span x-text="metodeBayar === 'cash' && uangDiterima < totalTagihan ? 'Nominal Kurang' : 'BAYAR'">BAYAR</span>
-                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                                class="w-full py-4 rounded-2xl text-white font-black text-sm flex items-center justify-center gap-2 transition-all">
+                            <span x-text="metodeBayar === 'cash' && uangDiterima < totalTagihan ? 'NOMINAL KURANG' : 'PROSES PEMBAYARAN'">PROSES PEMBAYARAN</span>
                         </button>
                     </div>
 

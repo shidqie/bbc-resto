@@ -44,13 +44,6 @@
                             <input type="text" name="nama_bahan" value="{{ old('nama_bahan', $bahanBaku->nama_bahan) }}" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#0F2E23]/10 focus:border-[#0F2E23] outline-none block w-full p-3 transition-colors placeholder-gray-400 font-medium" placeholder="Contoh: Beras Premium">
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Peruntukan Penggunaan <span class="text-red-500">*</span></label>
-                            <select name="jenis_penggunaan" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm font-semibold rounded-xl focus:ring-2 focus:ring-[#0F2E23]/10 focus:border-[#0F2E23] block w-full p-3 outline-none">
-                                <option value="resto_nasibox" {{ old('jenis_penggunaan', $bahanBaku->jenis_penggunaan) != 'catering' ? 'selected' : '' }}>Resto & Nasi Box (Stok Harian Resto)</option>
-                                <option value="catering" {{ old('jenis_penggunaan', $bahanBaku->jenis_penggunaan) == 'catering' ? 'selected' : '' }}>Catering (Stok Khusus Catering)</option>
-                            </select>
-                        </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -99,38 +92,11 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Harga Beli Terakhir <span class="text-red-500">*</span></label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-500 font-medium">Rp</div>
-                                <input type="number" name="harga_terakhir" value="{{ old('harga_terakhir', $bahanBaku->harga_terakhir) }}" required min="0" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full pl-12 p-3 transition-colors">
-                            </div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan / Deskripsi <span class="text-gray-400 text-xs font-normal">(Opsional)</span></label>
+                            <textarea name="keterangan" rows="4" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors placeholder-gray-400" placeholder="Deskripsi tambahan bahan baku...">{{ old('keterangan', $bahanBaku->keterangan) }}</textarea>
                         </div>
+                        
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Utama <span class="text-gray-400 text-xs font-normal">(Opsional)</span></label>
-                            <select name="supplier_id" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
-                                <option value="">Pilih Supplier</option>
-                                @foreach($suppliers as $supplier)
-                                    <option value="{{ $supplier->id }}" {{ old('supplier_id', $bahanBaku->supplier_id) == $supplier->id ? 'selected' : '' }}>{{ $supplier->nama_supplier }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Penyimpanan <span class="text-gray-400 text-xs font-normal">(Opsional)</span></label>
-                                <input type="text" name="lokasi_penyimpanan" value="{{ old('lokasi_penyimpanan', $bahanBaku->lokasi_penyimpanan) }}" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors placeholder-gray-400" placeholder="Contoh: Rak A1">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Kedaluwarsa <span class="text-gray-400 text-xs font-normal">(Opsional)</span></label>
-                                <input type="date" name="tanggal_kedaluwarsa" value="{{ old('tanggal_kedaluwarsa', $bahanBaku->tanggal_kedaluwarsa ? \Carbon\Carbon::parse($bahanBaku->tanggal_kedaluwarsa)->format('Y-m-d') : '') }}" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan <span class="text-gray-400 text-xs font-normal">(Opsional)</span></label>
-                            <textarea name="keterangan" rows="2" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors placeholder-gray-400" placeholder="Catatan tambahan...">{{ old('keterangan', $bahanBaku->keterangan) }}</textarea>
-                        </div>
                     </div>
                 </div>
 

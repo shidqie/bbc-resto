@@ -23,6 +23,7 @@ class PesananNasiBox extends Model
         'total_tagihan',
         'dp_amount',
         'status',
+        'status_bayar',
         'catatan'
     ];
 
@@ -33,6 +34,11 @@ class PesananNasiBox extends Model
     public function paket()
     {
         return $this->belongsTo(PaketCatering::class, 'paket_id');
+    }
+
+    public function statusLogs()
+    {
+        return $this->morphMany(PesananStatusLog::class, 'pesanan')->latest();
     }
 
     public function details()

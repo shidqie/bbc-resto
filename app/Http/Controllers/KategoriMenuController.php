@@ -66,7 +66,7 @@ class KategoriMenuController extends Controller
             'jenis_menu' => $request->jenis_menu,
         ]);
 
-        return redirect()->route('kategori-menu.index')->with('success', 'Kategori menu ' . $kodeKategori . ' (' . $request->nama . ') berhasil ditambahkan.');
+        return redirect()->route('menu.index', ['tab' => 'kategori'])->with('success', 'Kategori menu ' . $kodeKategori . ' (' . $request->nama . ') berhasil ditambahkan.');
     }
 
     public function update(Request $request, KategoriMenu $kategori_menu)
@@ -98,7 +98,7 @@ class KategoriMenuController extends Controller
             'jenis_menu' => $request->jenis_menu,
         ]);
 
-        return redirect()->route('kategori-menu.index')->with('success', 'Kategori menu ' . $kategori_menu->kode_kategori . ' berhasil diperbarui.');
+        return redirect()->route('menu.index', ['tab' => 'kategori'])->with('success', 'Kategori menu ' . $kategori_menu->kode_kategori . ' berhasil diperbarui.');
     }
 
     public function destroy(KategoriMenu $kategori_menu)
@@ -106,7 +106,7 @@ class KategoriMenuController extends Controller
         // Skenario Alternatif A2: Menghapus kategori yang masih dipakai menu
         $count = $kategori_menu->menus()->count();
         if ($count > 0) {
-            return redirect()->route('kategori-menu.index')
+            return redirect()->route('menu.index', ['tab' => 'kategori'])
                 ->with('error', "Gagal Menghapus: Kategori '{$kategori_menu->nama}' tidak dapat dihapus karena masih digunakan oleh {$count} data menu. Harap pindahkan menu ke kategori lain terlebih dahulu.");
         }
 
@@ -114,6 +114,6 @@ class KategoriMenuController extends Controller
         $kode = $kategori_menu->kode_kategori;
         $kategori_menu->delete();
 
-        return redirect()->route('kategori-menu.index')->with('success', "Kategori menu '{$kode} - {$nama}' berhasil dihapus.");
+        return redirect()->route('menu.index', ['tab' => 'kategori'])->with('success', "Kategori menu '{$kode} - {$nama}' berhasil dihapus.");
     }
 }

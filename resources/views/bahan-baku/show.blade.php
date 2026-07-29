@@ -72,10 +72,6 @@
                             <p class="text-xs text-gray-500 font-medium">Satuan Dasar</p>
                             <p class="text-sm text-gray-900">{{ $bahanBaku->satuan->nama_satuan }} ({{ $bahanBaku->satuan->singkatan }})</p>
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-medium">Harga Beli Terakhir</p>
-                            <p class="text-sm font-medium text-gray-900">Rp{{ number_format($bahanBaku->harga_terakhir, 0, ',', '.') }}</p>
-                        </div>
                         <div class="pt-4 border-t border-gray-100">
                             <p class="text-xs text-gray-500 font-medium">Batas Minimum Stok</p>
                             <p class="text-sm text-gray-900">{{ rtrim(rtrim(number_format($bahanBaku->stok_minimum, 2, ',', '.'), '0'), ',') }} {{ $bahanBaku->satuan->singkatan }}</p>
@@ -94,22 +90,7 @@
                     </div>
                     <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <p class="text-xs text-gray-500 font-medium mb-1"><x-heroicon-o-truck class="text-gray-400 w-4 w-5 h-5 inline-block shrink-0" /> Supplier Utama</p>
-                            <p class="text-sm text-gray-900">{{ $bahanBaku->supplier->nama_supplier ?? 'Tidak ditentukan' }}</p>
-                            @if($bahanBaku->supplier)
-                                <p class="text-xs text-gray-500 mt-0.5">{{ $bahanBaku->supplier->kontak ?? '-' }}</p>
-                            @endif
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-medium mb-1"><x-heroicon-o-map-pin class="text-gray-400 w-4 w-5 h-5 inline-block shrink-0" /> Lokasi Penyimpanan</p>
-                            <p class="text-sm text-gray-900">{{ $bahanBaku->lokasi_penyimpanan ?: 'Tidak ditentukan' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-medium mb-1"><x-heroicon-o-calendar-days class="text-gray-400 w-4 w-5 h-5 inline-block shrink-0" /> Tanggal Kedaluwarsa</p>
-                            <p class="text-sm text-gray-900">{{ $bahanBaku->tanggal_kedaluwarsa ? \Carbon\Carbon::parse($bahanBaku->tanggal_kedaluwarsa)->translatedFormat('d F Y') : 'Tidak ada' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-medium mb-1"><x-heroicon-o-information-circle class="text-gray-400 w-4 w-5 h-5 inline-block shrink-0" /> Keterangan</p>
+                            <p class="text-xs text-gray-500 font-medium mb-1"><x-heroicon-o-information-circle class="text-gray-400 w-4 h-4 inline-block shrink-0" /> Keterangan / Deskripsi</p>
                             <p class="text-sm text-gray-900">{{ $bahanBaku->keterangan ?: '-' }}</p>
                         </div>
                     </div>

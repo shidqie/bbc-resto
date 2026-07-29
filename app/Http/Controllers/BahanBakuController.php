@@ -15,7 +15,7 @@ class BahanBakuController extends Controller
 {
     public function index(Request $request)
     {
-        $query = BahanBaku::with(['kategoriBahan', 'satuan', 'supplier']);
+        $query = BahanBaku::with(['kategoriBahan', 'satuan', 'supplierRelation']);
 
         // Stats
         $totalBahan = BahanBaku::count();
@@ -64,10 +64,6 @@ class BahanBakuController extends Controller
                     break;
             }
         }
-        
-        if ($request->filled('supplier')) {
-            $query->where('supplier_id', $request->supplier);
-        }
 
         $bahanBakus = $query->latest()->paginate(12)->withQueryString();
         $kategoris = KategoriBahan::all();
@@ -83,13 +79,12 @@ class BahanBakuController extends Controller
     {
         $kategoris = KategoriBahan::all();
         $satuans = Satuan::all();
-        $suppliers = Supplier::all();
         
         $lastBahan = BahanBaku::latest('id')->first();
         $nextId = $lastBahan ? $lastBahan->id + 1 : 1;
         $kodeBahan = 'BB-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
 
-        return view('bahan-baku.create', compact('kategoris', 'satuans', 'suppliers', 'kodeBahan'));
+        return view('bahan-baku.create', compact('kategoris', 'satuans', 'kodeBahan'));
     }
 
     public function store(Request $request)
@@ -97,27 +92,22 @@ class BahanBakuController extends Controller
         $validated = $request->validate([
             'kode_bahan' => 'required|unique:bahan_bakus',
             'nama_bahan' => 'required|string|max:255',
-            'jenis_penggunaan' => 'required|in:resto_nasibox,catering,dine_in,nasi_box,semua',
             'kategori_bahan_id' => 'required|exists:kategori_bahans,id',
             'satuan_id' => 'required|exists:satuans,id',
-            'stok' => 'required|numeric|min:0',
+            'stok' => 'nullable|numeric|min:0',
             'stok_minimum' => 'required|numeric|min:0',
-            'harga_terakhir' => 'required|numeric|min:0',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'lokasi_penyimpanan' => 'nullable|string|max:255',
-            'tanggal_kedaluwarsa' => 'nullable|date',
             'keterangan' => 'nullable|string',
             'status' => 'boolean',
         ], [
             'nama_bahan.required' => 'Nama bahan wajib diisi.',
-            'jenis_penggunaan.required' => 'Peruntukan penggunaan wajib dipilih.',
             'kategori_bahan_id.required' => 'Kategori wajib dipilih.',
             'satuan_id.required' => 'Satuan wajib dipilih.',
             'stok_minimum.min' => 'Batas minimum tidak boleh negatif.',
             'stok.min' => 'Stok awal tidak boleh negatif.',
-            'harga_terakhir.min' => 'Harga beli tidak boleh negatif.',
             'kode_bahan.unique' => 'Kode bahan sudah digunakan.',
         ]);
+
+        if (!isset($validated['stok'])) $validated['stok'] = 0;
 
         DB::beginTransaction();
         try {
@@ -144,7 +134,7 @@ class BahanBakuController extends Controller
 
     public function show(BahanBaku $bahanBaku)
     {
-        $bahanBaku->load(['kategoriBahan', 'satuan', 'supplier']);
+        $bahanBaku->load(['kategoriBahan', 'satuan', 'supplierRelation']);
         $mutasiStoks = $bahanBaku->mutasiStoks()->with('user')->latest()->take(5)->get();
         return view('bahan-baku.show', compact('bahanBaku', 'mutasiStoks'));
     }
@@ -153,22 +143,16 @@ class BahanBakuController extends Controller
     {
         $kategoris = KategoriBahan::all();
         $satuans = Satuan::all();
-        $suppliers = Supplier::all();
-        return view('bahan-baku.edit', compact('bahanBaku', 'kategoris', 'satuans', 'suppliers'));
+        return view('bahan-baku.edit', compact('bahanBaku', 'kategoris', 'satuans'));
     }
 
     public function update(Request $request, BahanBaku $bahanBaku)
     {
         $validated = $request->validate([
             'nama_bahan' => 'required|string|max:255',
-            'jenis_penggunaan' => 'required|in:resto_nasibox,catering,dine_in,nasi_box,semua',
             'kategori_bahan_id' => 'required|exists:kategori_bahans,id',
             'satuan_id' => 'required|exists:satuans,id',
             'stok_minimum' => 'required|numeric|min:0',
-            'harga_terakhir' => 'required|numeric|min:0',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'lokasi_penyimpanan' => 'nullable|string|max:255',
-            'tanggal_kedaluwarsa' => 'nullable|date',
             'keterangan' => 'nullable|string',
             'status' => 'boolean',
         ]);

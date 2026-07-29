@@ -91,16 +91,13 @@
             line-height: 1.4;
         }
     </style>
-    <section class="py-16 bg-canvas min-h-screen">
-        <div class="max-w-4xl mx-auto px-4">
-
-
+    <section class="py-16 bg-white min-h-screen">
+        <div class="max-w-7xl mx-auto px-4">
 
             {{-- Header --}}
-            <div class="text-center mb-10">
-                <p class="text-sm text-secondary font-semibold tracking-widest uppercase mb-2">Layanan Catering</p>
-                <h1 class="text-4xl font-serif text-primary mb-3">Form Pemesanan Catering</h1>
-                <p class="text-body">Pemesanan minimal H-14 sebelum acara · DP 50%</p>
+            <div class="mb-10">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Pemesanan Catering</h1>
+                <p class="text-gray-500 text-sm">Harap melakukan pemesanan minimal H-14 sebelum acara (DP 50%)</p>
             </div>
 
             @if($errors->any())
@@ -115,36 +112,34 @@
 
             <form id="cateringForm" method="POST" action="{{ route('pesan.catering.store') }}">
                 @csrf
-
-                {{-- SECTION 1: Detail Acara --}}
-                <div class="bg-surface rounded-2xl border border-primary/10 p-6 mb-6 shadow-sm">
-                    <h2 class="text-lg font-serif text-primary mb-4 flex items-center gap-2">
-                        <span class="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
-                        Detail Acara
-                    </h2>
+                <div class="grid lg:grid-cols-3 gap-12 items-start">
+                    
+                    {{-- LEFT COLUMN: Form Input --}}
+                    <div class="lg:col-span-2 divide-y divide-gray-100">
+                        
+                        {{-- SECTION 1: Detail Acara --}}
+                        <div class="pb-8">
+                    <h2 class="text-lg font-bold text-gray-900 mb-5">1. Detail Acara</h2>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-semibold text-body mb-1">Tanggal Acara <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Acara <span class="text-red-500">*</span></label>
                             <input type="date" name="tanggal_acara" id="tanggalAcara"
                                    min="{{ \Carbon\Carbon::today()->addDays(14)->format('Y-m-d') }}"
                                    value="{{ old('tanggal_acara') }}"
-                                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition" required>
+                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
                             <p id="tanggal-warning" class="text-red-500 text-xs mt-1 hidden">Pemesanan catering minimal H-14 sebelum acara.</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-body mb-1">Jumlah Porsi <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jumlah Porsi <span class="text-red-500">*</span></label>
                             <input type="number" name="jumlah_porsi" id="jumlahPorsi" min="1" value="{{ old('jumlah_porsi', 50) }}"
-                                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition" required>
+                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
                         </div>
                     </div>
                 </div>
 
-{{-- SECTION 2: Pilih Paket --}}
-                <div class="bg-surface rounded-2xl border border-primary/10 p-6 mb-6 shadow-sm">
-                    <h2 class="text-lg font-serif text-primary mb-4 flex items-center gap-2">
-                        <span class="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
-                        Pilih Paket
-                    </h2>
+                        {{-- SECTION 2: Pilih Paket --}}
+                        <div class="py-8">
+                    <h2 class="text-lg font-bold text-gray-900 mb-5">2. Pilih Paket</h2>
                     <div class="grid md:grid-cols-2 gap-4">
                         @foreach($pakets->where('jenis_paket','catering') as $paket)
                             <label class="paket-card cursor-pointer border-2 rounded-xl p-5 transition-all duration-200 hover:border-primary border-gray-200"
@@ -171,59 +166,49 @@
                     </div>
                 </div>
 
-                {{-- SECTION 3: Komponen Menu (dynamic) --}}
-                <div id="sec-komponen" class="bg-surface rounded-2xl border border-primary/10 p-6 mb-6 shadow-sm hidden">
-                    <h2 class="text-lg font-serif text-primary mb-4 flex items-center gap-2">
-                        <span class="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                        Pilih Menu Komponen
-                    </h2>
+                        {{-- SECTION 3: Komponen Menu (dynamic) --}}
+                        <div id="sec-komponen" class="py-8 hidden">
+                    <h2 class="text-lg font-bold text-gray-900 mb-5">3. Pilih Komponen</h2>
                     <div id="komponen-container" class="space-y-5"></div>
                 </div>
 
-                                {{-- SECTION X: Data Pemesan --}}
-                <div class="bg-surface rounded-2xl border border-primary/10 p-6 mb-6 shadow-sm">
-                    <h2 class="text-lg font-serif text-primary mb-4 flex items-center gap-2">
-                        <span class="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold section-number">4</span>
-                        Data Pemesan
-                    </h2>
+                        {{-- SECTION X: Data Pemesan --}}
+                        <div class="py-8">
+                    <h2 class="text-lg font-bold text-gray-900 mb-5">4. Data Pemesan & Pengiriman</h2>
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-semibold text-body mb-1">Nama Pemesan <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Pemesan <span class="text-red-500">*</span></label>
                             <input type="text" name="nama_pemesan" value="{{ old('nama_pemesan', auth()->user()->name ?? '') }}"
-                                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition" required>
+                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-body mb-1">Nomor Kontak (WhatsApp) <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nomor Kontak (WhatsApp) <span class="text-red-500">*</span></label>
                             <div class="flex">
-                                <span class="inline-flex items-center px-4 font-semibold text-gray-600 bg-gray-50 border border-r-0 border-gray-200 rounded-l-xl">
+                                <span class="inline-flex items-center px-4 font-semibold text-gray-500 bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg">
                                     +62
                                 </span>
                                 <input type="number" inputmode="numeric" name="kontak" value="{{ old('kontak', auth()->user()->phone_number ?? '') }}" placeholder="81234567890"
-                                       class="w-full border border-gray-200 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition [&::-webkit-inner-spin-button]:appearance-none" required>
+                                       class="w-full border border-gray-200 rounded-r-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50 [&::-webkit-inner-spin-button]:appearance-none" required>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-body mb-1">Email Pemesan <span class="text-red-500">*</span></label>
-                            <input type="email" name="email" value="{{ old('email', auth()->user()->email ?? '') }}" placeholder="contoh@gmail.com"
-                                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition" required>
-                            <p class="text-xs text-gray-500 mt-1">Kami akan mengirimkan detail dan tanda terima ke email ini.</p>
-                        </div>
+
                         <input type="hidden" name="metode_pengiriman" value="delivery">
 
                         <div id="deliverySection" class="md:col-span-2 mb-4">
                             
                             <div class="mb-4">
-                                <label class="block text-sm font-semibold text-body mb-1">Nama / Alamat Venue (Opsional)</label>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Venue / Gedung (Opsional)</label>
                                 <input type="text" name="alamat_venue" value="{{ old('alamat_venue') }}" placeholder="Contoh: Gedung Sabuga / Aula Serbaguna"
-                                       class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition mb-3">
+                                       class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50 mb-4">
                                        
-                                <label class="block text-sm font-semibold text-body mb-1">Alamat Lengkap <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Alamat Lengkap <span class="text-red-500">*</span></label>
                                 <textarea name="lokasi_acara" id="alamatDelivery" rows="2"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition" required>{{ old('lokasi_acara', auth()->user()->alamat ?? '') }}</textarea>
-                                <p class="text-xs text-body/60 mt-1">💡 Tip: Cari alamat lewat ikon 🔍 di peta, lalu geser pin ke titik yang tepat.</p>
+                                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>{{ old('lokasi_acara', auth()->user()->alamat ?? '') }}</textarea>
                             </div>
 
                             {{-- Map Container --}}
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lokasi Pengiriman <span class="text-red-500">*</span></label>
+                            <p class="text-xs text-body/60 mb-2">💡 Tip: Cari alamat lewat ikon 🔍 di peta, lalu geser pin ke titik yang tepat.</p>
                             <div id="map-container" class="rounded-2xl overflow-hidden border border-gray-200 shadow-md mb-3 z-0" style="height: 340px; position:relative;">
                                 {{-- Address Card Overlay --}}
                                 <div id="map-address-card">
@@ -241,6 +226,7 @@
                             <input type="hidden" name="jarak_km" id="inputJarak">
                             
                             {{-- Jarak Info Card Minimalist --}}
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5 mt-4">Jarak Pengiriman (Otomatis)</label>
                             <div class="flex flex-col sm:flex-row gap-3 mb-4">
                                 <div class="flex-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 flex-shrink-0">
@@ -266,92 +252,68 @@
                         </div>
 
                         <div class="md:col-span-2 mt-2">
-                            <label class="block text-sm font-semibold text-body mb-1">Catatan Tambahan</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Catatan Tambahan</label>
                             <textarea name="catatan" rows="2"
-                                      class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition">{{ old('catatan') }}</textarea>
+                                      class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">{{ old('catatan') }}</textarea>
                         </div>
                     </div>
                 </div>
 
-                {{-- SECTION 5: Layanan Tambahan --}}
-                <div class="bg-surface rounded-2xl border border-primary/10 p-6 mb-6 shadow-sm">
-                    <h2 class="text-lg font-serif text-primary mb-4 flex items-center gap-2">
-                        <span class="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
-                        Layanan Tambahan <span class="text-sm font-normal text-body">(opsional)</span>
-                    </h2>
-                    <div class="grid sm:grid-cols-2 gap-3">
-                        @foreach($layananTambahan as $layanan)
-                            <label class="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-3 cursor-pointer hover:border-primary/50 transition">
-                                <input type="checkbox" name="layanan_tambahan[]" value="{{ $layanan->id }}"
-                                       class="layanan-checkbox w-4 h-4 accent-primary" data-harga="{{ $layanan->harga }}"
-                                       {{ in_array($layanan->id, old('layanan_tambahan', [])) ? 'checked' : '' }}>
-                                <div>
-                                    <p class="text-sm font-semibold text-body">{{ $layanan->nama }}</p>
-                                    <p class="text-xs text-secondary">+ Rp {{ number_format($layanan->harga, 0, ',', '.') }}</p>
-                                </div>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                {{-- SECTION 6: Opsi Pembayaran --}}
-                <div class="bg-surface rounded-2xl border border-primary/10 p-6 mb-6 shadow-sm">
-                    <h2 class="text-lg font-serif text-primary mb-4 flex items-center gap-2">
-                        <span class="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold">6</span>
-                        Opsi Pembayaran
-                    </h2>
+                        {{-- SECTION 5: Opsi Pembayaran --}}
+                        <div class="py-8">
+                    <h2 class="text-lg font-bold text-gray-900 mb-5">5. Pembayaran</h2>
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <label class="flex-1 flex items-center gap-3 border border-primary bg-primary/5 rounded-xl px-4 py-3 cursor-pointer transition">
-                            <input type="radio" name="opsi_pembayaran" value="dp" checked class="w-5 h-5 accent-primary" onchange="updatePaymentLabel(this.value)">
+                        <label class="flex-1 flex items-center gap-3 border border-primary bg-primary/5 rounded-lg px-4 py-3.5 cursor-pointer transition">
+                            <input type="radio" name="opsi_pembayaran" value="dp" checked class="w-4 h-4 accent-primary" onchange="updatePaymentLabel(this.value)">
                             <div>
-                                <p class="text-sm font-semibold text-body">Bayar DP (50%)</p>
-                                <p class="text-xs text-secondary">Sisa pelunasan dibayar nanti</p>
+                                <p class="text-sm font-semibold text-gray-900">Bayar DP (50%)</p>
+                                <p class="text-xs text-gray-500">Sisa dibayar H-3 sebelum acara</p>
                             </div>
                         </label>
-                        <label class="flex-1 flex items-center gap-3 border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary/50 transition">
-                            <input type="radio" name="opsi_pembayaran" value="lunas" class="w-5 h-5 accent-primary" onchange="updatePaymentLabel(this.value)">
+                        <label class="flex-1 flex items-center gap-3 border border-gray-200 bg-white rounded-lg px-4 py-3.5 cursor-pointer hover:border-primary/30 transition">
+                            <input type="radio" name="opsi_pembayaran" value="lunas" class="w-4 h-4 accent-primary" onchange="updatePaymentLabel(this.value)">
                             <div>
-                                <p class="text-sm font-semibold text-body">Bayar Lunas (100%)</p>
-                                <p class="text-xs text-gray-500">Bayar penuh di awal</p>
+                                <p class="text-sm font-semibold text-gray-900">Bayar Lunas (100%)</p>
+                                <p class="text-xs text-gray-500">Selesaikan pembayaran sekaligus</p>
                             </div>
                         </label>
                     </div>
                 </div>
+                    </div> {{-- END LEFT COLUMN --}}
 
-                {{-- SECTION 7: Ringkasan & Submit --}}
-                <div class="bg-primary text-white rounded-2xl p-6 shadow-md">
-                    <h2 class="text-lg font-serif mb-4 flex items-center gap-2">
-                        <span class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">7</span>
-                        Ringkasan Pesanan
-                    </h2>
-                    <div class="space-y-2 text-sm mb-4">
-                        <div class="flex justify-between">
-                            <span class="text-white/70">Subtotal Menu</span>
-                            <span id="subtotal-menu" class="font-semibold">Rp 0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-white/70">Layanan Tambahan</span>
-                            <span id="subtotal-addon" class="font-semibold">Rp 0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-white/70">Ongkos Kirim</span>
-                            <span id="summary-ongkir" class="font-semibold text-yellow-300">Rp 0</span>
-                        </div>
-                        <div class="border-t border-white/20 pt-2 flex justify-between text-base">
-                            <span class="font-semibold">Total Tagihan</span>
-                            <span id="total-tagihan" class="font-bold text-secondary">Rp 0</span>
-                        </div>
-                                               <div class="flex justify-between text-base">
-                            <span id="label-payment">DP yang Harus Dibayar <span class="text-white/70 text-xs">(50%)</span></span>
-                            <span id="dp-amount" class="font-bold text-yellow-300">Rp 0</span>
-                        </div>
-                    </div>
-                    <button type="submit" id="submitBtn"
-                            class="w-full bg-secondary hover:bg-secondary/90 text-white font-bold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                        Lanjut ke Pembayaran →
-                    </button>
-                </div>
+                    {{-- RIGHT COLUMN: Ringkasan & Submit (Sticky) --}}
+                    <div class="lg:col-span-1 sticky top-28">
+                        {{-- SECTION 6: Ringkasan & Submit --}}
+                        <div class="bg-gray-50/50 border border-gray-200 rounded-xl p-6">
+                            <h2 class="text-base font-bold text-gray-900 mb-4 pb-4 border-b border-gray-200">
+                                Ringkasan Pesanan
+                            </h2>
+                            <div class="space-y-3 text-sm mb-6">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Subtotal Menu</span>
+                                    <span id="subtotal-menu" class="font-semibold text-gray-900">Rp 0</span>
+                                </div>
 
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Ongkos Kirim</span>
+                                    <span id="summary-ongkir" class="font-semibold text-gray-900">Rp 0</span>
+                                </div>
+                                <div class="border-t border-gray-200 pt-3 flex justify-between text-base mt-2">
+                                    <span class="font-semibold text-gray-900">Total Tagihan</span>
+                                    <span id="total-tagihan" class="font-bold text-gray-900">Rp 0</span>
+                                </div>
+                                <div class="flex justify-between text-base bg-amber-50 rounded-lg p-3 mt-4 border border-amber-100">
+                                    <span id="label-payment" class="text-amber-800 font-medium">DP (50%)</span>
+                                    <span id="dp-amount" class="font-bold text-amber-600">Rp 0</span>
+                                </div>
+                            </div>
+                            <button type="submit" id="submitBtn"
+                                    class="w-full bg-primary hover:bg-primary-container text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                Lanjut Pembayaran
+                            </button>
+                        </div>
+                    </div> {{-- END RIGHT COLUMN --}}
+                </div> {{-- END GRID --}}
             </form>
         </div>
     </section>
@@ -608,10 +570,10 @@
             const label = document.getElementById('label-payment');
             const amount = document.getElementById('dp-amount');
             if (val === 'lunas') {
-                label.innerHTML = 'Total yang Harus Dibayar <span class="text-white/70 text-xs">(100%)</span>';
+                label.innerHTML = 'Total Pembayaran <span class="text-amber-700/70 text-xs">(100%)</span>';
                 amount.textContent = formatRp(currentTotal);
             } else {
-                label.innerHTML = 'DP yang Harus Dibayar <span class="text-white/70 text-xs">(50%)</span>';
+                label.innerHTML = 'DP Pembayaran <span class="text-amber-700/70 text-xs">(50%)</span>';
                 amount.textContent = formatRp(currentDp);
             }
             
@@ -632,15 +594,7 @@
             const porsi = parseInt(document.getElementById('jumlahPorsi').value) || 0;
             const subtotalMenu = hargaPaket * porsi;
 
-            let subtotalAddon = 0;
-            let layananAddons = [];
-            document.querySelectorAll('.layanan-checkbox:checked').forEach(cb => {
-                subtotalAddon += parseInt(cb.dataset.harga);
-                layananAddons.push(cb.value);
-            });
-
             document.getElementById('subtotal-menu').textContent = formatRp(subtotalMenu);
-            document.getElementById('subtotal-addon').textContent = formatRp(subtotalAddon);
             
             if(!selectedPaketId) return;
 
@@ -651,7 +605,7 @@
                     body: JSON.stringify({
                         paket_id: selectedPaketId,
                         jumlah_porsi: porsi,
-                        layanan_tambahan: layananAddons,
+                        layanan_tambahan: [],
                         metode_pengiriman: metodePengiriman,
                         jarak_km: jarakKm
                     })
@@ -665,10 +619,7 @@
                     currentDp = data.dp;
                     updatePaymentLabel(document.querySelector('input[name="opsi_pembayaran"]:checked').value);
                     
-                    if(data.ongkir === 0 && metodePengiriman === 'delivery' && porsi >= 100) {
-                         document.getElementById('summary-ongkir').textContent = 'GRATIS (Tier Tercapai)';
-                    }
-                    
+                    // Tier gratis ongkir akan otomatis menjadi Rp 0 dari server
                     document.getElementById('submitBtn').disabled = false;
                 } else {
                     alert(data.error || "Gagal menghitung tagihan.");
@@ -680,7 +631,6 @@
         }
 
         document.getElementById('jumlahPorsi').addEventListener('input', hitungTotalPreview);
-        document.querySelectorAll('.layanan-checkbox').forEach(cb => cb.addEventListener('change', hitungTotalPreview));
 
         // Validasi tanggal
         document.getElementById('tanggalAcara').addEventListener('change', function() {

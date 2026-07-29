@@ -77,18 +77,26 @@ class DineInPaymentController extends Controller
             );
 
             if ($request->metode_bayar == 'cash') {
-                return redirect()->route('pos.dinein.index')
-                                 ->with('print_nota_id', $request->pesanan_id)
+                return redirect()->route('pos.dinein.success', $request->pesanan_id)
                                  ->with('success', 'Pembayaran tunai berhasil! Silakan cetak nota.');
             }
 
             // Jika qris/kartu dari Midtrans Popup berhasil:
-            return redirect()->route('pos.dinein.index')
-                             ->with('print_nota_id', $request->pesanan_id)
+            return redirect()->route('pos.dinein.success', $request->pesanan_id)
                              ->with('success', 'Pembayaran non-tunai berhasil diverifikasi! Silakan cetak nota.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function success($pesananId)
+    {
+        $pesanan = PesananDinein::with('items.menu', 'meja', 'pembayaran')->findOrFail($pesananId);
+        // Only allow if payment has been made (status = lunas)
+        if ($pesanan->status !== 'lunas') {
+            return redirect()->route('pos.dinein.index')->with('error', 'Pesanan belum dibayar.');
+        }
+        return view('pos.dinein.success', compact('pesanan'));
     }
 
     public function receipts($pesananId)

@@ -111,49 +111,46 @@
     </div>
 
     <!-- menu grid -->
-    <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-4">
         <template x-for="m in filtered" :key="m.id">
-            <div class="bg-white rounded-xl border border-gray-200/70 overflow-hidden flex flex-col group hover:shadow-md hover:border-gray-300 transition-all duration-200">
+            <div class="group cursor-pointer flex flex-col gap-3" @click="detail(m)">
                 <!-- image -->
-                <div class="relative aspect-square bg-gray-50 overflow-hidden cursor-pointer" @click="detail(m)">
+                <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
                     <template x-if="m.foto">
-                        <img :src="'/storage/'+m.foto" :alt="m.nama" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" loading="lazy">
+                        <img :src="'/storage/'+m.foto" :alt="m.nama" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
                     </template>
                     <template x-if="!m.foto">
-                        <div class="w-full h-full flex items-center justify-center text-gray-300"><i class="fas fa-utensils text-xl"></i></div>
+                        <div class="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
+                            <span class="text-3xl font-black tracking-widest" x-text="m.nama.split(' ').slice(0,3).map(n => n[0]).join('').toUpperCase()"></span>
+                        </div>
                     </template>
                     <template x-if="m.status==='habis' || m.is_habis">
-                        <div class="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center">
-                            <span class="mono text-[10px] font-bold text-white tracking-widest uppercase bg-red-600 px-2.5 py-1 rounded-lg shadow-md">STOK HABIS</span>
+                        <div class="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center">
+                            <span class="bg-gray-800 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase shadow-md">HABIS</span>
                         </div>
                     </template>
                 </div>
                 <!-- info -->
-                <div class="p-3 flex-1 flex flex-col justify-between">
-                    <div class="cursor-pointer" @click="detail(m)">
-                        <h3 class="text-[13px] font-semibold text-gray-900 leading-snug line-clamp-2" x-text="m.nama"></h3>
-                        <p class="text-[10px] text-gray-400 line-clamp-1 mt-0.5 leading-relaxed" x-text="m.deskripsi||''"></p>
-                    </div>
-                    <div class="mt-2.5 pt-2 border-t border-gray-100 flex items-end justify-between gap-1">
-                        <span class="text-[13px] font-bold text-brand" x-text="rp(m.harga)"></span>
+                <div class="flex flex-col flex-1 px-1">
+                    <h3 class="text-[13px] font-semibold text-gray-900 leading-snug line-clamp-2" x-text="m.nama"></h3>
+                    
+                    <div class="mt-auto pt-3 flex items-center justify-between">
+                        <span class="text-[13px] font-bold text-gray-900" x-text="rp(m.harga)"></span>
                         <template x-if="m.status!=='habis' && !m.is_habis">
                             <div>
                                 <template x-if="qty(m.id)===0">
-                                    <button @click.stop="add(m)" class="w-7 h-7 rounded-lg bg-brand text-white flex items-center justify-center text-[11px] hover:bg-brand/90 transition-all active:scale-90 shadow-sm">
-                                        <i class="fas fa-plus"></i>
+                                    <button @click.stop="add(m)" class="bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                                        <i class="fas fa-plus text-xs"></i>
                                     </button>
                                 </template>
                                 <template x-if="qty(m.id)>0">
-                                    <div class="flex items-center gap-0.5 bg-brand rounded-lg text-white">
-                                        <button @click.stop="dec(m.id)" class="w-6 h-7 flex items-center justify-center text-[10px] rounded-l-lg hover:bg-white/10"><i class="fas fa-minus"></i></button>
-                                        <span class="text-[11px] font-bold w-5 text-center" x-text="qty(m.id)"></span>
-                                        <button @click.stop="add(m)" class="w-6 h-7 flex items-center justify-center text-[10px] rounded-r-lg hover:bg-white/10"><i class="fas fa-plus"></i></button>
+                                    <div class="flex items-center gap-0.5 bg-gray-100 rounded-full text-gray-700">
+                                        <button @click.stop="dec(m.id)" class="w-8 h-8 flex items-center justify-center rounded-l-full hover:bg-gray-200"><i class="fas fa-minus text-xs"></i></button>
+                                        <span class="text-[11px] font-bold w-4 text-center" x-text="qty(m.id)"></span>
+                                        <button @click.stop="add(m)" class="w-8 h-8 flex items-center justify-center rounded-r-full hover:bg-gray-200"><i class="fas fa-plus text-xs"></i></button>
                                     </div>
                                 </template>
                             </div>
-                        </template>
-                        <template x-if="m.status==='habis' || m.is_habis">
-                            <span class="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md">Habis</span>
                         </template>
                     </div>
                 </div>
@@ -193,7 +190,11 @@
         <!-- image -->
         <div class="relative aspect-video bg-gray-50 shrink-0">
             <template x-if="dm.foto"><img :src="'/storage/'+dm.foto" :alt="dm.nama" class="w-full h-full object-cover"></template>
-            <template x-if="!dm.foto"><div class="w-full h-full flex items-center justify-center text-gray-300"><i class="fas fa-utensils text-3xl"></i></div></template>
+            <template x-if="!dm.foto">
+                <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300">
+                    <span class="text-5xl font-black tracking-widest" x-text="dm.nama.split(' ').slice(0,3).map(n => n[0]).join('').toUpperCase()"></span>
+                </div>
+            </template>
             <button @click="modal=null" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center text-xs backdrop-blur-sm hover:bg-black/60 transition"><i class="fas fa-times"></i></button>
         </div>
         <!-- body -->

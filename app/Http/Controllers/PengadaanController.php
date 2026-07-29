@@ -17,33 +17,21 @@ class PengadaanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pengadaan::with(['supplier', 'user', 'pesananCatering', 'pesananNasiBox'])->latest();
+        $query = Pengadaan::with('user')->latest();
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('kode_pengadaan', 'like', "%{$search}%")
-                  ->orWhereHas('supplier', fn($s) => $s->where('nama_supplier', 'like', "%{$search}%"));
+                $q->where('nomor_pengadaan', 'like', "%{$search}%")
+                  ->orWhere('asal_pembelian', 'like', "%{$search}%");
             });
-        }
-
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->has('jenis_pesanan') && $request->jenis_pesanan != '') {
-            $query->where('jenis_pesanan', $request->jenis_pesanan);
         }
 
         $pengadaans = $query->paginate(15)->withQueryString();
 
         $stats = [
             'total' => Pengadaan::count(),
-            'pending' => Pengadaan::where('status', 'pending')->count(),
-            'diterima' => Pengadaan::where('status', 'diterima')->count(),
-            'dibatalkan' => Pengadaan::where('status', 'dibatalkan')->count(),
-            'catering' => Pengadaan::where('jenis_pesanan', 'catering')->count(),
-            'nasi_box' => Pengadaan::where('jenis_pesanan', 'nasi_box')->count(),
+            'total_biaya' => Pengadaan::sum('total_biaya'),
         ];
 
         return view('pengadaan.index', compact('pengadaans', 'stats'));
@@ -51,145 +39,93 @@ class PengadaanController extends Controller
 
     public function create(Request $request)
     {
-        $suppliers = Supplier::orderBy('nama_supplier')->get();
         $bahanBakus = BahanBaku::with('satuan')->where('status', 1)->orderBy('nama_bahan')->get();
+        
+        $prefillItems = [];
+        $kodePesananError = null;
+        
+        if ($request->has('kode_pesanan')) {
+            $kode = trim($request->kode_pesanan);
+            if (str_starts_with($kode, 'CTR')) {
+                $pid = PesananCatering::where('kode_pesanan', $kode)->value('id');
+                if($pid) $request->merge(['pesanan_id' => $pid]);
+                else $kodePesananError = "Pesanan Catering tidak ditemukan.";
+            } else if (str_starts_with($kode, 'NBX')) {
+                $pid = PesananNasiBox::where('kode_pesanan', $kode)->value('id');
+                if($pid) $request->merge(['pesanan_nasibox_id' => $pid]);
+                else $kodePesananError = "Pesanan Nasi Box tidak ditemukan.";
+            } else {
+                $kodePesananError = "Format Kode Pesanan tidak valid.";
+            }
+        }
 
-        // Pesanan Catering & Nasi Box Aktif (Terkonfirmasi)
-        $pesananCaterings = PesananCatering::whereIn('status', ['menunggu_dp', 'menunggu_konfirmasi', 'terkonfirmasi', 'diproses'])
-            ->latest()->get();
-
-        $pesananNasiBoxes = PesananNasiBox::whereIn('status', ['menunggu_dp', 'menunggu_konfirmasi', 'terkonfirmasi', 'diproses'])
-            ->latest()->get();
-
-        $prepopulate = [];
-        $bomAnalysis = [];
-        $missingBomMenus = [];
-        $selectedPesanan = null;
-        $pesananId = $request->query('pesanan_id');
-        $jenisPesanan = $request->query('jenis_pesanan', 'catering');
-
-        if ($pesananId) {
-            $estimasi = [];
-            
-            if ($jenisPesanan === 'nasi_box') {
-                $selectedPesanan = PesananNasiBox::with('details.menu.resep.bahanBaku.satuan')->find($pesananId);
-                if ($selectedPesanan) {
-                    $portion = $selectedPesanan->jumlah_box;
-                    foreach ($selectedPesanan->details as $detail) {
-                        if ($detail->menu) {
-                            if ($detail->menu->resep->isEmpty()) {
-                                $missingBomMenus[] = [
-                                    'id' => $detail->menu->id,
-                                    'nama' => $detail->menu->nama,
-                                ];
-                            } else {
-                                foreach ($detail->menu->resep as $r) {
-                                    $bahanId = $r->bahan_baku_id;
-                                    $kebutuhan = $r->jumlah_kebutuhan * $portion;
-                                    if (!isset($estimasi[$bahanId])) {
-                                        $estimasi[$bahanId] = [
-                                            'bahan_baku_id' => $bahanId,
-                                            'nama_bahan' => $r->bahanBaku->nama_bahan ?? 'Bahan Baku',
-                                            'satuan' => $r->bahanBaku->satuan->nama_satuan ?? '',
-                                            'kebutuhan_total' => 0,
-                                            'stok_saat_ini' => $r->bahanBaku->stok ?? 0,
-                                        ];
-                                    }
-                                    $estimasi[$bahanId]['kebutuhan_total'] += $kebutuhan;
-                                }
-                            }
+        if ($request->has('pesanan_id')) {
+            $pesanan = PesananCatering::with('details.menu.resep.bahanBaku')->find($request->pesanan_id);
+            if ($pesanan) {
+                $kebutuhan = [];
+                foreach ($pesanan->details as $detail) {
+                    if ($detail->menu && $detail->menu->resep) {
+                        foreach ($detail->menu->resep as $resep) {
+                            $bahanId = $resep->bahan_baku_id;
+                            $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_porsi;
+                            $kebutuhan[$bahanId] = ($kebutuhan[$bahanId] ?? 0) + $qty;
                         }
                     }
                 }
-            } else {
-                // Default: Catering
-                $selectedPesanan = PesananCatering::with('details.menu.resep.bahanBaku.satuan')->find($pesananId);
-                if ($selectedPesanan) {
-                    $portion = $selectedPesanan->jumlah_porsi;
-                    foreach ($selectedPesanan->details as $detail) {
-                        if ($detail->menu) {
-                            if ($detail->menu->resep->isEmpty()) {
-                                $missingBomMenus[] = [
-                                    'id' => $detail->menu->id,
-                                    'nama' => $detail->menu->nama,
-                                ];
-                            } else {
-                                foreach ($detail->menu->resep as $r) {
-                                    $bahanId = $r->bahan_baku_id;
-                                    $kebutuhan = $r->jumlah_kebutuhan * $portion;
-                                    if (!isset($estimasi[$bahanId])) {
-                                        $estimasi[$bahanId] = [
-                                            'bahan_baku_id' => $bahanId,
-                                            'nama_bahan' => $r->bahanBaku->nama_bahan ?? 'Bahan Baku',
-                                            'satuan' => $r->bahanBaku->satuan->nama_satuan ?? '',
-                                            'kebutuhan_total' => 0,
-                                            'stok_saat_ini' => $r->bahanBaku->stok ?? 0,
-                                        ];
-                                    }
-                                    $estimasi[$bahanId]['kebutuhan_total'] += $kebutuhan;
-                                }
-                            }
+                foreach ($kebutuhan as $bahanId => $totalKebutuhan) {
+                    $bahan = $bahanBakus->firstWhere('id', $bahanId);
+                    if ($bahan) {
+                        $kurang = $totalKebutuhan - $bahan->stok;
+                        if ($kurang > 0) {
+                            $prefillItems[] = [
+                                'bahan_baku_id' => $bahanId,
+                                'jumlah_beli' => ceil($kurang * 100) / 100
+                            ];
                         }
                     }
                 }
             }
-
-            // Analysis & Prepopulate
-            foreach ($estimasi as $est) {
-                $kekurangan = max(0, $est['kebutuhan_total'] - $est['stok_saat_ini']);
-                
-                $lastDetail = DetailPengadaan::where('bahan_baku_id', $est['bahan_baku_id'])
-                    ->whereNotNull('harga_real')
-                    ->latest('id')
-                    ->first();
-                $hargaPrediksi = $lastDetail ? $lastDetail->harga_real : 0;
-
-                $bomAnalysis[] = array_merge($est, [
-                    'kekurangan' => $kekurangan,
-                    'harga_estimasi' => $hargaPrediksi
-                ]);
-
-                if ($kekurangan > 0) {
-                    $prepopulate[] = [
-                        'bahan_baku_id' => $est['bahan_baku_id'],
-                        'jumlah' => $kekurangan,
-                        'harga_estimasi' => $hargaPrediksi
-                    ];
+        } elseif ($request->has('pesanan_nasibox_id')) {
+            $pesanan = PesananNasiBox::with('details.menu.resep.bahanBaku')->find($request->pesanan_nasibox_id);
+            if ($pesanan) {
+                $kebutuhan = [];
+                foreach ($pesanan->details as $detail) {
+                    if ($detail->menu && $detail->menu->resep) {
+                        foreach ($detail->menu->resep as $resep) {
+                            $bahanId = $resep->bahan_baku_id;
+                            $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_box;
+                            $kebutuhan[$bahanId] = ($kebutuhan[$bahanId] ?? 0) + $qty;
+                        }
+                    }
+                }
+                foreach ($kebutuhan as $bahanId => $totalKebutuhan) {
+                    $bahan = $bahanBakus->firstWhere('id', $bahanId);
+                    if ($bahan) {
+                        $kurang = $totalKebutuhan - $bahan->stok;
+                        if ($kurang > 0) {
+                            $prefillItems[] = [
+                                'bahan_baku_id' => $bahanId,
+                                'jumlah_beli' => ceil($kurang * 100) / 100
+                            ];
+                        }
+                    }
                 }
             }
         }
 
-        return view('pengadaan.create', compact(
-            'suppliers', 
-            'bahanBakus', 
-            'pesananCaterings', 
-            'pesananNasiBoxes', 
-            'prepopulate', 
-            'bomAnalysis',
-            'pesananId', 
-            'jenisPesanan',
-            'selectedPesanan',
-            'missingBomMenus'
-        ));
+        return view('pengadaan.create', compact('bahanBakus', 'prefillItems', 'kodePesananError'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, StockService $stockService)
     {
         $request->validate([
-            'jenis_pesanan' => 'required|in:catering,nasi_box,umum',
-            'pesanan_catering_id' => 'nullable|exists:pesanan_caterings,id',
-            'pesanan_nasi_box_id' => 'nullable|exists:pesanan_nasi_boxes,id',
-            'supplier_id' => 'required|exists:suppliers,id',
             'tanggal_pengadaan' => 'required|date',
+            'asal_pembelian' => 'nullable|string|max:255',
             'catatan' => 'nullable|string',
             'bahan_baku_id' => 'required|array',
             'bahan_baku_id.*' => 'required|exists:bahan_bakus,id',
-            'jumlah_estimasi' => 'nullable|array',
-            'jumlah_estimasi.*' => 'nullable|numeric|min:0.01',
-            'harga_estimasi' => 'nullable|array',
-            'harga_estimasi.*' => 'nullable|numeric|min:0',
-            'jumlah' => 'nullable|array',
-            'harga_satuan' => 'nullable|array',
+            'jumlah' => 'required|array',
+            'jumlah.*' => 'required|numeric|min:0.01',
         ]);
 
         try {
@@ -200,13 +136,9 @@ class PengadaanController extends Controller
             $kode = 'PO-' . date('Ymd') . '-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
 
             $pengadaan = Pengadaan::create([
-                'kode_pengadaan' => $kode,
-                'jenis_pesanan' => $request->jenis_pesanan,
-                'pesanan_catering_id' => $request->jenis_pesanan === 'catering' ? $request->pesanan_catering_id : null,
-                'pesanan_nasi_box_id' => $request->jenis_pesanan === 'nasi_box' ? $request->pesanan_nasi_box_id : null,
-                'supplier_id' => $request->supplier_id,
+                'nomor_pengadaan' => $kode,
+                'asal_pembelian' => $request->asal_pembelian,
                 'tanggal_pengadaan' => $request->tanggal_pengadaan,
-                'status' => 'pending',
                 'catatan' => $request->catatan,
                 'user_id' => Auth::id(),
                 'total_biaya' => 0,
@@ -214,112 +146,128 @@ class PengadaanController extends Controller
 
             $totalBiaya = 0;
 
-            if ($request->has('bahan_baku_id')) {
-                foreach ($request->bahan_baku_id as $index => $bahanId) {
-                    $bahanBaku = BahanBaku::with('satuan')->find($bahanId);
-                    $jumlahEst = $request->jumlah_estimasi[$index] ?? ($request->jumlah[$index] ?? 0);
-                    $hargaEst = $request->harga_estimasi[$index] ?? ($request->harga_satuan[$index] ?? 0);
-                    $subtotalEst = $jumlahEst * $hargaEst;
+            foreach ($request->bahan_baku_id as $index => $bahanId) {
+                $bahanBaku = BahanBaku::with('satuan')->find($bahanId);
+                $qty = $request->jumlah[$index];
+                $harga = 0;
+                $subtotal = 0;
 
-                    DetailPengadaan::create([
-                        'pengadaan_id' => $pengadaan->id,
-                        'bahan_baku_id' => $bahanId,
-                        'jumlah' => $jumlahEst,
-                        'satuan' => $bahanBaku->satuan->nama_satuan ?? '',
-                        'harga_satuan' => $hargaEst,
-                        'subtotal' => $subtotalEst,
-                        'jumlah_estimasi' => $jumlahEst,
-                        'harga_estimasi' => $hargaEst,
-                        'subtotal_estimasi' => $subtotalEst,
-                    ]);
+                DetailPengadaan::create([
+                    'pengadaan_id' => $pengadaan->id,
+                    'bahan_baku_id' => $bahanId,
+                    'jumlah' => $qty,
+                    'satuan' => $bahanBaku->satuan->nama_satuan ?? '',
+                    'harga_satuan' => $harga,
+                    'subtotal' => $subtotal,
+                ]);
 
-                    $totalBiaya += $subtotalEst;
-                }
+                $totalBiaya += $subtotal;
             }
 
-            $pengadaan->update(['total_biaya' => $totalBiaya]);
+            $pengadaan->update(['total_biaya' => $totalBiaya, 'status' => 'pending']);
 
             DB::commit();
-            return redirect()->route('pengadaan.show', $pengadaan->id)->with('success', "Form Order Bahan Baku {$kode} berhasil disimpan.");
+            return redirect()->route('pengadaan.show', $pengadaan->id)->with('success', "Permintaan Pembelian (PO) {$kode} berhasil dibuat. Silakan unduh PDF untuk belanja.");
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan saat menyimpan order pengadaan: ' . $e->getMessage())->withInput();
+            return back()->with('error', 'Terjadi kesalahan saat menyimpan pengadaan: ' . $e->getMessage())->withInput();
         }
     }
 
     public function show(Pengadaan $pengadaan)
     {
-        $pengadaan->load(['supplier', 'user', 'pesananCatering', 'pesananNasiBox', 'details.bahanBaku.kategoriBahan']);
-        return view('pengadaan.catering_rab', compact('pengadaan'));
+        $pengadaan->load(['user', 'details.bahanBaku.kategoriBahan']);
+        return view('pengadaan.show', compact('pengadaan'));
     }
 
-    public function realisasi(Request $request, Pengadaan $pengadaan, StockService $stockService)
+    public function exportPdf(Pengadaan $pengadaan)
+    {
+        $pengadaan->load(['details.bahanBaku.satuan', 'user']);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pengadaan.pdf', compact('pengadaan'));
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->download('Permintaan_Pembelian_' . $pengadaan->nomor_pengadaan . '.pdf');
+    }
+
+    public function terimaBarang(Request $request)
     {
         $request->validate([
-            'detail_id' => 'required|array',
-            'jumlah_real' => 'required|array',
-            'harga_real' => 'required|array',
+            'nomor_pengadaan' => 'required|string'
+        ]);
+
+        $kode = trim($request->nomor_pengadaan);
+        $pengadaan = Pengadaan::where('nomor_pengadaan', $kode)->first();
+
+        if (!$pengadaan) {
+            return back()->with('error', "PO dengan ID {$kode} tidak ditemukan.");
+        }
+
+        if ($pengadaan->status === 'diterima') {
+            return back()->with('error', "PO {$kode} sudah pernah diterima sebelumnya.");
+        }
+
+        return redirect()->route('pengadaan.form-terima', $pengadaan->id);
+    }
+
+    public function formTerima(Pengadaan $pengadaan)
+    {
+        if ($pengadaan->status === 'diterima') {
+            return redirect()->route('pengadaan.index')->with('error', "PO {$pengadaan->nomor_pengadaan} sudah diterima.");
+        }
+
+        $pengadaan->load(['details.bahanBaku.satuan']);
+        return view('pengadaan.terima', compact('pengadaan'));
+    }
+
+    public function prosesTerima(Request $request, Pengadaan $pengadaan, StockService $stockService)
+    {
+        if ($pengadaan->status === 'diterima') {
+            return redirect()->route('pengadaan.index')->with('error', "PO sudah diterima sebelumnya.");
+        }
+
+        $request->validate([
+            'jumlah_aktual' => 'required|array',
+            'jumlah_aktual.*' => 'required|numeric|min:0',
+            'total_belanja' => 'required|numeric|min:0'
         ]);
 
         try {
             DB::beginTransaction();
 
-            $totalReal = 0;
-            $jenisLabel = $pengadaan->jenis_label;
+            $totalBelanja = $request->total_belanja;
 
-            foreach ($request->detail_id as $index => $detailId) {
-                $detail = DetailPengadaan::findOrFail($detailId);
-                $qty = $request->jumlah_real[$index];
-                $harga = $request->harga_real[$index];
-                $sub = $qty * $harga;
-
+            foreach ($pengadaan->details as $detail) {
+                $actualQty = $request->jumlah_aktual[$detail->id] ?? $detail->jumlah;
+                
+                // Update detail with actual qty
                 $detail->update([
-                    'jumlah_real' => $qty,
-                    'harga_real' => $harga,
-                    'subtotal_real' => $sub,
-                    'jumlah' => $qty,
-                    'harga_satuan' => $harga,
-                    'subtotal' => $sub
+                    'jumlah' => $actualQty
                 ]);
 
-                $totalReal += $sub;
-
-                // Tambahkan stok bahan baku & catat mutasi stok dengan tag jenis_pesanan (catering / nasi box)
-                $stockService->addStock(
-                    $detail->bahan_baku_id, 
-                    $qty, 
-                    "Penerimaan Bahan Baku {$jenisLabel} PO: {$pengadaan->kode_pengadaan}"
-                );
+                // Update Stok & Mutasi if actual quantity > 0
+                if ($actualQty > 0) {
+                    $stockService->addStock(
+                        $detail->bahan_baku_id, 
+                        $actualQty, 
+                        "Penerimaan Bahan Baku (PO: {$pengadaan->nomor_pengadaan})",
+                        null,
+                        $pengadaan->nomor_pengadaan
+                    );
+                }
             }
 
+            // Update pengadaan status and total cost
             $pengadaan->update([
-                'total_biaya' => $totalReal,
-                'status' => 'diterima'
+                'status' => 'diterima',
+                'total_biaya' => $totalBelanja
             ]);
 
             DB::commit();
-            return redirect()->route('pengadaan.show', $pengadaan->id)->with('success', "Penerimaan Bahan Baku {$pengadaan->kode_pengadaan} berhasil disimpan, data stok telah diperbarui.");
+            return redirect()->route('pengadaan.index')->with('success', "Bahan baku dari PO {$pengadaan->nomor_pengadaan} berhasil diterima. Stok terupdate.");
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal memproses penerimaan barang: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memproses penerimaan: ' . $e->getMessage());
         }
-    }
-
-    public function updateStatus(Request $request, Pengadaan $pengadaan)
-    {
-        $request->validate([
-            'status' => 'required|in:pending,diterima,dibatalkan',
-            'catatan' => 'nullable|string'
-        ]);
-
-        $pengadaan->status = $request->status;
-        if ($request->has('catatan')) {
-            $pengadaan->catatan = $request->catatan;
-        }
-        $pengadaan->save();
-
-        return back()->with('success', "Status pengadaan {$pengadaan->kode_pengadaan} berhasil diubah menjadi " . ucfirst($request->status));
     }
 }

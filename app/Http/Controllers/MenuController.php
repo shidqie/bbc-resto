@@ -39,8 +39,15 @@ class MenuController extends Controller
             $query->where('jenis_menu', $request->jenis_menu);
         }
 
-        $menus = $query->orderBy('id', 'asc')->paginate(12)->withQueryString();
-        $kategoris = KategoriMenu::orderBy('id', 'asc')->get();
+        $menus = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
+
+        // Kategori dengan jumlah menu (untuk tab Kategori, difilter jika ada param jenis)
+        $katQuery = KategoriMenu::withCount('menus');
+        if ($request->has('jenis') && $request->jenis !== 'semua') {
+            $katQuery->where('jenis_menu', $request->jenis);
+        }
+        $kategoris = $katQuery->orderBy('id', 'asc')->paginate(10)->withQueryString();
+        
         $bahanBakus = BahanBaku::with('satuan')->where('status', 1)->orderBy('nama_bahan')->get();
 
         $stats = [

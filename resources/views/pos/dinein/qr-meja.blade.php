@@ -33,9 +33,9 @@
         <div class="no-print bg-white rounded-3xl p-5 md:p-6 border border-gray-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
             <div class="space-y-1">
                 <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
-                    <a href="{{ route('pos.dinein.index') }}" class="hover:text-[#0F2E23]">Point of Sale</a>
+                    <a href="{{ route('menu.index') }}" class="hover:text-[#0F2E23]">Daftar Menu</a>
                     <span>/</span>
-                    <span class="text-[#0F2E23]">QR Scan Menu</span>
+                    <span class="text-[#0F2E23]">Cetak QR Code Meja</span>
                 </div>
                 <h1 class="text-xl md:text-2xl font-black text-[#0F2E23] flex items-center gap-2.5">
                     <i class="fa-solid fa-qrcode text-emerald-700"></i> QR Scan Menu (Kartu Meja)
@@ -44,8 +44,8 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <a href="{{ route('pos.dinein.index') }}" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-2xl font-extrabold text-xs transition-all border border-gray-200">
-                    <i class="fa-solid fa-arrow-left"></i> Kembali ke POS
+                <a href="{{ route('menu.index') }}" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-2xl font-extrabold text-xs transition-all border border-gray-200">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar Menu
                 </a>
                 <button onclick="window.print()" class="inline-flex items-center gap-2 bg-[#0F2E23] hover:bg-[#0a1f17] text-white px-5 py-2.5 rounded-2xl font-extrabold text-xs transition-all shadow-xs active:scale-95">
                     <i class="fa-solid fa-print text-emerald-400"></i> Cetak Kartu QR Meja

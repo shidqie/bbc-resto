@@ -54,7 +54,7 @@
 <body>
     <div class="header">
         <h2>SAUNG BABAKAN CINTA (BBC RESTO)</h2>
-        <p>Laporan Penjualan Keseluruhan</p>
+        <p>Laporan Penjualan {{ $jenisFilter === 'semua' ? 'Keseluruhan' : ($jenisFilter === 'reguler' ? 'Reguler (Dine-In)' : ($jenisFilter === 'catering' ? 'Catering' : 'Nasi Box')) }}</p>
         <p>Periode: {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</p>
     </div>
 
@@ -64,8 +64,8 @@
                 <th width="5%">No</th>
                 <th width="15%">Tanggal</th>
                 <th width="15%">No. Pesanan</th>
-                <th width="15%">Kasir</th>
-                <th width="15%">Metode</th>
+                <th width="15%">Pelanggan</th>
+                <th width="15%">Jenis Pesanan</th>
                 <th width="35%" class="text-right">Total (Rp)</th>
             </tr>
         </thead>
@@ -73,11 +73,11 @@
             @forelse($pesanans as $index => $pesanan)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $pesanan->created_at->format('d/m/Y H:i') }}</td>
-                <td>#{{ str_pad($pesanan->id, 5, '0', STR_PAD_LEFT) }}</td>
-                <td>{{ $pesanan->user->name ?? 'Kasir' }}</td>
-                <td>{{ strtoupper($pesanan->metode_pembayaran) }}</td>
-                <td class="text-right">{{ number_format($pesanan->total_harga, 0, ',', '.') }}</td>
+                <td>{{ \Carbon\Carbon::parse($pesanan->tanggal)->format('d/m/Y H:i') }}</td>
+                <td>{{ $pesanan->kode }}</td>
+                <td>{{ $pesanan->pelanggan }}</td>
+                <td>{{ $pesanan->jenis }}</td>
+                <td class="text-right">{{ number_format($pesanan->total, 0, ',', '.') }}</td>
             </tr>
             @empty
             <tr>

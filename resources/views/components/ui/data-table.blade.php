@@ -32,10 +32,10 @@
     'paginator' => null,
 ])
 
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
     {{-- Toolbar (Search, Filter, dll) --}}
     @if(isset($toolbar))
-        <div class="p-4 border-b border-gray-100 bg-gray-50/50">
+        <div class="p-3.5 border-b border-gray-100 bg-white">
             {{ $toolbar }}
         </div>
     @endif
@@ -47,7 +47,7 @@
 
     {{-- Pagination --}}
     @if($paginator && $paginator->hasPages())
-        <div class="p-4 border-t border-gray-100 bg-white">
+        <div class="px-4 py-3 border-t border-gray-100 bg-white">
             {{ $paginator->links() }}
         </div>
     @endif

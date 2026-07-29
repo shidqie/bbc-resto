@@ -34,13 +34,70 @@ function posSystemData() {
     mejasList: @json($mejas ?? []),
     showTableDropdown: false,
 
-    // Modals Detail & Void
+    // Modals Detail & Void & Cetak Struk
     selectedTrxDetail: null,
     showTrxDetailModal: false,
     showVoidModal: false,
     trxToVoid: null,
     alasanVoidInput: 'Salah Input Menu',
     catatanVoidInput: '',
+    showCetakStrukModal: false,
+    showSavePrintModal: false,
+    cetakStrukTargetId: null,
+    pendingCheckoutAction: false,
+    checkoutTargetMeja: null,
+    selectedPrintOptions: ['dapur', 'meja'],
+    togglePrintOption(opt) {
+      if (this.selectedPrintOptions.includes(opt)) {
+        this.selectedPrintOptions = this.selectedPrintOptions.filter(o => o !== opt);
+      } else {
+        this.selectedPrintOptions.push(opt);
+      }
+    },
+    closePrintModal() {
+      this.showSavePrintModal = false;
+      this.showCetakStrukModal = false;
+      if (this.pendingCheckoutAction && this.checkoutTargetMeja) {
+          window.location.href = `/pos/dinein/meja/${this.checkoutTargetMeja}/checkout`;
+      }
+    },
+    openCetakStrukModal(id, action = 'simpan', mejaId = null) {
+      this.savedPesananId = id;
+      this.cetakStrukTargetId = id;
+      this.pendingCheckoutAction = (action === 'bayar');
+      this.checkoutTargetMeja = mejaId;
+      this.selectedPrintOptions = action === 'simpan' ? ['meja', 'dapur'] : ['meja', 'dapur', 'konsumen'];
+      this.showSavePrintModal = true;
+      this.showCetakStrukModal = true;
+    },
+    async executePrintSelection() {
+      if (!this.selectedPrintOptions.length) {
+        return Swal.fire({ icon: 'warning', title: 'Pilih Struk', text: 'Pilih minimal 1 jenis struk yang akan dicetak!', confirmButtonColor: '#0F2E23' });
+      }
+      
+      const targetId = this.savedPesananId || this.cetakStrukTargetId;
+      if (!targetId) return;
+
+      const hasMeja = this.selectedPrintOptions.includes('meja');
+      const hasDapur = this.selectedPrintOptions.includes('dapur');
+      const hasKonsumen = this.selectedPrintOptions.includes('konsumen');
+
+      if (hasMeja && hasDapur) {
+        this.printSilentIframe('/pos/dinein/pesanan/' + targetId + '/print-gabungan');
+      } else if (hasMeja) {
+        this.printSilentIframe('/pos/dinein/pesanan/' + targetId + '/print-meja');
+      } else if (hasDapur) {
+        this.printSilentIframe('/pos/dinein/pesanan/' + targetId + '/print-dapur');
+      }
+
+      if (hasKonsumen) {
+        setTimeout(() => {
+          this.printSilentIframe('/pos/dinein/pesanan/' + targetId + '/print-nota');
+        }, (hasMeja || hasDapur) ? 800 : 0);
+      }
+
+      this.closePrintModal();
+    },
 
     get filteredRiwayat() {
       let list = this.riwayatTransaksi || [];
@@ -375,15 +432,17 @@ function posSystemData() {
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          if (action === 'bayar') {
-            window.location.href = `/pos/dinein/meja/${this.selectedTable}/checkout`;
-          } else {
             // Dynamic Alpine state update without page reload
             if (data.pesanan) {
-              const existingIdx = this.openBills.findIndex(b => b.id === data.pesanan.id);
-              if (existingIdx !== -1) {
-                this.openBills[existingIdx] = data.pesanan;
+              if (Array.isArray(this.openBills)) {
+                const existingIdx = this.openBills.findIndex(b => b.id === data.pesanan.id);
+                if (existingIdx !== -1) {
+                  this.openBills[existingIdx] = data.pesanan;
+                } else {
+                  this.openBills.unshift(data.pesanan);
+                }
               } else {
+                this.openBills = Object.values(this.openBills);
                 this.openBills.unshift(data.pesanan);
               }
             }
@@ -395,10 +454,22 @@ function posSystemData() {
             this.savedPesananId = data.pesanan_id;
             this.savedPesananObject = data.pesanan;
             this.rightPanelMode = 'cart';
-            this.showSavePrintModal = true;
 
-            // Trigger silent print via hidden iframe (No extra browser tab or window.open!)
-            this.printSilentIframe('/pos/dinein/pesanan/' + data.pesanan_id + '/print-gabungan');
+            // Toast Success Message
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            Toast.fire({
+                icon: 'success',
+                title: data.message || 'Pesanan berhasil disimpan'
+            });
+
+            // Show Cetak Struk Modal (Image 2) and pass action + mejaId
+            this.openCetakStrukModal(data.pesanan_id, action, this.selectedTable);
 
             // Reset cart & form inputs smoothly
             this.cart = [];
@@ -406,10 +477,37 @@ function posSystemData() {
             this.customerPhone = '';
             this.selectedTable = null;
             this.selectedTableLabel = '';
-          }
+
         } else { Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: data.message || 'Gagal menyimpan pesanan', confirmButtonColor: '#0F2E23' }); }
       } catch(e) { Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Terjadi kesalahan jaringan.', confirmButtonColor: '#0F2E23' }); }
       finally { this.isSubmitting = false; }
+    },
+
+    async toggleStatusSajian(billId, itemId) {
+        try {
+            const res = await fetch('/pos/dinein/item/' + itemId + '/toggle-sajian', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                // Update local state
+                const bill = this.openBills.find(b => b.id === billId);
+                if (bill && bill.items) {
+                    const item = bill.items.find(i => i.id === itemId);
+                    if (item) {
+                        item.status_sajian = data.status_sajian;
+                    }
+                }
+            }
+        } catch(e) {
+            console.error('Toggle sajian error:', e);
+        }
+    },
+
+    proceedToCheckout(bill) {
+        if (!bill.items || bill.items.length === 0) return;
+        window.location.href = '/pos/dinein/meja/' + bill.id + '/checkout';
     }
   };
 }
@@ -445,7 +543,7 @@ document.addEventListener('alpine:init', () => {
             </div>
           </div>
 
-          {{-- 2 TAB UTAMA KHUSUS (Katalog Menu & Pesanan Belum Dibayar) --}}
+          {{-- 2 TAB UTAMA KHUSUS (Katalog Menu & List Pesanan Dine In) --}}
           <div class="flex items-center gap-1 bg-gray-100/90 p-1 rounded-2xl border border-gray-200/70">
             {{-- Tab 1: Katalog Menu --}}
             <button type="button" @click="leftView = 'menu'"
@@ -455,12 +553,12 @@ document.addEventListener('alpine:init', () => {
               <span>Katalog Menu</span>
             </button>
 
-            {{-- Tab 2: Pesanan Belum Dibayar --}}
+            {{-- Tab 2: List Pesanan Dine In --}}
             <button type="button" @click="leftView = 'open_bills'"
                     :class="leftView === 'open_bills' ? 'bg-[#0F2E23] text-white shadow-xs' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
                     class="inline-flex items-center gap-2 px-4 h-9 rounded-xl text-xs font-extrabold transition-all active:scale-95">
               <x-heroicon-o-receipt-percent class="w-4 h-4 shrink-0" style="width: 16px; height: 16px;" />
-              <span>Pesanan Belum Dibayar</span>
+              <span>List Pesanan Dine In</span>
               {{-- Badge Angka Kecil (Pill) --}}
               <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black transition-colors"
                     :class="leftView === 'open_bills' ? 'bg-emerald-400 text-[#0F2E23]' : 'bg-[#0F2E23] text-white'"
@@ -510,14 +608,6 @@ document.addEventListener('alpine:init', () => {
                   :class="leftView === 'meja' ? 'bg-[#0F2E23] text-white border-[#0F2E23]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'"
                   class="w-9 h-9 rounded-xl border flex items-center justify-center transition-all shadow-2xs">
             <x-heroicon-o-squares-2x2 class="w-4 h-4 shrink-0" style="width: 18px; height: 18px;" />
-          </button>
-
-          {{-- 3. Utility Icon Button: QR Scan Menu --}}
-          <button type="button" @click="leftView = (leftView === 'qr') ? 'menu' : 'qr'"
-                  title="QR Scan Menu"
-                  :class="leftView === 'qr' ? 'bg-[#0F2E23] text-white border-[#0F2E23]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'"
-                  class="w-9 h-9 rounded-xl border flex items-center justify-center transition-all shadow-2xs">
-            <x-heroicon-o-qr-code class="w-4 h-4 shrink-0" style="width: 18px; height: 18px;" />
           </button>
 
         </div>
@@ -589,12 +679,7 @@ document.addEventListener('alpine:init', () => {
 
           {{-- Clean Minimal Selects --}}
           <div class="flex items-center gap-2">
-            <select x-model="riwayatKasirFilter" class="h-8 px-3 text-xs font-bold rounded-xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-[#0F2E23]">
-              <option value="semua">Semua Kasir</option>
-              @foreach($cashiers as $kasir)
-              <option value="{{ $kasir->id }}">{{ $kasir->name }}</option>
-              @endforeach
-            </select>
+
 
             <select x-model="riwayatStatusFilter" class="h-8 px-3 text-xs font-bold rounded-xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-[#0F2E23]">
               <option value="semua">Semua Status</option>
@@ -634,8 +719,8 @@ document.addEventListener('alpine:init', () => {
     </header>
 
     {{-- ══════════════════════  VIEW 1 · MENU CATALOG  ══════════════════════ --}}
-    <div x-show="leftView === 'menu'" class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0]">
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    <div x-show="leftView === 'menu'" class="flex-1 overflow-y-auto p-4 bg-white">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         @foreach($menus as $menu)
         @php $isHabis = $menu->isHabis(); @endphp
         <div x-show="(activeCategory === 'semua' || activeCategory == '{{ $menu->kategori_menu_id }}') && ('{{ strtolower(addslashes($menu->nama)) }}'.includes(searchQuery.toLowerCase()))"
@@ -643,20 +728,27 @@ document.addEventListener('alpine:init', () => {
              x-transition:enter-start="opacity-0 translate-y-1"
              x-transition:enter-end="opacity-100 translate-y-0"
              @if(!$isHabis) @click="addToCart({{ $menu->id }}, '{{ addslashes($menu->nama) }}', {{ $menu->harga }})" @endif
-             class="card-menu bg-white border border-gray-200/80 rounded-2xl overflow-hidden transition-all duration-200 flex flex-col relative shadow-xs {{ $isHabis ? 'opacity-50 grayscale cursor-not-allowed pointer-events-none select-none bg-gray-100/90 border-red-200' : 'cursor-pointer' }}">
+             class="group cursor-pointer flex flex-col bg-white border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-gray-300 transition-all duration-300 rounded-2xl overflow-hidden {{ $isHabis ? 'opacity-50 grayscale pointer-events-none select-none' : '' }}">
 
           {{-- Thumbnail --}}
-          <div class="relative h-32 bg-gradient-to-br from-gray-50 to-emerald-50/20 flex items-center justify-center overflow-hidden">
+          <div class="relative w-full aspect-[4/3] bg-gray-50 border-b border-gray-100">
             @if($menu->foto)
-              <img src="{{ Storage::url($menu->foto) }}" class="w-full h-full object-cover {{ $isHabis ? 'grayscale opacity-60' : '' }}" alt="{{ $menu->nama }}">
+              <img src="{{ Storage::url($menu->foto) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 {{ $isHabis ? 'grayscale opacity-60' : '' }}" alt="{{ $menu->nama }}">
             @else
-              <div class="flex flex-col items-center gap-1 text-gray-300">
-                <x-heroicon-o-photo class="w-10 h-10" style="width: 40px; height: 40px;" />
+              @php
+                  $words = explode(' ', $menu->nama);
+                  $initials = '';
+                  foreach (array_slice($words, 0, 3) as $w) {
+                      $initials .= strtoupper(substr($w, 0, 1));
+                  }
+              @endphp
+              <div class="w-full h-full flex items-center justify-center bg-gray-50 {{ $isHabis ? 'grayscale opacity-60' : '' }}">
+                  <span class="text-3xl font-black text-gray-300 tracking-widest">{{ $initials }}</span>
               </div>
             @endif
 
             {{-- Category Label --}}
-            <span class="absolute top-2.5 left-2.5 bg-white/95 text-gray-700 text-[11px] font-extrabold px-2.5 py-0.5 rounded-lg border border-gray-200/70 shadow-2xs">
+            <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-gray-100">
               {{ Str::limit($menu->kategori->nama ?? 'Menu', 18) }}
             </span>
 
@@ -744,7 +836,7 @@ document.addEventListener('alpine:init', () => {
       {{-- Header strip --}}
       <div class="flex items-center justify-between mb-4 bg-white border border-gray-200/80 rounded-2xl px-5 py-3.5 shadow-xs">
         <div>
-          <p class="text-[16px] font-extrabold text-[#0F2E23]">Pesanan Belum Dibayar</p>
+          <p class="text-[16px] font-extrabold text-[#0F2E23]">List Pesanan Dine In</p>
           <p class="text-[12px] text-gray-500 mt-0.5">Daftar pesanan aktif konsumen yang belum diselesaikan pembayarannya di meja</p>
         </div>
         <span class="mono text-[12px] text-gray-500">
@@ -758,7 +850,7 @@ document.addEventListener('alpine:init', () => {
           <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-2xl">
             <i class="fa-solid fa-circle-check"></i>
           </div>
-          <h3 class="text-base font-extrabold text-gray-900">Tidak Ada Pesanan Belum Dibayar</h3>
+          <h3 class="text-base font-extrabold text-gray-900">Tidak Ada List Pesanan Dine In</h3>
           <p class="text-xs text-gray-500 mt-1 leading-relaxed">Semua meja saat ini kosong atau transaksi pembayaran sudah lunas.</p>
         </div>
       </template>
@@ -787,12 +879,12 @@ document.addEventListener('alpine:init', () => {
               <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider shrink-0">Rincian Pesanan:</p>
               <div class="bg-slate-50/80 border border-slate-100 rounded-2xl p-3 space-y-2 text-xs flex-1 overflow-y-auto">
                 <template x-for="item in (bill.items || [])" :key="item.id">
-                  <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center justify-between gap-2 p-1 rounded-lg">
                     <div class="flex items-center gap-2 min-w-0 pr-1">
-                      <span class="font-black text-[#0F2E23] text-xs shrink-0" x-text="item.qty + 'x'"></span>
-                      <span class="font-extrabold text-gray-800 text-xs truncate" x-text="item.menu ? item.menu.nama : (item.nama_menu || 'Menu')"></span>
+                      <span class="font-black text-xs shrink-0 text-[#0F2E23]" x-text="item.qty + 'x'"></span>
+                      <span class="font-extrabold text-xs truncate text-gray-800" x-text="item.menu ? item.menu.nama : (item.nama_menu || 'Menu')"></span>
                     </div>
-                    <span class="font-bold text-gray-900 text-[11px] shrink-0" 
+                    <span class="font-bold text-[11px] shrink-0 text-gray-900" 
                           x-text="'Rp ' + formatPrice((item.menu ? item.menu.harga : (item.harga_satuan || 0)) * item.qty)"></span>
                   </div>
                 </template>
@@ -802,19 +894,6 @@ document.addEventListener('alpine:init', () => {
             {{-- Status Pesanan (Dapur) & Status Pembayaran --}}
             <div class="space-y-2 pt-2 border-t border-gray-100 shrink-0">
               
-              {{-- Status Pesanan (Kitchen Progress Sub-Status) --}}
-              <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-gray-500">Status Pesanan:</span>
-                <select :value="bill.sub_status || 'diproses'"
-                        @change="changeSubStatus(bill.id, $event.target.value)"
-                        class="h-7 px-2.5 text-[11px] font-extrabold rounded-xl border outline-none cursor-pointer transition-all shadow-2xs"
-                        :class="bill.sub_status === 'siap_diantar' ? 'bg-blue-50 text-blue-900 border-blue-200/90' : (bill.sub_status === 'sudah_diantar' ? 'bg-emerald-50 text-emerald-900 border-emerald-200/90' : 'bg-amber-50 text-amber-900 border-amber-200/90')">
-                  <option value="diproses" class="bg-white text-gray-800 font-bold">Diproses Dapur</option>
-                  <option value="siap_diantar" class="bg-white text-gray-800 font-bold">Siap Diantar</option>
-                  <option value="sudah_diantar" class="bg-white text-gray-800 font-bold">Sudah Diantar</option>
-                </select>
-              </div>
-
               {{-- Status Pembayaran --}}
               <div class="flex items-center justify-between text-xs">
                 <span class="font-bold text-gray-500">Status Pembayaran:</span>
@@ -832,12 +911,32 @@ document.addEventListener('alpine:init', () => {
             </div>
 
             {{-- Action Button --}}
-            <div class="pt-2 shrink-0">
-              <a :href="'/pos/dinein/meja/' + bill.id + '/checkout'" 
-                 class="w-full py-2.5 bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] text-white rounded-2xl text-xs font-black text-center transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
+            <div class="pt-2 shrink-0 flex items-center gap-1.5">
+              <!-- Struk Meja -->
+              <a :href="'/pos/dinein/pesanan/' + bill.id + '/print-meja'" target="_blank" 
+                 title="Cetak Struk Meja" 
+                 class="flex-1 flex items-center justify-center py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all shadow-xs">
+                <i class="fa-solid fa-receipt text-sm"></i>
+              </a>
+              <!-- Checker Dapur -->
+              <a :href="'/pos/dinein/pesanan/' + bill.id + '/print-dapur'" target="_blank" 
+                 title="Cetak Checker Dapur" 
+                 class="flex-1 flex items-center justify-center py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all shadow-xs">
+                <i class="fa-solid fa-fire-burner text-sm"></i>
+              </a>
+              <!-- Struk Konsumen -->
+              <a :href="'/pos/dinein/pesanan/' + bill.id + '/print-nota'" target="_blank" 
+                 title="Cetak Struk Konsumen" 
+                 class="flex-1 flex items-center justify-center py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all shadow-xs">
+                <i class="fa-solid fa-file-invoice-dollar text-sm"></i>
+              </a>
+              
+              <!-- Tombol Bayar -->
+              <button type="button" @click="proceedToCheckout(bill)"
+                 class="flex-[2.5] py-2.5 bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] text-white rounded-xl text-xs font-black text-center transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer">
                 <span>BAYAR</span>
                 <i class="fa-solid fa-chevron-right text-[10px]"></i>
-              </a>
+              </button>
             </div>
 
           </div>
@@ -1195,11 +1294,11 @@ document.addEventListener('alpine:init', () => {
           </div>
 
           <div class="grid grid-cols-2 gap-2 pt-1">
-            <button type="button" @click="submitOrder('simpan')" :disabled="isSubmitting"
+            <button type="button" @click.stop="submitOrder('simpan')" :disabled="isSubmitting"
                     class="py-3.5 px-3 rounded-2xl border border-gray-300 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-xs transition-all shadow-2xs cursor-pointer">
               SIMPAN
             </button>
-            <button type="button" @click="submitOrder('bayar')" :disabled="isSubmitting"
+            <button type="button" @click.stop="submitOrder('bayar')" :disabled="isSubmitting"
                     class="py-3.5 px-3 rounded-2xl bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
               <span>BAYAR</span>
               <i class="fa-solid fa-chevron-right text-[10px]"></i>
@@ -1394,7 +1493,7 @@ document.addEventListener('alpine:init', () => {
 
   </div>
   {{-- ── MODAL DETAIL TRANSAKSI LENGKAP ── --}}
-  <div x-show="showTrxDetailModal" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4" style="display: none;">
+  <div x-show="showTrxDetailModal" x-cloak x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4" style="display: none;">
     <div class="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl border border-gray-100" @click.outside="showTrxDetailModal = false">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div>
@@ -1444,8 +1543,16 @@ document.addEventListener('alpine:init', () => {
         </div>
       </template>
 
-      <div class="pt-2 flex justify-end">
-        <button type="button" @click="showTrxDetailModal = false" class="px-5 py-2.5 bg-slate-900 text-white font-extrabold rounded-2xl text-xs hover:bg-slate-800 transition-colors">
+      <div class="pt-4 flex flex-wrap justify-between gap-2 border-t border-gray-100">
+        <div class="flex gap-2">
+            <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + selectedTrxDetail.id + '/print-dapur')" class="px-4 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold rounded-xl text-xs hover:bg-emerald-100 transition-colors">
+                <i class="fa-solid fa-print"></i> Struk Dapur
+            </button>
+            <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + selectedTrxDetail.id + '/print-meja')" class="px-4 py-2.5 bg-blue-50 text-blue-800 border border-blue-200 font-extrabold rounded-xl text-xs hover:bg-blue-100 transition-colors">
+                <i class="fa-solid fa-print"></i> Struk Meja
+            </button>
+        </div>
+        <button type="button" @click="showTrxDetailModal = false" class="px-5 py-2.5 bg-slate-900 text-white font-extrabold rounded-xl text-xs hover:bg-slate-800 transition-colors cursor-pointer">
           Tutup
         </button>
       </div>
@@ -1453,7 +1560,7 @@ document.addEventListener('alpine:init', () => {
   </div>
 
   {{-- ── MODAL VOID / BATAL TRANSAKSI ── --}}
-  <div x-show="showVoidModal" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4" style="display: none;">
+  <div x-show="showVoidModal" x-cloak x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4" style="display: none;">
     <div class="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-gray-100" @click.outside="showVoidModal = false">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div class="flex items-center gap-2">
@@ -1473,172 +1580,112 @@ document.addEventListener('alpine:init', () => {
           <select x-model="alasanVoidInput" class="w-full h-11 px-3.5 text-xs font-extrabold rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0F2E23] outline-none">
             <option value="Salah Input Menu">Salah Input Menu</option>
             <option value="Request Pembatalan Pelanggan">Request Pembatalan Pelanggan</option>
-            <option value="Kesalahan Input Kasir">Kesalahan Input Kasir</option>
-            <option value="Double Order / Duplikat">Double Order / Duplikat</option>
             <option value="Lainnya">Lainnya</option>
           </select>
         </div>
 
-        <div class="space-y-1.5">
-          <label class="font-extrabold text-slate-700">Catatan Alasan Tambahan</label>
-          <textarea x-model="catatanVoidInput" rows="2" placeholder="Tuliskan keterangan detail alasan void..."
-                    class="w-full p-3 text-xs font-medium rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0F2E23] outline-none"></textarea>
+        <div class="space-y-1.5 mt-3">
+          <label class="font-extrabold text-slate-700">Catatan Tambahan</label>
+          <input type="text" x-model="catatanVoidInput" class="w-full h-11 px-3.5 text-xs font-extrabold rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0F2E23] outline-none" placeholder="Misal: Pesanan ganda...">
         </div>
-      </div>
 
-      <div class="pt-2 flex gap-2">
-        <button type="button" @click="showVoidModal = false" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold rounded-2xl text-xs transition-colors">
-          Batal
-        </button>
-        <button type="button" @click="submitVoidOrder()" :disabled="isSubmitting" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl text-xs transition-colors flex items-center justify-center gap-1.5">
-          <span>Konfirmasi Void</span>
-          <i class="fa-solid fa-check text-xs"></i>
-        </button>
+        <div class="mt-6 flex gap-3">
+          <button type="button" @click="showVoidModal = false" class="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-2xl text-xs transition-colors">
+            Tutup
+          </button>
+          <button type="button" @click="submitVoidOrder" :disabled="isSubmitting" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl text-xs transition-colors shadow-sm disabled:opacity-50">
+            <span x-show="!isSubmitting">Proses Void</span>
+            <span x-show="isSubmitting">Memproses...</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-
-  {{-- ── MODAL MINIMALIST PRINT STRUK & CHECKER (DAPUR & MEJA) ── --}}
-  <div x-show="showSavePrintModal" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4" style="display: none;">
-    <div class="bg-white rounded-3xl p-5 max-w-md w-full space-y-4 shadow-2xl border border-gray-100" @click.outside="showSavePrintModal = false">
+  {{-- ── MODAL PRINT STRUK (MULTI-SELECT) ── --}}
+  <div x-show="showSavePrintModal || showCetakStrukModal"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0 scale-95"
+       x-transition:enter-end="opacity-100 scale-100"
+       x-transition:leave="transition ease-in duration-150"
+       x-transition:leave-start="opacity-100 scale-100"
+       x-transition:leave-end="opacity-0 scale-95"
+       class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+       style="display: none;">
+    <div class="bg-white rounded-[24px] p-6 max-w-sm w-full shadow-2xl relative">
       
       {{-- Modal Header --}}
-      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-2xl bg-[#0F2E23] text-emerald-400 flex items-center justify-center text-xs font-black shadow-xs">
-            <i class="fa-solid fa-check"></i>
-          </div>
-          <div>
-            <h3 class="text-sm font-extrabold text-slate-900">Pesanan Disimpan</h3>
-            <p class="text-[11px] font-bold text-emerald-800" x-text="savedPesananObject ? ('#' + (savedPesananObject.kode_pesanan || ('DIN-' + savedPesananObject.id))) : ''"></p>
-          </div>
-        </div>
-
-        <button type="button" @click="showSavePrintModal = false" class="text-gray-400 hover:text-gray-600 font-bold text-xl leading-none cursor-pointer">&times;</button>
+      <div class="text-center mb-6 relative">
+        <h3 class="text-[17px] font-bold text-[#111827]">Cetak Struk</h3>
+        <p class="text-[13px] font-medium text-gray-500 mt-0.5">Pilih struk yang akan dicetak</p>
+        <button type="button" @click="closePrintModal()" class="absolute right-0 top-0 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100/80 hover:bg-gray-200 text-gray-500 transition-colors">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
       </div>
 
-      {{-- Thermal Receipt Card Preview (Matches Physical Print Photo Layout) --}}
-      <div class="bg-slate-50 rounded-2xl p-4 border border-gray-200 font-mono text-xs text-gray-900 space-y-3 max-h-80 overflow-y-auto shadow-inner">
+      {{-- List Options (Checkboxes) --}}
+      <div class="space-y-3">
         
-        {{-- Section 1: CHECKER MEJA --}}
-        <div class="space-y-1 bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-          <div class="text-center font-bold text-xs tracking-wider uppercase mb-2">** CHECKER MEJA **</div>
-          
-          <div class="space-y-0.5 text-[11px]">
-            <div class="flex justify-between"><span>No :</span><span class="font-bold" x-text="savedPesananObject ? savedPesananObject.id : '-'"></span></div>
-            <div class="flex justify-between"><span>Invoice :</span><span class="font-bold" x-text="savedPesananObject ? (savedPesananObject.kode_pesanan || ('DIN-' + savedPesananObject.id)) : '-'"></span></div>
-            <div class="flex justify-between"><span>Tanggal :</span><span x-text="savedPesananObject ? savedPesananObject.created_at : '-'"></span></div>
-            <div class="flex justify-between"><span>Kasir :</span><span class="font-bold" x-text="savedPesananObject && savedPesananObject.kasir ? savedPesananObject.kasir.name : 'Kasir'"></span></div>
-            <div class="flex justify-between"><span>Meja :</span><span class="font-extrabold text-emerald-800" x-text="savedPesananObject && savedPesananObject.meja ? savedPesananObject.meja.nomor_meja : '-'"></span></div>
-          </div>
-
-          <div class="border-b border-dashed border-gray-400 my-1.5"></div>
-
-          <div class="flex justify-between font-bold text-[11px]">
-            <span>Item Name</span>
-            <span>Qty</span>
-          </div>
-
-          <div class="border-b border-dashed border-gray-400 my-1.5"></div>
-
-          <div class="space-y-1 text-[11px]">
-            <template x-for="item in (savedPesananObject ? savedPesananObject.items : [])" :key="'modal-meja-' + item.id">
-              <div class="space-y-0.5">
-                <div class="flex justify-between font-bold">
-                  <span x-text="item.menu ? item.menu.nama : (item.nama_menu || 'Menu')"></span>
-                  <span x-text="item.qty"></span>
+        {{-- Option 1: Struk Pelanggan --}}
+        <label class="w-full group bg-white border rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer select-none"
+               :class="selectedPrintOptions.includes('konsumen') ? 'border-emerald-500 bg-emerald-50/30' : 'border-gray-200 hover:border-emerald-200'">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm border"
+                     :class="selectedPrintOptions.includes('konsumen') ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-gray-50 text-gray-500 border-gray-100 group-hover:bg-white'">
+                    <i class="ph ph-receipt text-xl"></i>
                 </div>
-                <template x-if="item.catatan">
-                  <p class="text-[10px] text-amber-800 italic" x-text="'* ' + item.catatan"></p>
-                </template>
-              </div>
-            </template>
-          </div>
+                <span class="font-semibold text-sm transition-colors"
+                      :class="selectedPrintOptions.includes('konsumen') ? 'text-emerald-800' : 'text-gray-700'">Struk Pelanggan</span>
+            </div>
+            <input type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer" 
+                   value="konsumen" x-model="selectedPrintOptions">
+        </label>
 
-          <div class="border-b border-dashed border-gray-400 my-1.5"></div>
-        </div>
-
-        {{-- Divider / Spacer --}}
-        <div class="text-center text-[10px] font-bold text-gray-400 border-y border-dashed border-gray-300 py-1 uppercase tracking-widest">
-          - - - - - - - - - - - - - - - - -
-        </div>
-
-        {{-- Section 2: CHECKER DAPUR --}}
-        <div class="space-y-1 bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-          <div class="text-center font-bold text-xs tracking-wider uppercase mb-2">** CHECKER DAPUR **</div>
-          
-          <div class="space-y-0.5 text-[11px]">
-            <div class="flex justify-between"><span>No :</span><span class="font-bold" x-text="savedPesananObject ? savedPesananObject.id : '-'"></span></div>
-            <div class="flex justify-between"><span>Invoice :</span><span class="font-bold" x-text="savedPesananObject ? (savedPesananObject.kode_pesanan || ('DIN-' + savedPesananObject.id)) : '-'"></span></div>
-            <div class="flex justify-between"><span>Tanggal :</span><span x-text="savedPesananObject ? savedPesananObject.created_at : '-'"></span></div>
-            <div class="flex justify-between"><span>Kasir :</span><span class="font-bold" x-text="savedPesananObject && savedPesananObject.kasir ? savedPesananObject.kasir.name : 'Kasir'"></span></div>
-            <div class="flex justify-between"><span>Meja :</span><span class="font-extrabold text-emerald-800" x-text="savedPesananObject && savedPesananObject.meja ? savedPesananObject.meja.nomor_meja : '-'"></span></div>
-          </div>
-
-          <div class="border-b border-dashed border-gray-400 my-1.5"></div>
-
-          <div class="flex justify-between font-bold text-[11px]">
-            <span>Item Name</span>
-            <span>Qty</span>
-          </div>
-
-          <div class="border-b border-dashed border-gray-400 my-1.5"></div>
-
-          <div class="space-y-1 text-[11px]">
-            <template x-for="item in (savedPesananObject ? savedPesananObject.items : [])" :key="'modal-dapur-' + item.id">
-              <div class="space-y-0.5">
-                <div class="flex justify-between font-bold">
-                  <span x-text="item.menu ? item.menu.nama : (item.nama_menu || 'Menu')"></span>
-                  <span x-text="item.qty"></span>
+        {{-- Option 2: Struk Dapur --}}
+        <label class="w-full group bg-white border rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer select-none"
+               :class="selectedPrintOptions.includes('dapur') ? 'border-emerald-500 bg-emerald-50/30' : 'border-gray-200 hover:border-emerald-200'">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm border"
+                     :class="selectedPrintOptions.includes('dapur') ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-gray-50 text-gray-500 border-gray-100 group-hover:bg-white'">
+                    <i class="ph ph-cooking-pot text-xl"></i>
                 </div>
-                <template x-if="item.catatan">
-                  <p class="text-[10px] text-amber-800 italic" x-text="'* ' + item.catatan"></p>
-                </template>
-              </div>
-            </template>
-          </div>
+                <span class="font-semibold text-sm transition-colors"
+                      :class="selectedPrintOptions.includes('dapur') ? 'text-emerald-800' : 'text-gray-700'">Struk Dapur</span>
+            </div>
+            <input type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer" 
+                   value="dapur" x-model="selectedPrintOptions">
+        </label>
 
-          <div class="border-b border-dashed border-gray-400 my-1.5"></div>
-        </div>
+        {{-- Option 3: Struk Checker Pesanan --}}
+        <label class="w-full group bg-white border rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer select-none"
+               :class="selectedPrintOptions.includes('meja') ? 'border-emerald-500 bg-emerald-50/30' : 'border-gray-200 hover:border-emerald-200'">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm border"
+                     :class="selectedPrintOptions.includes('meja') ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-gray-50 text-gray-500 border-gray-100 group-hover:bg-white'">
+                    <i class="ph ph-clipboard-text text-xl"></i>
+                </div>
+                <span class="font-semibold text-sm transition-colors"
+                      :class="selectedPrintOptions.includes('meja') ? 'text-emerald-800' : 'text-gray-700'">Struk Checker Pesanan (Meja)</span>
+            </div>
+            <input type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer" 
+                   value="meja" x-model="selectedPrintOptions">
+        </label>
 
       </div>
 
-      {{-- Action Buttons --}}
-      <div class="space-y-2 pt-1">
-        <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + savedPesananId + '/print-gabungan')"
-                class="w-full py-3 px-3 bg-[#0F2E23] hover:bg-[#0a1f17] text-white font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm text-center cursor-pointer">
-          <i class="fa-solid fa-print text-emerald-400"></i>
-          <span>Cetak Struk Thermal (1 Halaman)</span>
+      {{-- Actions --}}
+      <div class="mt-6 space-y-2">
+        <button type="button" @click="executePrintSelection()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-print"></i>
+          Cetak yang Dipilih
         </button>
 
-        <div class="grid grid-cols-2 gap-2">
-          <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + savedPesananId + '/print-dapur')"
-                  class="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-[#0F2E23] border border-emerald-200 font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs text-center cursor-pointer">
-            <i class="fa-solid fa-fire-burner text-xs text-emerald-700"></i>
-            <span>Struk Dapur</span>
-          </button>
-
-          <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + savedPesananId + '/print-meja')"
-                  class="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-[#0F2E23] border border-emerald-200 font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs text-center cursor-pointer">
-            <i class="fa-solid fa-chair text-xs text-emerald-700"></i>
-            <span>Struk Meja</span>
-          </button>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 pt-1">
-          <button type="button" @click="showSavePrintModal = false"
-                  class="py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold rounded-xl text-xs transition-colors cursor-pointer">
-            Selesai & Lanjut
-          </button>
-          <a :href="'/pos/dinein/meja/' + (savedPesananObject ? savedPesananObject.meja_id : '') + '/checkout'"
-             class="py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold rounded-xl text-xs transition-colors text-center flex items-center justify-center gap-1 cursor-pointer">
-            <span>BAYAR</span>
-            <i class="fa-solid fa-arrow-right text-[10px]"></i>
-          </a>
-        </div>
+        <button type="button" @click="closePrintModal()" class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-2xl text-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+          <span x-text="pendingCheckoutAction ? 'Lewati & Proses Pembayaran' : 'Lewati (Kembali)'"></span>
+          <i class="fa-solid fa-arrow-right text-[11px]"></i>
+        </button>
       </div>
-
+      
     </div>
   </div>
 

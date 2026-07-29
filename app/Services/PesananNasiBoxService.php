@@ -106,12 +106,11 @@ class PesananNasiBoxService
             
             MutasiStok::create([
                 'bahan_baku_id' => $bahanId,
-                'jenis_mutasi' => 'keluar',
-                'jumlah' => $qty_butuh,
-                'stok_awal' => $bahan->stok,
-                'stok_akhir' => $bahan->stok - $qty_butuh,
-                'keterangan' => "Potong stok untuk Pesanan Nasi Box: {$pesanan->kode_pesanan}",
-                'created_by' => auth()->id() ?? 1
+                'user_id'       => auth()->id(),
+                'jenis_mutasi'  => 'keluar',
+                'jumlah'        => $qty_butuh,
+                'sisa_stok'     => $bahan->stok - $qty_butuh,
+                'keterangan'    => "Potong stok untuk Pesanan Nasi Box: {$pesanan->kode_pesanan}",
             ]);
             
             $bahan->stok -= $qty_butuh;

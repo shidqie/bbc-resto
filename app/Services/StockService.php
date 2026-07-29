@@ -18,9 +18,9 @@ class StockService
      * @param int|null $userId ID User (default: auth user)
      * @return MutasiStok
      */
-    public function addStock(int $bahanBakuId, float $jumlah, string $keterangan = 'Stok Masuk', ?int $userId = null)
+    public function addStock(int $bahanBakuId, float $jumlah, string $keterangan = 'Stok Masuk', ?int $userId = null, ?string $referensi = null)
     {
-        return DB::transaction(function () use ($bahanBakuId, $jumlah, $keterangan, $userId) {
+        return DB::transaction(function () use ($bahanBakuId, $jumlah, $keterangan, $userId, $referensi) {
             $bahanBaku = BahanBaku::lockForUpdate()->findOrFail($bahanBakuId);
             
             $bahanBaku->stok += $jumlah;
@@ -33,6 +33,7 @@ class StockService
                 'jumlah' => $jumlah,
                 'sisa_stok' => $bahanBaku->stok,
                 'keterangan' => $keterangan,
+                'referensi' => $referensi,
             ]);
         });
     }
@@ -46,14 +47,12 @@ class StockService
      * @param int|null $userId ID User (default: auth user)
      * @return MutasiStok
      */
-    public function deductStock(int $bahanBakuId, float $jumlah, string $keterangan = 'Stok Keluar', ?int $userId = null)
+    public function deductStock(int $bahanBakuId, float $jumlah, string $keterangan = 'Stok Keluar', ?int $userId = null, ?string $referensi = null)
     {
-        return DB::transaction(function () use ($bahanBakuId, $jumlah, $keterangan, $userId) {
+        return DB::transaction(function () use ($bahanBakuId, $jumlah, $keterangan, $userId, $referensi) {
             $bahanBaku = BahanBaku::lockForUpdate()->findOrFail($bahanBakuId);
             
             $bahanBaku->stok -= $jumlah;
-            // Boleh minus atau ditahan di 0, tergantung rules bisnis. 
-            // Kita asumsikan bisa negatif jika sistem telat update pengadaan.
             $bahanBaku->save();
 
             return MutasiStok::create([
@@ -63,6 +62,7 @@ class StockService
                 'jumlah' => $jumlah,
                 'sisa_stok' => $bahanBaku->stok,
                 'keterangan' => $keterangan,
+                'referensi' => $referensi,
             ]);
         });
     }

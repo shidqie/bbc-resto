@@ -10,6 +10,7 @@ class ItemPesananDinein extends Model
         'pesanan_dinein_id',
         'menu_id',
         'qty',
+        'status_sajian',
         'catatan',
         'diinput_oleh',
         'diinput_pada',

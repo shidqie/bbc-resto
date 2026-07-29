@@ -11,7 +11,7 @@ class StokMenipisController extends Controller
     public function index(Request $request)
     {
         // Kondisi stok menipis: stok <= stok_minimum
-        $query = BahanBaku::with(['kategoriBahan', 'satuan', 'supplier'])
+        $query = BahanBaku::with(['kategoriBahan', 'satuan'])
                           ->whereRaw('stok <= stok_minimum');
 
         if ($request->has('search') && $request->search != '') {

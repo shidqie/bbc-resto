@@ -1,3 +1,5 @@
+
+
 {{--
 |--------------------------------------------------------------------------
 | Admin Topbar Header (Vision UI Reference Theme)
@@ -21,17 +23,7 @@
         @endif
     </div>
 
-    {{-- Area Kanan Topbar (Hanya 3 Elemen: 1. Waktu, 2. Notif, 3. Profile) --}}
     <div class="flex items-center gap-3">
-        {{-- 1. Waktu --}}
-        <div class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-100/80 border border-gray-200/50 rounded-full text-xs font-bold text-gray-700 shadow-2xs">
-            <i class="fa-regular fa-clock text-gray-400"></i>
-            <span>{{ now()->format('d M Y, H:i') }} WIB</span>
-        </div>
-
-        {{-- 2. Notif --}}
-        <x-ui.admin-notification-bell />
-
         {{-- 3. Profile --}}
         <div class="relative" x-data="{ userMenuOpen: false }" @click.outside="userMenuOpen = false">
             <button @click="userMenuOpen = !userMenuOpen" class="flex items-center gap-2 p-1 pl-3 bg-gray-100/80 hover:bg-gray-200/80 border border-gray-200/50 rounded-full transition-all focus:outline-none shadow-2xs">

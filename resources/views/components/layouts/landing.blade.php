@@ -6,12 +6,21 @@
     <title>{{ $title ?? 'Saung Babakan Cinta' }}</title>
     <meta name="description" content="{{ $description ?? 'Saung Babakan Cinta — Rumah Makan Sunda. Dine-in, Catering & Nasi Box.' }}">
     
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
     <!-- Tailwind CSS CDN Fallback for Wi-Fi LAN Access -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        'Google_Sans': ['Outfit', 'sans-serif'],
+                        'Anonymous_Pro': ['Anonymous Pro', 'monospace'],
+                    },
                     colors: {
                         primary: '#0D3024',
                         'primary-container': '#0a2219',

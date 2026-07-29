@@ -32,30 +32,25 @@
 </head>
 <body>
 
-    <div class="header-title">
+    <div class="text-center" style="font-weight: bold; font-size: 13px; margin-bottom: 8px;">
         ** CHECKER DAPUR **
     </div>
     
-    <table>
+    <div style="font-size: 13px; font-weight: bold; margin-bottom: 2px;">
+        Queue No: {{ str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) }}
+    </div>
+    <div style="margin-bottom: 8px;">
+        Table : {{ $pesanan->meja->nomor_meja ?? '-' }}
+    </div>
+
+    <table style="margin-bottom: 8px;">
         <tr>
-            <td style="width: 70px;">No :</td>
-            <td class="text-right">{{ $pesanan->id }}</td>
+            <td style="width: 50%; color: #555;">Date & Time</td>
+            <td style="width: 50%; color: #555;">Staff</td>
         </tr>
         <tr>
-            <td>Invoice :</td>
-            <td class="text-right">{{ $pesanan->kode_pesanan ?? ('DIN-'.str_pad($pesanan->id, 5, '0', STR_PAD_LEFT)) }}</td>
-        </tr>
-        <tr>
-            <td>Tanggal :</td>
-            <td class="text-right">{{ \Carbon\Carbon::parse($pesanan->created_at ?? now())->format('d/m/Y H:i:s') }}</td>
-        </tr>
-        <tr>
-            <td>Kasir :</td>
-            <td class="text-right">{{ auth()->user()->name ?? 'Kasir' }}</td>
-        </tr>
-        <tr>
-            <td>Meja :</td>
-            <td class="text-right font-bold">{{ $pesanan->meja->nomor_meja ?? '-' }}</td>
+            <td class="font-bold">{{ \Carbon\Carbon::parse($pesanan->created_at ?? now())->format('d/m/y, h:i A') }}</td>
+            <td class="font-bold">{{ auth()->user()->name ?? 'Kasir' }}</td>
         </tr>
     </table>
 
@@ -86,15 +81,11 @@
         @endforeach
     </table>
 
-    <div class="divider"></div>
-
     <script>
         window.onload = function() {
-            window.focus();
-            window.print();
             setTimeout(function() {
-                window.close();
-            }, 500);
+                window.print();
+            }, 300);
         };
     </script>
 </body>

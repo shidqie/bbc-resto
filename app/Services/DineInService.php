@@ -193,13 +193,7 @@ class DineInService
                 ]);
             }
 
-            // Notifikasi Admin
-            \App\Models\NotifikasiAdmin::buatNotifikasi(
-                'Pesanan Resto Baru #' . $pesanan->kode_pesanan,
-                "Pesanan Resto/Dine-In baru di Meja {$meja->nomor_meja} atas nama {$namaKonsumen} (Total: Rp " . number_format($totalHarga, 0, ',', '.') . ").",
-                'pesanan_baru',
-                '/pos/dine-in'
-            );
+
 
             return $pesanan;
         });

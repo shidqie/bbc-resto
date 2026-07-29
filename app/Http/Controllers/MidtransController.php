@@ -39,7 +39,8 @@ class MidtransController extends Controller
 
         if ($order instanceof PesananDinein) {
             foreach ($order->items as $item) {
-                $gross_amount += ($item->qty * $item->menu->harga);
+                $harga = $item->menu->harga ?? 0;
+                $gross_amount += ($item->qty * $harga);
             }
             $firstName = $order->nama_konsumen ?? 'Pelanggan Dine-In';
             $phone = '080000000000';
@@ -132,8 +133,19 @@ class MidtransController extends Controller
         $isPelunasan = strpos($orderIdFull, '-LNS-') !== false || in_array($order->status, ['terkonfirmasi', 'menunggu_pelunasan']);
 
         if ($isPelunasan) {
-            if ($order->status !== 'lunas') {
-                $order->update(['status' => 'lunas']);
+            if ($order->status_bayar !== 'lunas') {
+                $statusLama = $order->status;
+                $newStatus = in_array($order->status, ['ditinjau', 'lunas']) ? 'terkonfirmasi' : $order->status;
+                $order->update(['status' => $newStatus, 'status_bayar' => 'lunas']);
+
+                \App\Models\PesananStatusLog::create([
+                    'pesanan_type' => get_class($order),
+                    'pesanan_id'   => $order->id,
+                    'status_lama'  => $statusLama,
+                    'status_baru'  => 'lunas',
+                    'user_id'      => null,
+                    'catatan'      => 'Pelunasan otomatis via Midtrans',
+                ]);
 
                 // Catat di Riwayat Pembayaran
                 BuktiPembayaran::create([
@@ -150,7 +162,7 @@ class MidtransController extends Controller
                     'PELUNASAN DITERIMA #' . $order->kode_pesanan,
                     "Pelunasan sebesar Rp " . number_format(max(0, $order->total_tagihan - $order->dp_amount), 0, ',', '.') . " untuk pesanan #{$order->kode_pesanan} atas nama {$order->nama_pemesan} telah LUNAS via Payment Gateway.",
                     'pelunasan',
-                    '/pesan/status/' . $order->kode_pesanan
+                    '/pesan/bayar/' . $order->kode_pesanan
                 );
 
                 // Send Email Invoice / Notification Lunas (Main Flow Step 9)
@@ -164,7 +176,17 @@ class MidtransController extends Controller
             }
         } else {
             if ($order->status !== 'terkonfirmasi' && $order->status !== 'lunas' && $order->status !== 'selesai') {
-                $order->update(['status' => 'terkonfirmasi']);
+                $statusLama = $order->status;
+                $order->update(['status' => 'terkonfirmasi', 'status_bayar' => 'dp_terbayar']);
+
+                \App\Models\PesananStatusLog::create([
+                    'pesanan_type' => get_class($order),
+                    'pesanan_id'   => $order->id,
+                    'status_lama'  => $statusLama,
+                    'status_baru'  => 'terkonfirmasi',
+                    'user_id'      => null,
+                    'catatan'      => 'DP diterima otomatis via Midtrans',
+                ]);
 
                 // Catat di Riwayat Pembayaran DP
                 BuktiPembayaran::create([
@@ -181,7 +203,7 @@ class MidtransController extends Controller
                     'DP Diterima #' . $order->kode_pesanan,
                     "Pembayaran DP sebesar Rp " . number_format($order->dp_amount, 0, ',', '.') . " untuk pesanan #{$order->kode_pesanan} atas nama {$order->nama_pemesan} telah diterima & terkonfirmasi.",
                     'bukti_pembayaran',
-                    '/pesan/status/' . $order->kode_pesanan
+                    '/pesan/bayar/' . $order->kode_pesanan
                 );
 
                 if ($order instanceof PesananCatering) {
@@ -218,7 +240,7 @@ class MidtransController extends Controller
         // Simulasikan pengecekan jika di local
         if (config('app.env') === 'local') {
             $this->processSuccessPayment($order, $order->kode_pesanan . ($order->status === 'terkonfirmasi' ? '-LNS-' : '-DP-'));
-            return redirect()->route('pesanan.status', $kodePesanan)
+            return redirect()->route('pesanan.bayar', $kodePesanan)
                 ->with('success', 'Status pembayaran berhasil diverifikasi! Pesanan kini ' . strtoupper($order->fresh()->status));
         }
 
@@ -229,18 +251,18 @@ class MidtransController extends Controller
 
             if (in_array($transaction, ['settlement', 'capture'])) {
                 $this->processSuccessPayment($order, $order->kode_pesanan);
-                return redirect()->route('pesanan.status', $kodePesanan)
+                return redirect()->route('pesanan.bayar', $kodePesanan)
                     ->with('success', 'Status transaksi diverifikasi otomatis: LUNAS!');
             } else if (in_array($transaction, ['deny', 'cancel', 'expire'])) {
-                return redirect()->route('pesanan.status', $kodePesanan)
+                return redirect()->route('pesanan.bayar', $kodePesanan)
                     ->with('error', 'Pembayaran gagal atau expired. Silakan coba bayar ulang sisa tagihan.');
             } else {
-                return redirect()->route('pesanan.status', $kodePesanan)
+                return redirect()->route('pesanan.bayar', $kodePesanan)
                     ->with('info', 'Status pembayaran saat ini: ' . strtoupper($transaction));
             }
         } catch (\Exception $e) {
             Log::error('Manual Midtrans Polling Error: ' . $e->getMessage());
-            return redirect()->route('pesanan.status', $kodePesanan)
+            return redirect()->route('pesanan.bayar', $kodePesanan)
                 ->with('error', 'Gagal memeriksa status ke Payment Gateway: ' . $e->getMessage());
         }
     }

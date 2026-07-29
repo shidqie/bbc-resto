@@ -52,26 +52,30 @@
 
     <div class="divider"></div>
     
-    <table>
+    <div class="text-center" style="font-weight: bold; font-size: 13px; margin-bottom: 8px;">
+        Dine-In
+    </div>
+    
+    <div style="font-size: 13px; font-weight: bold; margin-bottom: 2px;">
+        Queue No: {{ str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) }}
+    </div>
+    <div style="margin-bottom: 2px;">
+        {{ $pesanan->kode_pesanan ?? 'INV-'.str_pad($pesanan->id, 5, '0', STR_PAD_LEFT) }}
+    </div>
+    <div style="margin-bottom: 8px;">
+        Table : {{ $pesanan->meja->nomor_meja ?? '-' }}
+    </div>
+
+    <table style="margin-bottom: 8px;">
         <tr>
-            <td style="width: 75px;">No. Struk</td>
-            <td>: {{ $pesanan->kode_pesanan ?? 'DIN-'.str_pad($pesanan->id, 5, '0', STR_PAD_LEFT) }}</td>
+            <td style="width: 40%; color: #555;">Date & Time</td>
+            <td style="width: 30%; color: #555;">Staff</td>
+            <td style="width: 30%; color: #555;">Customer</td>
         </tr>
         <tr>
-            <td>Tanggal</td>
-            <td>: {{ \Carbon\Carbon::parse($pesanan->dibayar_pada ?? $pesanan->created_at ?? now())->format('d/m/Y H:i:s') }}</td>
-        </tr>
-        <tr>
-            <td>Kasir</td>
-            <td>: {{ auth()->user()->name ?? 'Kasir Resto' }}</td>
-        </tr>
-        <tr>
-            <td>Meja / Tipe</td>
-            <td class="font-bold">: Meja {{ $pesanan->meja->nomor_meja ?? '-' }} (Dine In)</td>
-        </tr>
-        <tr>
-            <td>Pelanggan</td>
-            <td class="font-bold">: {{ $pesanan->nama_konsumen ?? 'Pelanggan' }}</td>
+            <td class="font-bold">{{ \Carbon\Carbon::parse($pesanan->dibayar_pada ?? $pesanan->created_at ?? now())->format('d/m/y, h:i A') }}</td>
+            <td class="font-bold">{{ auth()->user()->name ?? 'Kasir' }}</td>
+            <td class="font-bold">{{ $pesanan->nama_konsumen ?? 'Pelanggan' }}</td>
         </tr>
     </table>
     
@@ -118,16 +122,20 @@
 
     <table>
         <tr>
-            <td>Subtotal</td>
+            <td>Sub Total</td>
             <td class="text-right font-bold">Rp {{ number_format($subtotalTotal, 0, ',', '.') }}</td>
         </tr>
         <tr>
-            <td>PB1 / Tax (0%)</td>
+            <td>Charge</td>
+            <td class="text-right">Rp 0</td>
+        </tr>
+        <tr>
+            <td>Tax</td>
             <td class="text-right">Rp 0</td>
         </tr>
         <tr class="font-bold">
-            <td style="padding-top: 4px;">TOTAL TAGIHAN</td>
-            <td class="text-right" style="padding-top: 4px; font-size: 12px;">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</td>
+            <td style="padding-top: 6px; font-size: 13px;">Total Amount</td>
+            <td class="text-right" style="padding-top: 6px; font-size: 13px;">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</td>
         </tr>
     </table>
 
@@ -169,7 +177,9 @@
 
     <script>
         window.onload = function() {
-            window.print();
+            setTimeout(function() {
+                window.print();
+            }, 300);
         };
     </script>
 </body>

@@ -146,6 +146,18 @@ class DineInController extends Controller
         ]);
     }
 
+    public function toggleStatusSajian($itemId)
+    {
+        $item = \App\Models\ItemPesananDinein::findOrFail($itemId);
+        $item->update(['status_sajian' => !$item->status_sajian]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status sajian item berhasil diperbarui.',
+            'status_sajian' => $item->status_sajian
+        ]);
+    }
+
     public function voidOrder(Request $request, $pesananId)
     {
         $request->validate([

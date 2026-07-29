@@ -42,7 +42,7 @@ class BOMService
                 
                 // Validasi ketersediaan stok
                 if ($bahan->stok < $kebutuhanTotal) {
-                    return false; // Ada minimal 1 bahan baku yang tidak mencukupi / stok = 0
+                    return false;
                 }
             }
         }
@@ -56,17 +56,17 @@ class BOMService
      *
      * @param int $menuId
      * @param int $jumlahPesan
-     * @param int|null $pesananId
+     * @param int|null $pesananId (opsional) ID referensi pesanan
      * @return bool
      * @throws Exception
      */
     public static function kurangiStokBahan($menuId, $jumlahPesan = 1, $pesananId = null)
     {
-        // 1. Cek ketersediaan bahan baku terlebih dahulu
+        // 1. Cek ketersediaan bahan (kini hanya cek apakah menu & bahan aktif)
         if (!self::cekKetersediaanBahan($menuId, $jumlahPesan)) {
             $menu = Menu::find($menuId);
             $namaMenu = $menu ? $menu->nama : "ID {$menuId}";
-            throw new Exception("Gagal memproses pesanan: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
+            throw new Exception("Gagal memproses pesanan: Menu '{$namaMenu}' tidak tersedia atau bahan baku utamanya dinonaktifkan.");
         }
 
         // 2. Eksekusi transaksi database secara ATOMIK
@@ -83,9 +83,8 @@ class BOMService
                 $kebutuhanTotal = $resep->jumlah_kebutuhan * $jumlahPesan;
                 $stokAwal = (float) $bahanBaku->stok;
 
-                // Validasi agar stok tidak bisa minus/negatif
                 if ($stokAwal < $kebutuhanTotal) {
-                    throw new Exception("Stok bahan baku '{$bahanBaku->nama_bahan}' tidak mencukupi. Sisa stok: {$stokAwal}, Kebutuhan: {$kebutuhanTotal}.");
+                    throw new Exception("Stok {$bahanBaku->nama} tidak mencukupi. (Sisa: {$stokAwal}, Butuh: {$kebutuhanTotal})");
                 }
 
                 // Kurangi stok secara aman
@@ -99,7 +98,8 @@ class BOMService
                     'jenis_mutasi' => 'keluar',
                     'jumlah' => $kebutuhanTotal,
                     'sisa_stok' => $bahanBaku->stok,
-                    'keterangan' => 'Pengurangan stok BOM otomatis untuk menu: ' . $menu->nama . ' (Qty: ' . $jumlahPesan . ')' . ($pesananId ? ' [Order #' . $pesananId . ']' : ''),
+                    'keterangan' => 'Penjualan menu: ' . $menu->nama . ' (Qty: ' . $jumlahPesan . ')',
+                    'referensi' => $pesananId ? 'ORD-' . $pesananId : null,
                 ]);
             }
 

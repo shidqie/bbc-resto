@@ -23,8 +23,13 @@ class BuktiPembayaranController extends Controller
 
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
 
-        // Generate/Refresh Snap Token untuk DP atau Pelunasan
-        if (in_array($pesanan->status, ['menunggu_dp', 'terkonfirmasi', 'menunggu_pelunasan'])) {
+        if (in_array($pesanan->status_bayar, ['lunas', 'paid'])) {
+            return redirect()->route('lacak.index', ['kode_pesanan' => $kodePesanan])
+                ->with('success', 'Pesanan ini sudah lunas.');
+        }
+
+        // Generate/Refresh Snap Token untuk pembayaran (DP atau Pelunasan)
+        if (in_array($pesanan->status, ['ditinjau', 'dikonfirmasi', 'terkonfirmasi', 'menunggu_pelunasan'])) {
             $pesanan->snap_token = \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, $type);
         }
 
@@ -64,53 +69,38 @@ class BuktiPembayaranController extends Controller
         // Update status pesanan
         $pesanan->update(['status' => 'menunggu_konfirmasi']);
 
-        // Notifikasi Admin
-        $jenisStr = strtoupper($request->jenis_pembayaran);
-        \App\Models\NotifikasiAdmin::buatNotifikasi(
-            "Upload Bukti {$jenisStr} #" . $request->kode_pesanan,
-            "Pelanggan {$pesanan->nama_pemesan} telah mengunggah bukti transfer {$request->jenis_pembayaran} untuk pesanan #{$request->kode_pesanan}. Silakan lakukan verifikasi.",
-            $request->jenis_pembayaran === 'pelunasan' ? 'pelunasan' : 'bukti_pembayaran',
-            '/pesan/status/' . $request->kode_pesanan
-        );
 
-        return redirect()->route('pesanan.status', $request->kode_pesanan)
+        return redirect()->route('pesanan.bayar', $request->kode_pesanan)
             ->with('success', 'Bukti pembayaran berhasil dikirim! Kami akan memverifikasi dalam 1×24 jam.');
     }
 
-    /** GET /pesan/status/{kodePesanan} */
-    public function status($kodePesanan)
-    {
-        $pesanan = PesananCatering::with('buktiPembayarans', 'paket')
-            ->where('kode_pesanan', $kodePesanan)->first();
-        $type = 'catering';
-
-        if (!$pesanan) {
-            $pesanan = PesananNasiBox::with('buktiPembayarans', 'menu')
-                ->where('kode_pesanan', $kodePesanan)->first();
-            $type = 'nasi_box';
-        }
-
-        abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
-
-        return view('pesanan.status', compact('pesanan', 'type', 'kodePesanan'));
-    }
 
     public function invoicePdf($kodePesanan)
     {
-        $pesanan = \App\Models\PesananCatering::with('buktiPembayarans', 'paket')
+        $pesanan = \App\Models\PesananCatering::with('buktiPembayarans', 'paket', 'details.menu')
             ->where('kode_pesanan', $kodePesanan)->first();
         $type = 'catering';
 
         if (!$pesanan) {
-            $pesanan = \App\Models\PesananNasiBox::with('buktiPembayarans', 'menu')
+            $pesanan = \App\Models\PesananNasiBox::with('buktiPembayarans', 'paket', 'details.menu')
                 ->where('kode_pesanan', $kodePesanan)->first();
             $type = 'nasi_box';
         }
 
+        // Fallback: cari pesanan dine-in (Pesanan reguler)
+        if (!$pesanan) {
+            $pesanan = \App\Models\Pesanan::with('details.menu', 'pembayarans', 'user')
+                ->where('no_pesanan', $kodePesanan)->first();
+            $type = 'dine_in';
+        }
+
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pesanan.invoice-pdf', compact('pesanan', 'type', 'kodePesanan'));
+        $viewTemplate = $type === 'dine_in' ? 'pesanan.invoice-dinein' : 'pesanan.invoice-pdf';
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView($viewTemplate, compact('pesanan', 'type', 'kodePesanan'))
+            ->setPaper('a4', 'portrait');
         
-        return $pdf->download("Invoice-{$kodePesanan}.pdf");
+        return $pdf->stream("E-Receipt-{$kodePesanan}.pdf");
     }
 }

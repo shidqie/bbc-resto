@@ -22,6 +22,8 @@ class PesananCatering extends Model
         'total_tagihan',
         'dp_amount',
         'status',
+        'status_bayar',
+        'alasan_batal',
         'catatan',
         'user_id'
     ];
@@ -38,6 +40,11 @@ class PesananCatering extends Model
     public function paket()
     {
         return $this->belongsTo(PaketCatering::class, 'paket_id');
+    }
+
+    public function statusLogs()
+    {
+        return $this->morphMany(PesananStatusLog::class, 'pesanan')->latest();
     }
 
     public function details()

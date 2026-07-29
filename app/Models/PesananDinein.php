@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PesananDinein extends Model
 {
     protected $fillable = [
+        'kode_pesanan',
         'meja_id',
         'nama_konsumen',
         'jumlah_tamu',
@@ -15,6 +16,7 @@ class PesananDinein extends Model
         'dibuka_oleh',
         'dibuka_pada',
         'dibayar_pada',
+        'snap_token',
     ];
 
     protected $casts = [

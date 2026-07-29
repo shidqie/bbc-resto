@@ -125,6 +125,56 @@
             NProgress.start();
         }
     });
+
+    // Global SweetAlert2 Interceptor for Native Confirm Dialogs
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Swal !== 'undefined') {
+            const confirmElements = document.querySelectorAll('[onsubmit*="confirm("], [onclick*="confirm("]');
+            confirmElements.forEach(el => {
+                const isForm = el.tagName === 'FORM';
+                const attrName = isForm ? 'onsubmit' : 'onclick';
+                const attrValue = el.getAttribute(attrName);
+                
+                const match = attrValue.match(/confirm\(\s*['"](.*?)['"]\s*\)/);
+                const msg = match ? match[1] : 'Apakah Anda yakin?';
+                
+                el.removeAttribute(attrName);
+                
+                el.addEventListener(isForm ? 'submit' : 'click', function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Konfirmasi',
+                        text: msg,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0F2E23',
+                        cancelButtonColor: '#ef4444',
+                        confirmButtonText: 'Ya, Lanjutkan',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true,
+                        customClass: {
+                            popup: 'rounded-xl border border-gray-100 shadow-2xl',
+                            title: 'text-lg font-semibold text-gray-900',
+                            confirmButton: 'rounded-lg px-5 py-2 text-sm font-semibold transition-colors',
+                            cancelButton: 'rounded-lg px-5 py-2 text-sm font-semibold transition-colors'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (isForm) {
+                                el.submit();
+                            } else {
+                                if (el.tagName === 'A' && el.href) {
+                                    window.location.href = el.href;
+                                } else if (el.type === 'submit' && el.closest('form')) {
+                                    el.closest('form').submit();
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    });
     </script>
 
     @stack('scripts')
