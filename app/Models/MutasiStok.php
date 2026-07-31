@@ -2,29 +2,77 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class MutasiStok extends Model
+class MutasiStok extends BaseModel
 {
-    use HasFactory;
+    protected $table = 'mutasi_stok';
+    protected $guarded = [];
+    public $timestamps = false;
 
-    protected $fillable = [
-        'bahan_baku_id',
-        'user_id',
-        'jenis_mutasi',
-        'jumlah',
-        'sisa_stok',
-        'keterangan',
-    ];
-
-    public function bahanBaku()
+    protected static function boot()
     {
-        return $this->belongsTo(BahanBaku::class);
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->jenis_mutasi_stok_id)) {
+                $model->jenis_mutasi_stok_id = 2; // 2 = Keluar
+            }
+            if (empty($model->satuan_id) && !empty($model->bahan_baku_id)) {
+                $bahan = BahanBaku::find($model->bahan_baku_id);
+                if ($bahan) {
+                    $model->satuan_id = $bahan->satuan_id;
+                }
+            }
+            if (empty($model->tanggal_mutasi)) {
+                $model->tanggal_mutasi = now();
+            }
+            if (empty($model->dibuat_oleh)) {
+                $model->dibuat_oleh = auth()->check() ? auth()->id() : 1;
+            }
+            if (empty($model->dibuat_pada)) {
+                $model->dibuat_pada = now();
+            }
+        });
     }
 
-    public function user()
+    public function setJenisMutasiAttribute($value)
     {
-        return $this->belongsTo(User::class);
+        $this->attributes['jenis_mutasi_stok_id'] = ($value === 'masuk' || $value == 1) ? 1 : 2;
     }
+
+    public function setUserIdAttribute($value)
+    {
+        $this->attributes['dibuat_oleh'] = $value;
+    }
+
+    public function setSisaStokAttribute($value)
+    {
+        // Virtual attribute ignored for SQL columns
+    }
+
+    public function setKeteranganAttribute($value)
+    {
+        $this->attributes['catatan'] = $value;
+    }
+
+    public function setReferensiAttribute($value)
+    {
+        if ($value) {
+            $cat = $this->attributes['catatan'] ?? '';
+            $this->attributes['catatan'] = trim("{$cat} [Ref: {$value}]");
+        }
+    }
+
+    public function bahan_baku() { return $this->belongsTo(BahanBaku::class, 'bahan_baku_id'); }
+
+    public function jenis_mutasi_stok() { return $this->belongsTo(JenisMutasiStok::class, 'jenis_mutasi_stok_id'); }
+
+    public function satuan() { return $this->belongsTo(Satuan::class, 'satuan_id'); }
+
+    public function detail_pesanan() { return $this->belongsTo(DetailPesanan::class, 'detail_pesanan_id'); }
+
+    public function detail_penerimaan_bahan() { return $this->belongsTo(DetailPenerimaanBahan::class, 'detail_penerimaan_bahan_id'); }
+
+    public function detail_penyesuaian_stok() { return $this->belongsTo(DetailPenyesuaianStok::class, 'detail_penyesuaian_stok_id'); }
+
+    public function dibuat_oleh_pengguna() { return $this->belongsTo(Pengguna::class, 'dibuat_oleh'); }
 }

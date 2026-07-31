@@ -13,13 +13,13 @@
 |   - default : Tombol aksi tambahan (opsional, misal "Tambah Data")
 |
 | Contoh Pemakaian:
-|   <x-ui.empty-state icon="fa-receipt" title="Belum ada pesanan" message="Buat pesanan baru">
+|   <x-ui.empty-state icon="document-text" title="Belum ada pesanan" message="Buat pesanan baru">
 |       <a href="/pesanan/create">Buat Pesanan</a>
 |   </x-ui.empty-state>
 --}}
 
 @props([
-    'icon'    => 'fa-box-open',
+    'icon'    => 'archive-box',
     'title'   => 'Tidak ada data',
     'message' => '',
 ])

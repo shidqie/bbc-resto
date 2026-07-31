@@ -7,7 +7,7 @@
     showCreateModal: false, 
     showEditModal: false, 
     showDeleteModal: false, 
-    editForm: { id: '', name: '', email: '', phone_number: '', role_id: '' },
+    editForm: { id: '', name: '', email: '', phone_number: '', peran_id: '' },
     deleteForm: { id: '', name: '' }
 }" class="p-4 md:p-8 w-full h-full flex flex-col bg-[#F3F4F6]">
     
@@ -96,7 +96,7 @@
                             {{ $users->firstItem() + $loop->index }}
                         </td>
                         <td class="px-6 py-4">
-                            <div class="font-medium text-gray-900 text-sm">{{ $user->name }}</div>
+                            <div class="font-medium text-gray-900 text-sm">{{ $user->nama }}</div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-600">{{ $user->email }}</div>
@@ -106,26 +106,26 @@
                         </td>
                         @if($type !== 'pelanggan')
                         <td class="px-6 py-4">
-                            @if($user->role && strtolower($user->role->name) === 'admin')
-                                <span class="bg-rose-100 text-rose-700 py-1 px-3 rounded-full text-xs font-medium">{{ $user->role->name }}</span>
-                            @elseif($user->role && strtolower($user->role->name) === 'manajer')
-                                <span class="bg-amber-100 text-amber-700 py-1 px-3 rounded-full text-xs font-medium">{{ $user->role->name }}</span>
+                            @if($user->role && strtolower($user->peran->nama_peran) === 'admin')
+                                <span class="bg-rose-100 text-rose-700 py-1 px-3 rounded-full text-xs font-medium">{{ $user->peran->nama_peran }}</span>
+                            @elseif($user->role && strtolower($user->peran->nama_peran) === 'manajer')
+                                <span class="bg-amber-100 text-amber-700 py-1 px-3 rounded-full text-xs font-medium">{{ $user->peran->nama_peran }}</span>
                             @else
-                                <span class="bg-teal-100 text-teal-700 py-1 px-3 rounded-full text-xs font-medium">{{ $user->role ? $user->role->name : 'Kasir' }}</span>
+                                <span class="bg-teal-100 text-teal-700 py-1 px-3 rounded-full text-xs font-medium">{{ $user->role ? $user->peran->nama_peran : 'Kasir' }}</span>
                             @endif
                         </td>
                         @else
                         <td class="px-6 py-4">
-                            <span class="text-sm text-gray-500">{{ $user->created_at->format('d M Y') }}</span>
+                            <span class="text-sm text-gray-500">{{ $user->dibuat_pada->format('d M Y') }}</span>
                         </td>
                         @endif
                         @if($type !== 'pelanggan')
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-center gap-3">
-                                <button @click="showEditModal = true; editForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}', email: '{{ addslashes($user->email) }}', phone_number: '{{ addslashes($user->phone_number) }}', role_id: '{{ $user->role_id }}' }" class="text-gray-400 hover:text-blue-600 transition-colors" title="Edit">
+                                <button @click="showEditModal = true; editForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->nama) }}', email: '{{ addslashes($user->email) }}', phone_number: '{{ addslashes($user->phone_number) }}', peran_id: '{{ $user->peran_id }}' }" class="text-gray-400 hover:text-blue-600 transition-colors" title="Edit">
                                     <x-heroicon-o-pencil-square class="w-5 h-5" />
                                 </button>
-                                <button @click="showDeleteModal = true; deleteForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' }" class="text-gray-400 hover:text-rose-500 transition-colors" title="Hapus">
+                                <button @click="showDeleteModal = true; deleteForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->nama) }}' }" class="text-gray-400 hover:text-rose-500 transition-colors" title="Hapus">
                                     <x-heroicon-o-trash class="w-5 h-5" />
                                 </button>
                             </div>
@@ -153,10 +153,10 @@
                     
                     @if($type !== 'pelanggan')
                     <div class="flex items-center gap-2 shrink-0">
-                        <button @click="showEditModal = true; editForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}', email: '{{ addslashes($user->email) }}', phone_number: '{{ addslashes($user->phone_number) }}', role_id: '{{ $user->role_id }}' }" class="p-1.5 text-blue-500 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors">
+                        <button @click="showEditModal = true; editForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->nama) }}', email: '{{ addslashes($user->email) }}', phone_number: '{{ addslashes($user->phone_number) }}', peran_id: '{{ $user->peran_id }}' }" class="p-1.5 text-blue-500 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors">
                             <x-heroicon-o-pencil-square class="w-4 h-4" />
                         </button>
-                        <button @click="showDeleteModal = true; deleteForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' }" class="p-1.5 text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-colors">
+                        <button @click="showDeleteModal = true; deleteForm = { id: '{{ $user->id }}', name: '{{ addslashes($user->nama) }}' }" class="p-1.5 text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-colors">
                             <x-heroicon-o-trash class="w-4 h-4" />
                         </button>
                     </div>
@@ -168,7 +168,7 @@
                     <div class="grid grid-cols-[100px_10px_1fr] text-sm">
                         <div class="text-gray-500">Nama</div>
                         <div class="text-gray-500">:</div>
-                        <div class="font-medium text-gray-800 truncate">{{ $user->name }}</div>
+                        <div class="font-medium text-gray-800 truncate">{{ $user->nama }}</div>
                     </div>
                     <div class="grid grid-cols-[100px_10px_1fr] text-sm">
                         <div class="text-gray-500">Email</div>
@@ -185,12 +185,12 @@
                         <div class="text-gray-500">Role</div>
                         <div class="text-gray-500">:</div>
                         <div>
-                            @if($user->role && strtolower($user->role->name) === 'admin')
-                                <span class="bg-rose-100 text-rose-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ $user->role->name }}</span>
-                            @elseif($user->role && strtolower($user->role->name) === 'manajer')
-                                <span class="bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ $user->role->name }}</span>
+                            @if($user->role && strtolower($user->peran->nama_peran) === 'admin')
+                                <span class="bg-rose-100 text-rose-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ $user->peran->nama_peran }}</span>
+                            @elseif($user->role && strtolower($user->peran->nama_peran) === 'manajer')
+                                <span class="bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ $user->peran->nama_peran }}</span>
                             @else
-                                <span class="bg-teal-100 text-teal-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ $user->role ? $user->role->name : 'Kasir' }}</span>
+                                <span class="bg-teal-100 text-teal-700 py-0.5 px-2 rounded-full text-[10px] font-medium">{{ $user->role ? $user->peran->nama_peran : 'Kasir' }}</span>
                             @endif
                         </div>
                     </div>
@@ -198,7 +198,7 @@
                     <div class="grid grid-cols-[100px_10px_1fr] text-sm">
                         <div class="text-gray-500">Bergabung</div>
                         <div class="text-gray-500">:</div>
-                        <div class="text-gray-700">{{ $user->created_at->format('d M Y') }}</div>
+                        <div class="text-gray-700">{{ $user->dibuat_pada->format('d M Y') }}</div>
                     </div>
                     @endif
                 </div>
@@ -246,10 +246,10 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Role (Hak Akses)</label>
-                                <select name="role_id" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                                <select name="peran_id" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                                     <option value="">Pilih Role...</option>
                                     @foreach($roles as $role)
-                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                        <option value="{{ $role->id }}">{{ $role->nama }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -303,10 +303,10 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Role (Hak Akses)</label>
-                                <select name="role_id" x-model="editForm.role_id" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                                <select name="peran_id" x-model="editForm.peran_id" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                                     <option value="">Pilih Role...</option>
                                     @foreach($roles as $role)
-                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                        <option value="{{ $role->id }}">{{ $role->nama }}</option>
                                     @endforeach
                                 </select>
                             </div>

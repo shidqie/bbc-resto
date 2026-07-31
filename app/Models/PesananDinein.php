@@ -2,45 +2,115 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class PesananDinein extends Model
+class PesananDinein extends BaseModel
 {
-    protected $fillable = [
-        'kode_pesanan',
-        'meja_id',
-        'nama_konsumen',
-        'jumlah_tamu',
-        'status',
-        'sub_status',
-        'dibuka_oleh',
-        'dibuka_pada',
-        'dibayar_pada',
-        'snap_token',
-    ];
+    protected $table = 'pesanan';
+    protected $guarded = [];
 
-    protected $casts = [
-        'dibuka_pada' => 'datetime',
-        'dibayar_pada' => 'datetime',
-    ];
-
-    public function meja()
+    protected static function boot()
     {
-        return $this->belongsTo(Meja::class);
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->jenis_pesanan_id)) {
+                $model->jenis_pesanan_id = 1; // 1 = Dine In
+            }
+            if (empty($model->status_pesanan_id)) {
+                $model->status_pesanan_id = 1; // 1 = Menunggu
+            }
+            if (empty($model->tanggal_pesanan)) {
+                $model->tanggal_pesanan = now();
+            }
+        });
     }
 
-    public function kasir()
+    public function getKodePesananAttribute()
     {
-        return $this->belongsTo(User::class, 'dibuka_oleh');
+        return $this->attributes['nomor_pesanan'] ?? ($this->attributes['kode_pesanan'] ?? null);
+    }
+
+    public function setKodePesananAttribute($value)
+    {
+        $this->attributes['nomor_pesanan'] = $value;
+    }
+
+    public function setNamaKonsumenAttribute($value)
+    {
+        if ($value) {
+            $catatan = $this->attributes['catatan'] ?? '';
+            $this->attributes['catatan'] = trim("Pemesan: {$value} | {$catatan}", ' |');
+        }
+    }
+
+    public function getNamaKonsumenAttribute()
+    {
+        if (preg_match('/Pemesan:\s*([^|]+)/', $this->attributes['catatan'] ?? '', $matches)) {
+            return trim($matches[1]);
+        }
+        return 'Pelanggan';
+    }
+
+    public function setJumlahTamuAttribute($value)
+    {
+        // Virtual attribute ignored for SQL columns
+    }
+
+    public function getJumlahTamuAttribute()
+    {
+        return 1;
+    }
+
+    public function setDibukaOlehAttribute($value)
+    {
+        $this->attributes['pelayan_id'] = $value;
+    }
+
+    public function getDibukaOlehAttribute()
+    {
+        return $this->attributes['pelayan_id'] ?? null;
+    }
+
+    public function setDibukaPadaAttribute($value)
+    {
+        // Handled by tanggal_pesanan
+    }
+
+    public function getDibukaPadaAttribute()
+    {
+        return $this->attributes['tanggal_pesanan'] ?? null;
+    }
+
+    public function getStatusAttribute()
+    {
+        return match((int)($this->attributes['status_pesanan_id'] ?? 1)) {
+            5 => 'lunas',
+            6 => 'batal',
+            default => 'menunggu_pembayaran'
+        };
+    }
+
+    public function setStatusAttribute($value)
+    {
+        $id = match($value) {
+            'lunas', 'selesai' => 5,
+            'batal', 'dibatalkan' => 6,
+            default => 1
+        };
+        $this->attributes['status_pesanan_id'] = $id;
     }
 
     public function items()
     {
-        return $this->hasMany(ItemPesananDinein::class, 'pesanan_dinein_id');
+        return $this->hasMany(ItemPesananDinein::class, 'pesanan_id');
     }
 
-    public function pembayaran()
+    public function meja()
     {
-        return $this->hasOne(PembayaranDinein::class, 'pesanan_dinein_id');
+        return $this->belongsTo(Meja::class, 'meja_id');
+    }
+
+    public function detail_pesanan()
+    {
+        return $this->hasMany(DetailPesanan::class, 'pesanan_id');
     }
 }

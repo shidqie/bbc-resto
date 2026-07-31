@@ -2,55 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class BahanBaku extends Model
+class BahanBaku extends BaseModel
 {
-    use HasFactory;
+    protected $table = 'bahan_baku';
+    protected $guarded = [];
 
-    protected $fillable = [
-        'kode_bahan',
-        'kategori_bahan_id',
-        'supplier_id',
-        'supplier',
-        'nama_bahan',
-        'jenis_penggunaan',
-        'satuan_id',
-        'stok',
-        'stok_minimum',
-        'harga_terakhir',
-        'lokasi_penyimpanan',
-        'tanggal_kedaluwarsa',
-        'keterangan',
-        'status',
-    ];
+    public function kategori_bahan_baku() { return $this->belongsTo(KategoriBahanBaku::class, 'kategori_bahan_baku_id'); }
 
-    public function kategoriBahan()
+    public function satuan() { return $this->belongsTo(Satuan::class, 'satuan_id'); }
+
+    public function stok_relasi() { return $this->hasOne(StokBahanBaku::class, 'bahan_baku_id'); }
+
+    public function stok() { return $this->hasOne(StokBahanBaku::class, 'bahan_baku_id'); }
+
+    public function getJumlahStokAttribute()
     {
-        return $this->belongsTo(KategoriBahan::class);
+        return (float) ($this->stok_relasi->jumlah_stok ?? 0);
     }
 
-    public function satuan()
-    {
-        return $this->belongsTo(Satuan::class);
-    }
-
-    public function supplierRelation()
-    {
-        return $this->belongsTo(Supplier::class, 'supplier_id');
-    }
-
-    public function getNamaSupplierAttribute()
-    {
-        return $this->supplier ?: ($this->supplierRelation->nama_supplier ?? null);
-    }
-
-    public function getJenisPenggunaanLabelAttribute()
-    {
-        return match($this->jenis_penggunaan) {
-            'catering' => 'Catering',
-            default => 'Resto & Nasi Box',
-        };
-    }
+    public function stok_caterings() { return $this->hasMany(StokCatering::class, 'bahan_baku_id'); }
 }

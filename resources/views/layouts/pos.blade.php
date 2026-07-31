@@ -79,8 +79,10 @@
         }
     </style>
 </head>
-<body class="admin-shell antialiased bg-[#F8FAFC] text-[#111827] h-screen overflow-hidden flex" x-data="{ sidebarOpen: window.innerWidth > 1024 }" @resize.window="sidebarOpen = window.innerWidth > 1024">
-
+<body class="admin-shell antialiased bg-[#F8FAFC] text-[#111827] h-screen overflow-hidden flex" 
+      x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') !== null ? localStorage.getItem('sidebarOpen') === 'true' : window.innerWidth > 1024 }" 
+      x-init="$watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val))"
+      @resize.window="if(window.innerWidth <= 1024) sidebarOpen = false">
     <!-- Sidebar -->
     @include('partials.sidebar')
 

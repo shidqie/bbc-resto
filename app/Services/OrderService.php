@@ -25,19 +25,21 @@ class OrderService
      */
     public function completeOrder(Pesanan $pesanan)
     {
-        if ($pesanan->status_pesanan == 'selesai' || $pesanan->status_pesanan == 'dibatalkan') {
+        if ($pesanan->status_pesanan_id == 5 || $pesanan->status_pesanan_id == 6) {
             throw new \Exception('Pesanan sudah selesai atau dibatalkan.');
         }
 
         DB::transaction(function () use ($pesanan) {
-            $pesanan->load('details.menu.resep.bahanBaku');
+            $pesanan->load('detail_pesanan.menu.resep_menu.bahan_baku');
 
             // Potong stok bahan baku untuk tiap detail pesanan
-            foreach ($pesanan->details as $detail) {
+            foreach ($pesanan->detail_pesanan as $detail) {
                 $menu = $detail->menu;
                 $jumlahDipesan = $detail->jumlah;
 
-                foreach ($menu->resep as $resep) {
+                if (!$menu || !$menu->resep_menu) continue;
+
+                foreach ($menu->resep_menu as $resep) {
                     $bahanBakuId = $resep->bahan_baku_id;
                     $kebutuhanPerPorsi = $resep->jumlah_kebutuhan;
                     
@@ -46,7 +48,7 @@ class OrderService
                     $this->stockService->deductStock(
                         $bahanBakuId,
                         $totalKebutuhan,
-                        "Pesanan #{$pesanan->no_pesanan} (Menu: {$menu->nama})"
+                        "Pesanan #{$pesanan->nomor_pesanan} (Menu: {$menu->nama_menu})"
                     );
                 }
             }

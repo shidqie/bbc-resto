@@ -2,25 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Pembayaran extends Model
+class Pembayaran extends BaseModel
 {
-    protected $fillable = [
-        'pesanan_id',
-        'jumlah_bayar',
-        'metode_pembayaran',
-        'jenis_pembayaran',
-        'tanggal_bayar',
-        'referensi'
-    ];
+    protected $table = 'pembayaran';
+    protected $guarded = [];
 
-    protected $casts = [
-        'tanggal_bayar' => 'datetime'
-    ];
+    public function pesanan() { return $this->belongsTo(Pesanan::class, 'pesanan_id'); }
 
-    public function pesanan()
-    {
-        return $this->belongsTo(Pesanan::class);
-    }
+    public function metode_pembayaran() { return $this->belongsTo(MetodePembayaran::class, 'metode_pembayaran_id'); }
+
+    public function status_pembayaran() { return $this->belongsTo(StatusPembayaran::class, 'status_pembayaran_id'); }
+
+    public function jenis_pembayaran() { return $this->belongsTo(JenisPembayaran::class, 'jenis_pembayaran_id'); }
+
+    public function diproses_oleh_pengguna() { return $this->belongsTo(Pengguna::class, 'diproses_oleh'); }
 }

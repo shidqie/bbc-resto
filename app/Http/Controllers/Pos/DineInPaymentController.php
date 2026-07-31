@@ -5,32 +5,28 @@ namespace App\Http\Controllers\Pos;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Meja;
-use App\Models\PesananDinein;
-use App\Services\DineInService;
+use App\Models\Pesanan;
+use App\Models\DetailPesanan;
+use App\Models\Pembayaran;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DineInPaymentController extends Controller
 {
-    protected $dineInService;
-
-    public function __construct(DineInService $dineInService)
-    {
-        $this->dineInService = $dineInService;
-        // Hanya kasir (dan admin/pemilik) yang boleh mengakses checkout
-        // (asumsi middleware ditambahkan di route, tidak di konstruktor)
-    }
-
     public function checkout($id)
     {
         // 1. Cari pesanan aktif langsung berdasarkan ID Pesanan atau ID Meja
-        $pesanan = PesananDinein::with(['items.menu', 'meja'])
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'meja'])
             ->where('id', $id)
-            ->where('status', 'menunggu_pembayaran')
+            ->where('status_pesanan_id', 1) // 1 = Menunggu Pembayaran
+            ->where('jenis_pesanan_id', 1) // Dine in
             ->first();
 
         if (!$pesanan) {
-            $pesanan = PesananDinein::with(['items.menu', 'meja'])
+            $pesanan = Pesanan::with(['detail_pesanan.menu', 'meja'])
                 ->where('meja_id', $id)
-                ->where('status', 'menunggu_pembayaran')
+                ->where('status_pesanan_id', 1)
+                ->where('jenis_pesanan_id', 1)
                 ->latest()
                 ->first();
         }
@@ -40,68 +36,74 @@ class DineInPaymentController extends Controller
         }
 
         $meja = $pesanan->meja;
+        $totalTagihan = $pesanan->total_tagihan;
 
-        // Kalkulasi Total Tagihan (Aman terhadap null menu)
-        $totalTagihan = 0;
-        foreach ($pesanan->items as $item) {
-            $hargaSatuan = $item->menu->harga ?? $item->harga_satuan ?? 0;
-            $totalTagihan += ($item->qty * $hargaSatuan);
-        }
-
-        if (!$pesanan->snap_token && $totalTagihan > 0) {
-            try {
-                \App\Http\Controllers\MidtransController::generateSnapToken($pesanan);
-            } catch (\Exception $e) {
-                // Abaikan kesalahan Midtrans jika offline agar pembayaran Tunai tetap bisa dilakukan kasir
-            }
-        }
-
-        return view('pos.dinein.checkout', compact('meja', 'pesanan', 'totalTagihan'));
+        return view('pos.pesanan.checkout', compact('meja', 'pesanan', 'totalTagihan'));
     }
 
     public function processPayment(Request $request, $mejaId)
     {
-
         $request->validate([
-            'pesanan_id' => 'required|exists:pesanan_dineins,id',
-            'metode_bayar' => 'required|in:cash,qris,kartu,nontunai,promo',
-            'total_tagihan' => 'required|numeric'
+            'pesanan_id' => 'required|exists:pesanan,id',
+            'metode_bayar' => 'required|string', // cash or nontunai
+            'total_tagihan' => 'required|numeric',
+            'jumlah_bayar' => 'nullable|numeric' // For cash
         ]);
 
         try {
-            $this->dineInService->prosesPembayaran(
-                $request->pesanan_id,
-                $request->metode_bayar,
-                $request->total_tagihan,
-                auth()->id()
-            );
+            DB::beginTransaction();
 
-            if ($request->metode_bayar == 'cash') {
-                return redirect()->route('pos.dinein.success', $request->pesanan_id)
-                                 ->with('success', 'Pembayaran tunai berhasil! Silakan cetak nota.');
+            $pesanan = Pesanan::findOrFail($request->pesanan_id);
+            $metodeId = $request->metode_bayar === 'nontunai' ? 2 : 1; // 2 = QRIS, 1 = Tunai
+
+            // 1. Create pembayaran
+            Pembayaran::create([
+                'nomor_pembayaran' => 'PAY-' . date('YmdHis') . '-' . rand(100, 999),
+                'pesanan_id' => $pesanan->id,
+                'metode_pembayaran_id' => $metodeId,
+                'jenis_pembayaran_id' => 1, // 1 = Pembayaran Penuh
+                'jumlah_bayar' => $request->jumlah_bayar ?? $pesanan->total_tagihan,
+                'status_pembayaran_id' => 2, // 2 = Lunas
+                'diproses_oleh' => Auth::id(),
+                'dibayar_pada' => now()
+            ]);
+
+            // 2. Potong stok via OrderService (harus dipanggil sebelum status diupdate jadi selesai)
+            app(\App\Services\OrderService::class)->completeOrder($pesanan);
+
+            // 3. Update status pesanan & meja
+            $pesanan->update([
+                'status_pesanan_id' => 5, // 5 = Selesai
+            ]);
+
+            if ($pesanan->meja) {
+                $pesanan->meja->update(['status_meja_id' => 1]); // 1 = Tersedia
             }
 
-            // Jika qris/kartu dari Midtrans Popup berhasil:
+            DB::commit();
+
             return redirect()->route('pos.dinein.success', $request->pesanan_id)
-                             ->with('success', 'Pembayaran non-tunai berhasil diverifikasi! Silakan cetak nota.');
+                             ->with('success', 'Pembayaran berhasil! Silakan cetak nota.');
         } catch (\Exception $e) {
+            DB::rollBack();
             return back()->with('error', $e->getMessage());
         }
     }
 
     public function success($pesananId)
     {
-        $pesanan = PesananDinein::with('items.menu', 'meja', 'pembayaran')->findOrFail($pesananId);
-        // Only allow if payment has been made (status = lunas)
-        if ($pesanan->status !== 'lunas') {
-            return redirect()->route('pos.dinein.index')->with('error', 'Pesanan belum dibayar.');
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'meja', 'pembayaran'])->findOrFail($pesananId);
+        
+        if ($pesanan->status_pesanan_id !== 5) {
+            return redirect()->route('pos.dinein.index')->with('error', 'Pesanan belum lunas.');
         }
-        return view('pos.dinein.success', compact('pesanan'));
+        
+        return view('pos.pesanan.success', compact('pesanan'));
     }
 
     public function receipts($pesananId)
     {
-        $pesanan = PesananDinein::with('items.menu', 'meja', 'pembayaran')->findOrFail($pesananId);
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'meja', 'pembayaran'])->findOrFail($pesananId);
         return view('pos.dinein.receipts', compact('pesanan'));
     }
 }

@@ -1,7 +1,7 @@
 <section>
     <header class="pb-3 border-b border-gray-100">
         <h2 class="text-base font-extrabold text-gray-900 flex items-center gap-2">
-            <i class="fa-solid fa-user-pen text-[#0F2E23]"></i> Informasi Profil
+            <x-heroicon-o-pencil class="text-[#0F2E23] w-5 h-5" /> Informasi Profil
         </h2>
         <p class="mt-1 text-xs text-gray-500 font-medium">
             Perbarui data diri dan alamat email pengguna akun Anda.
@@ -18,17 +18,17 @@
 
         <div>
             <label for="name" class="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
-                <i class="fa-solid fa-user text-gray-400 text-[11px]"></i> Nama Lengkap
+                <x-heroicon-o-user class="text-gray-400 w-3 h-3" /> Nama Lengkap
             </label>
             <input id="name" name="name" type="text" 
                 class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-xs font-semibold text-gray-900 focus:bg-white focus:border-[#0F2E23] focus:ring-2 focus:ring-[#0F2E23]/20 transition-all outline-none" 
-                value="{{ old('name', $user->name) }}" required autofocus autocomplete="name" />
+                value="{{ old('name', $user->nama) }}" required autofocus autocomplete="name" />
             <x-input-error class="mt-1.5" :messages="$errors->get('name')" />
         </div>
 
         <div>
             <label for="email" class="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
-                <i class="fa-solid fa-envelope text-gray-400 text-[11px]"></i> Alamat Email
+                <x-heroicon-o-envelope class="w-3 h-3 text-gray-400" /> Alamat Email
             </label>
             <input id="email" name="email" type="email" 
                 class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-xs font-semibold text-gray-900 focus:bg-white focus:border-[#0F2E23] focus:ring-2 focus:ring-[#0F2E23]/20 transition-all outline-none" 
@@ -55,7 +55,7 @@
 
         <div class="flex items-center gap-4 pt-2">
             <button type="submit" class="px-5 py-2.5 bg-[#0F2E23] hover:bg-[#163e30] text-white text-xs font-extrabold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                <i class="fa-solid fa-check text-xs"></i> Simpan Perubahan
+                <x-heroicon-o-check class="w-3 h-3" /> Simpan Perubahan
             </button>
 
             @if (session('status') === 'profile-updated')
@@ -65,7 +65,7 @@
                     x-transition
                     x-init="setTimeout(() => show = false, 2500)"
                     class="text-xs font-bold text-emerald-600 flex items-center gap-1"
-                ><i class="fa-solid fa-circle-check"></i> Perubahan berhasil disimpan!</p>
+                ><x-heroicon-o-check-circle class="w-5 h-5" /> Perubahan berhasil disimpan!</p>
             @endif
         </div>
     </form>

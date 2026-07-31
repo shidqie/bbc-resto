@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Role;
+use App\Models\Peran;
 use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Role::orderBy('id');
+        $query = Peran::orderBy('id');
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -30,7 +30,7 @@ class RoleController extends Controller
             'description' => 'nullable|string|max:255',
         ]);
 
-        Role::create($validated);
+        Peran::create($validated);
         return redirect()->route('roles.index')->with('success', 'Hak Akses berhasil ditambahkan.');
     }
 

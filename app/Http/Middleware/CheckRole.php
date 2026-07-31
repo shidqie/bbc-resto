@@ -19,10 +19,10 @@ class CheckRole
             return redirect('/login');
         }
 
-        $userRole = auth()->user()->role->name ?? 'Konsumen';
+        $userRole = auth()->user()->peran->nama_peran ?? 'Konsumen';
 
-        // Jika peran user ada di dalam daftar roles yang diizinkan (atau Admin punya akses penuh)
-        if (in_array($userRole, $roles) || in_array($userRole, ['Admin', 'Super Admin'])) {
+        // Jika peran user ada di dalam daftar roles yang diizinkan (atau Pemilik punya akses penuh)
+        if (in_array($userRole, $roles) || in_array($userRole, ['Admin', 'Super Admin', 'Pemilik', 'Admin Sistem'])) {
             return $next($request);
         }
 

@@ -38,7 +38,7 @@ class PesananController extends Controller
             'selesai' => Pesanan::where('status_pesanan', 'selesai')->count(),
         ];
 
-        return view('pesanan.index', compact('pesanans', 'stats'));
+        return view('order.index', compact('pesanans', 'stats'));
     }
 
     public function create()
@@ -55,7 +55,7 @@ class PesananController extends Controller
             'jenis_pesanan' => 'required|in:dine_in,take_away,catering,nasi_box',
             'tanggal_pengiriman' => 'nullable|date',
             'menu_id' => 'required|array',
-            'menu_id.*' => 'required|exists:menus,id',
+            'menu_id.*' => 'required|exists:menu,id',
             'jumlah' => 'required|array',
             'jumlah.*' => 'required|integer|min:1',
             'catatan' => 'nullable|array',
@@ -138,7 +138,7 @@ class PesananController extends Controller
     public function show(Pesanan $pesanan)
     {
         $pesanan->load(['details.menu', 'pembayarans', 'user']);
-        return view('pesanan.show', compact('pesanan'));
+        return view('pos.pesanan.show', compact('pesanan'));
     }
 
     public function updateStatus(Request $request, Pesanan $pesanan, OrderService $orderService)
@@ -148,12 +148,20 @@ class PesananController extends Controller
         ]);
 
         try {
-            if ($request->status_pesanan == 'selesai' && $pesanan->status_pesanan != 'selesai') {
+            // Note: $request->status_pesanan string is legacy. Assuming it's the old schema, 
+            // but just in case, use the ID mapping or keep as is.
+            if ($request->status_pesanan == 'selesai' && $pesanan->status_pesanan_id != 5) {
                 $orderService->completeOrder($pesanan);
-            } elseif ($request->status_pesanan == 'dibatalkan' && $pesanan->status_pesanan != 'dibatalkan') {
-                $orderService->cancelOrder($pesanan);
+                $pesanan->update(['status_pesanan_id' => 5]);
+            } elseif ($request->status_pesanan == 'dibatalkan' && $pesanan->status_pesanan_id != 6) {
+                // $orderService->cancelOrder($pesanan);
+                $pesanan->update(['status_pesanan_id' => 6]);
             } else {
-                $pesanan->update(['status_pesanan' => $request->status_pesanan]);
+                // Legacy map
+                $map = ['baru'=>1, 'diproses'=>3, 'dikirim'=>4, 'selesai'=>5, 'dibatalkan'=>6];
+                if (isset($map[$request->status_pesanan])) {
+                    $pesanan->update(['status_pesanan_id' => $map[$request->status_pesanan]]);
+                }
             }
 
             return back()->with('success', 'Status pesanan diperbarui!');

@@ -9,111 +9,77 @@ class KategoriMenuController extends Controller
 {
     public function index(Request $request)
     {
-        // Auto-fill kode_kategori untuk data lama yang belum punya kode
-        $missingCodes = KategoriMenu::whereNull('kode_kategori')->orderBy('id', 'asc')->get();
-        foreach ($missingCodes as $k) {
-            $k->kode_kategori = KategoriMenu::generateKodeKategori();
-            $k->save();
-        }
-
         $query = KategoriMenu::query();
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('kode_kategori', 'like', "%{$search}%");
+                $q->where('nama_kategori', 'like', "%{$search}%");
             });
         }
 
-        if ($request->has('jenis') && $request->jenis != '') {
-            $query->where('jenis_menu', $request->jenis);
-        }
+        $kategoris = $query->withCount('menu')->orderBy('id', 'asc')->paginate(15)->withQueryString();
 
-        $kategoris = $query->withCount('menus')->orderBy('id', 'asc')->paginate(15)->withQueryString();
-
-        return view('kategori-menu.index', compact('kategoris'));
+        return view('menu.kategori.index', compact('kategoris'));
     }
 
     public function store(Request $request)
     {
+        $namaKat = $request->input('nama_kategori') ?? $request->input('nama');
+        $request->merge(['nama_kategori' => $namaKat]);
+
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'jenis_menu' => 'required|in:dine_in,catering,nasi_box'
+            'nama_kategori' => 'required|string|max:255|unique:kategori_menu,nama_kategori',
+            'deskripsi' => 'nullable|string'
         ]);
 
-        // Skenario Alternatif A1: Validasi duplikasi nama kategori pada jenis menu yang sama
-        $exists = KategoriMenu::where('nama', trim($request->nama))
-            ->where('jenis_menu', $request->jenis_menu)
-            ->exists();
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $namaKat) {
+            $data = [
+                'nama_kategori' => trim($namaKat),
+                'deskripsi' => $request->deskripsi,
+            ];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('kategori_menu', 'status_aktif')) {
+                $data['status_aktif'] = true;
+            }
+            KategoriMenu::create($data);
 
-        if ($exists) {
-            $jenisLabel = match($request->jenis_menu) {
-                'catering' => 'Catering',
-                'nasi_box' => 'Nasi Box',
-                default => 'Resto',
-            };
-            return redirect()->back()
-                ->withInput()
-                ->with('error', "Gagal Menyimpan: Nama kategori '{$request->nama}' dengan jenis menu '{$jenisLabel}' sudah terdaftar! Harap gunakan nama lain.");
-        }
-
-        $kodeKategori = KategoriMenu::generateKodeKategori();
-
-        KategoriMenu::create([
-            'kode_kategori' => $kodeKategori,
-            'nama' => trim($request->nama),
-            'jenis_menu' => $request->jenis_menu,
-        ]);
-
-        return redirect()->route('menu.index', ['tab' => 'kategori'])->with('success', 'Kategori menu ' . $kodeKategori . ' (' . $request->nama . ') berhasil ditambahkan.');
+            return redirect()->route('kategori-menu.index')->with('success', "Kategori menu '{$namaKat}' berhasil ditambahkan.");
+        });
     }
 
     public function update(Request $request, KategoriMenu $kategori_menu)
     {
+        $namaKat = $request->input('nama_kategori') ?? $request->input('nama');
+        $request->merge(['nama_kategori' => $namaKat]);
+
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'jenis_menu' => 'required|in:dine_in,catering,nasi_box'
+            'nama_kategori' => 'required|string|max:255|unique:kategori_menu,nama_kategori,' . $kategori_menu->id,
+            'deskripsi' => 'nullable|string'
         ]);
 
-        // Skenario Alternatif A1: Validasi duplikasi saat update
-        $exists = KategoriMenu::where('nama', trim($request->nama))
-            ->where('jenis_menu', $request->jenis_menu)
-            ->where('id', '!=', $kategori_menu->id)
-            ->exists();
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $kategori_menu, $namaKat) {
+            $kategori_menu->update([
+                'nama_kategori' => trim($namaKat),
+                'deskripsi' => $request->deskripsi,
+            ]);
 
-        if ($exists) {
-            $jenisLabel = match($request->jenis_menu) {
-                'catering' => 'Catering',
-                'nasi_box' => 'Nasi Box',
-                default => 'Resto',
-            };
-            return redirect()->back()
-                ->withInput()
-                ->with('error', "Gagal Perbarui: Nama kategori '{$request->nama}' dengan jenis menu '{$jenisLabel}' sudah terdaftar! Harap gunakan nama lain.");
-        }
-
-        $kategori_menu->update([
-            'nama' => trim($request->nama),
-            'jenis_menu' => $request->jenis_menu,
-        ]);
-
-        return redirect()->route('menu.index', ['tab' => 'kategori'])->with('success', 'Kategori menu ' . $kategori_menu->kode_kategori . ' berhasil diperbarui.');
+            return redirect()->route('kategori-menu.index')->with('success', "Kategori menu '{$namaKat}' berhasil diperbarui.");
+        });
     }
 
     public function destroy(KategoriMenu $kategori_menu)
     {
-        // Skenario Alternatif A2: Menghapus kategori yang masih dipakai menu
-        $count = $kategori_menu->menus()->count();
-        if ($count > 0) {
-            return redirect()->route('menu.index', ['tab' => 'kategori'])
-                ->with('error', "Gagal Menghapus: Kategori '{$kategori_menu->nama}' tidak dapat dihapus karena masih digunakan oleh {$count} data menu. Harap pindahkan menu ke kategori lain terlebih dahulu.");
-        }
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($kategori_menu) {
+            $count = $kategori_menu->menu()->count();
+            if ($count > 0) {
+                return redirect()->route('kategori-menu.index')
+                    ->with('error', "Gagal Menghapus: Kategori '{$kategori_menu->nama_kategori}' tidak dapat dihapus karena masih digunakan oleh {$count} menu.");
+            }
 
-        $nama = $kategori_menu->nama;
-        $kode = $kategori_menu->kode_kategori;
-        $kategori_menu->delete();
+            $nama = $kategori_menu->nama_kategori;
+            $kategori_menu->delete();
 
-        return redirect()->route('menu.index', ['tab' => 'kategori'])->with('success', "Kategori menu '{$kode} - {$nama}' berhasil dihapus.");
+            return redirect()->route('kategori-menu.index')->with('success', "Kategori menu '{$nama}' berhasil dihapus.");
+        });
     }
 }

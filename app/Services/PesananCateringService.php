@@ -56,8 +56,8 @@ class PesananCateringService
 
     public static function hitungTotal($paketId, $jumlahPorsi, $layananTambahanIds = [], $ongkir = 0)
     {
-        $paket = PaketCatering::findOrFail($paketId);
-        $subtotalMenu = $paket->harga * $jumlahPorsi;
+        $paket = \App\Models\Produk::findOrFail($paketId);
+        $subtotalMenu = $paket->harga_jual * $jumlahPorsi;
         
         $subtotalAddon = 0;
         if (!empty($layananTambahanIds)) {

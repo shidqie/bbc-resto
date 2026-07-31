@@ -57,15 +57,15 @@
             @foreach ($kategoris as $kat)
                 <button
                     class="menu-tab px-3 py-1.5 rounded-full text-xs font-bold bg-primary/5 text-primary hover:bg-primary/10"
-                    onclick="filterMenu('kat-{{ $kat->id }}', this)">{{ $kat->nama }}</button>
+                    onclick="filterMenu('kat-{{ $kat->id }}', this)">{{ $kat->nama_kategori }}</button>
             @endforeach
         </div>
 
         {{-- Menu Grid --}}
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="menuGrid">
             @foreach ($kategoris as $kategori)
-                @foreach ($kategori->menus as $menu)
-                    <x-landing.menu-card :menu="$menu" :kategoriNama="$kategori->nama" :filterGroup="'kat-' . $kategori->id" />
+                @foreach ($kategori->menu as $menu)
+                    <x-landing.menu-card :menu="$menu" :kategoriNama="$kategori->nama_kategori" :filterGroup="'kat-' . $kategori->id" />
                 @endforeach
             @endforeach
         </div>

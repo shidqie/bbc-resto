@@ -13,7 +13,7 @@
 |   - size    (string) : Ukuran: sm, md (default: md)
 |
 | Contoh Pemakaian:
-|   <x-ui.button href="/menu/create" icon="fa-plus">Tambah Menu</x-ui.button>
+|   <x-ui.button href="/menu/create" icon="plus">Tambah Menu</x-ui.button>
 |   <x-ui.button variant="danger" type="submit">Hapus</x-ui.button>
 |   <x-ui.button variant="outline" href="/back">Kembali</x-ui.button>
 --}}
@@ -51,13 +51,17 @@
 @if($href)
     {{-- Render sebagai <a> link --}}
     <a href="{{ $href }}" {{ $attributes->merge(['class' => $classes]) }}>
-        @if($icon) <i class="fas {{ $icon }}"></i> @endif
+        @if($icon) 
+            <x-dynamic-component :component="'heroicon-s-' . $icon" class="w-4 h-4 shrink-0" />
+        @endif
         {{ $slot }}
     </a>
 @else
     {{-- Render sebagai <button> --}}
     <button type="{{ $type }}" {{ $attributes->merge(['class' => $classes]) }}>
-        @if($icon) <i class="fas {{ $icon }}"></i> @endif
+        @if($icon) 
+            <x-dynamic-component :component="'heroicon-s-' . $icon" class="w-4 h-4 shrink-0" />
+        @endif
         {{ $slot }}
     </button>
 @endif

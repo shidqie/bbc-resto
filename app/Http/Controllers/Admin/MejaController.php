@@ -5,66 +5,88 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Meja;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MejaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $mejas = Meja::all()->sortBy(function($m) {
-            return (int) preg_replace('/[^0-9]/', '', $m->nomor_meja);
-        })->values();
+        $query = Meja::query();
+        
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where('nomor_meja', 'like', "%{$search}%");
+        }
 
-        return view('admin.meja.index', compact('mejas'));
+        $mejas = $query->orderBy(DB::raw('CAST(REGEXP_REPLACE(nomor_meja, "[^0-9]", "") AS UNSIGNED)'), 'asc')
+                       ->paginate(10)
+                       ->withQueryString();
+
+        return view('pos.meja.index', compact('mejas'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nomor_meja' => 'required|string|max:50|unique:mejas,nomor_meja',
+            'nomor_meja' => 'required|string|max:50|unique:meja,nomor_meja',
             'kapasitas'  => 'required|integer|min:1',
-            'status'     => 'nullable|in:kosong,menunggu_pembayaran,terisi'
+            'area'       => 'nullable|string|max:50',
+            'status_meja_id' => 'nullable|integer|in:1,2,4'
         ]);
 
-        $validated['status'] = $validated['status'] ?? 'kosong';
+        if (!isset($validated['status_meja_id'])) {
+            $validated['status_meja_id'] = 1;
+        }
 
         Meja::create($validated);
 
-        return redirect()->route('meja.index')->with('success', 'Meja berhasil ditambahkan.');
+        return back()->with('success', 'Meja berhasil ditambahkan.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Meja $meja)
     {
         $validated = $request->validate([
-            'nomor_meja' => 'required|string|max:50|unique:mejas,nomor_meja,' . $meja->id,
+            'nomor_meja' => 'required|string|max:50|unique:meja,nomor_meja,' . $meja->id,
             'kapasitas'  => 'required|integer|min:1',
-            'status'     => 'required|in:kosong,menunggu_pembayaran,terisi'
+            'area'       => 'nullable|string|max:50',
+            'status_meja_id' => 'nullable|integer|in:1,2,4'
         ]);
+
+        if (!isset($validated['status_meja_id'])) {
+            $validated['status_meja_id'] = $meja->status_meja_id;
+        }
 
         $meja->update($validated);
 
-        return redirect()->route('meja.index')->with('success', 'Data meja berhasil diperbarui.');
+        return back()->with('success', 'Data meja berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    public function generateQr(Meja $meja)
+    {
+        $meja->qr_token = \Illuminate\Support\Str::random(32);
+        
+        if (empty($meja->kode_meja)) {
+            $number = preg_replace('/[^0-9]/', '', $meja->nomor_meja);
+            if ($number) {
+                $meja->kode_meja = 'MJ-' . str_pad($number, 3, '0', STR_PAD_LEFT);
+            } else {
+                $meja->kode_meja = 'MJ-' . strtoupper(\Illuminate\Support\Str::random(4));
+            }
+        }
+        
+        $meja->save();
+
+        return back()->with('success', 'QR Token berhasil di-generate untuk ' . $meja->nomor_meja);
+    }
+
     public function destroy(Meja $meja)
     {
-        if ($meja->status !== 'kosong') {
-            return redirect()->route('meja.index')->with('error', 'Meja tidak dapat dihapus karena sedang terisi atau menunggu pembayaran.');
+        if ($meja->status_meja_id != 1) { // 1 = TERSEDIA
+            return back()->with('error', 'Meja tidak dapat dihapus karena sedang terisi atau dipesan.');
         }
 
         $meja->delete();
 
-        return redirect()->route('meja.index')->with('success', 'Meja berhasil dihapus.');
+        return back()->with('success', 'Meja berhasil dihapus.');
     }
 }

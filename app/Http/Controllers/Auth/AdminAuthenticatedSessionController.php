@@ -28,7 +28,7 @@ class AdminAuthenticatedSessionController extends Controller
         $request->authenticate();
         
         $user = Auth::user();
-        $role = $user->role->name ?? '';
+        $role = $user->peran->nama_peran ?? '';
 
         // Tolak jika Konsumen mencoba masuk ke portal admin
         if ($role === 'Konsumen') {

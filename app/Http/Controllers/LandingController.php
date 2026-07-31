@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\KategoriMenu;
 use App\Models\Menu;
-use App\Models\PaketCatering;
 use Illuminate\Http\Request;
 
 class LandingController extends Controller
@@ -12,26 +11,30 @@ class LandingController extends Controller
     public function index()
     {
         // 1. Ambil Menu Dine-in beserta Kategori
-        // Hanya ambil kategori yang memiliki menu dine-in aktif
-        $kategoris = KategoriMenu::with(['menus' => function($query) {
-            $query->where('status', 'tersedia')->where('jenis_menu', 'dine_in');
-        }])->whereHas('menus', function($query) {
-            $query->where('status', 'tersedia')->where('jenis_menu', 'dine_in');
+        // Hanya ambil kategori yang memiliki menu dine-in aktif atau yang belum memiliki jenis (null)
+        $kategoris = KategoriMenu::with(['menu' => function($query) {
+            $query->where('status_aktif', true)
+                  ->where(function($q) {
+                      $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
+                  });
+        }])->whereHas('menu', function($query) {
+            $query->where('status_aktif', true)
+                  ->where(function($q) {
+                      $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
+                  });
         })->get();
 
         // 2. Ambil Semua Menu Dine-In aktif (untuk opsi tab "Semua")
-        $semuaMenu = Menu::where('status', 'tersedia')->where('jenis_menu', 'dine_in')->get();
+        $semuaMenu = Menu::where('status_aktif', true)
+            ->where(function($q) {
+                $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
+            })->get();
 
-        // 3. Ambil Paket Catering aktif
-        $paketCatering = PaketCatering::with('komponens.opsi.menu')
-            ->where('is_active', true)
-            ->where('jenis_paket', 'catering')
-            ->get();
+        // 3. Ambil Paket Catering aktif (jenis_menu_id = 2)
+        $paketCatering = Menu::where('status_aktif', true)->where('jenis_menu_id', 2)->get();
 
-        $paketNasiBox = PaketCatering::with('komponens.opsi.menu')
-            ->where('is_active', true)
-            ->where('jenis_paket', 'nasi_box')
-            ->get();
+        // 4. Ambil Paket Nasi Box aktif (jenis_menu_id = 3)
+        $paketNasiBox = Menu::where('status_aktif', true)->where('jenis_menu_id', 3)->get();
 
         return view('landing', compact('kategoris', 'semuaMenu', 'paketCatering', 'paketNasiBox'));
     }

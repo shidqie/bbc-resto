@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pengadaan;
-use App\Models\DetailPengadaan;
-use App\Models\Supplier;
+use App\Models\PengadaanBahan;
+use App\Models\DetailPengadaanBahan;
+use App\Models\PenerimaanBahan;
+use App\Models\DetailPenerimaanBahan;
+use App\Models\Pemasok;
 use App\Models\BahanBaku;
-use App\Models\PesananCatering;
-use App\Models\PesananNasiBox;
+use App\Models\Pesanan;
+use App\Models\MutasiStok;
 use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,57 +19,42 @@ class PengadaanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pengadaan::with('user')->latest();
+        $query = PengadaanBahan::with(['pengguna', 'pemasok', 'status_pengadaan'])->latest();
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('nomor_pengadaan', 'like', "%{$search}%")
-                  ->orWhere('asal_pembelian', 'like', "%{$search}%");
+                $q->where('nomor_pengadaan', 'like', "%{$search}%");
             });
         }
 
         $pengadaans = $query->paginate(15)->withQueryString();
 
         $stats = [
-            'total' => Pengadaan::count(),
-            'total_biaya' => Pengadaan::sum('total_biaya'),
+            'total' => PengadaanBahan::count(),
+            'total_pengadaan' => PengadaanBahan::sum('total_pengadaan'),
         ];
 
-        return view('pengadaan.index', compact('pengadaans', 'stats'));
+        return view('inventory.pengadaan.index', compact('pengadaans', 'stats'));
     }
 
     public function create(Request $request)
     {
-        $bahanBakus = BahanBaku::with('satuan')->where('status', 1)->orderBy('nama_bahan')->get();
+        $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
+        $pemasoks = Pemasok::where('status_aktif', true)->orderBy('nama_pemasok')->get();
         
         $prefillItems = [];
         $kodePesananError = null;
-        
-        if ($request->has('kode_pesanan')) {
-            $kode = trim($request->kode_pesanan);
-            if (str_starts_with($kode, 'CTR')) {
-                $pid = PesananCatering::where('kode_pesanan', $kode)->value('id');
-                if($pid) $request->merge(['pesanan_id' => $pid]);
-                else $kodePesananError = "Pesanan Catering tidak ditemukan.";
-            } else if (str_starts_with($kode, 'NBX')) {
-                $pid = PesananNasiBox::where('kode_pesanan', $kode)->value('id');
-                if($pid) $request->merge(['pesanan_nasibox_id' => $pid]);
-                else $kodePesananError = "Pesanan Nasi Box tidak ditemukan.";
-            } else {
-                $kodePesananError = "Format Kode Pesanan tidak valid.";
-            }
-        }
 
         if ($request->has('pesanan_id')) {
-            $pesanan = PesananCatering::with('details.menu.resep.bahanBaku')->find($request->pesanan_id);
+            $pesanan = Pesanan::with('detail_pesanan.menu.resep_menu.bahan_baku')->find($request->pesanan_id);
             if ($pesanan) {
                 $kebutuhan = [];
-                foreach ($pesanan->details as $detail) {
-                    if ($detail->menu && $detail->menu->resep) {
-                        foreach ($detail->menu->resep as $resep) {
+                foreach ($pesanan->detail_pesanan as $detail) {
+                    if ($detail->menu && $detail->menu->resep_menu) {
+                        foreach ($detail->menu->resep_menu as $resep) {
                             $bahanId = $resep->bahan_baku_id;
-                            $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_porsi;
+                            $qty = $resep->jumlah_kebutuhan * $detail->jumlah;
                             $kebutuhan[$bahanId] = ($kebutuhan[$bahanId] ?? 0) + $qty;
                         }
                     }
@@ -75,33 +62,7 @@ class PengadaanController extends Controller
                 foreach ($kebutuhan as $bahanId => $totalKebutuhan) {
                     $bahan = $bahanBakus->firstWhere('id', $bahanId);
                     if ($bahan) {
-                        $kurang = $totalKebutuhan - $bahan->stok;
-                        if ($kurang > 0) {
-                            $prefillItems[] = [
-                                'bahan_baku_id' => $bahanId,
-                                'jumlah_beli' => ceil($kurang * 100) / 100
-                            ];
-                        }
-                    }
-                }
-            }
-        } elseif ($request->has('pesanan_nasibox_id')) {
-            $pesanan = PesananNasiBox::with('details.menu.resep.bahanBaku')->find($request->pesanan_nasibox_id);
-            if ($pesanan) {
-                $kebutuhan = [];
-                foreach ($pesanan->details as $detail) {
-                    if ($detail->menu && $detail->menu->resep) {
-                        foreach ($detail->menu->resep as $resep) {
-                            $bahanId = $resep->bahan_baku_id;
-                            $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_box;
-                            $kebutuhan[$bahanId] = ($kebutuhan[$bahanId] ?? 0) + $qty;
-                        }
-                    }
-                }
-                foreach ($kebutuhan as $bahanId => $totalKebutuhan) {
-                    $bahan = $bahanBakus->firstWhere('id', $bahanId);
-                    if ($bahan) {
-                        $kurang = $totalKebutuhan - $bahan->stok;
+                        $kurang = $totalKebutuhan - ($bahan->stok_bahan_baku?->jumlah_stok ?? 0);
                         if ($kurang > 0) {
                             $prefillItems[] = [
                                 'bahan_baku_id' => $bahanId,
@@ -113,17 +74,17 @@ class PengadaanController extends Controller
             }
         }
 
-        return view('pengadaan.create', compact('bahanBakus', 'prefillItems', 'kodePesananError'));
+        return view('inventory.pengadaan.create', compact('bahanBakus', 'pemasoks', 'prefillItems', 'kodePesananError'));
     }
 
-    public function store(Request $request, StockService $stockService)
+    public function store(Request $request)
     {
         $request->validate([
             'tanggal_pengadaan' => 'required|date',
-            'asal_pembelian' => 'nullable|string|max:255',
+            'pemasok_id' => 'required|exists:pemasok,id',
             'catatan' => 'nullable|string',
             'bahan_baku_id' => 'required|array',
-            'bahan_baku_id.*' => 'required|exists:bahan_bakus,id',
+            'bahan_baku_id.*' => 'required|exists:bahan_baku,id',
             'jumlah' => 'required|array',
             'jumlah.*' => 'required|numeric|min:0.01',
         ]);
@@ -131,32 +92,30 @@ class PengadaanController extends Controller
         try {
             DB::beginTransaction();
 
-            $lastPengadaan = Pengadaan::latest()->first();
-            $lastId = $lastPengadaan ? $lastPengadaan->id : 0;
-            $kode = 'PO-' . date('Ymd') . '-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
+            $kode = 'PO-' . date('Ymd') . '-' . rand(100, 999);
 
-            $pengadaan = Pengadaan::create([
+            $pengadaan = PengadaanBahan::create([
                 'nomor_pengadaan' => $kode,
-                'asal_pembelian' => $request->asal_pembelian,
+                'pemasok_id' => $request->pemasok_id,
                 'tanggal_pengadaan' => $request->tanggal_pengadaan,
                 'catatan' => $request->catatan,
-                'user_id' => Auth::id(),
-                'total_biaya' => 0,
+                'pengguna_id' => Auth::id(),
+                'status_pengadaan_id' => 1, // Pending
+                'total_pengadaan' => 0,
             ]);
 
             $totalBiaya = 0;
 
             foreach ($request->bahan_baku_id as $index => $bahanId) {
-                $bahanBaku = BahanBaku::with('satuan')->find($bahanId);
+                $bahanBaku = BahanBaku::find($bahanId);
                 $qty = $request->jumlah[$index];
-                $harga = 0;
+                $harga = 0; // Harga diisi saat diterima atau jika ada referensi harga
                 $subtotal = 0;
 
-                DetailPengadaan::create([
-                    'pengadaan_id' => $pengadaan->id,
+                DetailPengadaanBahan::create([
+                    'pengadaan_bahan_id' => $pengadaan->id,
                     'bahan_baku_id' => $bahanId,
-                    'jumlah' => $qty,
-                    'satuan' => $bahanBaku->satuan->nama_satuan ?? '',
+                    'jumlah_dipesan' => $qty,
                     'harga_satuan' => $harga,
                     'subtotal' => $subtotal,
                 ]);
@@ -164,10 +123,10 @@ class PengadaanController extends Controller
                 $totalBiaya += $subtotal;
             }
 
-            $pengadaan->update(['total_biaya' => $totalBiaya, 'status' => 'pending']);
+            $pengadaan->update(['total_pengadaan' => $totalBiaya]);
 
             DB::commit();
-            return redirect()->route('pengadaan.show', $pengadaan->id)->with('success', "Permintaan Pembelian (PO) {$kode} berhasil dibuat. Silakan unduh PDF untuk belanja.");
+            return redirect()->route('pengadaan.show', $pengadaan->id)->with('success', "Permintaan Pembelian (PO) {$kode} berhasil dibuat.");
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -175,91 +134,135 @@ class PengadaanController extends Controller
         }
     }
 
-    public function show(Pengadaan $pengadaan)
-    {
-        $pengadaan->load(['user', 'details.bahanBaku.kategoriBahan']);
-        return view('pengadaan.show', compact('pengadaan'));
-    }
-
-    public function exportPdf(Pengadaan $pengadaan)
-    {
-        $pengadaan->load(['details.bahanBaku.satuan', 'user']);
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pengadaan.pdf', compact('pengadaan'));
-        $pdf->setPaper('a4', 'portrait');
-        return $pdf->download('Permintaan_Pembelian_' . $pengadaan->nomor_pengadaan . '.pdf');
-    }
-
+    /**
+     * Halaman Penerimaan Bahan — daftar PO yang siap/belum diterima.
+     */
     public function terimaBarang(Request $request)
     {
-        $request->validate([
-            'nomor_pengadaan' => 'required|string'
-        ]);
+        $search = $request->input('search', '');
+        $status = $request->input('status', ''); // filter opsional
 
-        $kode = trim($request->nomor_pengadaan);
-        $pengadaan = Pengadaan::where('nomor_pengadaan', $kode)->first();
+        $query = PengadaanBahan::with(['pemasok', 'status_pengadaan', 'detail_pengadaan_bahan.bahan_baku'])
+            ->whereIn('status_pengadaan_id', [2, 3]); // Disetujui (2) & Dikirim (3) — siap terima
 
-        if (!$pengadaan) {
-            return back()->with('error', "PO dengan ID {$kode} tidak ditemukan.");
+        if ($search) {
+            $query->where('nomor_pengadaan', 'like', "%{$search}%");
         }
 
-        if ($pengadaan->status === 'diterima') {
-            return back()->with('error', "PO {$kode} sudah pernah diterima sebelumnya.");
-        }
+        $pengadaans = $query->latest()->paginate(15)->withQueryString();
 
-        return redirect()->route('pengadaan.form-terima', $pengadaan->id);
+        return view('inventory.pengadaan.terima-barang', compact('pengadaans', 'search'));
     }
 
-    public function formTerima(Pengadaan $pengadaan)
+    public function show($id)
     {
-        if ($pengadaan->status === 'diterima') {
+        $pengadaan = PengadaanBahan::with(['diajukan_oleh_pengguna', 'pemasok', 'detail_pengadaan_bahan.bahan_baku.satuan', 'status_pengadaan'])->findOrFail($id);
+        return view('inventory.pengadaan.show', compact('pengadaan'));
+    }
+
+    public function formTerima($id)
+    {
+        $pengadaan = PengadaanBahan::with(['detail_pengadaan_bahan.bahan_baku.satuan', 'pemasok'])->findOrFail($id);
+        
+        if ($pengadaan->status_pengadaan_id == 3) { // Diterima
             return redirect()->route('pengadaan.index')->with('error', "PO {$pengadaan->nomor_pengadaan} sudah diterima.");
         }
 
-        $pengadaan->load(['details.bahanBaku.satuan']);
-        return view('pengadaan.terima', compact('pengadaan'));
+        return view('inventory.pengadaan.terima', compact('pengadaan'));
     }
 
-    public function prosesTerima(Request $request, Pengadaan $pengadaan, StockService $stockService)
+    public function prosesTerima(Request $request, $id)
     {
-        if ($pengadaan->status === 'diterima') {
+        $pengadaan = PengadaanBahan::with('detail_pengadaan_bahan.bahan_baku')->findOrFail($id);
+        
+        if ($pengadaan->status_pengadaan_id == 3) {
             return redirect()->route('pengadaan.index')->with('error', "PO sudah diterima sebelumnya.");
         }
 
         $request->validate([
             'jumlah_aktual' => 'required|array',
             'jumlah_aktual.*' => 'required|numeric|min:0',
-            'total_belanja' => 'required|numeric|min:0'
+            'harga_aktual' => 'required|array',
+            'harga_aktual.*' => 'required|numeric|min:0',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $totalBelanja = $request->total_belanja;
+            $penerimaan = PenerimaanBahan::create([
+                'nomor_penerimaan' => 'RCV-' . date('Ymd') . '-' . rand(100, 999),
+                'pengadaan_bahan_id' => $pengadaan->id,
+                'tanggal_penerimaan' => now(),
+                'catatan' => $request->catatan,
+                'diterima_oleh' => Auth::id()
+            ]);
 
-            foreach ($pengadaan->details as $detail) {
-                $actualQty = $request->jumlah_aktual[$detail->id] ?? $detail->jumlah;
+            $totalBelanja = 0;
+
+            foreach ($pengadaan->detail_pengadaan_bahan as $detail) {
+                $actualQty = $request->jumlah_aktual[$detail->id] ?? $detail->jumlah_dipesan;
+                $actualPrice = $request->harga_aktual[$detail->id] ?? 0;
+                $subtotal = $actualQty * $actualPrice;
+                $totalBelanja += $subtotal;
                 
-                // Update detail with actual qty
-                $detail->update([
-                    'jumlah' => $actualQty
+                DetailPenerimaanBahan::create([
+                    'penerimaan_bahan_id' => $penerimaan->id,
+                    'bahan_baku_id' => $detail->bahan_baku_id,
+                    'jumlah_diterima' => $actualQty,
+                    'harga_satuan' => $actualPrice,
+                    'subtotal' => $subtotal
                 ]);
 
-                // Update Stok & Mutasi if actual quantity > 0
+                // Update detail pengadaan
+                $detail->update([
+                    'harga_satuan' => $actualPrice,
+                    'subtotal' => $subtotal
+                ]);
+
+                // Update Stok & Mutasi
                 if ($actualQty > 0) {
-                    $stockService->addStock(
-                        $detail->bahan_baku_id, 
-                        $actualQty, 
-                        "Penerimaan Bahan Baku (PO: {$pengadaan->nomor_pengadaan})",
-                        null,
-                        $pengadaan->nomor_pengadaan
-                    );
+                    $bahan = $detail->bahan_baku;
+                    
+                    if ($pengadaan->jenis_pengadaan == 'CATERING') {
+                        $stokCatering = \App\Models\StokCatering::firstOrCreate([
+                            'pesanan_id' => $pengadaan->pesanan_id,
+                            'bahan_baku_id' => $bahan->id
+                        ]);
+                        $stokCatering->diterima += $actualQty;
+                        $stokCatering->save();
+                    } else {
+                        $stok = $bahan->stok ?? $bahan->stok_bahan_baku; // if relationship name is 'stok'
+                        if ($stok) {
+                            $stok->jumlah_stok += $actualQty;
+                            $stok->save();
+                        } else {
+                            \App\Models\StokBahanBaku::create([
+                                'bahan_baku_id' => $bahan->id,
+                                'jumlah_stok' => $actualQty,
+                                'terakhir_diperbarui' => now()
+                            ]);
+                        }
+                    }
+
+                    \App\Models\MutasiStok::create([
+                        'bahan_baku_id' => $bahan->id,
+                        'dibuat_oleh' => \Illuminate\Support\Facades\Auth::id(),
+                        'jenis_mutasi_stok_id' => 1, // Masuk
+                        'jumlah' => $actualQty,
+                        'satuan_id' => $bahan->satuan_id ?? 1,
+                        'tanggal_mutasi' => now(),
+                        'jenis_stok' => $pengadaan->jenis_pengadaan,
+                        'referensi_id' => $pengadaan->jenis_pengadaan == 'CATERING' ? $pengadaan->pesanan_id : $pengadaan->id,
+                        'catatan' => "Penerimaan PO: {$pengadaan->nomor_pengadaan}",
+                        'detail_penerimaan_bahan_id' => $penerimaan->id
+                    ]);
                 }
             }
 
-            // Update pengadaan status and total cost
+            // Update pengadaan
             $pengadaan->update([
-                'status' => 'diterima',
-                'total_biaya' => $totalBelanja
+                'status_pengadaan_id' => 3, // Diterima
+                'total_pengadaan' => $totalBelanja
             ]);
 
             DB::commit();

@@ -52,7 +52,7 @@
             {{-- Middle --}}
             <div class="relative z-10">
                 <div class="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-3.5 py-1.5 mb-6">
-                    <i class="fa-solid fa-shield-halved text-white/60 text-[10px]"></i>
+                    <x-heroicon-o-shield-check class="w-3 h-3 text-white/60" />
                     <span class="text-white/60 text-[11px] font-semibold uppercase tracking-[0.1em]">Staff Access</span>
                 </div>
                 <h1 class="text-3xl xl:text-4xl font-bold text-white leading-snug mb-4">
@@ -76,7 +76,7 @@
                 {{-- Mobile logo --}}
                 <div class="lg:hidden flex items-center gap-2.5 mb-10">
                     <div class="w-8 h-8 rounded-lg bg-[#0F2E23] flex items-center justify-center">
-                        <i class="fa-solid fa-shield-halved text-white text-xs"></i>
+                        <x-heroicon-o-shield-check class="text-white w-3 h-3" />
                     </div>
                     <span class="text-sm font-bold text-[#111827] tracking-wide">BBC Resto · Staff</span>
                 </div>
@@ -84,14 +84,14 @@
                 {{-- Heading --}}
                 <div class="mb-8 fu d1">
                     <h2 class="text-2xl font-bold text-[#111827] tracking-tight mb-1">Masuk Portal Staff</h2>
-                    <p class="text-sm text-gray-500 font-medium">Gunakan nomor HP & password akun staff Anda.</p>
+                    <p class="text-sm text-gray-500 font-medium">Gunakan Email atau Nomor HP & password akun staff Anda.</p>
                 </div>
 
                 <x-auth-session-status class="mb-5 text-sm" :status="session('status')" />
 
                 @if($errors->any())
                     <div class="mb-5 p-3.5 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 font-medium fu d1">
-                        <i class="fa-solid fa-circle-exclamation mr-2 text-red-400"></i>{{ $errors->first() }}
+                        <x-heroicon-o-exclamation-circle class="mr-2 text-red-400 w-5 h-5" />{{ $errors->first() }}
                     </div>
                 @endif
 
@@ -100,10 +100,10 @@
 
                     {{-- Email / HP --}}
                     <div class="fu d2">
-                        <label for="login" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Nomor HP</label>
+                        <label for="login" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Email / No. HP</label>
                         <input id="login" type="text" name="login" value="{{ old('login') }}"
                                required autofocus autocomplete="username"
-                               placeholder="08xxxxxxxxxx"
+                               placeholder="admin@resto.com / 08xxxxxxxxxx"
                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0F2E23]">
                     </div>
 
@@ -122,8 +122,8 @@
                                    class="w-full px-4 py-3 pr-11 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0F2E23]">
                             <button type="button" @click="show = !show"
                                     class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
-                                <i class="fa-solid fa-eye text-sm" x-show="!show"></i>
-                                <i class="fa-solid fa-eye-slash text-sm" x-show="show" style="display:none"></i>
+                                <x-heroicon-o-eye class="w-4 h-4" x-show="!show" />
+                                <x-heroicon-o-sparkles class="w-4 h-4" x-show="show" style="display:none" />
                             </button>
                         </div>
                     </div>

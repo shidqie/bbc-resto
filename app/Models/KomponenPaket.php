@@ -2,19 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class KomponenPaket extends Model
+class KomponenPaket extends BaseModel
 {
-    protected $fillable = ['paket_catering_id', 'nama_komponen', 'tipe', 'urutan'];
+    protected $table = 'komponen_paket';
+    protected $guarded = [];
 
-    public function paketCatering()
+    public function menu()
     {
-        return $this->belongsTo(PaketCatering::class);
+        return $this->belongsTo(Menu::class, 'menu_id');
     }
 
     public function opsi()
     {
-        return $this->hasMany(OpsiKomponen::class);
+        return $this->hasMany(PilihanKomponenPaket::class, 'komponen_paket_id')->orderBy('urutan');
     }
 }

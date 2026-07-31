@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\BahanBaku;
 use App\Models\MutasiStok;
+use App\Models\StokBahanBaku;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,19 +22,25 @@ class StockService
     public function addStock(int $bahanBakuId, float $jumlah, string $keterangan = 'Stok Masuk', ?int $userId = null, ?string $referensi = null)
     {
         return DB::transaction(function () use ($bahanBakuId, $jumlah, $keterangan, $userId, $referensi) {
-            $bahanBaku = BahanBaku::lockForUpdate()->findOrFail($bahanBakuId);
+            $stok = StokBahanBaku::lockForUpdate()->firstOrCreate(
+                ['bahan_baku_id' => $bahanBakuId],
+                ['jumlah_stok' => 0, 'terakhir_diperbarui' => now()]
+            );
             
-            $bahanBaku->stok += $jumlah;
-            $bahanBaku->save();
+            $stok->jumlah_stok += $jumlah;
+            $stok->terakhir_diperbarui = now();
+            $stok->save();
+
+            $bahanBaku = BahanBaku::findOrFail($bahanBakuId);
 
             return MutasiStok::create([
                 'bahan_baku_id' => $bahanBakuId,
-                'user_id' => $userId ?? Auth::id(),
-                'jenis_mutasi' => 'masuk',
+                'jenis_mutasi_stok_id' => 1, // Asumsi 1 = Masuk
                 'jumlah' => $jumlah,
-                'sisa_stok' => $bahanBaku->stok,
-                'keterangan' => $keterangan,
-                'referensi' => $referensi,
+                'satuan_id' => $bahanBaku->satuan_id,
+                'tanggal_mutasi' => now(),
+                'dibuat_oleh' => $userId ?? Auth::id() ?? 1, // Fallback to 1
+                'catatan' => $keterangan . ($referensi ? " (Ref: $referensi)" : ''),
             ]);
         });
     }
@@ -50,19 +57,25 @@ class StockService
     public function deductStock(int $bahanBakuId, float $jumlah, string $keterangan = 'Stok Keluar', ?int $userId = null, ?string $referensi = null)
     {
         return DB::transaction(function () use ($bahanBakuId, $jumlah, $keterangan, $userId, $referensi) {
-            $bahanBaku = BahanBaku::lockForUpdate()->findOrFail($bahanBakuId);
+            $stok = StokBahanBaku::lockForUpdate()->firstOrCreate(
+                ['bahan_baku_id' => $bahanBakuId],
+                ['jumlah_stok' => 0, 'terakhir_diperbarui' => now()]
+            );
             
-            $bahanBaku->stok -= $jumlah;
-            $bahanBaku->save();
+            $stok->jumlah_stok -= $jumlah;
+            $stok->terakhir_diperbarui = now();
+            $stok->save();
+
+            $bahanBaku = BahanBaku::findOrFail($bahanBakuId);
 
             return MutasiStok::create([
                 'bahan_baku_id' => $bahanBakuId,
-                'user_id' => $userId ?? Auth::id(),
-                'jenis_mutasi' => 'keluar',
+                'jenis_mutasi_stok_id' => 2, // Asumsi 2 = Keluar
                 'jumlah' => $jumlah,
-                'sisa_stok' => $bahanBaku->stok,
-                'keterangan' => $keterangan,
-                'referensi' => $referensi,
+                'satuan_id' => $bahanBaku->satuan_id,
+                'tanggal_mutasi' => now(),
+                'dibuat_oleh' => $userId ?? Auth::id() ?? 1, // Fallback to 1
+                'catatan' => $keterangan . ($referensi ? " (Ref: $referensi)" : ''),
             ]);
         });
     }

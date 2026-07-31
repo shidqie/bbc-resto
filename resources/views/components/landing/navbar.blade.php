@@ -69,7 +69,7 @@
 
                         <a href="{{ route('qr.scanner') }}"
                            class="block px-4 py-3 text-sm hover:bg-primary/5 hover:text-primary transition text-emerald-600 font-bold">
-                            <i class="fa-solid fa-qrcode mr-1"></i> QR Self Ordering
+                            <x-heroicon-o-qr-code class="mr-1 w-5 h-5" /> QR Self Ordering
                         </a>
                     </div>
                 </div>
@@ -136,7 +136,7 @@
             <a href="{{ route('home') }}#nasi-box" class="py-3 border-b border-primary/5">Nasi Box</a>
             <a href="{{ route('home') }}#galeri" class="py-3 border-b border-primary/5">Galeri</a>
             <a href="{{ route('home') }}#lacak-pesanan" class="py-3 border-b border-primary/5">Lacak Pesanan</a>
-            <a href="{{ route('qr.scanner') }}" class="py-3 border-b border-primary/5 text-emerald-600 font-bold"><i class="fa-solid fa-qrcode mr-1"></i> QR Self Ordering</a>
+            <a href="{{ route('qr.scanner') }}" class="py-3 border-b border-primary/5 text-emerald-600 font-bold"><x-heroicon-o-qr-code class="mr-1 w-5 h-5" /> QR Self Ordering</a>
             <a href="{{ route('home') }}#kontak" class="py-3 border-b border-primary/5">Kontak</a>
 
             <a href="{{ route('home') }}#catering"

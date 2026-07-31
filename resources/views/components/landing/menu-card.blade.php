@@ -12,12 +12,12 @@
         </div>
     </div>
     <div class="p-4 flex-1 flex flex-col">
-        <x-typography.h3 class="!text-base mb-2 line-clamp-2 !text-primary">{{ $menu->nama }}</x-typography.h3>
+        <x-typography.h3 class="!text-base mb-2 line-clamp-2 !text-primary">{{ $menu->nama_menu ?? $menu->nama }}</x-typography.h3>
         @if($menu->deskripsi)
             <x-typography.p variant="small" class="line-clamp-2 mb-2">{{ $menu->deskripsi }}</x-typography.p>
         @endif
         <div class="mt-auto pt-3 border-t border-primary/5 flex justify-between items-center">
-            <span class="text-secondary font-bold text-base">Rp {{ number_format($menu->harga, 0, ',', '.') }}</span>
+            <span class="text-secondary font-bold text-base">Rp {{ number_format($menu->harga_jual ?? $menu->harga, 0, ',', '.') }}</span>
         </div>
     </div>
 </div>

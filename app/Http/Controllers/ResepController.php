@@ -14,62 +14,62 @@ class ResepController extends Controller
     {
         $search = $request->search;
         
-        $menus = Menu::with('kategori')
-            ->withCount('resep')
+        $menus = Menu::with('kategori_menu', 'jenis_menu')
+            ->withCount('resep_menu')
             ->when($search, function($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
+                $q->where('nama_menu', 'like', "%{$search}%")
                   ->orWhere('kode_menu', 'like', "%{$search}%");
             })
-            ->orderBy('nama', 'asc')
+            ->orderBy('nama_menu', 'asc')
             ->paginate(10)->withQueryString();
             
-        return view('resep.index', compact('menus', 'search'));
+        return view('menu.resep.index', compact('menus', 'search'));
     }
 
     public function create(Menu $menu)
     {
-        $menu->load('resep.bahanBaku.satuan');
+        $menu->load('resep_menu.bahan_baku.satuan');
         
-        // Ambil semua bahan baku yang aktif
-        $bahanBakus = BahanBaku::with('satuan')->where('status', 1)->orderBy('nama_bahan')->get();
+        $bahanBakus = BahanBaku::with('satuan')->orderBy('nama_bahan')->get();
         
-        return view('resep.create', compact('menu', 'bahanBakus'));
+        // Calculate current HPP
+        $totalHpp = 0;
+        foreach ($menu->resep_menu as $resep) {
+            $hargaSatuan = $resep->bahan_baku->harga_satuan ?? 0;
+            $totalHpp += $hargaSatuan * $resep->jumlah_kebutuhan;
+        }
+        
+        return view('menu.resep.create', compact('menu', 'bahanBakus', 'totalHpp'));
     }
 
     public function store(Request $request, Menu $menu)
     {
         $request->validate([
             'bahan_baku_id' => 'required|array',
-            'bahan_baku_id.*' => 'required|exists:bahan_bakus,id',
+            'bahan_baku_id.*' => 'required|exists:bahan_baku,id',
             'jumlah_kebutuhan' => 'required|array',
             'jumlah_kebutuhan.*' => 'required|numeric|min:0.01',
-            'keterangan' => 'nullable|array',
         ]);
 
         try {
             DB::beginTransaction();
 
             // Hapus resep lama
-            $menu->resep()->delete();
+            $menu->resep_menu()->delete();
 
             // Insert resep baru
             if ($request->has('bahan_baku_id')) {
                 foreach ($request->bahan_baku_id as $index => $bahanId) {
-                    // Ambil data bahan baku untuk mendapatkan satuan
-                    $bahanBaku = BahanBaku::with('satuan')->find($bahanId);
-                    
                     ResepMenu::create([
                         'menu_id' => $menu->id,
                         'bahan_baku_id' => $bahanId,
                         'jumlah_kebutuhan' => $request->jumlah_kebutuhan[$index],
-                        'satuan' => $bahanBaku->satuan->nama_satuan ?? '',
-                        'keterangan' => $request->keterangan[$index] ?? null,
                     ]);
                 }
             }
 
             DB::commit();
-            return redirect()->route('menu.show', $menu->id)->with('success', 'Resep menu berhasil diperbarui.');
+            return redirect()->route('resep.index')->with('success', "Resep untuk menu {$menu->nama_menu} berhasil diperbarui.");
             
         } catch (\Exception $e) {
             DB::rollBack();

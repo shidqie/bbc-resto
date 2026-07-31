@@ -1,5 +1,5 @@
 @php
-    $role = strtolower(auth()->user()?->role?->name ?? 'pemilik');
+    $role = strtolower(auth()->user()?->role?->nama ?? 'pemilik');
     $isMobile = $mobile ?? false;
 
     // Helper function for active state
@@ -25,14 +25,14 @@
 
 <!-- Dashboard (Semua Role) -->
 <a href="{{ route('dashboard') }}" class="{{ $baseClass }} {{ $isActive('dashboard') ? $activeClass : $inactiveClass }}">
-    <i class="fa-solid fa-house {{ $iconClass }}"></i>
+    <x-heroicon-o-home class="{{ $iconClass }} w-5 h-5" />
     <span>Dashboard</span>
 </a>
 
 @if(in_array($role, ['pemilik', 'admin', 'manajer']))
 <!-- Menu (Pemilik / Manajer) -->
 <a href="{{ route('menu.index') }}" class="{{ $baseClass }} {{ $isActive('menu.*') || $isActive('kategori-menu.*') ? $activeClass : $inactiveClass }}">
-    <i class="fa-solid fa-utensils {{ $iconClass }}"></i>
+    <x-heroicon-o-sparkles class="{{ $iconClass }} w-5 h-5" />
     <span>Menu</span>
 </a>
 @endif
@@ -40,7 +40,7 @@
 @if(in_array($role, ['pemilik', 'admin', 'kasir']))
 <!-- Meja / POS (Kasir / Pemilik) -->
 <a href="{{ route('pos.dinein.index') }}" class="{{ $baseClass }} {{ $isActive('pos.*') ? $activeClass : $inactiveClass }}">
-    <i class="fa-solid fa-chair {{ $iconClass }}"></i>
+    <x-heroicon-o-users class="{{ $iconClass }} w-5 h-5" />
     <span>Meja</span>
 </a>
 @endif
@@ -48,7 +48,7 @@
 @if(in_array($role, ['pemilik', 'admin', 'dapur', 'manajer']))
 <!-- Pesanan Dapur -->
 <a href="{{ route('pesanan.index') }}" class="{{ $baseClass }} {{ $isActive('pesanan.*') ? $activeClass : $inactiveClass }}">
-    <i class="fa-solid fa-clipboard-list {{ $iconClass }}"></i>
+    <x-heroicon-o-clipboard-document-list class="{{ $iconClass }} w-5 h-5" />
     <span>Pesanan</span>
 </a>
 @endif
@@ -56,7 +56,7 @@
 @if(in_array($role, ['pemilik', 'admin']))
 <!-- Pengguna -->
 <a href="{{ route('users.index') }}" class="{{ $baseClass }} {{ $isActive('users.*') ? $activeClass : $inactiveClass }}">
-    <i class="fa-solid fa-users {{ $iconClass }}"></i>
+    <x-heroicon-o-users class="{{ $iconClass }} w-5 h-5" />
     <span>Pengguna</span>
 </a>
 @endif

@@ -33,7 +33,7 @@ class BuktiPembayaranController extends Controller
             $pesanan->snap_token = \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, $type);
         }
 
-        return view('pesanan.bayar', compact('pesanan', 'type', 'kodePesanan'));
+        return view('pos.pembayaran.index', compact('pesanan', 'type', 'kodePesanan'));
     }
 
     /** POST /pesan/bukti */

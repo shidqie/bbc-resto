@@ -3,72 +3,93 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Menu;
 use App\Models\KategoriMenu;
 use App\Models\Meja;
+use App\Models\Menu;
 use App\Services\DineInService;
 use Illuminate\Support\Facades\Log;
 
 class QrMenuController extends Controller
 {
     protected $dineInService;
+    protected $midtransService;
 
-    public function __construct(DineInService $dineInService)
+    public function __construct(DineInService $dineInService, \App\Services\MidtransService $midtransService)
     {
         $this->dineInService = $dineInService;
+        $this->midtransService = $midtransService;
     }
 
-    public function index(Request $request)
-    {
-        // Fetch active categories
-        $kategoris = KategoriMenu::orderBy('nama', 'asc')->get();
-
-        // Fetch menus for Dine-In
-        $menus = Menu::with(['kategori', 'resep.bahanBaku'])
-            ->where(function ($query) {
-                $query->where('jenis_menu', 'dine_in')
-                      ->orWhereNull('jenis_menu');
-            })
-            ->get();
-
-        // Fetch all tables
-        $mejas = Meja::orderBy('id', 'asc')->get();
-
-        // Check if table parameter is present
-        $selectedMejaParam = $request->query('meja') ?? $request->query('meja_id');
-        $selectedMeja = null;
-
-        if ($selectedMejaParam) {
-            $selectedMeja = Meja::where('id', $selectedMejaParam)
-                ->orWhere('nomor_meja', $selectedMejaParam)
-                ->orWhere('nomor_meja', 'Meja ' . $selectedMejaParam)
-                ->first();
-        }
-
-        return view('qr-menu.index', compact('kategoris', 'menus', 'mejas', 'selectedMeja'));
-    }
-
+    /**
+     * Halaman Scanner QR Code Mandiri
+     */
     public function scanner()
     {
-        $mejas = Meja::orderBy('id', 'asc')->get();
-        return view('qr-menu.scanner', compact('mejas'));
+        return view('menu.qr-menu.scanner');
     }
 
+    /**
+     * Halaman menu QR — hanya bisa diakses via QR Code meja (dengan token).
+     * Tanpa token valid, konsumen diarahkan ke halaman "scan QR dulu".
+     */
+    public function index(Request $request, $token = null)
+    {
+        $selectedMeja = null;
+
+        // Resolve meja dari token QR
+        if ($token) {
+            $selectedMeja = Meja::where('qr_token', $token)->first();
+        }
+
+        // Jika tidak ada token atau token tidak valid → tampilkan halaman "scan QR dulu"
+        if (!$selectedMeja) {
+            return view('menu.qr-menu.scan-required');
+        }
+
+        // Fetch kategori
+        $kategoris = \App\Models\KategoriMenu::orderBy('nama_kategori', 'asc')->get();
+
+        // Fetch menu Dine-In aktif
+        $rawMenus = Menu::with(['kategori_menu'])
+            ->where(function ($q) {
+                $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
+            })
+            ->where('status_aktif', true)
+            ->get();
+
+        $menus = $rawMenus->map(fn($m) => [
+            'id'              => $m->id,
+            'nama'            => $m->nama_menu ?? $m->nama ?? 'Menu',
+            'harga'           => (float) ($m->harga_jual ?? $m->harga ?? 0),
+            'foto'            => $m->foto,
+            'deskripsi'       => $m->deskripsi,
+            'kategori_menu_id'=> $m->kategori_menu_id,
+            'status'          => $m->status_aktif ? 'aktif' : 'habis',
+            'is_habis'        => false,
+        ]);
+
+        return view('menu.qr-menu.index', compact('kategoris', 'menus', 'selectedMeja'));
+    }
+
+    /**
+     * Simpan pesanan dari QR Self-Order.
+     */
     public function storeOrder(Request $request)
     {
         $request->validate([
-            'meja_id' => 'required|exists:mejas,id',
-            'nama_konsumen' => 'required|string|max:255',
-            'jumlah_tamu' => 'nullable|integer|min:1',
-            'items' => 'required|array|min:1',
-            'items.*.menu_id' => 'required|exists:menus,id',
-            'items.*.qty' => 'required|integer|min:1',
-            'items.*.catatan' => 'nullable|string'
+            'meja_id'          => 'required|exists:meja,id',
+            'nama_konsumen'    => 'required|string|max:255',
+            'nomor_hp'         => 'nullable|string|max:20',
+            'jumlah_tamu'      => 'nullable|integer|min:1',
+            'metode_pembayaran'=> 'nullable|string|in:kasir,qris',
+            'items'            => 'required|array|min:1',
+            'items.*.menu_id'  => 'required|exists:menu,id',
+            'items.*.qty'      => 'required|integer|min:1',
+            'items.*.catatan'  => 'nullable|string',
         ]);
 
         try {
-            // Default staff user ID if order placed directly by customer QR scanning
-            $staffId = auth()->check() ? auth()->id() : 1;
+            $staffId = 1; // Self-order by customer → gunakan default system staff
 
             $pesanan = $this->dineInService->createOrder(
                 $request->meja_id,
@@ -78,33 +99,41 @@ class QrMenuController extends Controller
                 $staffId
             );
 
+            $kodePesanan = $pesanan->kode_pesanan ?? 'DIN-' . $pesanan->id;
+            $metode      = $request->metode_pembayaran ?? 'kasir';
+            $qrisData    = null;
+
+            if ($metode === 'qris') {
+                $totalAmount = 0;
+                foreach ($request->items as $item) {
+                    $m = Menu::find($item['menu_id']);
+                    if ($m) $totalAmount += (($m->harga_jual ?? $m->harga ?? 0) * $item['qty']);
+                }
+
+                $qrisData = $this->midtransService->createQrisPayment(
+                    (int) $totalAmount,
+                    $kodePesanan,
+                    ['first_name' => $request->nama_konsumen]
+                );
+            }
+
             return response()->json([
-                'success' => true,
-                'message' => 'Pesanan berhasil dikirim ke kasir & dapur!',
-                'kode_pesanan' => $pesanan->kode_pesanan ?? 'DIN-' . $pesanan->id,
-                'pesanan_id' => $pesanan->id
+                'success'           => true,
+                'message'           => $metode === 'qris'
+                    ? 'Pesanan dibuat! Silakan scan QRIS untuk membayar.'
+                    : 'Pesanan berhasil dikirim ke kasir!',
+                'kode_pesanan'      => $kodePesanan,
+                'pesanan_id'        => $pesanan->id,
+                'metode_pembayaran' => $metode,
+                'qris'              => $qrisData,
             ]);
+
         } catch (\Exception $e) {
-            Log::error('QR Menu Store Order Error: ' . $e->getMessage());
+            Log::error('QR Menu storeOrder Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal membuat pesanan: ' . $e->getMessage()
             ], 400);
         }
-    }
-
-    public function panggilPelayan(Request $request)
-    {
-        $request->validate([
-            'meja_id' => 'required|exists:mejas,id',
-            'alasan' => 'nullable|string|max:255'
-        ]);
-
-        $meja = Meja::find($request->meja_id);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Panggilan pelayan dikirim! Staf kami akan segera mendatangi ' . ($meja ? 'Meja ' . $meja->nomor_meja : 'meja Anda') . '.'
-        ]);
     }
 }

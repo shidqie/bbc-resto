@@ -1,0 +1,364 @@
+@extends('layouts.pos')
+
+@section('title', 'Detail Pesanan Catering #' . $pesanan->nomor_pesanan)
+
+@section('content')
+<div class="w-full p-6 max-w-[1200px] mx-auto">
+    <div class="w-full p-6 flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Detail Pesanan Catering #{{ $pesanan->nomor_pesanan }}</h1>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.pesanan.catering.pdf', $pesanan->id) }}" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">
+                <x-heroicon-o-document class="mr-1 w-5 h-5" /> Cetak Rincian (PDF)
+            </a>
+            <a href="{{ route('admin.pesanan.catering.index') }}" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold transition-colors">&larr; Kembali</a>
+        </div>
+    </div>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+            @if(session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                    <span class="block sm:inline">{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                    <span class="block sm:inline">{{ session('error') }}</span>
+                </div>
+            @endif
+
+            @if(session('kekurangan_stok'))
+                <div class="bg-red-50 border border-red-200 p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-bold text-red-800 mb-2">Konfirmasi Gagal: Stok Bahan Kurang!</h3>
+                    <p class="text-sm text-red-700 mb-4">Stok bahan baku saat ini tidak mencukupi untuk memenuhi BOM pesanan ini. Silakan buat pengadaan bahan terlebih dahulu.</p>
+                    <table class="w-full text-sm text-left border text-red-800">
+                        <thead class="bg-red-100">
+                            <tr>
+                                <th class="px-4 py-2 border">Bahan Baku</th>
+                                <th class="px-4 py-2 border">Stok Saat Ini</th>
+                                <th class="px-4 py-2 border">Kebutuhan</th>
+                                <th class="px-4 py-2 border">Kekurangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(session('kekurangan_stok') as $kurang)
+                                <tr>
+                                    <td class="px-4 py-2 border font-semibold">{{ $kurang['nama_bahan'] }}</td>
+                                    <td class="px-4 py-2 border">{{ $kurang['stok_sekarang'] }} {{ $kurang['satuan'] }}</td>
+                                    <td class="px-4 py-2 border">{{ $kurang['kebutuhan'] }} {{ $kurang['satuan'] }}</td>
+                                    <td class="px-4 py-2 border font-bold text-red-600">{{ $kurang['kurang'] }} {{ $kurang['satuan'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    <div class="mt-4">
+                        <a href="{{ route('pengadaan.create', ['pesanan_id' => $pesanan->id]) }}" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm">Buat Pengadaan</a>
+                    </div>
+                </div>
+            @endif
+
+            <div class="grid md:grid-cols-2 gap-6">
+                {{-- Info Pemesan --}}
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        <h3 class="text-lg font-semibold mb-4 border-b pb-2">Informasi Pemesan</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Status Pesanan</span> <span class="col-span-2 font-bold">{{ strtoupper(str_replace('_', ' ', $pesanan->status_pesanan_id)) }}</span></div>
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Status Bayar</span> <span class="col-span-2 font-bold text-blue-600">{{ strtoupper(str_replace('_', ' ', $pesanan->pembayaran->status_pembayaran_id)) }}</span></div>
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Nama Pemesan</span> <span class="col-span-2">{{ $pesanan->catatan }}</span></div>
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Kontak</span> <span class="col-span-2">{{ $pesanan->kontak }}</span></div>
+                            @if($pesanan->alamat_venue)
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Nama Venue</span> <span class="col-span-2">{{ $pesanan->alamat_venue }}</span></div>
+                            @endif
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Metode Pengiriman</span> <span class="col-span-2 capitalize">{{ $pesanan->pengantaran->jarak_km }}</span></div>
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Alamat / Lokasi</span> <span class="col-span-2">{{ $pesanan->jadwal_pesanan->lokasi_acara }}</span></div>
+                            @if($pesanan->pengantaran->jarak_km === 'delivery')
+                                <div class="grid grid-cols-3"><span class="text-gray-500">Jarak</span> <span class="col-span-2">{{ $pesanan->jarak_km }} km</span></div>
+                                <div class="grid grid-cols-3"><span class="text-gray-500">Ongkos Kirim</span> <span class="col-span-2">Rp {{ number_format($pesanan->pengantaran->biaya_pengantaran, 0, ',', '.') }}</span></div>
+                            @endif
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Tanggal Acara</span> <span class="col-span-2">{{ $pesanan->jadwal_pesanan->tanggal_acara->format('d M Y') }}</span></div>
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Catatan</span> <span class="col-span-2">{{ $pesanan->catatan ?: '-' }}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Info Paket --}}
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        <h3 class="text-lg font-semibold mb-4 border-b pb-2">Informasi Paket</h3>
+                        <div class="space-y-3 text-sm mb-4">
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Paket</span> <span class="col-span-2 font-semibold">{{ $pesanan->detail_pesanan->first()->menu->nama_menu_paket }}</span></div>
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Jumlah Porsi</span> <span class="col-span-2">{{ $pesanan->detail_pesanan->first()->kuantitas }}</span></div>
+                            <div class="grid grid-cols-3"><span class="text-gray-500">Total Tagihan</span> <span class="col-span-2 font-bold">Rp {{ number_format($pesanan->total_tagihan, 0, ',', '.') }}</span></div>
+                        </div>
+                        
+                        <h4 class="font-medium text-gray-700 mb-2">Menu Komponen Terpilih:</h4>
+                        <ul class="list-disc list-inside text-sm text-gray-600 mb-4">
+                            @foreach($pesanan->detail_pesanan as $detail)
+                                <li>{{ $detail->komponen->nama_komponen }}: <strong>{{ $detail->menu->nama }}</strong></li>
+                            @endforeach
+                        </ul>
+
+                        @if($pesanan->addons->isNotEmpty())
+                            <h4 class="font-medium text-gray-700 mb-2">Layanan Tambahan:</h4>
+                            <ul class="list-disc list-inside text-sm text-gray-600">
+                                @foreach($pesanan->addons as $addon)
+                                    <li>{{ $addon->layananTambahan->nama }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- ── TABEL ANALISIS STOK BAHAN BAKU CATERING INI ── --}}
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 mb-4 gap-2">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <x-heroicon-o-cube class="w-5 h-5 text-emerald-700" />
+                                Rincian & Analisis Stok Bahan Baku Catering Ini
+                            </h3>
+                            <p class="text-sm text-gray-500 font-medium mt-1">Kebutuhan resep untuk {{ $pesanan->detail_pesanan->first()->kuantitas }} porsi pesanan catering ini</p>
+                        </div>
+                        @if(!in_array($pesanan->status_pesanan_id, ['ditinjau', 'dibatalkan']))
+                        <a href="{{ route('pengadaan.create', ['pesanan_id' => $pesanan->id]) }}" class="inline-flex items-center gap-2 bg-[#0F2E23] hover:bg-[#0a1f17] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">
+                            <x-heroicon-o-plus class="w-4 h-4" />
+                            Buat Pengadaan Catering
+                        </a>
+                        @endif
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b">
+                                    <th class="px-4 py-3 font-semibold">Bahan Baku</th>
+                                    <th class="px-4 py-3 font-semibold">Stok Resto Saat Ini</th>
+                                    <th class="px-4 py-3 font-semibold">Total Kebutuhan Acara</th>
+                                    <th class="px-4 py-3 font-semibold">Status Ketersediaan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($kebutuhanBahan as $item)
+                                    @php $kurang = max(0, $item['total_kebutuhan'] - $item['stok_sekarang']); @endphp
+                                    <tr class="hover:bg-gray-50/50">
+                                        <td class="px-4 py-3 font-bold text-gray-900">{{ $item['nama_bahan'] }}</td>
+                                        <td class="px-4 py-3 font-medium text-gray-700">{{ number_format($item['stok_sekarang'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
+                                        <td class="px-4 py-3 font-bold text-blue-700">{{ number_format($item['total_kebutuhan'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
+                                        <td class="px-4 py-3">
+                                            @if($kurang > 0)
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+                                                    Kurang {{ number_format($kurang, 2, ',', '.') }} {{ $item['satuan'] }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                    ✓ Stok Cukup
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">
+                                            Belum ada resep bahan baku yang terdaftar pada menu paket terpilih.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Bukti Pembayaran & Aksi --}}
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <h3 class="text-lg font-semibold mb-4 border-b pb-2">Bukti Pembayaran</h3>
+                    
+                    @if($pesanan->buktiPembayarans->isEmpty())
+                        @if($pesanan->snap_token)
+                            <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 flex items-start gap-3">
+                                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <div>
+                                    <p class="font-bold mb-1">Pembayaran Terintegrasi (Midtrans)</p>
+                                    <p class="text-sm">Pelanggan menggunakan metode pembayaran otomatis Midtrans. 
+                                        @if($pesanan->pembayaran->status_pembayaran_id === 'belum_bayar')
+                                            Saat ini sistem sedang menunggu pembayaran diselesaikan.
+                                        @else
+                                            Pembayaran telah diverifikasi secara otomatis oleh sistem.
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-sm text-gray-500 italic">Belum ada bukti pembayaran yang diunggah pelanggan.</p>
+                        @endif
+                    @else
+                        <div class="grid md:grid-cols-2 gap-4">
+                            @foreach($pesanan->buktiPembayarans as $bukti)
+                                <div class="border rounded-lg p-4">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="font-bold uppercase">{{ $bukti->jenis_pembayaran }}</span>
+                                        <span class="text-xs px-2 py-1 rounded {{ $bukti->status === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                            {{ $bukti->status }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mb-3">Diunggah pada: {{ $bukti->dibuat_pada->format('d M Y H:i') }}</p>
+                                    
+                                    <a href="{{ asset('storage/' . $bukti->file_path) }}" target="_blank" class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded text-sm mb-3">Lihat File</a>
+                                    
+                                    @if($bukti->status === 'menunggu_verifikasi')
+                                        <form action="{{ route('admin.bukti.verifikasi-dp', $bukti->id) }}" method="POST" class="mt-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="text" name="catatan_admin" placeholder="Catatan opsional..." class="w-full text-sm border-gray-300 rounded-md mb-2">
+                                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                                                Verifikasi Pembayaran
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    {{-- INFO: Menunggu Pelunasan --}}
+                    @if($pesanan->status_pesanan_id === 'menunggu_pelunasan')
+                        <div class="mt-6 bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                            <h4 class="text-yellow-800 font-bold mb-1"><x-heroicon-o-clock class="w-4 h-4 mr-2" />Menunggu Pelunasan dari Konsumen</h4>
+                            <p class="text-yellow-700 text-sm">Pesanan ini sudah dikonfirmasi. Konsumen perlu melunasi sisa tagihan sebelum bisa diproses.</p>
+                            @php
+                                $sisaTagihan = $pesanan->total_tagihan - $pesanan->total_tagihan;
+                            @endphp
+                            <p class="text-yellow-800 font-bold mt-2">Sisa Tagihan: Rp {{ number_format($sisaTagihan, 0, ',', '.') }}</p>
+                        </div>
+                    @endif
+
+                    @if($pesanan->status_pesanan_id === 'dibatalkan' && $pesanan->alasan_batal)
+                        <div class="mt-6 bg-red-50 p-4 rounded-xl border border-red-100">
+                            <h4 class="text-red-800 font-bold mb-1"><x-heroicon-o-no-symbol class="mr-2 w-5 h-5" />Alasan Pembatalan:</h4>
+                            <p class="text-red-700 text-sm">{{ $pesanan->alasan_batal }}</p>
+                        </div>
+                    @endif
+
+                    {{-- Tombol Aksi Status (PRD 3.7 & 7.5) --}}
+                    @if(!in_array($pesanan->status_pesanan_id, ['selesai', 'dibatalkan']))
+                        <div class="mt-8 border-t pt-6" x-data="{ showBatalModal: false }">
+                            <div class="flex flex-wrap gap-3 justify-center">
+
+                                {{-- Konfirmasi (dari Ditinjau) --}}
+                                @if($pesanan->status_pesanan_id === 'ditinjau')
+                                <form action="{{ route('admin.pesanan.catering.konfirmasi', $pesanan->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin mengonfirmasi pesanan ini? Stok bahan baku akan langsung terpotong.')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                        <x-heroicon-o-check class="mr-2 w-5 h-5" />Konfirmasi & Potong Stok
+                                    </button>
+                                </form>
+                                @endif
+
+                                {{-- Mulai Diproses Dapur (dari Terkonfirmasi) --}}
+                                @if(in_array($pesanan->status_pesanan_id, ['terkonfirmasi', 'dikonfirmasi']))
+                                <form action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST" onsubmit="return confirm('Mulai proses dapur untuk pesanan ini?')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="diproses">
+                                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                        <x-heroicon-o-sparkles class="mr-2 w-5 h-5" />Mulai Proses Dapur
+                                    </button>
+                                </form>
+                                @endif
+
+                                {{-- Tandai Siap Kirim (dari Diproses) --}}
+                                @if($pesanan->status_pesanan_id === 'diproses')
+                                <form action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST" onsubmit="return confirm('Tandai pesanan sebagai Siap Dikirim?')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="menunggu_pengiriman">
+                                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                        <x-heroicon-o-cube class="mr-2 w-5 h-5" />Tandai Siap Dikirim
+                                    </button>
+                                </form>
+                                @endif
+
+                                {{-- Tandai Dikirim (dari Menunggu Pengiriman) --}}
+                                @if($pesanan->status_pesanan_id === 'menunggu_pengiriman')
+                                <form action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST" onsubmit="return confirm('Konfirmasi: pesanan sudah dikirim?')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="dikirim">
+                                    <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                        <x-heroicon-o-truck class="mr-2 w-5 h-5" />Tandai Dikirim
+                                    </button>
+                                </form>
+                                @endif
+
+                                {{-- Tandai Selesai (dari Dikirim) --}}
+                                @if($pesanan->status_pesanan_id === 'dikirim')
+                                <form action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST" onsubmit="return confirm('Tandai pesanan sebagai Selesai?')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="selesai">
+                                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                        <x-heroicon-o-flag class="mr-2 w-5 h-5" />Tandai Selesai
+                                    </button>
+                                </form>
+                                @endif
+
+                                {{-- Batalkan (semua status kecuali selesai) --}}
+                                <button @click="showBatalModal = true" type="button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                    <x-heroicon-o-x-mark class="mr-2 w-5 h-5" />Batalkan Pesanan
+                                </button>
+                            </div>
+
+                            {{-- Modal Pembatalan --}}
+                            <div x-show="showBatalModal" style="display:none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                                    <div x-show="showBatalModal" x-transition.opacity class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showBatalModal = false"></div>
+                                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                                    <div x-show="showBatalModal" x-transition class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                        <form action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="dibatalkan">
+                                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                                <div class="sm:flex sm:items-start">
+                                                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                                        <x-heroicon-o-exclamation-triangle class="text-red-600 w-5 h-5" />
+                                                    </div>
+                                                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Batalkan Pesanan</h3>
+                                                        <div class="mt-2">
+                                                            <p class="text-sm text-gray-500 mb-2">Masukkan alasan pembatalan dan kebijakan refund (jika ada).</p>
+                                                            <textarea name="alasan_batal" rows="3" required class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm" placeholder="Contoh: Dibatalkan pelanggan H-1, DP Hangus 50%"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                                <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm">Konfirmasi Batal</button>
+                                                <button type="button" @click="showBatalModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Kembali</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($pesanan->status_pesanan_id === 'ditinjau')
+                        <div class="mt-8 border-t pt-6 text-center">
+                            <p class="text-xs text-gray-400 mt-2">Gunakan tombol "Konfirmasi & Potong Stok" di atas untuk memproses pesanan ini.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@endsection

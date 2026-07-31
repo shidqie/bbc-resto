@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\Role;
+use App\Models\Pengguna;
+use App\Models\Peran;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -14,7 +14,7 @@ class UserController extends Controller
     {
         $type = $request->get('type', 'pegawai');
         
-        $query = User::with('role')->orderBy('created_at', 'desc');
+        $query = Pengguna::with('role')->orderBy('dibuat_pada', 'desc');
 
         if ($type === 'pelanggan') {
             // Only Konsumen
@@ -44,7 +44,7 @@ class UserController extends Controller
         $users = $query->paginate(10)->withQueryString();
         
         // Roles for the create/edit modal
-        $roles = Role::orderBy('id')->get();
+        $roles = Peran::orderBy('id')->get();
         
         return view('users.index', compact('users', 'roles', 'type', 'pageTitle', 'pageDescription'));
     }
@@ -56,11 +56,11 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'phone_number' => 'nullable|string|max:20',
-            'role_id' => 'required|exists:roles,id',
+            'peran_id' => 'required|exists:peran,id',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        User::create($validated);
+        Pengguna::create($validated);
 
         return redirect()->route('users.index')->with('success', 'Pengguna berhasil ditambahkan.');
     }
@@ -71,12 +71,12 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone_number' => 'nullable|string|max:20',
-            'role_id' => 'required|exists:roles,id',
+            'peran_id' => 'required|exists:peran,id',
         ]);
 
         if ($request->filled('password')) {
             $request->validate(['password' => 'string|min:8']);
-            $validated['password'] = Hash::make($request->password);
+            $validated['password'] = Hash::make($request->kata_sandi);
         }
 
         $user->update($validated);

@@ -1,7 +1,7 @@
 <section class="space-y-4">
     <header class="pb-3 border-b border-red-100">
         <h2 class="text-base font-extrabold text-red-700 flex items-center gap-2">
-            <i class="fa-solid fa-triangle-exclamation text-red-600"></i> Hapus Akun
+            <x-heroicon-o-exclamation-triangle class="text-red-600 w-5 h-5" /> Hapus Akun
         </h2>
         <p class="mt-1 text-xs text-gray-500 font-medium">
             Setelah akun Anda dihapus, semua sumber daya dan data akan dihapus secara permanen. Sebelum menghapus akun, pastikan Anda telah mengunduh data penting yang ingin disimpan.
@@ -13,7 +13,7 @@
         x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
         class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2"
     >
-        <i class="fa-solid fa-trash-can text-xs"></i> Hapus Akun Saya
+        <x-heroicon-o-trash class="w-3 h-3" /> Hapus Akun Saya
     </button>
 
     <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
@@ -22,7 +22,7 @@
             @method('delete')
 
             <h2 class="text-lg font-extrabold text-gray-900 flex items-center gap-2 mb-2">
-                <i class="fa-solid fa-triangle-exclamation text-red-600"></i> Apakah Anda yakin ingin menghapus akun?
+                <x-heroicon-o-exclamation-triangle class="text-red-600 w-5 h-5" /> Apakah Anda yakin ingin menghapus akun?
             </h2>
 
             <p class="text-xs text-gray-500 font-medium leading-relaxed">

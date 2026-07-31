@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="min-h-screen bg-[#F8FAFC] text-[#111827] font-sans p-6 md:p-8 space-y-6">
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div class="w-full p-6 space-y-6">
 
 
 
@@ -64,55 +64,11 @@
                         <p class="text-xs text-slate-400 font-medium">Grafik akumulasi omset harian resto & catering</p>
                     </div>
                     <span class="px-3 py-1 bg-emerald-50 text-[#0F2E23] text-xs font-bold rounded-xl border border-emerald-100">
-                        <i class="fa-solid fa-chart-line mr-1"></i> Realtime
+                        <x-heroicon-o-chart-bar class="mr-1 w-5 h-5" /> Realtime
                     </span>
                 </div>
                 <div class="h-64 w-full relative">
                     <canvas id="incomeChart"></canvas>
-                </div>
-            </div>
-
-            {{-- Menu Terlaris (1 Col) --}}
-            @php
-                $topMenus = \App\Models\Menu::where('status', 'aktif')->take(4)->get();
-                if ($topMenus->isEmpty()) {
-                    $topMenus = \App\Models\Menu::take(4)->get();
-                }
-                $dummySold = [48, 32, 24, 18];
-            @endphp
-            <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-                        <h2 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
-                            <i class="fa-solid fa-fire text-amber-500 text-sm"></i> Menu Terlaris
-                        </h2>
-                        <span class="text-xs text-slate-400 font-medium">Top 4</span>
-                    </div>
-
-                    <div class="space-y-3">
-                        @forelse($topMenus as $idx => $m)
-                            @php
-                                $qty = $dummySold[$idx] ?? rand(12, 25);
-                                $rankBadge = ['bg-amber-100 text-amber-800 border-amber-200', 'bg-slate-100 text-slate-700 border-slate-200', 'bg-amber-50 text-amber-900 border-amber-200', 'bg-slate-50 text-slate-600 border-slate-200'][$idx] ?? 'bg-slate-50 text-slate-600 border-slate-200';
-                            @endphp
-                            <div class="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 transition-all border border-slate-100">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <span class="w-7 h-7 rounded-xl {{ $rankBadge }} border text-xs font-black flex items-center justify-center shrink-0">
-                                        {{ $idx + 1 }}
-                                    </span>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-extrabold text-slate-900 truncate">{{ $m->nama }}</p>
-                                        <p class="text-[11px] text-slate-400 font-medium">Rp {{ number_format($m->harga, 0, ',', '.') }}</p>
-                                    </div>
-                                </div>
-                                <span class="text-xs font-extrabold text-[#0F2E23] bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-xl shrink-0">
-                                    {{ $qty }} Porsi
-                                </span>
-                            </div>
-                        @empty
-                            <div class="py-8 text-center text-slate-400 text-xs">Belum ada data menu.</div>
-                        @endforelse
-                    </div>
                 </div>
             </div>
 
@@ -200,7 +156,7 @@
                 <div>
                     <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
                         <h3 class="font-extrabold text-slate-900 text-base">Peringatan Stok</h3>
-                        <a href="{{ route('stok-menipis.index') }}" class="text-xs font-extrabold text-red-600 hover:underline shrink-0">
+                        <a href="{{ route('bahan-baku.index') }}" class="text-xs font-extrabold text-red-600 hover:underline shrink-0">
                             Lihat Semua &rarr;
                         </a>
                     </div>
@@ -210,7 +166,7 @@
                             <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100/80 transition-colors">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <div class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold shrink-0">
-                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        <x-heroicon-o-exclamation-triangle class="w-5 h-5" />
                                     </div>
                                     <div class="min-w-0">
                                         <p class="font-extrabold text-slate-900 text-xs truncate">{{ $stok->nama_bahan }}</p>
@@ -224,7 +180,7 @@
                         @empty
                             <div class="py-8 text-center text-slate-400 text-xs space-y-2">
                                 <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-lg">
-                                    <i class="fa-solid fa-circle-check"></i>
+                                    <x-heroicon-o-check-circle class="w-5 h-5" />
                                 </div>
                                 <p class="font-bold text-slate-700">Semua stok aman</p>
                             </div>

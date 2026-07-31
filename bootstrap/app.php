@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
+        $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $middleware->validateCsrfTokens(except: [
             '/api/midtrans/callback',
             '/api/payment/notification',

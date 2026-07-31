@@ -2,26 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class DetailPesanan extends Model
+class DetailPesanan extends BaseModel
 {
-    protected $fillable = [
-        'pesanan_id',
-        'menu_id',
-        'jumlah',
-        'harga_satuan',
-        'subtotal',
-        'catatan'
-    ];
+    protected $table = 'detail_pesanan';
+    protected $guarded = [];
 
-    public function pesanan()
-    {
-        return $this->belongsTo(Pesanan::class);
-    }
+    public function pesanan() { return $this->belongsTo(Pesanan::class, 'pesanan_id'); }
 
-    public function menu()
-    {
-        return $this->belongsTo(Menu::class);
-    }
+    public function menu() { return $this->belongsTo(Menu::class, 'menu_id'); }
 }

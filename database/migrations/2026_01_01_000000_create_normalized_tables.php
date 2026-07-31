@@ -58,8 +58,8 @@ return new class extends Migration
             $table->timestamp('diperbarui_pada')->useCurrent()->useCurrentOnUpdate();
         });
 
-        // 6. jenis_produk
-        Schema::create('jenis_produk', function (Blueprint $table) {
+        // 6. jenis_menu
+        Schema::create('jenis_menu', function (Blueprint $table) {
             $table->id();
             $table->string('kode_jenis', 30)->unique();
             $table->string('nama_jenis', 50)->unique();
@@ -75,13 +75,13 @@ return new class extends Migration
             $table->timestamp('diperbarui_pada')->useCurrent()->useCurrentOnUpdate();
         });
 
-        // 8. produk
-        Schema::create('produk', function (Blueprint $table) {
+        // 8. menu
+        Schema::create('menu', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('jenis_produk_id')->constrained('jenis_produk');
+            $table->foreignId('jenis_menu_id')->constrained('jenis_menu');
             $table->foreignId('kategori_menu_id')->nullable()->constrained('kategori_menu');
-            $table->string('kode_produk', 30)->unique();
-            $table->string('nama_produk', 150);
+            $table->string('kode_menu', 30)->unique();
+            $table->string('nama_menu', 150);
             $table->text('deskripsi')->nullable();
             $table->decimal('harga_jual', 15, 2);
             $table->string('foto', 255)->nullable();
@@ -92,7 +92,7 @@ return new class extends Migration
 
         // 9. ketentuan_paket
         Schema::create('ketentuan_paket', function (Blueprint $table) {
-            $table->foreignId('produk_id')->primary()->constrained('produk');
+            $table->foreignId('menu_id')->primary()->constrained('menu');
             $table->integer('minimal_pemesanan')->default(1);
             $table->integer('minimal_hari_pemesanan')->default(0);
             $table->decimal('persentase_uang_muka', 5, 2)->default(0);
@@ -126,16 +126,16 @@ return new class extends Migration
             $table->timestamp('diperbarui_pada')->useCurrent()->useCurrentOnUpdate();
         });
 
-        // 13. resep_produk
-        Schema::create('resep_produk', function (Blueprint $table) {
+        // 13. resep_menu
+        Schema::create('resep_menu', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produk_id')->constrained('produk');
+            $table->foreignId('menu_id')->constrained('menu');
             $table->foreignId('bahan_baku_id')->constrained('bahan_baku');
             $table->decimal('jumlah', 15, 3);
             $table->foreignId('satuan_id')->constrained('satuan');
             $table->timestamp('dibuat_pada')->useCurrent();
             $table->timestamp('diperbarui_pada')->useCurrent()->useCurrentOnUpdate();
-            $table->unique(['produk_id', 'bahan_baku_id']);
+            $table->unique(['menu_id', 'bahan_baku_id']);
         });
 
         // 14. jenis_pesanan
@@ -177,7 +177,7 @@ return new class extends Migration
         Schema::create('detail_pesanan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pesanan_id')->constrained('pesanan');
-            $table->foreignId('produk_id')->constrained('produk');
+            $table->foreignId('menu_id')->constrained('menu');
             $table->integer('jumlah');
             $table->decimal('harga_satuan', 15, 2);
             $table->decimal('jumlah_diskon', 15, 2)->default(0);
@@ -467,14 +467,14 @@ return new class extends Migration
         Schema::dropIfExists('pesanan');
         Schema::dropIfExists('status_pesanan');
         Schema::dropIfExists('jenis_pesanan');
-        Schema::dropIfExists('resep_produk');
+        Schema::dropIfExists('resep_menu');
         Schema::dropIfExists('bahan_baku');
         Schema::dropIfExists('kategori_bahan_baku');
         Schema::dropIfExists('satuan');
         Schema::dropIfExists('ketentuan_paket');
-        Schema::dropIfExists('produk');
+        Schema::dropIfExists('menu');
         Schema::dropIfExists('kategori_menu');
-        Schema::dropIfExists('jenis_produk');
+        Schema::dropIfExists('jenis_menu');
         Schema::dropIfExists('meja');
         Schema::dropIfExists('status_meja');
         Schema::dropIfExists('pelanggan');

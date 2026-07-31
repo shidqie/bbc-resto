@@ -10,15 +10,15 @@
 | 3. Profile (User Profile Pill Avatar Dropdown)
 --}}
 
-<header class="no-print h-16 bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 flex items-center justify-between shrink-0 z-[100] shadow-xs">
+<header class="no-print sticky top-0 h-16 bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 flex items-center justify-between shrink-0 z-[100] shadow-xs">
     {{-- Area Kiri: Halo Role Greeting (Hanya Muncul di Dashboard & Point of Sale) --}}
     <div class="flex items-center gap-3">
         @if(request()->routeIs('dashboard') || request()->routeIs('pos.*'))
             @php
-                $roleName = auth()->user()->role->name ?? 'Admin';
+                $roleName = auth()->user()->peran->nama_peran ?? 'Admin';
             @endphp
             <h2 class="text-base font-extrabold text-gray-900 flex items-center gap-2 tracking-tight">
-                <i class="fa-solid fa-user-shield text-[#0F2E23] text-sm"></i> Halo, {{ $roleName }}
+                <x-heroicon-o-shield-check class="text-[#0F2E23] w-4 h-4" /> Halo, {{ $roleName }}
             </h2>
         @endif
     </div>
@@ -27,9 +27,9 @@
         {{-- 3. Profile --}}
         <div class="relative" x-data="{ userMenuOpen: false }" @click.outside="userMenuOpen = false">
             <button @click="userMenuOpen = !userMenuOpen" class="flex items-center gap-2 p-1 pl-3 bg-gray-100/80 hover:bg-gray-200/80 border border-gray-200/50 rounded-full transition-all focus:outline-none shadow-2xs">
-                <span class="text-xs font-bold text-gray-800 hidden md:inline truncate max-w-[120px]">{{ auth()->user()->name ?? 'Admin' }}</span>
+                <span class="text-xs font-bold text-gray-800 hidden md:inline truncate max-w-[120px]">{{ auth()->user()->nama ?? 'Admin' }}</span>
                 <div class="w-8 h-8 rounded-full bg-[#111827] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                    {{ substr(auth()->user()->name ?? 'A', 0, 1) }}
+                    {{ substr(auth()->user()->nama ?? 'A', 0, 1) }}
                 </div>
             </button>
 
@@ -46,8 +46,8 @@
                 
                 {{-- Header Profile Info --}}
                 <div class="px-3 py-2 border-b border-gray-100 mb-1">
-                    <p class="text-xs font-bold text-gray-900 truncate">{{ auth()->user()->name ?? 'User' }}</p>
-                    <p class="text-[10px] text-gray-500 truncate">{{ auth()->user()->role->name ?? 'Admin' }}</p>
+                    <p class="text-xs font-bold text-gray-900 truncate">{{ auth()->user()->nama ?? 'User' }}</p>
+                    <p class="text-[10px] text-gray-500 truncate">{{ auth()->user()->peran->nama_peran ?? 'Admin' }}</p>
                 </div>
 
                 {{-- My Profile Group --}}
@@ -56,13 +56,13 @@
                     
                     {{-- Edit Profile Link --}}
                     <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors">
-                        <i class="fa-solid fa-user-pen text-[#0F2E23] text-xs w-4"></i>
+                        <x-heroicon-o-pencil class="text-[#0F2E23] w-3 h-3 w-4" />
                         <span>Edit Profile</span>
                     </a>
 
                     {{-- Ubah Password Link --}}
                     <a href="{{ route('profile.edit') }}#update-password" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors">
-                        <i class="fa-solid fa-key text-amber-600 text-xs w-4"></i>
+                        <x-heroicon-o-key class="text-amber-600 w-3 h-3 w-4" />
                         <span>Ubah Password</span>
                     </a>
                 </div>
@@ -73,7 +73,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 transition-colors">
-                        <i class="fa-solid fa-right-from-bracket text-xs w-4"></i>
+                        <x-heroicon-o-arrow-right-on-rectangle class="w-3 h-3 w-4" />
                         <span>Log Out</span>
                     </button>
                 </form>

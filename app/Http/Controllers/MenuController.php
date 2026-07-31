@@ -6,6 +6,7 @@ use App\Models\Menu;
 use App\Models\KategoriMenu;
 use App\Models\BahanBaku;
 use App\Models\ResepMenu;
+use App\Models\JenisMenu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -14,19 +15,12 @@ class MenuController extends Controller
 {
     public function index(Request $request)
     {
-        // Auto-fill kode_menu untuk data lama yang belum punya kode
-        $missingCodes = Menu::whereNull('kode_menu')->orderBy('id', 'asc')->get();
-        foreach ($missingCodes as $m) {
-            $m->kode_menu = Menu::generateKodeMenu();
-            $m->save();
-        }
-
-        $query = Menu::with(['kategori', 'resep.bahanBaku.satuan']);
+        $query = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'jenis_menu']);
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
+                $q->where('nama_menu', 'like', "%{$search}%")
                   ->orWhere('kode_menu', 'like', "%{$search}%");
             });
         }
@@ -36,179 +30,224 @@ class MenuController extends Controller
         }
 
         if ($request->has('jenis_menu') && $request->jenis_menu != '') {
-            $query->where('jenis_menu', $request->jenis_menu);
+            $query->where('jenis_menu_id', $request->jenis_menu);
         }
 
         $menus = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
 
-        // Kategori dengan jumlah menu (untuk tab Kategori, difilter jika ada param jenis)
-        $katQuery = KategoriMenu::withCount('menus');
-        if ($request->has('jenis') && $request->jenis !== 'semua') {
-            $katQuery->where('jenis_menu', $request->jenis);
-        }
-        $kategoris = $katQuery->orderBy('id', 'asc')->paginate(10)->withQueryString();
+        $kategoris = KategoriMenu::withCount('menu')->orderBy('id', 'asc')->paginate(10)->withQueryString();
+        $allKategoris = KategoriMenu::orderBy('nama_kategori', 'asc')->get();
         
-        $bahanBakus = BahanBaku::with('satuan')->where('status', 1)->orderBy('nama_bahan')->get();
+        $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
 
         $stats = [
             'total' => Menu::count(),
-            'dine_in' => Menu::where('jenis_menu', 'dine_in')->count(),
-            'catering' => Menu::where('jenis_menu', 'catering')->count(),
-            'nasi_box' => Menu::where('jenis_menu', 'nasi_box')->count(),
+            'dine_in' => Menu::where('jenis_menu_id', 1)->count(),
+            'catering' => Menu::where('jenis_menu_id', 2)->count(),
+            'nasi_box' => Menu::where('jenis_menu_id', 3)->count(),
         ];
 
-        return view('menu.index', compact('menus', 'kategoris', 'bahanBakus', 'stats'));
+        return view('menu.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'stats'));
     }
 
     public function create()
     {
-        $kategoris = KategoriMenu::orderBy('nama')->get();
-        $bahanBakus = BahanBaku::with('satuan')->where('status', 1)->orderBy('nama_bahan')->get();
-        return view('menu.create', compact('kategoris', 'bahanBakus'));
+        $kategoris = KategoriMenu::orderBy('nama_kategori')->get();
+        $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
+        $jenis_menu = JenisMenu::all();
+        return view('menu.menu.create', compact('kategoris', 'bahanBakus', 'jenis_menu'));
     }
 
     public function store(Request $request)
     {
+        $namaMenu = $request->input('nama_menu') ?? $request->input('nama');
+        $hargaJual = $request->input('harga_jual') ?? $request->input('harga');
+        
+        $request->merge([
+            'nama_menu' => $namaMenu,
+            'harga_jual' => $hargaJual,
+        ]);
+
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'kategori_menu_id' => 'required|exists:kategori_menus,id',
-            'jenis_menu' => 'required|in:dine_in,catering,nasi_box',
-            'harga' => 'required|numeric|min:0',
+            'nama_menu' => 'required|string|max:255',
+            'kategori_menu_id' => 'required|exists:kategori_menu,id',
+            'harga_jual' => 'required|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'status' => 'required|in:tersedia,nonaktif,habis',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'bahan_baku_id' => 'nullable|array',
             'jumlah_kebutuhan' => 'nullable|array',
         ]);
 
-        $data = $request->except(['foto', 'bahan_baku_id', 'jumlah_kebutuhan']);
-        $data['kode_menu'] = Menu::generateKodeMenu();
+        $jenisId = match((string)$request->input('jenis_menu_id')) {
+            'catering', '2' => 2,
+            'nasi_box', '3' => 3,
+            default => 1
+        };
 
-        if ($request->hasFile('foto')) {
-            $path = $request->file('foto')->store('menu', 'public');
-            $data['foto'] = $path;
-        }
+        $statusAktif = $request->has('status_aktif') 
+            ? (bool)$request->status_aktif 
+            : ($request->input('status') !== 'nonaktif');
 
-        $menu = Menu::create($data);
+        return DB::transaction(function () use ($request, $namaMenu, $hargaJual, $jenisId, $statusAktif) {
+            $data = [
+                'nama_menu' => $namaMenu,
+                'kode_menu' => 'PRD-' . strtoupper(uniqid()),
+                'kategori_menu_id' => $request->kategori_menu_id,
+                'jenis_menu_id' => $jenisId,
+                'harga_jual' => $hargaJual,
+                'deskripsi' => $request->deskripsi,
+                'status_aktif' => $statusAktif,
+            ];
 
-        // Process BOM (Komposisi Bahan Baku)
-        $hasBom = false;
-        if ($request->has('bahan_baku_id') && is_array($request->bahan_baku_id)) {
-            foreach ($request->bahan_baku_id as $idx => $bahanId) {
-                $qty = $request->jumlah_kebutuhan[$idx] ?? 0;
-                if ($bahanId && $qty > 0) {
-                    $bahan = BahanBaku::find($bahanId);
-                    ResepMenu::create([
-                        'menu_id' => $menu->id,
-                        'bahan_baku_id' => $bahanId,
-                        'jumlah_kebutuhan' => $qty,
-                        'satuan' => $bahan->satuan->nama_satuan ?? 'porsi',
-                    ]);
-                    $hasBom = true;
+            if ($request->hasFile('foto')) {
+                $path = $request->file('foto')->store('menu', 'public');
+                $data['foto'] = $path;
+            }
+
+            $menu = Menu::create($data);
+
+            if ($request->has('bahan_baku_id') && is_array($request->bahan_baku_id)) {
+                $jumlahCol = DB::getSchemaBuilder()->hasColumn('resep_menu', 'jumlah_kebutuhan') ? 'jumlah_kebutuhan' : 'jumlah';
+                $hasSatuanCol = DB::getSchemaBuilder()->hasColumn('resep_menu', 'satuan_id');
+
+                foreach ($request->bahan_baku_id as $idx => $bahanId) {
+                    $qty = $request->jumlah_kebutuhan[$idx] ?? 0;
+                    if ($bahanId && $qty > 0) {
+                        $bahan = BahanBaku::find($bahanId);
+                        $resepData = [
+                            'menu_id' => $menu->id,
+                            'bahan_baku_id' => $bahanId,
+                            $jumlahCol => $qty,
+                        ];
+                        if ($hasSatuanCol) {
+                            $resepData['satuan_id'] = $bahan->satuan_id ?? 1;
+                        }
+                        ResepMenu::create($resepData);
+                    }
                 }
             }
-        }
 
-        // Skenario Alternatif A3: Peringatan jika menyimpan menu tanpa mengisi BOM
-        if (!$hasBom) {
-            return redirect()->route('menu.index')->with([
-                'success' => "Menu {$menu->kode_menu} - {$menu->nama} berhasil disimpan.",
-                'warning_bom' => "Peringatan (Skenario A3): Menu '{$menu->nama}' disimpan tanpa data BOM (Komposisi Bahan Baku). Perhitungan otomatis kebutuhan bahan baku saat pesanan masuk tidak akan berjalan untuk menu ini sampai data BOM dilengkapi."
-            ]);
-        }
-
-        return redirect()->route('menu.index')->with('success', "Menu {$menu->kode_menu} - {$menu->nama} beserta komposisi BOM berhasil disimpan.");
+            return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' berhasil disimpan.");
+        });
     }
 
     public function edit(Menu $menu)
     {
-        $menu->load('resep.bahanBaku.satuan');
-        $kategoris = KategoriMenu::orderBy('nama')->get();
-        $bahanBakus = BahanBaku::with('satuan')->where('status', 1)->orderBy('nama_bahan')->get();
-        return view('menu.edit', compact('menu', 'kategoris', 'bahanBakus'));
+        $menu->load('resep_menu.bahan_baku.satuan');
+        $kategoris = KategoriMenu::orderBy('nama_kategori')->get();
+        $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
+        $jenis_menu = JenisMenu::all();
+        return view('menu.menu.edit', compact('menu', 'kategoris', 'bahanBakus', 'jenis_menu'));
     }
 
     public function update(Request $request, Menu $menu)
     {
+        $namaMenu = $request->input('nama_menu') ?? $request->input('nama');
+        $hargaJual = $request->input('harga_jual') ?? $request->input('harga');
+
+        $request->merge([
+            'nama_menu' => $namaMenu,
+            'harga_jual' => $hargaJual,
+        ]);
+
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'kategori_menu_id' => 'required|exists:kategori_menus,id',
-            'jenis_menu' => 'required|in:dine_in,catering,nasi_box',
-            'harga' => 'required|numeric|min:0',
+            'nama_menu' => 'required|string|max:255',
+            'kategori_menu_id' => 'required|exists:kategori_menu,id',
+            'harga_jual' => 'required|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'status' => 'required|in:tersedia,nonaktif,habis',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'bahan_baku_id' => 'nullable|array',
             'jumlah_kebutuhan' => 'nullable|array',
         ]);
 
-        $data = $request->except(['foto', 'bahan_baku_id', 'jumlah_kebutuhan']);
+        $jenisId = match((string)$request->input('jenis_menu_id')) {
+            'catering', '2' => 2,
+            'nasi_box', '3' => 3,
+            default => 1
+        };
 
-        if ($request->hasFile('foto')) {
-            if ($menu->foto && Storage::disk('public')->exists($menu->foto)) {
-                Storage::disk('public')->delete($menu->foto);
+        $statusAktif = $request->has('status_aktif') 
+            ? (bool)$request->status_aktif 
+            : ($request->input('status') !== 'nonaktif');
+
+        return DB::transaction(function () use ($request, $menu, $namaMenu, $hargaJual, $jenisId, $statusAktif) {
+            $data = [
+                'nama_menu' => $namaMenu,
+                'kategori_menu_id' => $request->kategori_menu_id,
+                'jenis_menu_id' => $jenisId,
+                'harga_jual' => $hargaJual,
+                'deskripsi' => $request->deskripsi,
+                'status_aktif' => $statusAktif,
+            ];
+
+            if ($request->hasFile('foto')) {
+                if ($menu->foto && Storage::disk('public')->exists($menu->foto)) {
+                    Storage::disk('public')->delete($menu->foto);
+                }
+                $path = $request->file('foto')->store('menu', 'public');
+                $data['foto'] = $path;
             }
-            $path = $request->file('foto')->store('menu', 'public');
-            $data['foto'] = $path;
-        }
 
-        $menu->update($data);
+            $menu->update($data);
 
-        // Re-sync BOM
-        $menu->resep()->delete();
-        $hasBom = false;
+            $menu->resep_menu()->delete();
 
-        if ($request->has('bahan_baku_id') && is_array($request->bahan_baku_id)) {
-            foreach ($request->bahan_baku_id as $idx => $bahanId) {
-                $qty = $request->jumlah_kebutuhan[$idx] ?? 0;
-                if ($bahanId && $qty > 0) {
-                    $bahan = BahanBaku::find($bahanId);
-                    ResepMenu::create([
-                        'menu_id' => $menu->id,
-                        'bahan_baku_id' => $bahanId,
-                        'jumlah_kebutuhan' => $qty,
-                        'satuan' => $bahan->satuan->nama_satuan ?? 'porsi',
-                    ]);
-                    $hasBom = true;
+            if ($request->has('bahan_baku_id') && is_array($request->bahan_baku_id)) {
+                $jumlahCol = DB::getSchemaBuilder()->hasColumn('resep_menu', 'jumlah_kebutuhan') ? 'jumlah_kebutuhan' : 'jumlah';
+                $hasSatuanCol = DB::getSchemaBuilder()->hasColumn('resep_menu', 'satuan_id');
+
+                foreach ($request->bahan_baku_id as $idx => $bahanId) {
+                    $qty = $request->jumlah_kebutuhan[$idx] ?? 0;
+                    if ($bahanId && $qty > 0) {
+                        $bahan = BahanBaku::find($bahanId);
+                        $resepData = [
+                            'menu_id' => $menu->id,
+                            'bahan_baku_id' => $bahanId,
+                            $jumlahCol => $qty,
+                        ];
+                        if ($hasSatuanCol) {
+                            $resepData['satuan_id'] = $bahan->satuan_id ?? 1;
+                        }
+                        ResepMenu::create($resepData);
+                    }
                 }
             }
-        }
 
-        if (!$hasBom) {
-            return redirect()->route('menu.index')->with([
-                'success' => "Menu {$menu->kode_menu} berhasil diperbarui.",
-                'warning_bom' => "Peringatan (Skenario A3): Menu '{$menu->nama}' tidak memiliki data BOM (Komposisi Bahan Baku). Perhitungan otomatis kebutuhan bahan baku tidak akan berjalan untuk menu ini."
-            ]);
-        }
-
-        return redirect()->route('menu.index')->with('success', "Menu {$menu->kode_menu} - {$menu->nama} beserta komposisi BOM berhasil diperbarui.");
+            return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' berhasil diperbarui.");
+        });
     }
 
     public function show(Menu $menu)
     {
-        $menu->load(['kategori', 'resep.bahanBaku.satuan']);
-        return view('menu.show', compact('menu'));
+        $menu->load(['kategori_menu', 'resep_menu.bahan_baku.satuan']);
+        return view('menu.menu.show', compact('menu'));
     }
 
-    // Skenario Alternatif A2: Menonaktifkan menu (bukan menghapus)
     public function toggleStatus(Menu $menu)
     {
-        $newStatus = ($menu->status === 'nonaktif') ? 'tersedia' : 'nonaktif';
-        $menu->update(['status' => $newStatus]);
-
-        $statusText = ($newStatus === 'nonaktif') ? 'Dinonaktifkan' : 'Diaktifkan';
-        return redirect()->route('menu.index')->with('success', "Status menu '{$menu->nama}' ({$menu->kode_menu}) berhasil diubah menjadi {$statusText}.");
+        $newStatus = !$menu->status_aktif;
+        $menu->update(['status_aktif' => $newStatus]);
+        return redirect()->route('menu.index')->with('success', "Status menu '{$menu->nama_menu}' berhasil diubah.");
     }
 
     public function destroy(Menu $menu)
     {
-        if ($menu->foto && Storage::disk('public')->exists($menu->foto)) {
-            Storage::disk('public')->delete($menu->foto);
+        try {
+            return DB::transaction(function () use ($menu) {
+                if ($menu->foto && Storage::disk('public')->exists($menu->foto)) {
+                    Storage::disk('public')->delete($menu->foto);
+                }
+                $menu->resep_menu()->delete();
+                $menu->komponen_paket()->delete(); // Hapus relasi komponen jika ada
+                $menu->delete();
+                return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' berhasil dihapus.");
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            $errorCode = $e->errorInfo[1] ?? $e->getCode();
+            if ($errorCode == 1451 || $errorCode == '23000' || strpos($e->getMessage(), '1451') !== false) {
+                return redirect()->route('menu.index')->with('error', "Menu '{$menu->nama_menu}' tidak dapat dihapus karena sudah ada di data pesanan. Silakan ubah status menjadi Nonaktif.");
+            }
+            return redirect()->route('menu.index')->with('error', "Gagal menghapus menu: Terjadi kesalahan database. " . $e->getMessage());
         }
-
-        $menu->resep()->delete();
-        $menu->delete();
-
-        return redirect()->route('menu.index')->with('success', 'Menu berhasil dihapus.');
     }
 }

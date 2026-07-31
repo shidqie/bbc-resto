@@ -6,7 +6,7 @@
 | Menggunakan Alpine.js (x-data, x-show, x-collapse).
 |
 | Variabel:
-|   - $icon   (string) : FontAwesome icon class (contoh: "fa-cube")
+|   - $icon   (string) : Heroicon name (contoh: "cube", "sparkles")
 |   - $label  (string) : Teks grup menu (contoh: "Bahan Baku")
 |   - $isOpen (bool)   : Apakah submenu terbuka secara default
 |   - $items  (array)  : Array of array(label, url, active)
@@ -18,30 +18,31 @@
 
     {{-- Main Trigger Button --}}
     <button @click="if(!sidebarOpen) { sidebarOpen = true; open = true; } else { open = !open; }" 
-            class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-[13px] transition-all duration-200 focus:outline-none group relative overflow-hidden"
-            :class="open ? 'text-white bg-gray-800/60 font-medium' : 'text-gray-500 hover:text-white hover:bg-gray-800/50 font-medium'"
+            class="flex items-center justify-between w-full px-3 py-3 rounded-lg text-[15px] transition-all duration-200 focus:outline-none group relative overflow-hidden"
+            :class="open ? 'text-white bg-white/5 font-semibold' : 'text-gray-300 hover:text-white hover:bg-white/5 font-medium'"
             x-bind:title="!sidebarOpen ? '{{ $label }}' : ''">
         @if($hasActiveChild)
         <span class="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-white rounded-r-full"></span>
         @endif
-        <div class="flex items-center gap-3">
-            <i class="fa-solid {{ $icon }} w-4 text-center text-[13px] shrink-0 transition-colors duration-200"
-               :class="open ? 'text-white' : 'text-gray-500 group-hover:text-white'"></i>
-            <span x-show="sidebarOpen" class="whitespace-nowrap leading-none" :class="open ? 'font-semibold' : ''">{{ $label }}</span>
+        <div class="flex items-center gap-3 flex-1 overflow-hidden">
+            <x-dynamic-component :component="$icon" 
+               class="w-6 h-6 text-center shrink-0 transition-colors duration-200"
+               x-bind:class="open ? 'text-white' : 'text-gray-400 group-hover:text-white'" />
+            <span x-show="sidebarOpen" class="whitespace-nowrap leading-none truncate text-left" :class="open ? 'font-semibold' : ''">{{ $label }}</span>
         </div>
-        <i x-show="sidebarOpen" 
-           class="fa-solid fa-chevron-down text-[9px] shrink-0 transition-transform duration-200"
-           :class="open ? 'rotate-180 text-gray-300' : 'text-gray-600 group-hover:text-gray-400'"></i>
+        <x-heroicon-s-chevron-down x-show="sidebarOpen" 
+           class="w-3 h-3 shrink-0 transition-transform duration-200"
+           x-bind:class="open ? 'rotate-180 text-gray-300' : 'text-gray-600 group-hover:text-gray-400'" />
     </button>
 
     {{-- Dropdown (expanded sidebar) --}}
     <div x-show="open && sidebarOpen" x-collapse class="mt-0.5 py-0.5 space-y-0.5" style="display: none;">
         @foreach($items as $item)
             <a href="{{ $item['url'] }}" 
-               class="flex items-center gap-2.5 ml-3 pl-5 pr-3 py-2 rounded-lg text-[12px] border-l transition-all duration-150
+               class="flex items-center gap-2.5 ml-3 pl-5 pr-3 py-2.5 rounded-lg text-[14px] border-l transition-all duration-150
                       {{ $item['active'] 
-                          ? 'border-white/30 text-white font-semibold bg-gray-800/50' 
-                          : 'border-gray-800 text-gray-500 hover:text-white hover:bg-gray-800/30 hover:border-gray-700' }}">
+                          ? 'border-white/50 text-white font-semibold bg-white/10 shadow-sm' 
+                          : 'border-white/10 text-gray-300 hover:text-white hover:bg-white/5 hover:border-white/30' }}">
                 {{ $item['label'] }}
             </a>
         @endforeach
@@ -49,24 +50,24 @@
 
     {{-- Floating Tooltip (collapsed sidebar hover) --}}
     <div x-show="hover && !sidebarOpen" x-cloak
-         class="absolute left-full top-0 ml-2 w-48 bg-[#1a2332] border border-gray-700/60 rounded-xl shadow-2xl py-2 z-50 overflow-hidden"
+         class="absolute left-full top-0 ml-2 w-52 bg-[#1a2332] border border-gray-700/60 rounded-xl shadow-2xl py-2 z-50 overflow-hidden"
          x-transition:enter="transition ease-out duration-150"
          x-transition:enter-start="opacity-0 -translate-x-1"
          x-transition:enter-end="opacity-100 translate-x-0"
          x-transition:leave="transition ease-in duration-100"
          x-transition:leave-start="opacity-100 translate-x-0"
          x-transition:leave-end="opacity-0 -translate-x-1">
-        <div class="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-700/60 flex items-center gap-2">
-            <i class="fa-solid {{ $icon }} text-[10px] text-gray-500"></i>
+        <div class="px-3 py-2.5 text-[12px] font-bold text-gray-300 uppercase tracking-widest border-b border-gray-700/60 flex items-center gap-2">
+            <x-heroicon-o-sparkles class="{{ $icon }} w-3 h-3 text-gray-400" />
             <span>{{ $label }}</span>
         </div>
-        <div class="px-1.5 pt-1.5 space-y-0.5">
+        <div class="px-2 pt-2 pb-1.5 space-y-1">
             @foreach($items as $item)
                 <a href="{{ $item['url'] }}" 
-                   class="block px-2.5 py-1.5 text-[12px] rounded-lg transition-colors duration-150
+                   class="block px-3 py-2.5 text-[14px] rounded-lg transition-colors duration-150
                           {{ $item['active'] 
-                              ? 'bg-gray-700/60 text-white font-semibold' 
-                              : 'text-gray-400 hover:text-white hover:bg-gray-700/40' }}">
+                              ? 'bg-white/10 text-white font-semibold shadow-sm' 
+                              : 'text-gray-300 hover:text-white hover:bg-white/5' }}">
                     {{ $item['label'] }}
                 </a>
             @endforeach

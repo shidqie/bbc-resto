@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\PesananCatering;
-use App\Models\PesananNasiBox;
+use App\Models\Pesanan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -12,91 +11,70 @@ class JadwalPengantaranController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Determine selected date and month
         $selectedDate = $request->get('date', Carbon::today()->format('Y-m-d'));
         $selectedMonth = $request->get('month', Carbon::parse($selectedDate)->format('Y-m'));
         
         $startOfMonth = Carbon::parse($selectedMonth . '-01')->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
-        // 2. Fetch dates with orders in this month for calendar dots
-        $cateringDates = PesananCatering::whereBetween('tanggal_acara', [$startOfMonth, $endOfMonth])
-            ->whereNotIn('status', ['dibatalkan'])
-            ->selectRaw('DATE(tanggal_acara) as date, COUNT(*) as count')
-            ->groupBy('date')
-            ->pluck('count', 'date')->toArray();
+        // Cari semua pesanan catering dan nasibox yang ada jadwalnya dalam bulan tersebut
+        $ordersInMonth = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
+            ->whereHas('jadwal_pesanan', function($query) use ($startOfMonth, $endOfMonth) {
+                $query->whereBetween('tanggal_acara', [$startOfMonth, $endOfMonth]);
+            })
+            ->whereNotIn('status_pesanan_id', [6]) // 6 = Dibatalkan
+            ->with('jadwal_pesanan')
+            ->get();
 
-        $nasiBoxDates = PesananNasiBox::whereBetween('tanggal_acara', [$startOfMonth, $endOfMonth])
-            ->whereNotIn('status', ['dibatalkan'])
-            ->selectRaw('DATE(tanggal_acara) as date, COUNT(*) as count')
-            ->groupBy('date')
-            ->pluck('count', 'date')->toArray();
-
-        // Merge dates for calendar
         $orderDates = [];
-        $allDates = array_unique(array_merge(array_keys($cateringDates), array_keys($nasiBoxDates)));
-        foreach ($allDates as $date) {
-            $orderDates[$date] = ($cateringDates[$date] ?? 0) + ($nasiBoxDates[$date] ?? 0);
+        foreach ($ordersInMonth as $order) {
+            if ($order->jadwal_pesanan && $order->jadwal_pesanan->tanggal_acara) {
+                $dateStr = \Carbon\Carbon::parse($order->jadwal_pesanan->tanggal_acara)->format('Y-m-d');
+                if (!isset($orderDates[$dateStr])) {
+                    $orderDates[$dateStr] = 0;
+                }
+                $orderDates[$dateStr]++;
+            }
         }
 
-        // 3. Fetch orders for the selected date
         $statusFilter = $request->get('status', 'Semua');
         $search = $request->get('search');
 
-        $cateringsQuery = PesananCatering::with('paket')->whereDate('tanggal_acara', $selectedDate);
-        $nasiBoxQuery = PesananNasiBox::with('paket')->whereDate('tanggal_acara', $selectedDate);
+        $query = Pesanan::with(['jadwal_pesanan', 'detail_pesanan.menu', 'pengantaran'])
+            ->whereIn('jenis_pesanan_id', [2, 3])
+            ->whereHas('jadwal_pesanan', function($q) use ($selectedDate) {
+                $q->whereDate('tanggal_acara', $selectedDate);
+            });
 
-        // Apply filters
         if ($statusFilter !== 'Semua') {
-            $cateringsQuery->where('status', $statusFilter);
-            $nasiBoxQuery->where('status', $statusFilter);
+            $query->where('status_pesanan_id', $statusFilter);
         }
 
         if ($search) {
-            $cateringsQuery->where(function($q) use ($search) {
-                $q->where('nama_pemesan', 'like', "%{$search}%")
-                  ->orWhere('kode_pesanan', 'like', "%{$search}%");
-            });
-            $nasiBoxQuery->where(function($q) use ($search) {
-                $q->where('nama_pemesan', 'like', "%{$search}%")
-                  ->orWhere('kode_pesanan', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('nomor_pesanan', 'like', "%{$search}%")
+                  ->orWhere('catatan', 'like', "%{$search}%");
             });
         }
 
-        $caterings = $cateringsQuery->get()->map(function($item) {
-            $item->jenis = 'Catering';
-            return $item;
-        });
-
-        $nasiBoxes = $nasiBoxQuery->get()->map(function($item) {
-            $item->jenis = 'Nasi Box';
-            return $item;
-        });
-
-        // Combine and sort by waktu_acara
-        $orders = $caterings->concat($nasiBoxes)->sortBy(function($order) {
-            // If waktu_acara is null, put it at the end (23:59:59)
-            return $order->waktu_acara ? $order->waktu_acara : '23:59:59';
+        $orders = $query->get()->sortBy(function($order) {
+            return $order->jadwal_pesanan->tanggal_acara ? \Carbon\Carbon::parse($order->jadwal_pesanan->tanggal_acara)->format('H:i:s') : '23:59:59';
         })->values();
 
-        // 4. Calculate summary counts for the selected date (ignoring search filter for summary)
-        $summaryCaterings = PesananCatering::whereDate('tanggal_acara', $selectedDate)->get();
-        $summaryNasiBoxes = PesananNasiBox::whereDate('tanggal_acara', $selectedDate)->get();
-        $allSummaryOrders = $summaryCaterings->concat($summaryNasiBoxes);
+        $allSummaryOrders = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
+            ->whereHas('jadwal_pesanan', function($q) use ($selectedDate) {
+                $q->whereDate('tanggal_acara', $selectedDate);
+            })->get();
 
         $summary = [
             'Semua' => $allSummaryOrders->count(),
-            'menunggu_dp' => $allSummaryOrders->where('status', 'menunggu_dp')->count(),
-            'menunggu_konfirmasi' => $allSummaryOrders->where('status', 'menunggu_konfirmasi')->count(),
-            'terkonfirmasi' => $allSummaryOrders->where('status', 'terkonfirmasi')->count(),
-            'diproses' => $allSummaryOrders->where('status', 'diproses')->count(),
-            'dikirim' => $allSummaryOrders->where('status', 'dikirim')->count(),
-            'selesai' => $allSummaryOrders->where('status', 'selesai')->count(),
-            'lunas' => $allSummaryOrders->where('status', 'lunas')->count(),
-            'dibatalkan' => $allSummaryOrders->where('status', 'dibatalkan')->count(),
+            'baru' => $allSummaryOrders->where('status_pesanan_id', 1)->count(),
+            'diproses' => $allSummaryOrders->whereIn('status_pesanan_id', [2,3,4])->count(),
+            'selesai' => $allSummaryOrders->where('status_pesanan_id', 5)->count(),
+            'dibatalkan' => $allSummaryOrders->where('status_pesanan_id', 6)->count(),
         ];
 
-        return view('admin.jadwal.index', compact(
+        return view('order.jadwal.index', compact(
             'selectedDate', 
             'selectedMonth', 
             'startOfMonth', 
@@ -111,18 +89,13 @@ class JadwalPengantaranController extends Controller
     public function updateStatus(Request $request, $jenis, $id)
     {
         $request->validate([
-            'status' => 'required|string'
+            'status' => 'required|integer'
         ]);
 
-        if ($jenis === 'Catering') {
-            $order = PesananCatering::findOrFail($id);
-        } else {
-            $order = PesananNasiBox::findOrFail($id);
-        }
-
-        $order->status = $request->status;
+        $order = Pesanan::findOrFail($id);
+        $order->status_pesanan_id = $request->status;
         $order->save();
 
-        return response()->json(['success' => true, 'message' => 'Status berhasil diubah', 'new_status' => $order->status]);
+        return response()->json(['success' => true, 'message' => 'Status berhasil diubah', 'new_status' => $order->status_pesanan_id]);
     }
 }

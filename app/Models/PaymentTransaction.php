@@ -2,35 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PaymentTransaction extends Model
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'order_id',
-        'din_number',
-        'gross_amount',
-        'payment_type',
-        'transaction_status',
-        'qr_url',
-        'raw_response',
-        'paid_at',
-    ];
+    protected $table = 'payment_transactions';
+    protected $guarded = [];
 
     protected $casts = [
         'raw_response' => 'array',
-        'paid_at' => 'datetime',
-        'gross_amount' => 'decimal:2',
+        'gross_amount' => 'integer',
     ];
 
-    /**
-     * Scope helper to check if payment is settled/paid
-     */
-    public function isPaid(): bool
-    {
-        return in_array($this->transaction_status, ['settlement', 'capture']);
-    }
+    const CREATED_AT = 'created_at';
+    const UPDATED_AT = 'updated_at';
 }

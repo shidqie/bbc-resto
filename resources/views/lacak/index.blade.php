@@ -134,7 +134,7 @@
                                 @if(in_array($pesanan->status_bayar ?? '', ['lunas', 'paid']))
                                 <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
                                     <span class="text-gray-400 font-light">Tanggal Pelunasan</span>
-                                    <span class="font-medium text-emerald-600">{{ \Carbon\Carbon::parse($pesanan->updated_at)->format('d M Y, H:i') }} WIB</span>
+                                    <span class="font-medium text-emerald-600">{{ \Carbon\Carbon::parse($pesanan->diperbarui_pada)->format('d M Y, H:i') }} WIB</span>
                                 </div>
                                 @elseif(($pesanan->status_bayar ?? '') === 'dp_terbayar')
                                 <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
@@ -195,7 +195,7 @@
                         {{-- Action Buttons --}}
                         <div class="space-y-3 pt-2">
                             @if(isset($pesanan->status_bayar) && in_array($pesanan->status_bayar, ['belum_bayar', 'dp_terbayar']) && isset($pesanan->kode_pesanan) && $pesanan->status !== 'dibatalkan')
-                                <a href="{{ route('pesanan.bayar', $pesanan->kode_pesanan) }}" class="w-full flex items-center justify-center gap-2 bg-[#3B82F6] hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-2xl text-xs tracking-widest uppercase transition-all shadow-md shadow-blue-500/20 active:scale-[0.99]">
+                                <a href="{{ route('pos.pembayaran.index', $pesanan->kode_pesanan) }}" class="w-full flex items-center justify-center gap-2 bg-[#3B82F6] hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-2xl text-xs tracking-widest uppercase transition-all shadow-md shadow-blue-500/20 active:scale-[0.99]">
                                     <span>{{ $pesanan->status_bayar === 'dp_terbayar' ? 'Lanjutkan Pelunasan' : 'Bayar Sekarang' }}</span>
                                     <i class="ph-bold ph-arrow-right text-base"></i>
                                 </a>

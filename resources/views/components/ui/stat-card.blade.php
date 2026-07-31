@@ -8,7 +8,7 @@
 @props([
     'label' => 'Label',
     'value' => 0,
-    'icon'  => 'fa-bag-shopping',
+    'icon'  => 'shopping-bag',
     'color' => 'blue',
 ])
 
@@ -42,6 +42,6 @@
     </div>
 
     <div class="w-11 h-11 rounded-xl {{ $c['iconBg'] }} flex items-center justify-center text-lg shrink-0">
-        <i class="fa-solid {{ $icon }}"></i>
+        <x-heroicon-o-sparkles class="{{ $icon }} w-5 h-5" />
     </div>
 </div>
