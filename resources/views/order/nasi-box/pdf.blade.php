@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Rincian Pesanan Nasi Box #{{ $pesanan->kode_pesanan }}</title>
+    <title>Rincian Pesanan Nasi Box #{{ $pesanan->nomor_pesanan }}</title>
     <style>
         @page {
             size: A4 portrait;
@@ -100,7 +100,7 @@
         <tr>
             <td style="vertical-align: top;">
                 <h1 class="header-title">Rincian Pesanan Nasi Box (Internal)</h1>
-                <p class="header-subtitle">Nomor Pesanan : {{ $pesanan->kode_pesanan }}</p>
+                <p class="header-subtitle">Nomor Pesanan : {{ $pesanan->nomor_pesanan }}</p>
             </td>
             <td class="logo">
                 @if($logoSrc)
@@ -123,32 +123,32 @@
         <tr>
             <td class="info-label">Nama Pemesan</td>
             <td class="info-colon">:</td>
-            <td class="info-val font-bold">{{ $pesanan->nama_pemesan }} ({{ $pesanan->kontak }})</td>
+            <td class="info-val font-bold">{{ $pesanan->jadwal_pesanan->nama_penerima ?? '-' }} ({{ $pesanan->jadwal_pesanan->nomor_telepon_penerima ?? '-' }})</td>
         </tr>
         <tr>
             <td class="info-label">Tanggal Acara</td>
             <td class="info-colon">:</td>
-            <td class="info-val">{{ \Carbon\Carbon::parse($pesanan->tanggal_acara)->translatedFormat('l, d F Y') }}</td>
+            <td class="info-val">{{ \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->translatedFormat('l, d F Y') }}</td>
         </tr>
         <tr>
             <td class="info-label">Waktu Acara</td>
             <td class="info-colon">:</td>
-            <td class="info-val">{{ $pesanan->waktu_acara }} WIB</td>
+            <td class="info-val">{{ $pesanan->jadwal_pesanan->waktu_pengantaran ?: '-' }} WIB</td>
         </tr>
         <tr>
             <td class="info-label">Alamat / Lokasi</td>
             <td class="info-colon">:</td>
-            <td class="info-val">{{ $pesanan->alamat ?? $pesanan->lokasi_acara }}</td>
+            <td class="info-val">{{ $pesanan->jadwal_pesanan->alamat_pengantaran ?? '-' }}</td>
         </tr>
         <tr>
             <td class="info-label">Jumlah Pesanan</td>
             <td class="info-colon">:</td>
-            <td class="info-val">{{ $pesanan->jumlah_box }} Box</td>
+            <td class="info-val">{{ $pesanan->detail_pesanan->first()->jumlah ?? 0 }} Box</td>
         </tr>
         <tr>
             <td class="info-label">Paket Dipilih</td>
             <td class="info-colon">:</td>
-            <td class="info-val font-bold text-blue-600">{{ $pesanan->paket->nama_paket ?? '-' }}</td>
+            <td class="info-val font-bold text-blue-600">{{ $pesanan->detail_pesanan->first()->menu->nama_menu ?? '-' }}</td>
         </tr>
         <tr>
             <td class="info-label">Catatan Tambahan</td>
@@ -159,14 +159,14 @@
 
     {{-- Detail Persiapan --}}
     <div class="section-title">Detail Persiapan (Tim Dapur)</div>
-    @if($pesanan->details && $pesanan->details->count() > 0)
+    @if($pesanan->detail_pesanan && $pesanan->detail_pesanan->count() > 0)
     <div style="margin-top: 8px; font-size: 11px;">
-        <p style="margin: 0 0 4px 0;"><strong>Paket:</strong> {{ $pesanan->paket->nama_paket ?? '-' }}</p>
-        <p style="margin: 0 0 8px 0;"><strong>Menu Komponen Terpilih:</strong></p>
+        <p style="margin: 0 0 4px 0;"><strong>Paket:</strong> {{ $pesanan->detail_pesanan->first()->menu->nama_menu ?? '-' }}</p>
+        <p style="margin: 0 0 8px 0;"><strong>Rincian Item:</strong></p>
         <ul style="margin: 0 0 12px 15px; padding: 0;">
-            @foreach($pesanan->details as $detail)
+            @foreach($pesanan->detail_pesanan as $detail)
             <li style="margin-bottom: 3px;">
-                {{ $detail->komponenPaket->nama_komponen ?? '-' }}: <strong>{{ $detail->menu->nama ?? '-' }}</strong>
+                {{ $detail->jumlah }} x <strong>{{ $detail->menu->nama_menu ?? '-' }}</strong>
             </li>
             @endforeach
         </ul>
@@ -205,7 +205,7 @@
             <td><strong>Perhatian Tim Dapur & Pengantaran:</strong></td>
         </tr>
         <tr>
-            <td>1. Pastikan jumlah pesanan (<strong>{{ $pesanan->jumlah_box }} Box</strong>) dan lauk-pauknya sesuai.</td>
+            <td>1. Pastikan jumlah pesanan (<strong>{{ $pesanan->detail_pesanan->first()->jumlah ?? 0 }} Box</strong>) dan lauk-pauknya sesuai.</td>
         </tr>
         <tr>
             <td>2. Periksa kembali catatan tambahan dari pemesan (jika ada).</td>

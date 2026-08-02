@@ -70,7 +70,7 @@ $mapping = [
     'fa-minus' => 'minus',
     'fa-cash-register' => 'currency-dollar',
     'fa-paper-plane' => 'paper-airplane',
-    'fa-pencil' => 'pencil'
+    'fa-pencil' => 'pencil',
 ];
 
 $sizeMap = [
@@ -95,24 +95,27 @@ $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator('resources
 $totalReplaced = 0;
 
 foreach ($files as $file) {
-    if ($file->isDir() || pathinfo($file, PATHINFO_EXTENSION) !== 'php') continue;
-    
+    if ($file->isDir() || pathinfo($file, PATHINFO_EXTENSION) !== 'php') {
+        continue;
+    }
+
     $content = file_get_contents($file);
     $original = $content;
 
     // 1. Replace button/component icon props: icon="fa-xyz" -> icon="xyz-mapped"
-    $content = preg_replace_callback('/icon=(["\'])(fa-[a-z0-9-]+)\1/is', function($matches) use ($mapping, &$totalReplaced) {
+    $content = preg_replace_callback('/icon=(["\'])(fa-[a-z0-9-]+)\1/is', function ($matches) use ($mapping, &$totalReplaced) {
         $iconClass = $matches[2];
         $heroicon = isset($mapping[$iconClass]) ? $mapping[$iconClass] : 'sparkles';
         $totalReplaced++;
-        return 'icon="' . $heroicon . '"';
+
+        return 'icon="'.$heroicon.'"';
     }, $content);
-    
+
     // 2. Replace empty-state component that we missed if it was passed via other ways, wait empty state uses icon prop.
     // 3. Replace any `<i class="fas fa-...` or `<i class="fa-solid fa-...`
     $pattern = '/<i([^>]*)class=(["\'])(.*?)\2([^>]*)>[\s]*<\/i>/is';
-    
-    $content = preg_replace_callback($pattern, function($matches) use ($mapping, $sizeMap, &$totalReplaced) {
+
+    $content = preg_replace_callback($pattern, function ($matches) use ($mapping, $sizeMap, &$totalReplaced) {
         $beforeClass = $matches[1];
         $quote = $matches[2];
         $classString = $matches[3];
@@ -129,7 +132,9 @@ foreach ($files as $file) {
 
         foreach ($classes as $cls) {
             $cls = trim($cls);
-            if (empty($cls)) continue;
+            if (empty($cls)) {
+                continue;
+            }
 
             if ($cls === 'fa-solid' || $cls === 'fa-regular' || $cls === 'fa-brands' || $cls === 'fas' || $cls === 'far') {
                 continue;
@@ -147,15 +152,15 @@ foreach ($files as $file) {
             }
         }
 
-        if (!$sizeAdded && !preg_match('/\bw-\d+\b/', implode(' ', $newClasses))) {
+        if (! $sizeAdded && ! preg_match('/\bw-\d+\b/', implode(' ', $newClasses))) {
             $newClasses[] = 'w-5 h-5';
         }
 
         $classAttr = implode(' ', $newClasses);
-        
+
         $totalReplaced++;
-        
-        $attrs = trim($beforeClass . ' ' . $afterClass);
+
+        $attrs = trim($beforeClass.' '.$afterClass);
         if (empty($attrs)) {
             return "<x-heroicon-o-{$heroicon} class=\"{$classAttr}\" />";
         } else {
@@ -180,5 +185,3 @@ foreach ($files as $file) {
 }
 
 echo "Total remaining icons replaced: $totalReplaced\n";
-
-?>

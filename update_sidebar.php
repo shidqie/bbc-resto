@@ -1,7 +1,8 @@
 <?php
+
 $files = [
     'resources/views/partials/sidebar-submenu.blade.php',
-    'resources/views/partials/sidebar-link.blade.php'
+    'resources/views/partials/sidebar-link.blade.php',
 ];
 
 foreach ($files as $file) {
@@ -26,4 +27,3 @@ $sidebarContent = str_replace("'icon' => 'chart-bar'", "'icon' => 'iconoir-repor
 file_put_contents($sidebarFile, $sidebarContent);
 
 echo "Sidebar updated.\n";
-?>

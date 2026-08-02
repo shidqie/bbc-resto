@@ -24,11 +24,11 @@ class StokMenipisController extends Controller
         if ($request->has('kategori') && $request->kategori != '') {
             $query->where('kategori_bahan_baku_id', $request->kategori);
         }
-        
+
         $query->orderByRaw('(stok_bahan_baku.jumlah_stok / NULLIF(bahan_baku.stok_minimal, 0)) ASC');
 
         $bahanBakus = $query->paginate(15)->withQueryString();
-        
+
         $kategoris = KategoriBahanBaku::all();
 
         $stats = [

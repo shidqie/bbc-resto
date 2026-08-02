@@ -5,6 +5,7 @@ namespace App\Models;
 class PembayaranDinein extends BaseModel
 {
     protected $table = 'pembayaran';
+
     protected $guarded = [];
 
     protected static function boot()

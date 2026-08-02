@@ -3,7 +3,7 @@
 --}}
 @extends('layouts.pos')
 
-@section('title', 'Detail Paket: ' . $paketCatering->nama_paket)
+@section('title', 'Detail Paket: ' . $paketCatering->nama_menu)
 
 @section('content')
 <div class="flex-1 overflow-auto bg-gray-50/50 text-gray-800 font-sans">
@@ -26,7 +26,7 @@
             
             {{-- Info Ringkas Paket (Kolom Kiri) --}}
             <div class="lg:col-span-4 space-y-4">
-                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 space-y-4">
+                <div class="bg-white rounded-[2.25rem] border border-gray-200/80 shadow-2xs p-5 space-y-4">
                     <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                         <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Jenis Paket:</span>
                         @if($paketCatering->jenis_menu_id == 3)
@@ -41,7 +41,7 @@
                         <p class="text-xs text-gray-500 font-medium mt-1">{{ $paketCatering->deskripsi ?: 'Tidak ada deskripsi' }}</p>
                     </div>
 
-                    <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-1">
+                    <div class="bg-gray-50 rounded-3xl p-3 border border-gray-100 space-y-1">
                         <span class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Harga per Porsi / Box</span>
                         <div class="text-xl font-black text-[#0F2E23]">Rp {{ number_format($paketCatering->harga_jual, 0, ',', '.') }}</div>
                     </div>
@@ -60,7 +60,7 @@
 
             {{-- Struktur Komponen Menu (Kolom Kanan - Match Mockup) --}}
             <div class="lg:col-span-8">
-                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 space-y-4">
+                <div class="bg-white rounded-[2.25rem] border border-gray-200/80 shadow-2xs p-5 space-y-4">
                     <div class="border-b border-gray-100 pb-3 flex justify-between items-center">
                         <div>
                             <h3 class="text-sm font-extrabold text-gray-900">Struktur Komponen Paket</h3>
@@ -70,7 +70,7 @@
 
                     <div class="space-y-3.5">
                         @forelse($paketCatering->komponen_paket as $komponen)
-                            <div class="bg-gray-50/80 border border-gray-200/90 rounded-2xl p-4 space-y-3 shadow-2xs">
+                            <div class="bg-gray-50/80 border border-gray-200/90 rounded-[2.25rem] p-4 space-y-3 shadow-2xs">
                                 
                                 {{-- Judul Komponen & Badge Tipe --}}
                                 <div class="flex items-center justify-between">
@@ -101,7 +101,7 @@
 
                             </div>
                         @empty
-                            <div class="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                            <div class="text-center py-10 bg-gray-50 rounded-[2.25rem] border border-dashed border-gray-200">
                                 <x-heroicon-o-cube class="w-8 h-8 text-gray-300 mx-auto mb-1" />
                                 <p class="text-xs font-bold text-gray-600">Belum ada komponen menu yang ditambahkan</p>
                             </div>

@@ -13,12 +13,10 @@
         {{-- PAGE HEADER --}}
         <div class="flex items-center justify-between gap-3">
             <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">
-                    {{ $jenis == 'nasi_box' ? 'Menu Nasi Box' : ($jenis == 'catering' ? 'Menu Catering' : 'Paket Menu') }}
-                </h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Kelola susunan paket, komponen resep, dan status tampilan di website.</p>
+                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Manajemen Menu</h1>
+                <p class="text-sm text-gray-500 font-medium mt-1">Kelola menu berdasarkan layanan dan kategorinya.</p>
             </div>
-            <a href="{{ route('paket-catering.create', ['jenis' => $jenis]) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+            <a href="{{ route('paket-catering.create', ['jenis' => $jenis]) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-2xl px-3 py-2 hover:bg-gray-800 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Tambah Paket Baru
             </a>
@@ -26,33 +24,38 @@
 
         <x-ui.alert />
 
+        {{-- TABS --}}
+        <div class="flex items-center gap-6 border-b border-gray-200">
+            <a href="{{ route('menu.index') }}" class="py-3 text-sm font-medium border-b-2 transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                Menu Dine In
+            </a>
+            <a href="{{ route('paket-catering.index', ['jenis' => 'nasi_box']) }}" class="py-3 text-sm border-b-2 transition-colors {{ $jenis === 'nasi_box' ? 'font-bold border-gray-900 text-gray-900' : 'font-medium border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                Menu Nasi Box
+            </a>
+            <a href="{{ route('paket-catering.index', ['jenis' => 'catering']) }}" class="py-3 text-sm border-b-2 transition-colors {{ $jenis === 'catering' ? 'font-bold border-gray-900 text-gray-900' : 'font-medium border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                Menu Katering
+            </a>
+        </div>
+
         {{-- Filter Bar --}}
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
             <div class="flex items-center gap-2">
                 <span class="text-xs font-medium text-gray-500">Total Paket:</span>
                 <span class="text-xs font-semibold text-gray-900 bg-gray-100 rounded-full px-2.5 py-0.5">{{ count($pakets) }}</span>
             </div>
-            <div class="flex items-center gap-1 text-xs font-medium overflow-x-auto no-scrollbar shrink-0">
-                <span class="text-gray-500 mr-1">Jenis:</span>
-                <a href="{{ route('paket-catering.index', ['jenis' => 'catering']) }}"
-                   class="px-3 py-1.5 rounded-lg transition-colors {{ $jenis === 'catering' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Catering</a>
-                <a href="{{ route('paket-catering.index', ['jenis' => 'nasi_box']) }}"
-                   class="px-3 py-1.5 rounded-lg transition-colors {{ $jenis === 'nasi_box' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Nasi Box</a>
-            </div>
         </div>
 
         {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-3xl border border-gray-200 overflow-hidden">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No.</th>
+                        <th class="px-4 py-3 text-left w-12">No</th>
                         <th class="px-4 py-3 text-left">Nama Paket</th>
-                        <th class="px-4 py-3 text-left">Jenis</th>
                         <th class="px-4 py-3 text-left">Harga / Porsi</th>
                         <th class="px-4 py-3 text-left">Komponen</th>
                         <th class="px-4 py-3 text-left">Status Website</th>
-                        <th class="px-4 py-3 text-right">Aksi</th>
+                        <th class="px-4 py-3 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -67,14 +70,7 @@
                                 <p class="text-xs text-gray-400 mt-0.5 truncate max-w-xs">{{ $paket->deskripsi }}</p>
                             @endif
                         </td>
-                        <td class="px-4 py-3">
-                            @if($paket->jenis_menu_id == 3)
-                                <span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700">Nasi Box</span>
-                            @else
-                                <span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700">Catering</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 font-semibold text-gray-900 tabular-nums">
+                        <td class="px-4 py-3 text-sm text-gray-900 font-semibold">
                             Rp {{ number_format($paket->harga_jual, 0, ',', '.') }}
                         </td>
                         <td class="px-4 py-3">
@@ -91,22 +87,19 @@
                                 </button>
                             </form>
                         </td>
-                        <td class="px-4 py-3 text-right">
-                            <div class="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                        <td class="px-4 py-3 text-center text-sm font-medium">
+                            <div class="flex items-center justify-center gap-1.5">
                                 {{-- View (Detail) --}}
-                                <button onclick="openPaketDrawer({{ json_encode($paket->load('komponen_paket.opsi')) }}, true)"
-                                    class="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors" title="Lihat">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <button onclick="openPaketDrawer({{ json_encode($paket->load('komponen_paket.opsi')) }}, true)" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                                    <x-heroicon-o-eye class="w-3 h-3" />
                                 </button>
                                 {{-- Edit (Update) --}}
-                                <a href="{{ route('paket-catering.edit', $paket->id) }}"
-                                    class="p-1.5 rounded-md text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Edit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                <a href="{{ route('paket-catering.edit', $paket->id) }}" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
+                                    <x-heroicon-o-pencil-square class="w-3 h-3" />
                                 </a>
                                 {{-- Delete (Hapus) --}}
-                                <button onclick="openDeleteModal({{ $paket->id }}, '{{ addslashes($paket->nama_paket) }}')"
-                                    class="p-1.5 rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Hapus">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <button onclick="openDeleteModal({{ $paket->id }}, '{{ addslashes($paket->nama_menu) }}')" title="Hapus" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
+                                    <x-heroicon-o-trash class="w-3 h-3" />
                                 </button>
                             </div>
                         </td>
@@ -139,7 +132,7 @@
                 <h2 class="font-semibold text-gray-900" id="paketDrawerTitle">Detail Paket</h2>
                 <p class="text-xs text-gray-400 mt-0.5" id="paketDrawerSubtitle">Informasi lengkap paket</p>
             </div>
-            <button onclick="closePaketDrawer()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+            <button onclick="closePaketDrawer()" class="p-1.5 rounded-2xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -184,11 +177,11 @@
 
         {{-- Footer --}}
         <div class="px-5 py-4 border-t border-gray-100 flex justify-between items-center bg-gray-50/80 shrink-0">
-            <a id="vBtnEdit" href="#" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-4 py-2 hover:bg-gray-800 transition-colors">
+            <a id="vBtnEdit" href="#" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-2xl px-4 py-2 hover:bg-gray-800 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Edit Paket
             </a>
-            <button onclick="closePaketDrawer()" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">Tutup</button>
+            <button onclick="closePaketDrawer()" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-2xl px-4 py-2 hover:bg-gray-50 transition-colors">Tutup</button>
         </div>
     </div>
 </div>
@@ -198,7 +191,7 @@
 {{-- ══════════════════════════════════════════ --}}
 <div id="modalHapus" class="fixed inset-0 z-50 hidden flex items-center justify-center">
     <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px]" onclick="closeDeleteModal()"></div>
-    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4 text-center">
+    <div class="relative bg-white rounded-[2.25rem] shadow-xl w-full max-w-sm mx-4 p-6 space-y-4 text-center">
         <div class="w-14 h-14 rounded-full border-2 border-orange-300 flex items-center justify-center mx-auto">
             <span class="text-orange-400 text-2xl font-bold">!</span>
         </div>
@@ -210,11 +203,11 @@
             @csrf @method('DELETE')
             <div class="flex gap-3 justify-center pt-1">
                 <button type="button" onclick="closeDeleteModal()"
-                    class="flex-1 text-sm font-semibold text-white bg-red-500 rounded-xl px-4 py-2.5 hover:bg-red-600 transition-colors">
+                    class="flex-1 text-sm font-semibold text-white bg-red-500 rounded-3xl px-4 py-2.5 hover:bg-red-600 transition-colors">
                     Batal
                 </button>
                 <button type="submit"
-                    class="flex-1 text-sm font-semibold text-white bg-[#0F2E23] rounded-xl px-4 py-2.5 hover:bg-[#0a1f17] transition-colors">
+                    class="flex-1 text-sm font-semibold text-white bg-[#0F2E23] rounded-3xl px-4 py-2.5 hover:bg-[#0a1f17] transition-colors">
                     Ya, Lanjutkan
                 </button>
             </div>
@@ -228,14 +221,14 @@ const BASE_URL = '{{ url('/') }}';
 // ═══ DRAWER: VIEW DETAIL ═══
 function openPaketDrawer(paket, isView = true) {
     document.getElementById('paketDrawerTitle').textContent = 'Detail Paket';
-    document.getElementById('paketDrawerSubtitle').textContent = paket.nama_paket ?? '';
+    document.getElementById('paketDrawerSubtitle').textContent = paket.nama_menu ?? '';
 
-    document.getElementById('vNamaPaket').textContent = paket.nama_paket ?? '-';
-    document.getElementById('vJenisPaket').textContent = paket.jenis_paket === 'nasi_box' ? 'Nasi Box' : 'Catering';
-    document.getElementById('vHargaPaket').textContent = 'Rp ' + Number(paket.harga ?? 0).toLocaleString('id-ID');
+    document.getElementById('vNamaPaket').textContent = paket.nama_menu ?? '-';
+    document.getElementById('vJenisPaket').textContent = Number(paket.jenis_menu_id) === 3 ? 'Nasi Box' : 'Catering';
+    document.getElementById('vHargaPaket').textContent = 'Rp ' + Number(paket.harga_jual ?? 0).toLocaleString('id-ID');
 
     const statusEl = document.getElementById('vStatusPaket');
-    if (paket.is_active) {
+    if (paket.status_aktif) {
         statusEl.textContent = '● Tampil di Website';
         statusEl.className = 'text-sm font-medium text-emerald-600';
     } else {
@@ -266,7 +259,7 @@ function openPaketDrawer(paket, isView = true) {
             }
 
             kompContainer.innerHTML += `
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2">
+                <div class="bg-gray-50 border border-gray-200 rounded-3xl p-3 space-y-2">
                     <div class="flex items-center gap-1">
                         <p class="text-xs font-semibold text-gray-800">${komp.nama_komponen ?? '-'}</p>
                         ${tipeBadge}

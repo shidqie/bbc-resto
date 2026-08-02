@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Menu;
 use App\Models\KategoriMenu;
-use App\Models\PaketCatering;
 use App\Models\KomponenPaket;
+use App\Models\Menu;
 use App\Models\OpsiKomponen;
+use App\Models\PaketCatering;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class CateringBOMSeeder extends Seeder
@@ -33,7 +33,7 @@ class CateringBOMSeeder extends Seeder
             'Kerupuk udang',
             'Air mineral',
             'Bakso tahu', 'Mi kocok',
-            'Buah potong', 'Es krim'
+            'Buah potong', 'Es krim',
         ];
 
         $menuIds = [];
@@ -43,7 +43,7 @@ class CateringBOMSeeder extends Seeder
                 [
                     'harga' => 10000, // Default price
                     'status' => 'tersedia',
-                    'kategori_menu_id' => $kategoriCatering->id
+                    'kategori_menu_id' => $kategoriCatering->id,
                 ]
             );
             $menuIds[$nama] = $menu->id;
@@ -55,13 +55,13 @@ class CateringBOMSeeder extends Seeder
                 'paket_catering_id' => $paketId,
                 'nama_komponen' => $namaKomponen,
                 'tipe' => $tipe,
-                'urutan' => $urutan
+                'urutan' => $urutan,
             ]);
 
             foreach ($opsiMenu as $namaMenu) {
                 OpsiKomponen::create([
                     'komponen_paket_id' => $komp->id,
-                    'menu_id' => $menuIds[$namaMenu]
+                    'menu_id' => $menuIds[$namaMenu],
                 ]);
             }
         };
@@ -72,7 +72,7 @@ class CateringBOMSeeder extends Seeder
             'jenis_paket' => 'catering',
             'harga' => 47500,
             'deskripsi' => 'Paket prasmanan lengkap dengan pilihan daging sapi',
-            'is_active' => true
+            'is_active' => true,
         ]);
 
         $addComponent($paketA->id, 'Nasi', 'fixed', 1, ['Nasi putih']);
@@ -91,7 +91,7 @@ class CateringBOMSeeder extends Seeder
             'jenis_paket' => 'catering',
             'harga' => 42500,
             'deskripsi' => 'Paket prasmanan dengan pilihan aneka olahan ayam',
-            'is_active' => true
+            'is_active' => true,
         ]);
 
         $addComponent($paketB->id, 'Nasi', 'fixed', 1, ['Nasi putih']);

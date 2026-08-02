@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Menu;
-use App\Models\Pesanan;
+use App\Models\BahanBaku;
 use App\Models\DetailPesanan;
 use App\Models\JadwalPesanan;
+use App\Models\Menu;
+use App\Models\Pelanggan;
 use App\Models\Pengantaran;
+use App\Models\Pesanan;
+use App\Services\OrderService;
+use App\Support\WhatsAppNumber;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PesananNasiBoxController extends Controller
 {
@@ -20,7 +25,7 @@ class PesananNasiBoxController extends Controller
         $pakets = Menu::where('jenis_menu_id', 3)
             ->where('status_aktif', true)
             ->get();
-            
+
         return view('order.nasi-box.create', compact('pakets'));
     }
 
@@ -29,20 +34,20 @@ class PesananNasiBoxController extends Controller
     {
         $request->validate([
             'paket_id' => 'required|exists:menu,id',
-            'jumlah_porsi' => 'required|integer|min:1',
+            'jumlah_box' => 'required|integer|min:1',
             'metode_pengiriman' => 'required|in:pickup,delivery',
-            'jarak_km' => 'required_if:metode_pengiriman,delivery|nullable|numeric|min:0'
+            'jarak_km' => 'required_if:metode_pengiriman,delivery|nullable|numeric|min:0',
         ]);
-        
+
         try {
             $paket = Menu::findOrFail($request->paket_id);
-            $total = $paket->harga_jual * $request->jumlah_porsi;
+            $total = $paket->harga_jual * $request->jumlah_box;
             $ongkir = ($request->metode_pengiriman === 'delivery') ? ($request->jarak_km * 5000) : 0;
-            
+
             return response()->json([
                 'ongkir' => $ongkir,
                 'total' => $total + $ongkir,
-                'dp' => ($total + $ongkir) * 0.5
+                'dp' => ($total + $ongkir) * 0.5,
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -54,25 +59,37 @@ class PesananNasiBoxController extends Controller
     {
         $request->validate([
             'nama_pemesan' => 'required|string|max:255',
-            'kontak' => 'required|string|max:50',
+            'kontak' => ['required', 'string', 'regex:/^(\+?62|0|8)\d{8,13}$/'],
             'tanggal_acara' => 'required|date',
             'lokasi_acara' => 'required|string',
             'metode_pengiriman' => 'required|in:pickup,delivery',
             'paket_id' => 'required|exists:menu,id',
-            'jumlah_porsi' => 'required|integer|min:1',
-            'opsi_pembayaran' => 'required|in:dp,lunas'
+            'jumlah_box' => 'required|integer|min:1',
+            'opsi_pembayaran' => 'required|in:dp,lunas',
         ]);
-        
+
+        $request->merge(['kontak' => WhatsAppNumber::normalize($request->kontak)]);
+
         $paket = Menu::findOrFail($request->paket_id);
-        $subtotal = $paket->harga_jual * $request->jumlah_porsi;
+        $subtotal = $paket->harga_jual * $request->jumlah_box;
         $ongkir = ($request->metode_pengiriman === 'delivery') ? (($request->jarak_km ?? 1) * 5000) : 0;
         $totalTagihan = $subtotal + $ongkir;
 
-        $pesanan = DB::transaction(function () use ($request, $paket, $totalTagihan) {
+        $pesanan = DB::transaction(function () use ($request, $paket, $subtotal, $totalTagihan, $ongkir) {
+            $pelanggan = Auth::guard('pelanggan')->check()
+                ? Auth::guard('pelanggan')->user()
+                : Pelanggan::firstOrCreate(
+                    ['nomor_telepon' => $request->kontak],
+                    ['nama' => $request->nama_pemesan, 'alamat' => $request->lokasi_acara]
+                );
+
             $pesanan = Pesanan::create([
-                'nomor_pesanan' => 'BOX-' . time(),
+                'nomor_pesanan' => 'BOX-'.time(),
                 'jenis_pesanan_id' => 3, // Nasi Box
+                'pelanggan_id' => $pelanggan->id,
                 'status_pesanan_id' => 1, // Menunggu Konfirmasi
+                'tanggal_pesanan' => now(),
+                'jumlah_sebelum_potongan' => $subtotal,
                 'total_tagihan' => $totalTagihan,
                 'catatan' => $request->catatan,
             ]);
@@ -81,25 +98,30 @@ class PesananNasiBoxController extends Controller
             JadwalPesanan::create([
                 'pesanan_id' => $pesanan->id,
                 'tanggal_acara' => $request->tanggal_acara,
-                'lokasi_acara' => $request->lokasi_acara,
+                'alamat_pengantaran' => $request->lokasi_acara,
+                'nama_penerima' => $request->nama_pemesan,
+                'nomor_telepon_penerima' => $request->kontak,
             ]);
 
             // Detail Pesanan
             DetailPesanan::create([
                 'pesanan_id' => $pesanan->id,
                 'menu_id' => $paket->id,
-                'jumlah' => $request->jumlah_porsi,
+                'jumlah' => $request->jumlah_box,
                 'harga_satuan' => $paket->harga_jual,
-                'subtotal' => $paket->harga_jual * $request->jumlah_porsi
+                'subtotal' => $paket->harga_jual * $request->jumlah_box,
             ]);
 
             if ($request->metode_pengiriman === 'delivery') {
                 Pengantaran::create([
+                    'nomor_pengantaran' => 'ANT-'.time().'-'.rand(100, 999),
                     'pesanan_id' => $pesanan->id,
                     'status_pengantaran_id' => 1, // Menunggu
+                    'jadwal_pengantaran' => $request->tanggal_acara.' 08:00:00',
+                    'nama_penerima' => $request->nama_pemesan,
+                    'nomor_telepon_penerima' => $request->kontak,
                     'biaya_pengantaran' => $ongkir,
-                    'jarak_km' => $request->jarak_km ?? null,
-                    'alamat_pengantaran' => $request->lokasi_acara
+                    'alamat_pengantaran' => $request->lokasi_acara,
                 ]);
             }
 
@@ -114,8 +136,8 @@ class PesananNasiBoxController extends Controller
     public function index(Request $request)
     {
         $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'status_pesanan'])
-                        ->where('jenis_pesanan_id', 3)
-                        ->latest();
+            ->where('jenis_pesanan_id', 3)
+            ->latest();
 
         if ($request->has('search')) {
             $query->where('nomor_pesanan', 'like', "%{$request->search}%");
@@ -125,7 +147,7 @@ class PesananNasiBoxController extends Controller
 
         $stats = [
             'baru' => Pesanan::where('jenis_pesanan_id', 3)->where('status_pesanan_id', 1)->count(),
-            'diproses' => Pesanan::where('jenis_pesanan_id', 3)->whereIn('status_pesanan_id', [2,3,4])->count(),
+            'diproses' => Pesanan::where('jenis_pesanan_id', 3)->whereIn('status_pesanan_id', [2, 3, 4])->count(),
             'selesai' => Pesanan::where('jenis_pesanan_id', 3)->where('status_pesanan_id', 5)->count(),
         ];
 
@@ -142,23 +164,108 @@ class PesananNasiBoxController extends Controller
             'jadwal_pesanan',
             'pengantaran',
             'pembayaran',
-            'status_pesanan'
+            'status_pesanan',
         ])->findOrFail($id);
 
-        $kebutuhanBahan = [];
+        $kebutuhanBahan = $this->hitungKebutuhanBahan($pesanan);
+
         return view('order.nasi-box.show', compact('pesanan', 'kebutuhanBahan'));
+    }
+
+    public function exportPdf($id)
+    {
+        $pesanan = Pesanan::with([
+            'detail_pesanan.menu',
+            'jadwal_pesanan',
+            'pengantaran',
+            'pembayaran',
+            'status_pesanan',
+        ])->findOrFail($id);
+
+        $kebutuhanBahan = $this->hitungKebutuhanBahan($pesanan);
+
+        $pdf = Pdf::loadView('order.nasi-box.pdf', compact('pesanan', 'kebutuhanBahan'));
+
+        return $pdf->stream('rincian-nasi-box-'.$pesanan->nomor_pesanan.'.pdf');
+    }
+
+    protected function hitungKebutuhanBahan(Pesanan $pesanan): array
+    {
+        $pesanan->load(['detail_pesanan.menu.resep_menu.bahan_baku']);
+
+        $kebutuhan = [];
+        foreach ($pesanan->detail_pesanan as $detail) {
+            $qtyMultiplier = $detail->jumlah;
+            if ($detail->menu && $detail->menu->resep_menu) {
+                foreach ($detail->menu->resep_menu as $resep) {
+                    $bahanId = $resep->bahan_baku_id;
+                    $kebutuhan[$bahanId] = ($kebutuhan[$bahanId] ?? 0) + ($resep->jumlah_kebutuhan * $qtyMultiplier);
+                }
+            }
+        }
+
+        $result = [];
+        foreach ($kebutuhan as $bahanId => $total) {
+            $bahan = BahanBaku::with('satuan')->find($bahanId);
+            if ($bahan) {
+                $result[] = [
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'total_kebutuhan' => rtrim(rtrim(number_format($total, 2, ',', '.'), '0'), ','),
+                    'satuan' => $bahan->satuan->singkatan ?? '',
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    public function konfirmasi($id)
+    {
+        $pesanan = Pesanan::findOrFail($id);
+
+        if ($pesanan->status_pesanan_id == 1) {
+            $pesanan->update(['status_pesanan_id' => 2]); // Dikonfirmasi
+        }
+
+        return back()->with('success', 'Pesanan berhasil dikonfirmasi.');
     }
 
     public function updateStatus(Request $request, $id)
     {
-        $pesanan = Pesanan::findOrFail($id);
-        $request->validate(['status' => 'required|integer']);
+        $request->validate(['status' => 'required']);
 
-        if ($request->status == 5 && $pesanan->status_pesanan_id != 5) {
-            app(\App\Services\OrderService::class)->completeOrder($pesanan);
+        $statusMap = [
+            'ditinjau' => 1,
+            'menunggu' => 1,
+            'terkonfirmasi' => 2,
+            'dikonfirmasi' => 2,
+            'diproses' => 3,
+            'menunggu_pengiriman' => 4,
+            'siap' => 4,
+            'dikirim' => 5,
+            'selesai' => 5,
+            'dibatalkan' => 6,
+        ];
+        $status = $statusMap[$request->status] ?? (int) $request->status;
+
+        $pesanan = Pesanan::findOrFail($id);
+
+        if ($status == 6) {
+            $alasan = $request->alasan_batal;
+            $pesanan->update([
+                'status_pesanan_id' => 6,
+                'catatan' => $alasan ? trim($pesanan->catatan.' [BATAL: '.$alasan.']') : $pesanan->catatan,
+            ]);
+
+            return back()->with('success', 'Pesanan berhasil dibatalkan.');
         }
 
-        $pesanan->update(['status_pesanan_id' => $request->status]);
+        if ($status == 5) {
+            app(OrderService::class)->completeOrder($pesanan);
+        } else {
+            $pesanan->update(['status_pesanan_id' => $status]);
+        }
+
         return back()->with('success', 'Status pesanan berhasil diperbarui.');
     }
 }

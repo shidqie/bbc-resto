@@ -10,36 +10,18 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Peran
-        $perans = ['Admin', 'Pemilik', 'Manajer', 'Kasir', 'Pelayan', 'Tim Dapur', 'Konsumen', 'Tim Pengantaran'];
-        foreach ($perans as $i => $peran) {
-            DB::table('peran')->insert(['id' => $i+1, 'nama_peran' => $peran]);
-        }
-
-        // 2. Pengguna
-        $users = [
-            ['peran_id' => 1, 'nama' => 'Super Admin', 'email' => 'admin@sbc.com'],
-            ['peran_id' => 2, 'nama' => 'Owner', 'email' => 'owner@sbc.com'],
-            ['peran_id' => 3, 'nama' => 'Manager', 'email' => 'manager@sbc.com'],
-            ['peran_id' => 4, 'nama' => 'Kasir 1', 'email' => 'kasir@sbc.com'],
-            ['peran_id' => 5, 'nama' => 'Pelayan 1', 'email' => 'pelayan@sbc.com'],
-            ['peran_id' => 6, 'nama' => 'Dapur 1', 'email' => 'dapur@sbc.com'],
-        ];
-        foreach ($users as $i => $u) {
-            $u['id'] = $i+1;
-            $u['kata_sandi'] = Hash::make('password');
-            DB::table('pengguna')->insert($u);
-        }
+        // 1. Peran & Pengguna (7 role: Pemilik, Manajer, Kasir, Pelayan, Dapur, Pengantaran, Pelanggan)
+        $this->call(UserRoleSeeder::class);
 
         // 3. Status Meja
         $status_meja = [
             ['kode_status' => 'TERSEDIA', 'nama_status' => 'Tersedia'],
             ['kode_status' => 'TERISI', 'nama_status' => 'Terisi'],
             ['kode_status' => 'DIPESAN', 'nama_status' => 'Dipesan'],
-            ['kode_status' => 'TIDAK_AKTIF', 'nama_status' => 'Tidak Aktif']
+            ['kode_status' => 'TIDAK_AKTIF', 'nama_status' => 'Tidak Aktif'],
         ];
         DB::table('status_meja')->insert($status_meja);
-        
+
         // Meja Dummy
         DB::table('meja')->insert([
             ['id' => 1, 'nomor_meja' => 'Meja 01', 'kapasitas' => 4, 'status_meja_id' => 1],
@@ -51,7 +33,7 @@ class DatabaseSeeder extends Seeder
         $jenis_menu = [
             ['kode_jenis' => 'REGULER', 'nama_jenis' => 'Menu Reguler'],
             ['kode_jenis' => 'CATERING', 'nama_jenis' => 'Paket Catering'],
-            ['kode_jenis' => 'NASI_BOX', 'nama_jenis' => 'Paket Nasi Box']
+            ['kode_jenis' => 'NASI_BOX', 'nama_jenis' => 'Paket Nasi Box'],
         ];
         DB::table('jenis_menu')->insert($jenis_menu);
 
@@ -65,7 +47,7 @@ class DatabaseSeeder extends Seeder
             ['nama_satuan' => 'Sendok Makan', 'singkatan' => 'sdm'],
             ['nama_satuan' => 'Sendok Teh', 'singkatan' => 'sdt'],
             ['nama_satuan' => 'Porsi', 'singkatan' => 'porsi'],
-            ['nama_satuan' => 'Ikat', 'singkatan' => 'ikat']
+            ['nama_satuan' => 'Ikat', 'singkatan' => 'ikat'],
         ];
         DB::table('satuan')->insert($satuan);
 
@@ -73,7 +55,7 @@ class DatabaseSeeder extends Seeder
         $jenis_pesanan = [
             ['kode_jenis' => 'DIN', 'nama_jenis' => 'Dine In'],
             ['kode_jenis' => 'CAT', 'nama_jenis' => 'Catering'],
-            ['kode_jenis' => 'BOX', 'nama_jenis' => 'Nasi Box']
+            ['kode_jenis' => 'BOX', 'nama_jenis' => 'Nasi Box'],
         ];
         DB::table('jenis_pesanan')->insert($jenis_pesanan);
 
@@ -84,7 +66,7 @@ class DatabaseSeeder extends Seeder
             ['kode_status' => 'DIPROSES', 'nama_status' => 'Sedang Diproses'],
             ['kode_status' => 'SIAP', 'nama_status' => 'Siap Disajikan / Diambil'],
             ['kode_status' => 'SELESAI', 'nama_status' => 'Selesai'],
-            ['kode_status' => 'DIBATALKAN', 'nama_status' => 'Dibatalkan']
+            ['kode_status' => 'DIBATALKAN', 'nama_status' => 'Dibatalkan'],
         ];
         DB::table('status_pesanan')->insert($status_pesanan);
 
@@ -93,7 +75,7 @@ class DatabaseSeeder extends Seeder
             ['kode_metode' => 'TUNAI', 'nama_metode' => 'Tunai'],
             ['kode_metode' => 'QRIS', 'nama_metode' => 'QRIS'],
             ['kode_metode' => 'TRANSFER', 'nama_metode' => 'Transfer Bank'],
-            ['kode_metode' => 'KARTU', 'nama_metode' => 'Kartu Debit/Kredit']
+            ['kode_metode' => 'KARTU', 'nama_metode' => 'Kartu Debit/Kredit'],
         ];
         DB::table('metode_pembayaran')->insert($metode_pembayaran);
 
@@ -103,7 +85,7 @@ class DatabaseSeeder extends Seeder
             ['kode_status' => 'SEBAGIAN', 'nama_status' => 'Dibayar Sebagian'],
             ['kode_status' => 'LUNAS', 'nama_status' => 'Lunas'],
             ['kode_status' => 'GAGAL', 'nama_status' => 'Gagal'],
-            ['kode_status' => 'DIKEMBALIKAN', 'nama_status' => 'Dikembalikan']
+            ['kode_status' => 'DIKEMBALIKAN', 'nama_status' => 'Dikembalikan'],
         ];
         DB::table('status_pembayaran')->insert($status_pembayaran);
 
@@ -112,7 +94,7 @@ class DatabaseSeeder extends Seeder
             ['kode_jenis' => 'PENUH', 'nama_jenis' => 'Pembayaran Penuh'],
             ['kode_jenis' => 'UANG_MUKA', 'nama_jenis' => 'Uang Muka'],
             ['kode_jenis' => 'PELUNASAN', 'nama_jenis' => 'Pelunasan'],
-            ['kode_jenis' => 'PENGEMBALIAN', 'nama_jenis' => 'Pengembalian Dana']
+            ['kode_jenis' => 'PENGEMBALIAN', 'nama_jenis' => 'Pengembalian Dana'],
         ];
         DB::table('jenis_pembayaran')->insert($jenis_pembayaran);
 
@@ -120,7 +102,7 @@ class DatabaseSeeder extends Seeder
         $status_dapur = [
             ['kode_status' => 'MENUNGGU', 'nama_status' => 'Menunggu'],
             ['kode_status' => 'DIPROSES', 'nama_status' => 'Sedang Diproses'],
-            ['kode_status' => 'SELESAI', 'nama_status' => 'Selesai']
+            ['kode_status' => 'SELESAI', 'nama_status' => 'Selesai'],
         ];
         DB::table('status_tiket_dapur')->insert($status_dapur);
 
@@ -141,7 +123,7 @@ class DatabaseSeeder extends Seeder
             ['kode_status' => 'MENUNGGU', 'nama_status' => 'Menunggu'],
             ['kode_status' => 'DIJALAN', 'nama_status' => 'Sedang Di Jalan'],
             ['kode_status' => 'SELESAI', 'nama_status' => 'Selesai Diantar'],
-            ['kode_status' => 'BATAL', 'nama_status' => 'Batal']
+            ['kode_status' => 'BATAL', 'nama_status' => 'Batal'],
         ];
         DB::table('status_pengantaran')->insert($status_antar);
 
@@ -150,11 +132,14 @@ class DatabaseSeeder extends Seeder
             ['kode_status' => 'MENUNGGU', 'nama_status' => 'Menunggu Persetujuan'],
             ['kode_status' => 'DISETUJUI', 'nama_status' => 'Disetujui'],
             ['kode_status' => 'DITOLAK', 'nama_status' => 'Ditolak'],
-            ['kode_status' => 'SELESAI', 'nama_status' => 'Selesai']
+            ['kode_status' => 'SELESAI', 'nama_status' => 'Selesai'],
         ];
         DB::table('status_pengadaan')->insert($status_pengadaan);
 
         // 15. Seeder Normalisasi Minimal (Dummy Data)
         $this->call(NormalisasiMinimalSeeder::class);
+
+        // 16. Paket Nasi Box (opsional, idempoten)
+        $this->call(NasiBoxSeeder::class);
     }
 }

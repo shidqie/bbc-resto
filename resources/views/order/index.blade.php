@@ -16,7 +16,7 @@
                 <h1 class="text-2xl font-black text-gray-900 tracking-tight">Daftar Pesanan Resto</h1>
                 <p class="text-sm text-gray-500 font-medium mt-1">Kelola transaksi pesanan dine-in, rincian menu, status dapur, dan pembayaran</p>
             </div>
-            <a href="{{ route('pos.dinein.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+            <a href="{{ route('pos.dinein.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-2xl px-3 py-2 hover:bg-gray-800 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Pesanan Baru (POS)
             </a>
@@ -26,19 +26,19 @@
 
         {{-- Stat Cards --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+            <div class="bg-white rounded-3xl border border-gray-200 px-4 py-3">
                 <p class="text-xs font-medium text-gray-500">Pesanan Baru</p>
                 <p class="text-xl font-bold text-blue-600 mt-1">{{ $stats['baru'] }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+            <div class="bg-white rounded-3xl border border-gray-200 px-4 py-3">
                 <p class="text-xs font-medium text-gray-500">Sedang Diproses</p>
                 <p class="text-xl font-bold text-amber-600 mt-1">{{ $stats['diproses'] }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+            <div class="bg-white rounded-3xl border border-gray-200 px-4 py-3">
                 <p class="text-xs font-medium text-gray-500">Pesanan Selesai</p>
                 <p class="text-xl font-bold text-emerald-600 mt-1">{{ $stats['selesai'] }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+            <div class="bg-white rounded-3xl border border-gray-200 px-4 py-3">
                 <p class="text-xs font-medium text-gray-500">Total Transaksi</p>
                 <p class="text-xl font-bold text-gray-900 mt-1">{{ $pesanans->total() }}</p>
             </div>
@@ -49,27 +49,27 @@
             <form action="{{ route('pesanan.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                 <div class="relative flex-1 sm:flex-none sm:w-64">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama / Meja…" class="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all bg-white">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama / Meja…" class="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-2xl outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all bg-white">
                 </div>
-                <select name="jenis" class="text-xs border border-gray-200 rounded-lg bg-white px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 transition-all" onchange="this.form.submit()">
+                <select name="jenis" class="text-xs border border-gray-200 rounded-2xl bg-white px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 transition-all" onchange="this.form.submit()">
                     <option value="">Semua Jenis</option>
                     <option value="dine_in" {{ request('jenis') == 'dine_in' ? 'selected' : '' }}>Dine In</option>
                     <option value="catering" {{ request('jenis') == 'catering' ? 'selected' : '' }}>Catering</option>
                     <option value="nasi_box" {{ request('jenis') == 'nasi_box' ? 'selected' : '' }}>Nasi Box</option>
                 </select>
-                <select name="status" class="text-xs border border-gray-200 rounded-lg bg-white px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 transition-all" onchange="this.form.submit()">
+                <select name="status" class="text-xs border border-gray-200 rounded-2xl bg-white px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 transition-all" onchange="this.form.submit()">
                     <option value="">Semua Status</option>
                     <option value="baru" {{ request('status') == 'baru' ? 'selected' : '' }}>Baru</option>
                     <option value="diproses" {{ request('status') == 'diproses' ? 'selected' : '' }}>Diproses</option>
                     <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                     <option value="dibatalkan" {{ request('status') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
                 </select>
-                <button type="submit" class="text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+                <button type="submit" class="text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-2xl px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
             </form>
         </div>
 
         {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+        <div class="bg-white rounded-3xl border border-gray-200 overflow-hidden overflow-x-auto">
             <table class="w-full text-sm min-w-[900px]">
                 <thead>
                     <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
@@ -91,7 +91,7 @@
                         <td class="px-4 py-3">
                             <p class="font-semibold text-gray-900 font-mono text-xs">{{ $p->no_pesanan }}</p>
                             <p class="text-[10px] text-gray-400 mt-0.5">{{ $p->tanggal_pesanan ? $p->tanggal_pesanan->format('d M Y, H:i') : '-' }}</p>
-                            <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 uppercase">
+                            <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-xl bg-blue-50 text-blue-700 uppercase">
                                 {{ str_replace('_', ' ', $p->jenis_pesanan) }}
                             </span>
                         </td>
@@ -114,7 +114,7 @@
                                 <p class="text-[10px] text-emerald-600 font-medium mt-0.5">{{ $phone }}</p>
                             @endif
                             @if($p->no_meja)
-                                <span class="inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800">Meja {{ $p->no_meja }}</span>
+                                <span class="inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-xl bg-amber-50 text-amber-800">Meja {{ $p->no_meja }}</span>
                             @endif
                         </td>
 
@@ -141,11 +141,11 @@
                         <td class="px-4 py-3">
                             <p class="font-semibold text-gray-900 text-sm">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</p>
                             @if($p->status_pembayaran == 'lunas')
-                                <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 mt-1">Lunas</span>
+                                <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-xl bg-emerald-50 text-emerald-700 mt-1">Lunas</span>
                             @elseif($p->status_pembayaran == 'dp')
-                                <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 mt-1">DP</span>
+                                <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-xl bg-blue-50 text-blue-700 mt-1">DP</span>
                             @else
-                                <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md bg-red-50 text-red-700 mt-1">Belum Bayar</span>
+                                <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-xl bg-red-50 text-red-700 mt-1">Belum Bayar</span>
                             @endif
                         </td>
 
@@ -154,7 +154,7 @@
                             <form action="{{ route('pesanan.update-status', $p->id) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <select name="status_pesanan" onchange="this.form.submit()"
-                                        class="text-xs font-semibold rounded-lg border px-2 py-1 outline-none cursor-pointer transition-colors
+                                        class="text-xs font-semibold rounded-2xl border px-2 py-1 outline-none cursor-pointer transition-colors
                                                {{ $p->status_pesanan == 'baru' ? 'bg-gray-100 text-gray-800 border-gray-200' : '' }}
                                                {{ $p->status_pesanan == 'diproses' ? 'bg-amber-50 text-amber-900 border-amber-200' : '' }}
                                                {{ $p->status_pesanan == 'selesai' ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : '' }}
@@ -170,7 +170,7 @@
                         {{-- Aksi --}}
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                                <a href="{{ route('pesanan.show', $p->id) }}" class="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors" title="Lihat Detail">
+                                <a href="{{ route('pesanan.show', $p->id) }}" class="p-1.5 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors" title="Lihat Detail">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 </a>
                             </div>

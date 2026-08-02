@@ -5,6 +5,7 @@ namespace App\Models;
 class KomponenPaket extends BaseModel
 {
     protected $table = 'komponen_paket';
+
     protected $guarded = [];
 
     public function menu()

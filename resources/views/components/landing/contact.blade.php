@@ -1,6 +1,6 @@
 <x-landing.section id="kontak" title="Lokasi & Kontak" bgBatik="true">
     <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col">
+        <div class="bg-surface rounded-3xl border border-primary/10 p-6 flex flex-col">
             <div class="space-y-4 w-full text-left">
                 <div class="flex items-center gap-3">
                     <svg class="w-5 h-5 text-secondary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -20,7 +20,7 @@
                 </div>
             </div>
         </div>
-        <div class="rounded-xl overflow-hidden border border-primary/10 min-h-[280px] bg-canvas">
+        <div class="rounded-3xl overflow-hidden border border-primary/10 min-h-[280px] bg-canvas">
             <iframe src="https://maps.google.com/maps?q=-6.8244057,107.5289353&z=18&output=embed" width="100%" height="100%" style="border:0; min-height:280px;" allowfullscreen="" loading="lazy"></iframe>
         </div>
     </div>

@@ -2,106 +2,90 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Menu;
 use App\Models\KategoriMenu;
-use App\Models\PaketCatering;
 use App\Models\KomponenPaket;
-use App\Models\OpsiKomponen;
+use App\Models\Menu;
+use App\Models\PilihanKomponenPaket;
+use Illuminate\Database\Seeder;
 
 class NasiBoxSeeder extends Seeder
 {
     public function run(): void
     {
-        $kategoriNasibox = KategoriMenu::firstOrCreate(['nama' => 'Nasi Box']);
+        $kategoriNasibox = KategoriMenu::firstOrCreate(
+            ['nama_kategori' => 'Nasi Box'],
+            ['status_aktif' => true]
+        );
 
-        $menuNames = [
-            'Nasi Putih', 'Ayam Goreng', 'Ayam Bakar', 'Rendang Daging',
-            'Tahu Goreng', 'Tempe Goreng', 'Sayur Asem', 'Sayur Nangka', 'Perkedel Kentang',
-            'Sambal Terasi', 'Sambal Ijo', 'Lalapan', 'Pisang', 'Jeruk', 'Air Mineral Gelas'
+        $dataPaket = [
+            [
+                'nama' => 'Paket Nasi Box A',
+                'kode' => 'BOX001A',
+                'harga' => 25000,
+                'deskripsi' => 'Paket hemat ayam goreng dengan tahu/tempe, lengkap dengan sambal dan lalapan.',
+                'komponen' => [
+                    ['nama' => 'Nasi Putih', 'tipe' => 'tetap', 'urutan' => 1, 'pilihan' => []],
+                    ['nama' => 'Lauk Utama', 'tipe' => 'pilihan', 'urutan' => 2, 'pilihan' => ['Ayam Goreng', 'Ayam Bakar', 'Rendang Daging']],
+                    ['nama' => 'Lauk Pendamping', 'tipe' => 'pilihan', 'urutan' => 3, 'pilihan' => ['Tahu Goreng', 'Tempe Goreng', 'Perkedel Kentang']],
+                    ['nama' => 'Sayuran', 'tipe' => 'pilihan', 'urutan' => 4, 'pilihan' => ['Sayur Asem', 'Sayur Nangka']],
+                    ['nama' => 'Sambal', 'tipe' => 'pilihan', 'urutan' => 5, 'pilihan' => ['Sambal Terasi', 'Sambal Ijo']],
+                    ['nama' => 'Pelengkap', 'tipe' => 'tetap', 'urutan' => 6, 'pilihan' => ['Lalapan', 'Kerupuk']],
+                    ['nama' => 'Minuman', 'tipe' => 'tetap', 'urutan' => 7, 'pilihan' => ['Air Mineral Gelas']],
+                ],
+            ],
+            [
+                'nama' => 'Paket Nasi Box B',
+                'kode' => 'BOX001B',
+                'harga' => 20000,
+                'deskripsi' => 'Paket ayam goreng hemat dengan sayur dan sambal, tanpa nasi box premium.',
+                'komponen' => [
+                    ['nama' => 'Nasi Putih', 'tipe' => 'tetap', 'urutan' => 1, 'pilihan' => []],
+                    ['nama' => 'Lauk Utama', 'tipe' => 'pilihan', 'urutan' => 2, 'pilihan' => ['Ayam Goreng', 'Ayam Bakar']],
+                    ['nama' => 'Lauk Pendamping', 'tipe' => 'pilihan', 'urutan' => 3, 'pilihan' => ['Tahu Goreng', 'Tempe Goreng']],
+                    ['nama' => 'Sayuran', 'tipe' => 'pilihan', 'urutan' => 4, 'pilihan' => ['Sayur Asem', 'Sayur Nangka']],
+                    ['nama' => 'Sambal', 'tipe' => 'tetap', 'urutan' => 5, 'pilihan' => ['Sambal Terasi']],
+                    ['nama' => 'Minuman', 'tipe' => 'tetap', 'urutan' => 6, 'pilihan' => ['Air Mineral Gelas']],
+                ],
+            ],
         ];
 
-        $menuIds = [];
-        foreach ($menuNames as $nama) {
-            $menu = Menu::firstOrCreate(
-                ['nama' => $nama, 'jenis_menu' => 'catering'],
+        foreach ($dataPaket as $p) {
+            $paket = Menu::firstOrCreate(
+                ['kode_menu' => $p['kode']],
                 [
-                    'harga' => 5000, 
-                    'status' => 'tersedia',
-                    'kategori_menu_id' => $kategoriNasibox->id
+                    'nama_menu' => $p['nama'],
+                    'jenis_menu_id' => 3, // NASI_BOX
+                    'kategori_menu_id' => $kategoriNasibox->id,
+                    'harga_jual' => $p['harga'],
+                    'deskripsi' => $p['deskripsi'],
+                    'status_aktif' => true,
                 ]
             );
-            $menuIds[$nama] = $menu->id;
+
+            // Hapus komponen lama lalu buat ulang agar seeder idempoten & selalu terbaru
+            $paket->komponen_paket()->delete();
+
+            foreach ($p['komponen'] as $idx => $k) {
+                $tipe = $k['tipe'] === 'pilihan' ? 'pilihan' : 'tetap';
+                $komponen = KomponenPaket::create([
+                    'menu_id' => $paket->id,
+                    'nama_komponen' => $k['nama'],
+                    'tipe_komponen' => $tipe,
+                    'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                    'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                    'urutan' => $k['urutan'],
+                ]);
+
+                foreach ($k['pilihan'] as $i => $namaPilihan) {
+                    PilihanKomponenPaket::create([
+                        'komponen_paket_id' => $komponen->id,
+                        'nama_pilihan' => $namaPilihan,
+                        'urutan' => $i + 1,
+                    ]);
+                }
+            }
         }
 
-        $addComponent = function ($paketId, $namaKomponen, $tipe, $urutan, $opsiMenu) use ($menuIds) {
-            $komp = KomponenPaket::create([
-                'paket_catering_id' => $paketId,
-                'nama_komponen' => $namaKomponen,
-                'tipe' => $tipe,
-                'urutan' => $urutan
-            ]);
-
-            foreach ($opsiMenu as $namaMenu) {
-                OpsiKomponen::create([
-                    'komponen_paket_id' => $komp->id,
-                    'menu_id' => $menuIds[$namaMenu]
-                ]);
-            }
-        };
-
-        // PAKET A
-        $paketA = PaketCatering::firstOrCreate([
-            'nama_paket' => 'Paket Nasi Box A',
-            'jenis_paket' => 'nasi_box'
-        ], [
-            'harga' => 25000,
-            'deskripsi' => 'Paket hemat ayam goreng dengan tahu/tempe, lengkap dengan sambal dan lalapan.',
-            'is_active' => true
-        ]);
-        // hapus komponen lama kalau ada
-        $paketA->komponens()->delete();
-
-        $addComponent($paketA->id, 'Nasi', 'fixed', 1, ['Nasi Putih']);
-        $addComponent($paketA->id, 'Lauk Utama', 'choice', 2, ['Ayam Goreng']);
-        $addComponent($paketA->id, 'Lauk Pendamping', 'choice', 3, ['Tahu Goreng', 'Tempe Goreng']);
-        $addComponent($paketA->id, 'Pelengkap', 'fixed', 4, ['Sambal Terasi', 'Lalapan']);
-
-        // PAKET B
-        $paketB = PaketCatering::firstOrCreate([
-            'nama_paket' => 'Paket Nasi Box B',
-            'jenis_paket' => 'nasi_box'
-        ], [
-            'harga' => 30000,
-            'deskripsi' => 'Paket lengkap ayam bakar dan sayur asem segar, ditambah buah pencuci mulut.',
-            'is_active' => true
-        ]);
-        $paketB->komponens()->delete();
-
-        $addComponent($paketB->id, 'Nasi', 'fixed', 1, ['Nasi Putih']);
-        $addComponent($paketB->id, 'Lauk Utama', 'fixed', 2, ['Ayam Bakar']);
-        $addComponent($paketB->id, 'Sayur', 'fixed', 3, ['Sayur Asem']);
-        $addComponent($paketB->id, 'Lauk Pendamping', 'choice', 4, ['Tahu Goreng', 'Tempe Goreng']);
-        $addComponent($paketB->id, 'Pelengkap', 'fixed', 5, ['Sambal Terasi', 'Lalapan']);
-        $addComponent($paketB->id, 'Buah', 'choice', 6, ['Pisang', 'Jeruk']);
-
-        // PAKET C
-        $paketC = PaketCatering::firstOrCreate([
-            'nama_paket' => 'Paket Nasi Box C',
-            'jenis_paket' => 'nasi_box'
-        ], [
-            'harga' => 35000,
-            'deskripsi' => 'Paket premium dengan rendang daging sapi empuk, sayur nangka khas padang, dan perkedel.',
-            'is_active' => true
-        ]);
-        $paketC->komponens()->delete();
-
-        $addComponent($paketC->id, 'Nasi', 'fixed', 1, ['Nasi Putih']);
-        $addComponent($paketC->id, 'Lauk Utama', 'fixed', 2, ['Rendang Daging']);
-        $addComponent($paketC->id, 'Sayur', 'fixed', 3, ['Sayur Nangka']);
-        $addComponent($paketC->id, 'Lauk Pendamping', 'fixed', 4, ['Perkedel Kentang']);
-        $addComponent($paketC->id, 'Pelengkap', 'fixed', 5, ['Sambal Ijo']);
-        $addComponent($paketC->id, 'Buah', 'choice', 6, ['Pisang', 'Jeruk']);
-        $addComponent($paketC->id, 'Minuman', 'fixed', 7, ['Air Mineral Gelas']);
+        $this->command->info('Paket Nasi Box A dan B berhasil disiapkan.');
     }
 }

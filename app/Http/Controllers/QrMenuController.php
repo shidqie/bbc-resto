@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\KategoriMenu;
 use App\Models\Meja;
 use App\Models\Menu;
 use App\Services\DineInService;
+use App\Services\MidtransService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class QrMenuController extends Controller
 {
     protected $dineInService;
+
     protected $midtransService;
 
-    public function __construct(DineInService $dineInService, \App\Services\MidtransService $midtransService)
+    public function __construct(DineInService $dineInService, MidtransService $midtransService)
     {
         $this->dineInService = $dineInService;
         $this->midtransService = $midtransService;
@@ -42,12 +44,12 @@ class QrMenuController extends Controller
         }
 
         // Jika tidak ada token atau token tidak valid → tampilkan halaman "scan QR dulu"
-        if (!$selectedMeja) {
+        if (! $selectedMeja) {
             return view('menu.qr-menu.scan-required');
         }
 
-        // Fetch kategori
-        $kategoris = \App\Models\KategoriMenu::orderBy('nama_kategori', 'asc')->get();
+        // Fetch kategori (urut sesuai id: Paket Nasi Liwet → Minuman Non-Coffee)
+        $kategoris = KategoriMenu::orderBy('id', 'asc')->get();
 
         // Fetch menu Dine-In aktif
         $rawMenus = Menu::with(['kategori_menu'])
@@ -57,15 +59,15 @@ class QrMenuController extends Controller
             ->where('status_aktif', true)
             ->get();
 
-        $menus = $rawMenus->map(fn($m) => [
-            'id'              => $m->id,
-            'nama'            => $m->nama_menu ?? $m->nama ?? 'Menu',
-            'harga'           => (float) ($m->harga_jual ?? $m->harga ?? 0),
-            'foto'            => $m->foto,
-            'deskripsi'       => $m->deskripsi,
-            'kategori_menu_id'=> $m->kategori_menu_id,
-            'status'          => $m->status_aktif ? 'aktif' : 'habis',
-            'is_habis'        => false,
+        $menus = $rawMenus->map(fn ($m) => [
+            'id' => $m->id,
+            'nama' => $m->nama_menu ?? $m->nama ?? 'Menu',
+            'harga' => (float) ($m->harga_jual ?? 0),
+            'foto' => $m->foto,
+            'deskripsi' => $m->deskripsi,
+            'kategori_menu_id' => $m->kategori_menu_id,
+            'status' => $m->status_aktif ? 'aktif' : 'habis',
+            'is_habis' => false,
         ]);
 
         return view('menu.qr-menu.index', compact('kategoris', 'menus', 'selectedMeja'));
@@ -77,15 +79,15 @@ class QrMenuController extends Controller
     public function storeOrder(Request $request)
     {
         $request->validate([
-            'meja_id'          => 'required|exists:meja,id',
-            'nama_konsumen'    => 'required|string|max:255',
-            'nomor_hp'         => 'nullable|string|max:20',
-            'jumlah_tamu'      => 'nullable|integer|min:1',
-            'metode_pembayaran'=> 'nullable|string|in:kasir,qris',
-            'items'            => 'required|array|min:1',
-            'items.*.menu_id'  => 'required|exists:menu,id',
-            'items.*.qty'      => 'required|integer|min:1',
-            'items.*.catatan'  => 'nullable|string',
+            'meja_id' => 'required|exists:meja,id',
+            'nama_konsumen' => 'required|string|max:255',
+            'nomor_hp' => 'nullable|string|max:20',
+            'jumlah_tamu' => 'nullable|integer|min:1',
+            'metode_pembayaran' => 'nullable|string|in:kasir,qris',
+            'items' => 'required|array|min:1',
+            'items.*.menu_id' => 'required|exists:menu,id',
+            'items.*.qty' => 'required|integer|min:1',
+            'items.*.catatan' => 'nullable|string',
         ]);
 
         try {
@@ -99,15 +101,17 @@ class QrMenuController extends Controller
                 $staffId
             );
 
-            $kodePesanan = $pesanan->kode_pesanan ?? 'DIN-' . $pesanan->id;
-            $metode      = $request->metode_pembayaran ?? 'kasir';
-            $qrisData    = null;
+            $kodePesanan = $pesanan->kode_pesanan ?? 'DIN-'.$pesanan->id;
+            $metode = $request->metode_pembayaran ?? 'kasir';
+            $qrisData = null;
 
             if ($metode === 'qris') {
                 $totalAmount = 0;
                 foreach ($request->items as $item) {
                     $m = Menu::find($item['menu_id']);
-                    if ($m) $totalAmount += (($m->harga_jual ?? $m->harga ?? 0) * $item['qty']);
+                    if ($m) {
+                        $totalAmount += (($m->harga_jual ?? 0) * $item['qty']);
+                    }
                 }
 
                 $qrisData = $this->midtransService->createQrisPayment(
@@ -118,21 +122,22 @@ class QrMenuController extends Controller
             }
 
             return response()->json([
-                'success'           => true,
-                'message'           => $metode === 'qris'
+                'success' => true,
+                'message' => $metode === 'qris'
                     ? 'Pesanan dibuat! Silakan scan QRIS untuk membayar.'
                     : 'Pesanan berhasil dikirim ke kasir!',
-                'kode_pesanan'      => $kodePesanan,
-                'pesanan_id'        => $pesanan->id,
+                'kode_pesanan' => $kodePesanan,
+                'pesanan_id' => $pesanan->id,
                 'metode_pembayaran' => $metode,
-                'qris'              => $qrisData,
+                'qris' => $qrisData,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('QR Menu storeOrder Error: ' . $e->getMessage());
+            Log::error('QR Menu storeOrder Error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal membuat pesanan: ' . $e->getMessage()
+                'message' => 'Gagal membuat pesanan: '.$e->getMessage(),
             ], 400);
         }
     }

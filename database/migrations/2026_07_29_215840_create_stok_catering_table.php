@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('digunakan', 15, 3)->default(0);
             $table->timestamp('dibuat_pada')->useCurrent();
             $table->timestamp('diperbarui_pada')->useCurrent()->useCurrentOnUpdate();
-            
+
             $table->unique(['pesanan_id', 'bahan_baku_id']);
         });
     }

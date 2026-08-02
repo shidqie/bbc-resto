@@ -2,13 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Produk as Menu;
 use App\Models\BahanBaku;
-use App\Models\StokBahanBaku;
-use App\Models\ResepProduk;
+use App\Models\Menu;
 use App\Models\MutasiStok;
-use Illuminate\Support\Facades\DB;
+use App\Models\StokBahanBaku;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class BOMService
 {
@@ -17,8 +16,8 @@ class BOMService
      */
     public static function cekKetersediaanBahan($menuId, $jumlahPesan = 1)
     {
-        $menu = Menu::with('resep_produk.bahanBaku.stok_relasi')->find($menuId);
-        if (!$menu) {
+        $menu = Menu::with('resep_menu.bahanBaku.stok_relasi')->find($menuId);
+        if (! $menu) {
             return false;
         }
 
@@ -26,12 +25,12 @@ class BOMService
             return false;
         }
 
-        $resepList = $menu->resep_produk ?? $menu->resep;
+        $resepList = $menu->resep_menu;
 
         if ($resepList && $resepList->count() > 0) {
             foreach ($resepList as $resep) {
                 $bahan = $resep->bahanBaku;
-                if (!$bahan || (isset($bahan->status_aktif) && !$bahan->status_aktif)) {
+                if (! $bahan || (isset($bahan->status_aktif) && ! $bahan->status_aktif)) {
                     return false;
                 }
 
@@ -39,7 +38,7 @@ class BOMService
                 $stokAda = (float) ($stokRecord->jumlah_stok ?? 0);
 
                 $kebutuhanTotal = $resep->jumlah_kebutuhan * $jumlahPesan;
-                
+
                 if ($stokAda < $kebutuhanTotal) {
                     return false;
                 }
@@ -55,26 +54,26 @@ class BOMService
      */
     public static function kurangiStokBahan($menuId, $jumlahPesan = 1, $pesananId = null)
     {
-        if (!self::cekKetersediaanBahan($menuId, $jumlahPesan)) {
+        if (! self::cekKetersediaanBahan($menuId, $jumlahPesan)) {
             $menu = Menu::find($menuId);
             $namaMenu = $menu ? ($menu->nama_produk ?? $menu->nama) : "ID {$menuId}";
             throw new Exception("Gagal memproses pesanan: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
         }
 
         return DB::transaction(function () use ($menuId, $jumlahPesan, $pesananId) {
-            $menu = Menu::with('resep_produk.bahanBaku')->findOrFail($menuId);
-            $resepList = $menu->resep_produk ?? $menu->resep;
+            $menu = Menu::with('resep_menu.bahanBaku')->findOrFail($menuId);
+            $resepList = $menu->resep_menu;
 
             if ($resepList) {
                 foreach ($resepList as $resep) {
                     $bahanBaku = BahanBaku::where('id', $resep->bahan_baku_id)->first();
                     $stokRecord = StokBahanBaku::where('bahan_baku_id', $resep->bahan_baku_id)->lockForUpdate()->first();
-                    
-                    if (!$stokRecord) {
+
+                    if (! $stokRecord) {
                         $stokRecord = StokBahanBaku::create([
                             'bahan_baku_id' => $resep->bahan_baku_id,
                             'jumlah_stok' => 100,
-                            'terakhir_diperbarui' => now()
+                            'terakhir_diperbarui' => now(),
                         ]);
                     }
 
@@ -89,7 +88,7 @@ class BOMService
                     $sisaStok = $stokAwal - $kebutuhanTotal;
                     $stokRecord->where('bahan_baku_id', $resep->bahan_baku_id)->update([
                         'jumlah_stok' => $sisaStok,
-                        'terakhir_diperbarui' => now()
+                        'terakhir_diperbarui' => now(),
                     ]);
 
                     MutasiStok::create([
@@ -98,8 +97,8 @@ class BOMService
                         'jenis_mutasi' => 'keluar',
                         'jumlah' => $kebutuhanTotal,
                         'sisa_stok' => $sisaStok,
-                        'keterangan' => 'Penjualan menu: ' . ($menu->nama_produk ?? $menu->nama) . ' (Qty: ' . $jumlahPesan . ')',
-                        'referensi' => $pesananId ? 'ORD-' . $pesananId : null,
+                        'keterangan' => 'Penjualan menu: '.($menu->nama_produk ?? $menu->nama).' (Qty: '.$jumlahPesan.')',
+                        'referensi' => $pesananId ? 'ORD-'.$pesananId : null,
                     ]);
                 }
             }
@@ -114,10 +113,12 @@ class BOMService
     public static function kembalikanStokBahan($menuId, $jumlahPesan = 1, $pesananId = null)
     {
         return DB::transaction(function () use ($menuId, $jumlahPesan, $pesananId) {
-            $menu = Menu::with('resep_produk.bahanBaku')->find($menuId);
-            if (!$menu) return true;
+            $menu = Menu::with('resep_menu.bahanBaku')->find($menuId);
+            if (! $menu) {
+                return true;
+            }
 
-            $resepList = $menu->resep_produk ?? $menu->resep;
+            $resepList = $menu->resep_menu;
             if ($resepList) {
                 foreach ($resepList as $resep) {
                     $stokRecord = StokBahanBaku::where('bahan_baku_id', $resep->bahan_baku_id)->lockForUpdate()->first();
@@ -126,7 +127,7 @@ class BOMService
                         $sisaStok = (float) $stokRecord->jumlah_stok + $kebutuhanTotal;
                         $stokRecord->where('bahan_baku_id', $resep->bahan_baku_id)->update([
                             'jumlah_stok' => $sisaStok,
-                            'terakhir_diperbarui' => now()
+                            'terakhir_diperbarui' => now(),
                         ]);
 
                         MutasiStok::create([
@@ -135,8 +136,8 @@ class BOMService
                             'jenis_mutasi' => 'masuk',
                             'jumlah' => $kebutuhanTotal,
                             'sisa_stok' => $sisaStok,
-                            'keterangan' => 'Void/Batal pesanan menu: ' . ($menu->nama_produk ?? $menu->nama) . ' (Qty: ' . $jumlahPesan . ')',
-                            'referensi' => $pesananId ? 'VOID-' . $pesananId : null,
+                            'keterangan' => 'Void/Batal pesanan menu: '.($menu->nama_produk ?? $menu->nama).' (Qty: '.$jumlahPesan.')',
+                            'referensi' => $pesananId ? 'VOID-'.$pesananId : null,
                         ]);
                     }
                 }

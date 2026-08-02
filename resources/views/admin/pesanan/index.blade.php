@@ -14,16 +14,16 @@
         </div>
 
     {{-- Filter & Pencarian --}}
-    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
+    <div class="bg-white p-4 rounded-[2.25rem] shadow-sm border border-gray-100 mb-6">
         <form action="{{ route('admin.pesanan.index') }}" method="GET" class="flex flex-wrap items-end gap-4">
             <div class="flex-1 min-w-[200px]">
                 <label class="block text-xs font-bold text-gray-600 mb-1">Cari Pesanan</label>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="No Pesanan / Nama Pemesan" 
-                       class="w-full border-gray-300 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                       class="w-full border-gray-300 rounded-3xl text-sm focus:border-emerald-500 focus:ring-emerald-500">
             </div>
             <div class="w-40">
                 <label class="block text-xs font-bold text-gray-600 mb-1">Jenis Pesanan</label>
-                <select name="jenis" class="w-full border-gray-300 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                <select name="jenis" class="w-full border-gray-300 rounded-3xl text-sm focus:border-emerald-500 focus:ring-emerald-500">
                     <option value="">Semua Jenis</option>
                     @foreach($jenis_pesanan as $jp)
                         <option value="{{ $jp->id }}" {{ request('jenis') == $jp->id ? 'selected' : '' }}>{{ $jp->nama_jenis }}</option>
@@ -32,24 +32,24 @@
             </div>
             <div class="w-48">
                 <label class="block text-xs font-bold text-gray-600 mb-1">Status</label>
-                <select name="status" class="w-full border-gray-300 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                <select name="status" class="w-full border-gray-300 rounded-3xl text-sm focus:border-emerald-500 focus:ring-emerald-500">
                     <option value="">Semua Status</option>
                     @foreach($status_pesanan as $sp)
                         <option value="{{ $sp->id }}" {{ request('status') == $sp->id ? 'selected' : '' }}>{{ $sp->nama_status }}</option>
                     @endforeach
                 </select>
             </div>
-            <button type="submit" class="px-5 py-2.5 bg-[#0F2E23] hover:bg-[#0a1f17] text-white rounded-xl text-sm font-bold shadow-sm transition-colors">
+            <button type="submit" class="px-5 py-2.5 bg-[#0F2E23] hover:bg-[#0a1f17] text-white rounded-3xl text-sm font-bold shadow-sm transition-colors">
                 <x-heroicon-o-funnel class="w-4 h-4 mr-1.5" /> Terapkan
             </button>
-            <a href="{{ route('admin.pesanan.index') }}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-bold transition-colors">
+            <a href="{{ route('admin.pesanan.index') }}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-3xl text-sm font-bold transition-colors">
                 Reset
             </a>
         </form>
     </div>
 
     {{-- Tabel Data --}}
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-[2.25rem] shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
@@ -110,7 +110,7 @@
                                     $payColor = 'red';
                                 }
                             @endphp
-                            <span class="px-2.5 py-1 bg-{{$payColor}}-50 text-{{$payColor}}-700 border border-{{$payColor}}-200 rounded-lg text-[11px] font-extrabold uppercase whitespace-nowrap">
+                            <span class="px-2.5 py-1 bg-{{$payColor}}-50 text-{{$payColor}}-700 border border-{{$payColor}}-200 rounded-2xl text-[11px] font-extrabold uppercase whitespace-nowrap">
                                 {{ $payStatus }}
                             </span>
                         </td>
@@ -122,19 +122,19 @@
                                 elseif($pesanan->status_pesanan_id == 6) $color = 'red';
                                 else $color = 'blue';
                             @endphp
-                            <span class="px-2.5 py-1 bg-{{$color}}-50 text-{{$color}}-700 border border-{{$color}}-200 rounded-lg text-[11px] font-extrabold uppercase whitespace-nowrap">
+                            <span class="px-2.5 py-1 bg-{{$color}}-50 text-{{$color}}-700 border border-{{$color}}-200 rounded-2xl text-[11px] font-extrabold uppercase whitespace-nowrap">
                                 {{ optional($pesanan->status_pesanan)->nama_status ?? 'Unknown' }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" onclick="openDetailDrawer({{ $pesanan->id }})" title="Detail" class="w-7 h-7 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                                <button type="button" onclick="openDetailDrawer({{ $pesanan->id }})" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
                                     <x-heroicon-o-eye class="w-3 h-3" />
                                 </button>
-                                <button type="button" onclick="alert('Fitur Ubah Pesanan belum tersedia')" title="Ubah" class="w-7 h-7 rounded-lg flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
+                                <button type="button" onclick="alert('Fitur Ubah Pesanan belum tersedia')" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
                                     <x-heroicon-o-pencil-square class="w-3 h-3" />
                                 </button>
-                                <button type="button" onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" title="Cetak" class="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
+                                <button type="button" onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" title="Cetak" class="w-7 h-7 rounded-full flex items-center justify-center bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
                                     <x-heroicon-o-printer class="w-3 h-3" />
                                 </button>
                             </div>

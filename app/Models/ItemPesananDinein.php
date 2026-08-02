@@ -5,6 +5,7 @@ namespace App\Models;
 class ItemPesananDinein extends BaseModel
 {
     protected $table = 'detail_pesanan';
+
     protected $guarded = [];
 
     protected static function boot()
@@ -12,7 +13,7 @@ class ItemPesananDinein extends BaseModel
         parent::boot();
 
         static::creating(function ($model) {
-            if (empty($model->harga_satuan) && !empty($model->menu_id)) {
+            if (empty($model->harga_satuan) && ! empty($model->menu_id)) {
                 $menu = Menu::find($model->menu_id);
                 if ($menu) {
                     $model->harga_satuan = $menu->harga_jual;
@@ -46,7 +47,7 @@ class ItemPesananDinein extends BaseModel
     public function setQtyAttribute($value)
     {
         $this->attributes['jumlah'] = $value;
-        if (!empty($this->attributes['harga_satuan'])) {
+        if (! empty($this->attributes['harga_satuan'])) {
             $this->attributes['subtotal'] = $this->attributes['harga_satuan'] * $value;
         }
     }
@@ -64,11 +65,6 @@ class ItemPesananDinein extends BaseModel
     public function setDiinputPadaAttribute($value)
     {
         // Virtual attribute ignored for SQL columns
-    }
-
-    public function menu()
-    {
-        return $this->belongsTo(Menu::class, 'menu_id');
     }
 
     public function menu()

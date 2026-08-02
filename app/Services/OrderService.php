@@ -3,9 +3,7 @@
 namespace App\Services;
 
 use App\Models\Pesanan;
-use App\Models\DetailPesanan;
 use Illuminate\Support\Facades\DB;
-use App\Services\StockService;
 
 class OrderService
 {
@@ -19,8 +17,8 @@ class OrderService
     /**
      * Selesaikan pesanan dan potong stok bahan baku sesuai resep menu.
      *
-     * @param Pesanan $pesanan
      * @return void
+     *
      * @throws \Exception
      */
     public function completeOrder(Pesanan $pesanan)
@@ -37,12 +35,14 @@ class OrderService
                 $menu = $detail->menu;
                 $jumlahDipesan = $detail->jumlah;
 
-                if (!$menu || !$menu->resep_menu) continue;
+                if (! $menu || ! $menu->resep_menu) {
+                    continue;
+                }
 
                 foreach ($menu->resep_menu as $resep) {
                     $bahanBakuId = $resep->bahan_baku_id;
                     $kebutuhanPerPorsi = $resep->jumlah_kebutuhan;
-                    
+
                     $totalKebutuhan = $kebutuhanPerPorsi * $jumlahDipesan;
 
                     $this->stockService->deductStock(
@@ -53,7 +53,7 @@ class OrderService
                 }
             }
 
-            $pesanan->status_pesanan = 'selesai';
+            $pesanan->status_pesanan_id = 5; // Selesai
             $pesanan->save();
         });
     }
@@ -63,17 +63,16 @@ class OrderService
      * Jika sudah terlanjur memotong stok (misal karena logic sebelumnya), bisa direstore di sini.
      * Saat ini asumsikan pemotongan stok hanya terjadi saat pesanan Selesai.
      *
-     * @param Pesanan $pesanan
      * @return void
      */
     public function cancelOrder(Pesanan $pesanan)
     {
-        if ($pesanan->status_pesanan == 'selesai') {
+        if ($pesanan->status_pesanan_id == 5) {
             throw new \Exception('Pesanan yang sudah selesai tidak bisa dibatalkan secara langsung.');
         }
 
         DB::transaction(function () use ($pesanan) {
-            $pesanan->status_pesanan = 'dibatalkan';
+            $pesanan->status_pesanan_id = 6; // Dibatalkan
             $pesanan->save();
         });
     }

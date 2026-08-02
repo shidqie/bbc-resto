@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Masuk Konsumen · BBC Resto</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        *, body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        input:focus { outline: none; box-shadow: 0 0 0 3px rgba(15,46,35,0.08); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fu  { animation: fadeUp .45s ease both; }
+        .d1  { animation-delay: .08s; }
+        .d2  { animation-delay: .16s; }
+        .d3  { animation-delay: .24s; }
+        .d4  { animation-delay: .32s; }
+    </style>
+</head>
+<body class="min-h-screen bg-[#f5f5f0] flex antialiased text-[#111827]">
+
+    <div class="flex min-h-screen w-full">
+
+        {{-- ── LEFT PANEL ── --}}
+        <div class="hidden lg:flex lg:w-2/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden">
+
+            <div class="absolute inset-0" style="background-image: url('{{ asset('images/homepage.webp') }}'); background-size: cover; background-position: center;"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
+            <div class="absolute inset-0 bg-[#0F2E23]/40"></div>
+
+            <div class="relative z-10 flex items-center gap-2.5">
+                <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-full object-contain bg-white/10 p-0.5">
+                <span class="text-white/80 text-sm font-semibold tracking-wide">BBC Resto</span>
+            </div>
+
+            <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-3.5 py-1.5 mb-6">
+                    <x-heroicon-o-shopping-bag class="w-3 h-3 text-white/60" />
+                    <span class="text-white/60 text-[11px] font-semibold uppercase tracking-[0.1em]">Customer Access</span>
+                </div>
+                <h1 class="text-3xl xl:text-4xl font-bold text-white leading-snug mb-4">
+                    Pantau<br>Pesanan Anda.
+                </h1>
+                <p class="text-white/60 text-sm leading-relaxed max-w-xs">
+                    Masuk untuk memantau status pesanan catering & nasi box, riwayat pembayaran, hingga pengantaran.
+                </p>
+            </div>
+
+            <div class="relative z-10">
+                <p class="text-white/30 text-xs">© 2026 Saung Babakan Cinta</p>
+            </div>
+        </div>
+
+        {{-- ── RIGHT: FORM ── --}}
+        <div class="flex-1 relative flex items-center justify-center px-6 py-16 sm:px-12 bg-[#f5f5f0]">
+
+            <a href="{{ route('home') }}"
+               class="absolute top-6 left-6 sm:top-8 sm:left-8 inline-flex items-center gap-1.5 pl-2.5 pr-3.5 py-1.5 rounded-full bg-white border border-gray-200 text-[13px] font-semibold text-gray-600 hover:text-[#0F2E23] shadow-sm transition-colors">
+                <x-heroicon-o-arrow-left class="w-4 h-4" />
+                Kembali
+            </a>
+
+            <div class="w-full max-w-[360px]">
+
+                <div class="lg:hidden flex items-center gap-2.5 mb-10">
+                    <div class="w-8 h-8 rounded-full bg-[#0F2E23] flex items-center justify-center">
+                        <x-heroicon-o-shopping-bag class="text-white w-3 h-3" />
+                    </div>
+                    <span class="text-sm font-bold text-[#111827] tracking-wide">BBC Resto · Konsumen</span>
+                </div>
+
+                <div class="mb-8 fu d1">
+                    <h2 class="text-2xl font-bold text-[#111827] tracking-tight mb-1">Masuk Konsumen</h2>
+                    <p class="text-sm text-gray-500 font-medium">Gunakan Email atau Nomor HP & password Anda.</p>
+                </div>
+
+                <x-auth-session-status class="mb-5 text-sm" :status="session('status')" />
+
+                @if($errors->any())
+                    <div class="mb-5 p-3.5 bg-red-50 border border-red-100 rounded-3xl text-sm text-red-600 font-medium fu d1">
+                        <x-heroicon-o-exclamation-circle class="mr-2 text-red-400 w-5 h-5" />{{ $errors->first() }}
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('konsumen.login') }}" class="space-y-4">
+                    @csrf
+
+                    <div class="fu d2">
+                        <label for="login" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Email / No. HP</label>
+                        <input id="login" type="text" name="login" value="{{ old('login') }}"
+                               required autofocus autocomplete="username"
+                               placeholder="nama@email.com / 08xxxxxxxxxx"
+                               class="w-full px-4 py-3 bg-white border rounded-3xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0F2E23] {{ $errors->has('login') ? 'border-red-300' : 'border-gray-200' }}">
+                    </div>
+
+                    <div class="fu d3" x-data="{ show: false }">
+                        <label for="kata_sandi" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Password</label>
+                        <div class="relative">
+                            <input id="kata_sandi" :type="show ? 'text' : 'password'" name="kata_sandi"
+                                   required autocomplete="current-password"
+                                   placeholder="••••••••"
+                                   class="w-full px-4 py-3 pr-11 bg-white border rounded-3xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0F2E23] {{ $errors->has('kata_sandi') ? 'border-red-300' : 'border-gray-200' }}">
+                            <button type="button" @click="show = !show"
+                                    class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                                <x-heroicon-o-eye class="w-4 h-4" x-show="!show" />
+                                <x-heroicon-o-eye-slash class="w-4 h-4" x-show="show" style="display:none" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 fu d3">
+                        <input id="remember_me" type="checkbox" name="remember"
+                               class="w-4 h-4 rounded border-gray-300 text-[#0F2E23] focus:ring-[#0F2E23]/20 transition-all cursor-pointer">
+                        <label for="remember_me" class="text-sm text-gray-400 font-medium cursor-pointer select-none">Ingat saya</label>
+                    </div>
+
+                    <div class="pt-1 fu d4">
+                        <button type="submit"
+                                class="w-full py-3.5 bg-[#0F2E23] hover:bg-[#1a4a35] text-white font-semibold text-sm rounded-3xl transition-all duration-200 active:scale-[0.99]">
+                            Masuk
+                        </button>
+                    </div>
+                </form>
+
+                <p class="text-center text-sm text-gray-500 font-medium mt-6 fu d4">
+                    Belum punya akun?
+                    <a href="{{ route('konsumen.register') }}" class="text-[#0F2E23] font-bold hover:opacity-70 transition-opacity">Daftar Sekarang</a>
+                </p>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

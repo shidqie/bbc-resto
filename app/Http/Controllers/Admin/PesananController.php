@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\JenisPesanan;
 use App\Models\Pesanan;
+use App\Models\StatusPesanan;
+use Illuminate\Http\Request;
 
 class PesananController extends Controller
 {
@@ -23,15 +25,15 @@ class PesananController extends Controller
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nomor_pesanan', 'like', "%{$search}%")
-                  ->orWhere('catatan', 'like', "%{$search}%");
+                    ->orWhere('catatan', 'like', "%{$search}%");
             });
         }
 
         $pesanans = $query->paginate(20)->withQueryString();
-        $jenis_pesanan = \App\Models\JenisPesanan::all();
-        $status_pesanan = \App\Models\StatusPesanan::all();
+        $jenis_pesanan = JenisPesanan::all();
+        $status_pesanan = StatusPesanan::all();
 
         return view('admin.pesanan.index', compact('pesanans', 'jenis_pesanan', 'status_pesanan'));
     }
@@ -41,7 +43,7 @@ class PesananController extends Controller
         $pesanan = Pesanan::with([
             'jenis_pesanan', 'status_pesanan', 'meja', 'kasir', 'pelayan',
             'detail_pesanan.menu', 'pembayaran.metode_pembayaran', 'pembayaran.jenis_pembayaran',
-            'tiket_dapur', 'jadwal_pesanan'
+            'tiket_dapur', 'jadwal_pesanan',
         ])->findOrFail($id);
 
         if ($request->ajax()) {

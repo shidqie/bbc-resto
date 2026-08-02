@@ -23,7 +23,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {{-- Informasi Menu --}}
             <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden">
                     @if($menu->foto)
                         <img src="{{ Storage::url($menu->foto) }}" class="w-full h-64 object-cover">
                     @else
@@ -35,10 +35,10 @@
                     <div class="p-6">
                         <div class="flex justify-between items-start mb-4">
                             <div>
-                                <h2 class="text-xl font-bold text-gray-900">{{ $menu->nama }}</h2>
-                                <p class="text-sm text-gray-500">{{ $menu->kategori->nama_kategori ?? 'Tanpa Kategori' }}</p>
+                                <h2 class="text-xl font-bold text-gray-900">{{ $menu->nama_menu }}</h2>
+                                <p class="text-sm text-gray-500">{{ $menu->kategori_menu->nama_kategori ?? 'Tanpa Kategori' }}</p>
                             </div>
-                            @if($menu->status == 'tersedia')
+                            @if($menu->status_aktif)
                                 <x-ui.badge color="success" dot>Tersedia</x-ui.badge>
                             @else
                                 <x-ui.badge color="danger" dot>Habis</x-ui.badge>
@@ -46,13 +46,13 @@
                         </div>
                         
                         <div class="text-2xl font-black text-[#3B82F6] mb-4">
-                            Rp {{ number_format($menu->harga, 0, ',', '.') }}
+                            Rp {{ number_format($menu->harga_jual, 0, ',', '.') }}
                         </div>
 
                         <div class="space-y-3 pt-4 border-t border-gray-100">
                             <div>
                                 <div class="text-xs font-medium text-gray-500 mb-1">Jenis Menu</div>
-                                <div class="text-sm font-medium text-gray-900 capitalize">{{ str_replace('_', ' ', $menu->jenis_menu) }}</div>
+                                <div class="text-sm font-medium text-gray-900 capitalize">{{ str_replace('_', ' ', $menu->jenis_menu->nama_jenis ?? '-') }}</div>
                             </div>
                             @if($menu->deskripsi)
                             <div>
@@ -67,10 +67,10 @@
 
             {{-- Komposisi Resep --}}
             <div class="lg:col-span-2">
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-full flex flex-col">
+                <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden h-full flex flex-col">
                     <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                         <h2 class="text-lg font-bold text-gray-900">Komposisi Resep</h2>
-                        <a href="{{ route('resep.create', $menu->id) }}" class="inline-flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-xl font-medium text-sm transition-colors">
+                        <a href="{{ route('resep.create', $menu->id) }}" class="inline-flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-3xl font-medium text-sm transition-colors">
                             <x-heroicon-o-list-bullet class="w-5 h-5 inline-block shrink-0" /> Atur Resep
                         </a>
                     </div>
@@ -93,7 +93,7 @@
                                                 <div class="text-xs text-gray-500">{{ $resep->bahanBaku->kategoriBahan->nama_kategori ?? '-' }}</div>
                                             </td>
                                             <td class="px-6 py-4 font-semibold text-gray-900 text-right">
-                                                {{ (float)$resep->jumlah_kebutuhan }} {{ $resep->satuan }}
+                                                {{ (float)$resep->jumlah_kebutuhan }} {{ $resep->satuan->singkatan ?? '' }}
                                             </td>
                                             <td class="px-6 py-4 text-gray-500">
                                                 {{ $resep->keterangan ?? '-' }}

@@ -39,7 +39,7 @@
         <div class="flex items-center gap-4">
             @auth
                 <a href="{{ route('dashboard') }}"
-                   class="inline-flex items-center justify-center px-4 py-1.5 rounded-lg border border-amber-400 text-amber-400 font-semibold text-sm hover:bg-amber-400 hover:text-green-950 transition-all duration-300">
+                   class="inline-flex items-center justify-center px-4 py-1.5 rounded-2xl border border-amber-400 text-amber-400 font-semibold text-sm hover:bg-amber-400 hover:text-green-950 transition-all duration-300">
                     Dasbor Admin
                 </a>
             @endauth

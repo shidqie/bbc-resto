@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pesanan;
-use App\Models\Menu;
 use App\Models\DetailPesanan;
+use App\Models\Menu;
 use App\Models\Pembayaran;
+use App\Models\Pesanan;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PesananController extends Controller
 {
@@ -19,7 +19,7 @@ class PesananController extends Controller
 
         if ($request->has('search') && $request->search != '') {
             $query->where('no_pesanan', 'like', "%{$request->search}%")
-                  ->orWhere('nama_pelanggan', 'like', "%{$request->search}%");
+                ->orWhere('nama_pelanggan', 'like', "%{$request->search}%");
         }
 
         if ($request->has('jenis') && $request->jenis != '') {
@@ -44,6 +44,7 @@ class PesananController extends Controller
     public function create()
     {
         $menus = Menu::with('kategori')->where('status', 'tersedia')->get();
+
         return view('pesanan.create', compact('menus'));
     }
 
@@ -60,7 +61,7 @@ class PesananController extends Controller
             'jumlah.*' => 'required|integer|min:1',
             'catatan' => 'nullable|array',
             'jumlah_bayar' => 'required|numeric|min:0',
-            'metode_pembayaran' => 'required|in:tunai,transfer,qris'
+            'metode_pembayaran' => 'required|in:tunai,transfer,qris',
         ]);
 
         try {
@@ -69,7 +70,7 @@ class PesananController extends Controller
             // Generate No Pesanan
             $lastPesanan = Pesanan::latest()->first();
             $lastId = $lastPesanan ? $lastPesanan->id : 0;
-            $noPesanan = 'INV-' . date('Ymd') . '-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
+            $noPesanan = 'INV-'.date('Ymd').'-'.str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
 
             $pesanan = Pesanan::create([
                 'no_pesanan' => $noPesanan,
@@ -81,7 +82,7 @@ class PesananController extends Controller
                 'jumlah_porsi' => 1, // default 1 (atau total item, disesuaikan)
                 'status_pesanan' => 'baru',
                 'user_id' => Auth::id(),
-                'total_harga' => 0
+                'total_harga' => 0,
             ]);
 
             $totalHarga = 0;
@@ -97,7 +98,7 @@ class PesananController extends Controller
                     'jumlah' => $qty,
                     'harga_satuan' => $menu->harga,
                     'subtotal' => $subtotal,
-                    'catatan' => $request->catatan[$index] ?? null
+                    'catatan' => $request->catatan[$index] ?? null,
                 ]);
             }
 
@@ -114,7 +115,7 @@ class PesananController extends Controller
 
             $pesanan->update([
                 'total_harga' => $totalHarga,
-                'status_pembayaran' => $statusBayar
+                'status_pembayaran' => $statusBayar,
             ]);
 
             if ($request->jumlah_bayar > 0) {
@@ -123,32 +124,35 @@ class PesananController extends Controller
                     'jumlah_bayar' => $request->jumlah_bayar,
                     'metode_pembayaran' => $request->metode_pembayaran,
                     'jenis_pembayaran' => $jenisPembayaran,
-                    'tanggal_bayar' => now()
+                    'tanggal_bayar' => now(),
                 ]);
             }
 
             DB::commit();
+
             return redirect()->route('pesanan.show', $pesanan->id)->with('success', 'Pesanan berhasil dibuat!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+
+            return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 
     public function show(Pesanan $pesanan)
     {
         $pesanan->load(['details.menu', 'pembayarans', 'user']);
+
         return view('pos.pesanan.show', compact('pesanan'));
     }
 
     public function updateStatus(Request $request, Pesanan $pesanan, OrderService $orderService)
     {
         $request->validate([
-            'status_pesanan' => 'required|in:baru,diproses,selesai,dibatalkan,dikirim'
+            'status_pesanan' => 'required|in:baru,diproses,selesai,dibatalkan,dikirim',
         ]);
 
         try {
-            // Note: $request->status_pesanan string is legacy. Assuming it's the old schema, 
+            // Note: $request->status_pesanan string is legacy. Assuming it's the old schema,
             // but just in case, use the ID mapping or keep as is.
             if ($request->status_pesanan == 'selesai' && $pesanan->status_pesanan_id != 5) {
                 $orderService->completeOrder($pesanan);
@@ -158,7 +162,7 @@ class PesananController extends Controller
                 $pesanan->update(['status_pesanan_id' => 6]);
             } else {
                 // Legacy map
-                $map = ['baru'=>1, 'diproses'=>3, 'dikirim'=>4, 'selesai'=>5, 'dibatalkan'=>6];
+                $map = ['baru' => 1, 'diproses' => 3, 'dikirim' => 4, 'selesai' => 5, 'dibatalkan' => 6];
                 if (isset($map[$request->status_pesanan])) {
                     $pesanan->update(['status_pesanan_id' => $map[$request->status_pesanan]]);
                 }
@@ -172,12 +176,12 @@ class PesananController extends Controller
 
     public function cetak(Pesanan $pesanan, $type)
     {
-        if (!in_array($type, ['konsumen', 'dapur', 'meja'])) {
+        if (! in_array($type, ['konsumen', 'dapur', 'meja'])) {
             abort(404);
         }
-        
+
         $pesanan->load(['details.menu', 'pembayarans', 'user']);
-        
+
         return view("pesanan.print.{$type}", compact('pesanan'));
     }
 }

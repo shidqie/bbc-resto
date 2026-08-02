@@ -5,6 +5,7 @@ namespace App\Models;
 class PilihanPesananCatering extends BaseModel
 {
     protected $table = 'pilihan_pesanan_catering';
+
     protected $guarded = [];
 
     public function detail_pesanan()

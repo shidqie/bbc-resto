@@ -6,7 +6,7 @@
 | Menggunakan Alpine.js untuk toggle open/close dan submenu.
 |--}}
 
-<aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="no-print bg-[#111827] text-gray-400 flex flex-col shrink-0 transition-all duration-300 relative z-20">
+<aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="no-print bg-white border-r border-neutral-200 text-neutral-600 flex flex-col shrink-0 transition-all duration-300 relative z-20">
     @php
         $userRole = auth()->user()->peran->nama_peran ?? '';
         $hasRole = function(...$roles) use ($userRole) {
@@ -16,28 +16,28 @@
     @endphp
 
     {{-- Logo & Toggle --}}
-    <div class="h-16 flex items-center justify-between px-4 border-b border-gray-800 shrink-0 transition-all duration-300">
+    <div class="h-16 flex items-center justify-between px-4 border-b border-neutral-100 shrink-0 transition-all duration-300">
         <div class="flex items-center gap-2.5 overflow-hidden" x-show="sidebarOpen" x-transition:enter="transition delay-100 duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-            <img src="/images/logo-saung.png" alt="Logo" class="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-700">
-            <span class="font-extrabold text-white text-[15px] tracking-widest whitespace-nowrap">SBC RESTO</span>
+            <img src="/images/logo-saung.png" alt="Logo" class="w-8 h-8 rounded object-contain shrink-0">
+            <span class="font-semibold text-neutral-900 text-[15px] tracking-tight whitespace-nowrap">SBC RESTO</span>
         </div>
-        <img x-show="!sidebarOpen" src="/images/logo-saung.png" alt="Logo" class="w-7 h-7 rounded-full object-cover shrink-0 mx-auto border border-gray-700" x-cloak>
-        <button @click="sidebarOpen = !sidebarOpen" 
-                class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors focus:outline-none shrink-0"
+        <img x-show="!sidebarOpen" src="/images/logo-saung.png" alt="Logo" class="w-7 h-7 rounded object-contain shrink-0 mx-auto" x-cloak>
+        <button @click="sidebarOpen = !sidebarOpen"
+                class="w-8 h-8 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors focus:outline-none shrink-0"
                 x-bind:class="sidebarOpen ? '' : 'hidden'"
                 title="Toggle Sidebar">
             <x-heroicon-o-chevron-left class="w-5 h-5" />
         </button>
         <button x-show="!sidebarOpen" @click="sidebarOpen = true"
-                class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors focus:outline-none shrink-0 mx-auto mt-1"
+                class="w-8 h-8 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors focus:outline-none shrink-0 mx-auto mt-1"
                 title="Buka Sidebar" x-cloak>
             <x-heroicon-o-chevron-right class="text-[15px] w-5 h-5" />
         </button>
     </div>
 
     {{-- Navigation --}}
-    <nav class="flex-1 py-6 px-3 space-y-2 no-scrollbar" :class="sidebarOpen ? 'overflow-y-auto' : 'overflow-visible'">
-        
+    <nav class="flex-1 py-5 px-2.5 space-y-1 no-scrollbar" :class="sidebarOpen ? 'overflow-y-auto' : 'overflow-visible'">
+
         {{-- Dashboard --}}
         @include('partials.sidebar-link', [
             'route' => 'dashboard',
@@ -47,7 +47,7 @@
         ])
 
         {{-- Divider --}}
-        <div class="py-2" x-show="sidebarOpen"><div class="h-px w-full bg-gray-800"></div></div>
+        <div class="py-1.5" x-show="sidebarOpen"><div class="h-px w-full bg-neutral-100"></div></div>
 
         {{-- Penjualan --}}
         @if($hasRole('Kasir', 'Pemilik', 'Tim Pengantaran'))
@@ -65,22 +65,24 @@
         ])
         @endif
 
-        {{-- Menu --}}
+        {{-- Menu & Paket --}}
         @if($hasRole('Manajer', 'Pemilik'))
         @include('partials.sidebar-submenu', [
             'icon' => 'gmdi-menu-book-r',
-            'label' => 'Menu',
-            'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('resep.*'),
+            'label' => 'Menu & Paket',
+            'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('resep.*') || request()->routeIs('paket-catering.*'),
             'items' => [
                 ['label' => 'Data Menu', 'url' => route('menu.index'), 'active' => request()->routeIs('menu.*')],
                 ['label' => 'Kategori Menu', 'url' => route('kategori-menu.index'), 'active' => request()->routeIs('kategori-menu.*')],
-                ['label' => 'Kelola Resep Menu', 'url' => route('resep.index'), 'active' => request()->routeIs('resep.*')],
+                ['label' => 'Resep & Takaran', 'url' => route('resep.index'), 'active' => request()->routeIs('resep.*')],
+                ['label' => 'Paket Catering', 'url' => route('paket-catering.index', ['jenis' => 'catering']), 'active' => request()->routeIs('paket-catering.*') && request('jenis', 'catering') === 'catering'],
+                ['label' => 'Paket Nasi Box', 'url' => route('paket-catering.index', ['jenis' => 'nasi_box']), 'active' => request()->routeIs('paket-catering.*') && request('jenis') === 'nasi_box'],
             ],
         ])
         @endif
 
         {{-- Meja --}}
-        @if($hasRole('Manajer', 'Pemilik'))
+        @if($hasRole('Admin', 'Manajer', 'Pemilik'))
         @include('partials.sidebar-submenu', [
             'icon' => 'gmdi-table-bar',
             'label' => 'Meja',
@@ -96,12 +98,12 @@
         @include('partials.sidebar-submenu', [
             'icon' => 'fluentui-box-16',
             'label' => 'Persediaan Bahan Baku',
-            'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('stok-operasional.*') || request()->routeIs('mutasi-stok.*'),
+            'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('stok-operasional.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('penyesuaian-stok.*'),
             'items' => [
                 ['label' => 'Data Bahan Baku', 'url' => route('bahan-baku.index'), 'active' => request()->routeIs('bahan-baku.*')],
                 ['label' => 'Stok Bahan Baku', 'url' => route('stok-operasional.index'), 'active' => request()->routeIs('stok-operasional.*')],
                 ['label' => 'Riwayat Stok', 'url' => route('mutasi-stok.index'), 'active' => request()->routeIs('mutasi-stok.*')],
-                ['label' => 'Penyesuaian Stok', 'url' => '#', 'active' => false],
+                ['label' => 'Penyesuaian Stok', 'url' => route('penyesuaian-stok.index'), 'active' => request()->routeIs('penyesuaian-stok.*')],
             ],
         ])
         @endif
@@ -113,7 +115,9 @@
             'label' => 'Pengadaan',
             'isOpen' => request()->routeIs('pengadaan.*'),
             'items' => [
-                ['label' => 'Pengadaan Bahan', 'url' => route('pengadaan.index'), 'active' => request()->routeIs('pengadaan.index') || request()->routeIs('pengadaan.create') || request()->routeIs('pengadaan.show')],
+                ['label' => 'Semua Pengadaan', 'url' => route('pengadaan.index'), 'active' => request()->routeIs('pengadaan.index') || request()->routeIs('pengadaan.show')],
+                ['label' => 'Pengadaan Harian', 'url' => route('pengadaan.create', ['tipe' => 'harian']), 'active' => request()->routeIs('pengadaan.create') && request('tipe') === 'harian'],
+                ['label' => 'Buat Pengadaan', 'url' => route('pengadaan.create'), 'active' => request()->routeIs('pengadaan.create') && !request()->has('tipe')],
                 ['label' => 'Penerimaan Bahan', 'url' => route('pengadaan.terima-barang'), 'active' => request()->routeIs('pengadaan.terima-barang') || request()->routeIs('pengadaan.form-terima') || request()->routeIs('pengadaan.proses-terima')],
             ],
         ])
@@ -127,18 +131,32 @@
             'isOpen' => request()->routeIs('laporan.*') || request()->routeIs('pengadaan.index'),
             'items' => [
                 ['label' => 'Penjualan', 'url' => route('laporan.penjualan'), 'active' => request()->routeIs('laporan.penjualan')],
-                ['label' => 'Stok Bahan', 'url' => route('laporan.stok'), 'active' => request()->routeIs('laporan.stok')],
+                ['label' => 'Persediaan Bahan Baku', 'url' => route('laporan.stok'), 'active' => request()->routeIs('laporan.stok')],
+            ],
+        ])
+        @endif
+
+        {{-- Manajemen Pengguna --}}
+        @if($hasRole('Pemilik', 'Manajer'))
+        @include('partials.sidebar-submenu', [
+            'icon' => 'fluentui-people-28',
+            'label' => 'Manajemen Pengguna',
+            'isOpen' => request()->routeIs('users.*') || request()->routeIs('roles.*'),
+            'items' => [
+                ['label' => 'Data Pengguna', 'url' => route('users.index'), 'active' => request()->routeIs('users.*') && request('type') !== 'pelanggan'],
+                ['label' => 'Data Pelanggan', 'url' => route('users.index', ['type' => 'pelanggan']), 'active' => request()->routeIs('users.*') && request('type') === 'pelanggan'],
+                ['label' => 'Hak Akses', 'url' => route('roles.index'), 'active' => request()->routeIs('roles.*')],
             ],
         ])
         @endif
     </nav>
 
     {{-- Footer Actions --}}
-    <div class="p-3 border-t border-gray-800 shrink-0">
+    <div class="p-2.5 border-t border-neutral-100 shrink-0">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="w-full flex items-center gap-3 px-3 py-3 text-[15px] font-semibold text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition group" title="Logout">
-                <x-ri-logout-box-r-fill class="text-[18px] w-6 text-center shrink-0 text-gray-500 group-hover:text-red-500" />
+            <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl transition group" title="Logout">
+                <x-ri-logout-box-r-fill class="text-[18px] w-6 text-center shrink-0 text-neutral-400 group-hover:text-neutral-900" />
                 <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-200">Log Out</span>
             </button>
         </form>

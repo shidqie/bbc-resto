@@ -19,9 +19,9 @@
             <form action="{{ route('resep.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
                 <div class="relative flex-1 sm:flex-none sm:w-56">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode…" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode…" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-2xl focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
                 </div>
-                <button type="submit" class="text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+                <button type="submit" class="text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-2xl px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
             </form>
             <div class="flex items-center gap-2">
                 <span class="text-xs font-medium text-gray-500">Total Menu:</span>
@@ -30,7 +30,7 @@
         </div>
 
         {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-3xl border border-gray-200 overflow-hidden">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
@@ -50,9 +50,9 @@
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
                                 @if($menu->foto)
-                                    <img src="{{ Storage::url($menu->foto) }}" class="w-9 h-9 rounded-lg object-cover border border-gray-100 shrink-0" alt="">
+                                    <img src="{{ Storage::url($menu->foto) }}" class="w-9 h-9 rounded-full object-cover border border-gray-100 shrink-0" alt="">
                                 @else
-                                    <div class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                                    <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                                         <span class="text-xs font-bold text-gray-400">{{ substr($menu->nama, 0, 1) }}</span>
                                     </div>
                                 @endif
@@ -64,7 +64,7 @@
                         </td>
                         <td class="px-4 py-3">
                             <span class="text-xs text-gray-700 font-medium">{{ $menu->kategori->nama ?? '-' }}</span>
-                            <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 ml-1 capitalize">{{ str_replace('_', ' ', $menu->jenis_menu) }}</span>
+                            <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-xl bg-gray-100 text-gray-600 ml-1 capitalize">{{ str_replace('_', ' ', $menu->jenis_menu) }}</span>
                         </td>
                         <td class="px-4 py-3">
                             @if($menu->resep_count > 0)
@@ -79,7 +79,7 @@
                         </td>
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                                <a href="{{ route('resep.create', $menu->id) }}" class="p-1.5 rounded-md text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="{{ $menu->resep_count > 0 ? 'Edit Resep' : 'Buat Resep' }}">
+                                <a href="{{ route('resep.create', $menu->id) }}" class="p-1.5 rounded-xl text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="{{ $menu->resep_count > 0 ? 'Edit Resep' : 'Buat Resep' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </a>
                             </div>

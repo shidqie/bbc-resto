@@ -101,7 +101,7 @@
             </div>
 
             @if($errors->any())
-                <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6">
+                <div class="bg-red-50 border border-red-200 text-red-700 rounded-3xl p-4 mb-6">
                     <ul class="list-disc list-inside text-sm space-y-1">
                         @foreach($errors->all() as $err)
                             <li>{{ $err }}</li>
@@ -126,13 +126,13 @@
                             <input type="date" name="tanggal_acara" id="tanggalAcara"
                                    min="{{ \Carbon\Carbon::today()->addDays(14)->format('Y-m-d') }}"
                                    value="{{ old('tanggal_acara') }}"
-                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                                   class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
                             <p id="tanggal-warning" class="text-red-500 text-xs mt-1 hidden">Pemesanan catering minimal H-14 sebelum acara.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jumlah Porsi <span class="text-red-500">*</span></label>
                             <input type="number" name="jumlah_porsi" id="jumlahPorsi" min="1" value="{{ old('jumlah_porsi', 50) }}"
-                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                                   class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
                         </div>
                     </div>
                 </div>
@@ -141,21 +141,21 @@
                         <div class="py-8">
                     <h2 class="text-lg font-bold text-gray-900 mb-5">2. Pilih Paket</h2>
                     <div class="grid md:grid-cols-2 gap-4">
-                        @foreach($pakets->where('jenis_paket','catering') as $paket)
-                            <label class="paket-card cursor-pointer border-2 rounded-xl p-5 transition-all duration-200 hover:border-primary border-gray-200"
-                                   data-paket-id="{{ $paket->id }}" data-harga="{{ $paket->harga }}">
+                        @foreach($pakets as $paket)
+                            <label class="paket-card cursor-pointer border-2 rounded-3xl p-5 transition-all duration-200 hover:border-primary border-gray-200"
+                                   data-paket-id="{{ $paket->id }}" data-harga="{{ $paket->harga_jual }}">
                                 <input type="radio" name="paket_id" value="{{ $paket->id }}" class="hidden paket-radio" {{ old('paket_id') == $paket->id ? 'checked' : '' }}>
                                 <div class="flex justify-between items-start mb-3">
-                                    <h3 class="text-lg font-serif text-primary font-semibold">{{ $paket->nama_paket }}</h3>
-                                    <span class="text-secondary font-bold text-lg">Rp {{ number_format($paket->harga, 0, ',', '.') }}<span class="text-sm font-normal text-body">/porsi</span></span>
+                                    <h3 class="text-lg font-serif text-primary font-semibold">{{ $paket->nama_menu }}</h3>
+                                    <span class="text-secondary font-bold text-lg">Rp {{ number_format($paket->harga_jual, 0, ',', '.') }}<span class="text-sm font-normal text-body">/porsi</span></span>
                                 </div>
                                 <p class="text-body text-sm mb-3">{{ $paket->deskripsi }}</p>
                                 <ul class="text-xs text-body space-y-1">
-                                    @foreach($paket->komponens->sortBy('urutan') as $komp)
+                                    @foreach($paket->komponen_paket->sortBy('urutan') as $komp)
                                         <li class="flex items-center gap-1.5">
-                                            <span class="w-1.5 h-1.5 rounded-full {{ $komp->tipe === 'fixed' ? 'bg-primary' : 'bg-secondary' }} flex-shrink-0"></span>
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $komp->tipe_komponen === 'tetap' ? 'bg-primary' : 'bg-secondary' }} flex-shrink-0"></span>
                                             <span>{{ $komp->nama_komponen }}
-                                                @if($komp->tipe === 'choice')<span class="text-secondary">(pilih 1)</span>@endif
+                                                @if($komp->tipe_komponen === 'pilihan')<span class="text-secondary">(pilih 1)</span>@endif
                                             </span>
                                         </li>
                                     @endforeach
@@ -178,18 +178,11 @@
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Pemesan <span class="text-red-500">*</span></label>
-                            <input type="text" name="nama_pemesan" value="{{ old('nama_pemesan', auth()->user()->name ?? '') }}"
-                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                            <input type="text" name="nama_pemesan" value="{{ old('nama_pemesan', optional(auth('pelanggan')->user())->nama ?? '') }}"
+                                   class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nomor Kontak (WhatsApp) <span class="text-red-500">*</span></label>
-                            <div class="flex">
-                                <span class="inline-flex items-center px-4 font-semibold text-gray-500 bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg">
-                                    +62
-                                </span>
-                                <input type="number" inputmode="numeric" name="kontak" value="{{ old('kontak', auth()->user()->phone_number ?? '') }}" placeholder="81234567890"
-                                       class="w-full border border-gray-200 rounded-r-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50 [&::-webkit-inner-spin-button]:appearance-none" required>
-                            </div>
+                            <x-input-wa name="kontak" label="Nomor WhatsApp" :value="optional(auth('pelanggan')->user())->nomor_telepon ?? ''" :required="true" hint="Nomor aktif WhatsApp untuk konfirmasi pesanan." />
                         </div>
 
                         <input type="hidden" name="metode_pengiriman" value="delivery">
@@ -199,23 +192,23 @@
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Venue / Gedung (Opsional)</label>
                                 <input type="text" name="alamat_venue" value="{{ old('alamat_venue') }}" placeholder="Contoh: Gedung Sabuga / Aula Serbaguna"
-                                       class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50 mb-4">
+                                       class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50 mb-4">
                                        
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Alamat Lengkap <span class="text-red-500">*</span></label>
                                 <textarea name="lokasi_acara" id="alamatDelivery" rows="2"
-                                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>{{ old('lokasi_acara', auth()->user()->alamat ?? '') }}</textarea>
+                                        class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>{{ old('lokasi_acara', auth()->user()->alamat ?? '') }}</textarea>
                             </div>
 
                             {{-- Map Container --}}
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lokasi Pengiriman <span class="text-red-500">*</span></label>
                             <p class="text-xs text-body/60 mb-2">💡 Tip: Cari alamat lewat ikon 🔍 di peta, lalu geser pin ke titik yang tepat.</p>
-                            <div id="map-container" class="rounded-2xl overflow-hidden border border-gray-200 shadow-md mb-3 z-0" style="height: 340px; position:relative;">
+                            <div id="map-container" class="rounded-[2.25rem] overflow-hidden border border-gray-200 shadow-md mb-3 z-0" style="height: 340px; position:relative;">
                                 {{-- Address Card Overlay --}}
                                 <div id="map-address-card">
                                     <div class="card-label">📍 Lokasi Venue / Alamat</div>
                                     <div class="card-address" id="cardAlamat">Geser pin ke lokasi kamu...</div>
                                 </div>
-                                <button type="button" onclick="locateUser()" class="absolute bottom-6 right-4 z-[1000] bg-white w-10 h-10 flex items-center justify-center rounded-xl shadow-lg border border-gray-200 text-primary hover:bg-gray-50 transition" title="Temukan Lokasi Saya">
+                                <button type="button" onclick="locateUser()" class="absolute bottom-6 right-4 z-[1000] bg-white w-10 h-10 flex items-center justify-center rounded-full shadow-lg border border-gray-200 text-primary hover:bg-gray-50 transition" title="Temukan Lokasi Saya">
                                     <i class="ph-bold ph-crosshair text-xl"></i>
                                 </button>
                                 <div id="map" style="width:100%; height:100%;"></div>
@@ -228,7 +221,7 @@
                             {{-- Jarak Info Card Minimalist --}}
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5 mt-4">Jarak Pengiriman (Otomatis)</label>
                             <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                                <div class="flex-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+                                <div class="flex-1 bg-white p-3 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 flex-shrink-0">
                                         <i class="ph ph-storefront text-lg"></i>
                                     </div>
@@ -237,7 +230,7 @@
                                         <p class="text-xs font-bold text-gray-800">Saung Babakan Cinta</p>
                                     </div>
                                 </div>
-                                <div class="flex-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+                                <div class="flex-1 bg-white p-3 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 flex-shrink-0">
                                         <i class="ph ph-truck text-lg"></i>
                                     </div>
@@ -254,7 +247,7 @@
                         <div class="md:col-span-2 mt-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Catatan Tambahan</label>
                             <textarea name="catatan" rows="2"
-                                      class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">{{ old('catatan') }}</textarea>
+                                      class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">{{ old('catatan') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -263,14 +256,14 @@
                         <div class="py-8">
                     <h2 class="text-lg font-bold text-gray-900 mb-5">5. Pembayaran</h2>
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <label class="flex-1 flex items-center gap-3 border border-primary bg-primary/5 rounded-lg px-4 py-3.5 cursor-pointer transition">
+                        <label class="flex-1 flex items-center gap-3 border border-primary bg-primary/5 rounded-2xl px-4 py-3.5 cursor-pointer transition">
                             <input type="radio" name="opsi_pembayaran" value="dp" checked class="w-4 h-4 accent-primary" onchange="updatePaymentLabel(this.value)">
                             <div>
                                 <p class="text-sm font-semibold text-gray-900">Bayar DP (50%)</p>
                                 <p class="text-xs text-gray-500">Sisa dibayar H-3 sebelum acara</p>
                             </div>
                         </label>
-                        <label class="flex-1 flex items-center gap-3 border border-gray-200 bg-white rounded-lg px-4 py-3.5 cursor-pointer hover:border-primary/30 transition">
+                        <label class="flex-1 flex items-center gap-3 border border-gray-200 bg-white rounded-2xl px-4 py-3.5 cursor-pointer hover:border-primary/30 transition">
                             <input type="radio" name="opsi_pembayaran" value="lunas" class="w-4 h-4 accent-primary" onchange="updatePaymentLabel(this.value)">
                             <div>
                                 <p class="text-sm font-semibold text-gray-900">Bayar Lunas (100%)</p>
@@ -284,7 +277,7 @@
                     {{-- RIGHT COLUMN: Ringkasan & Submit (Sticky) --}}
                     <div class="lg:col-span-1 sticky top-28">
                         {{-- SECTION 6: Ringkasan & Submit --}}
-                        <div class="bg-gray-50/50 border border-gray-200 rounded-xl p-6">
+                        <div class="bg-gray-50/50 border border-gray-200 rounded-3xl p-6">
                             <h2 class="text-base font-bold text-gray-900 mb-4 pb-4 border-b border-gray-200">
                                 Ringkasan Pesanan
                             </h2>
@@ -302,13 +295,13 @@
                                     <span class="font-semibold text-gray-900">Total Tagihan</span>
                                     <span id="total-tagihan" class="font-bold text-gray-900">Rp 0</span>
                                 </div>
-                                <div class="flex justify-between text-base bg-amber-50 rounded-lg p-3 mt-4 border border-amber-100">
+                                <div class="flex justify-between text-base bg-amber-50 rounded-2xl p-3 mt-4 border border-amber-100">
                                     <span id="label-payment" class="text-amber-800 font-medium">DP (50%)</span>
                                     <span id="dp-amount" class="font-bold text-amber-600">Rp 0</span>
                                 </div>
                             </div>
                             <button type="submit" id="submitBtn"
-                                    class="w-full bg-primary hover:bg-primary-container text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    class="w-full bg-primary hover:bg-primary-container text-white font-semibold py-3 rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 Lanjut Pembayaran
                             </button>
                         </div>
@@ -528,7 +521,7 @@
             container.innerHTML = '';
             komponens.forEach(komp => {
                 const div = document.createElement('div');
-                div.className = 'border border-gray-100 rounded-xl p-4 bg-canvas';
+                div.className = 'border border-gray-100 rounded-3xl p-4 bg-canvas';
                 
                 if (komp.tipe === 'fixed') {
                     div.innerHTML = `

@@ -16,7 +16,7 @@
                 <h1 class="text-2xl font-black text-gray-900 tracking-tight">Jadwal Pengantaran</h1>
                 <p class="text-sm text-gray-500 font-medium mt-1">Kelola jadwal pengiriman pesanan Catering &amp; Nasi Box</p>
             </div>
-            <a href="{{ route('admin.jadwal.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+            <a href="{{ route('admin.jadwal.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-2xl px-3 py-2 hover:bg-gray-800 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 Hari Ini
             </a>
@@ -26,19 +26,19 @@
 
         {{-- Stat Cards --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+            <div class="bg-white rounded-3xl border border-gray-200 px-4 py-3">
                 <p class="text-xs font-medium text-gray-500">Semua Pesanan ({{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d M') }})</p>
                 <p class="text-xl font-bold text-gray-900 mt-1">{{ $summary['Semua'] }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+            <div class="bg-white rounded-3xl border border-gray-200 px-4 py-3">
                 <p class="text-xs font-medium text-gray-500">Baru / Diproses</p>
                 <p class="text-xl font-bold text-amber-600 mt-1">{{ $summary['baru'] + $summary['diproses'] }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+            <div class="bg-white rounded-3xl border border-gray-200 px-4 py-3">
                 <p class="text-xs font-medium text-gray-500">Dibatalkan</p>
                 <p class="text-xl font-bold text-purple-600 mt-1">{{ $summary['dibatalkan'] }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+            <div class="bg-white rounded-3xl border border-gray-200 px-4 py-3">
                 <p class="text-xs font-medium text-gray-500">Selesai</p>
                 <p class="text-xl font-bold text-emerald-600 mt-1">{{ $summary['selesai'] }}</p>
             </div>
@@ -47,26 +47,26 @@
         {{-- Filter Bar --}}
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
             <form action="{{ route('admin.jadwal.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-                <input type="date" name="date" value="{{ $selectedDate }}" class="text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 transition-all bg-white" onchange="this.form.submit()">
+                <input type="date" name="date" value="{{ $selectedDate }}" class="text-xs border border-gray-200 rounded-2xl px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 transition-all bg-white" onchange="this.form.submit()">
                 
                 <div class="relative flex-1 sm:flex-none sm:w-56">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau No. Pesanan…" class="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all bg-white">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau No. Pesanan…" class="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-2xl outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all bg-white">
                 </div>
                 
-                <select name="status" class="text-xs border border-gray-200 rounded-lg bg-white px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 transition-all" onchange="this.form.submit()">
+                <select name="status" class="text-xs border border-gray-200 rounded-2xl bg-white px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 transition-all" onchange="this.form.submit()">
                     <option value="Semua" {{ request('status') == 'Semua' ? 'selected' : '' }}>Semua Status</option>
                     <option value="menunggu_konfirmasi" {{ request('status') == 1 ? 'selected' : '' }}>Menunggu</option>
                     <option value="diproses" {{ request('status') == 3 ? 'selected' : '' }}>Diproses</option>
                     <option value="dikirim" {{ request('status') == 4 ? 'selected' : '' }}>Sedang Diantar</option>
                     <option value="selesai" {{ request('status') == 5 ? 'selected' : '' }}>Selesai</option>
                 </select>
-                <button type="submit" class="text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+                <button type="submit" class="text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-2xl px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
             </form>
         </div>
 
         {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
+        <div class="bg-white rounded-3xl border border-gray-200 overflow-hidden overflow-x-auto">
             <table class="w-full text-sm min-w-[900px]">
                 <thead>
                     <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
@@ -93,9 +93,9 @@
                             </div>
                             <p class="font-semibold text-gray-600 font-mono text-[10px]">{{ $order->nomor_pesanan }}</p>
                             @if($order->jenis_pesanan_id == 2)
-                                <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700">Catering</span>
+                                <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-xl bg-blue-50 text-blue-700">Catering</span>
                             @else
-                                <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700">Nasi Box</span>
+                                <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-xl bg-purple-50 text-purple-700">Nasi Box</span>
                             @endif
                         </td>
 
@@ -126,7 +126,7 @@
                             <form action="{{ route('admin.jadwal.update-status', ['jenis' => $order->jenis_pesanan_id == 2 ? 'Catering' : 'Nasi Box', 'id' => $order->id]) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <select name="status" onchange="this.form.submit()"
-                                        class="text-[11px] font-semibold rounded-lg border px-2 py-1 outline-none cursor-pointer transition-colors w-full
+                                        class="text-[11px] font-semibold rounded-2xl border px-2 py-1 outline-none cursor-pointer transition-colors w-full
                                                {{ in_array($order->status_pesanan_id, [3, 1]) ? 'bg-amber-50 text-amber-900 border-amber-200' : '' }}
                                                {{ $order->status_pesanan_id == 4 ? 'bg-purple-50 text-purple-900 border-purple-200' : '' }}
                                                {{ in_array($order->status_pesanan_id, [5, 'lunas']) ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : '' }}
@@ -143,7 +143,7 @@
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
                                 <a href="{{ $order->jenis_pesanan_id == 2 ? url('/admin/pesanan/catering/' . $order->id) : url('/admin/pesanan/nasi-box/' . $order->id) }}" 
-                                   class="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors" title="Lihat Detail Pesanan">
+                                   class="p-1.5 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors" title="Lihat Detail Pesanan">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 </a>
                             </div>

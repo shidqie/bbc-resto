@@ -2,12 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
+use App\Models\BahanBaku;
 use App\Models\KategoriBahan;
 use App\Models\Satuan;
 use App\Models\Supplier;
-use App\Models\BahanBaku;
+use Illuminate\Database\Seeder;
 
 class BahanBakuSeeder extends Seeder
 {
@@ -31,7 +30,7 @@ class BahanBakuSeeder extends Seeder
         $supplierBerkah = Supplier::create([
             'nama_supplier' => 'Supplier Berkah',
             'kontak' => '08123456789',
-            'alamat' => 'Jl. Pasar Induk No. 1'
+            'alamat' => 'Jl. Pasar Induk No. 1',
         ]);
 
         // 4. Bahan Baku Example Data
@@ -44,7 +43,7 @@ class BahanBakuSeeder extends Seeder
             'stok' => 25,
             'stok_minimum' => 10,
             'harga_terakhir' => 15000,
-            'status' => true
+            'status' => true,
         ]);
 
         BahanBaku::create([
@@ -56,7 +55,7 @@ class BahanBakuSeeder extends Seeder
             'stok' => 8,
             'stok_minimum' => 10,
             'harga_terakhir' => 35000,
-            'status' => true
+            'status' => true,
         ]);
 
         BahanBaku::create([
@@ -68,7 +67,7 @@ class BahanBakuSeeder extends Seeder
             'stok' => 0,
             'stok_minimum' => 5,
             'harga_terakhir' => 18000,
-            'status' => true
+            'status' => true,
         ]);
 
         BahanBaku::create([
@@ -80,7 +79,7 @@ class BahanBakuSeeder extends Seeder
             'stok' => 4,
             'stok_minimum' => 3,
             'harga_terakhir' => 50000,
-            'status' => true
+            'status' => true,
         ]);
 
         BahanBaku::create([
@@ -92,7 +91,7 @@ class BahanBakuSeeder extends Seeder
             'stok' => 12,
             'stok_minimum' => 5,
             'harga_terakhir' => 25000,
-            'status' => true
+            'status' => true,
         ]);
     }
 }

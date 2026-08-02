@@ -22,7 +22,7 @@ class StokOperasionalController extends Controller
         if ($request->has('kategori') && $request->kategori != '') {
             $query->where('kategori_bahan_baku_id', $request->kategori);
         }
-        
+
         if ($request->has('status') && $request->status != '') {
             if ($request->status == 'habis') {
                 $query->whereRaw('stok_bahan_baku.jumlah_stok <= 0');
@@ -36,7 +36,7 @@ class StokOperasionalController extends Controller
         $query->orderByRaw('(stok_bahan_baku.jumlah_stok / NULLIF(bahan_baku.stok_minimal, 0)) ASC');
 
         $bahanBakus = $query->paginate(15)->withQueryString();
-        
+
         $kategoris = KategoriBahanBaku::all();
 
         $stats = [

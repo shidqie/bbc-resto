@@ -35,13 +35,13 @@
     $c = $colorMap[$color] ?? $colorMap['blue'];
 @endphp
 
-<div class="bg-white rounded-2xl p-5 border border-gray-200/90 shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-between">
+<div class="bg-white rounded-[2.25rem] p-5 border border-gray-200/90 shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-between">
     <div>
         <p class="text-xs font-semibold text-gray-400 mb-1 tracking-wide">{{ $label }}</p>
         <p class="text-2xl font-extrabold {{ $c['valueText'] }} tracking-tight">{{ $value }}</p>
     </div>
 
-    <div class="w-11 h-11 rounded-xl {{ $c['iconBg'] }} flex items-center justify-center text-lg shrink-0">
+    <div class="w-11 h-11 rounded-full {{ $c['iconBg'] }} flex items-center justify-center text-lg shrink-0">
         <x-heroicon-o-sparkles class="{{ $icon }} w-5 h-5" />
     </div>
 </div>

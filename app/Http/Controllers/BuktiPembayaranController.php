@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BuktiPembayaran;
-use App\Models\PesananCatering;
-use App\Models\PesananNasiBox;
+use App\Models\Pembayaran;
+use App\Models\Pesanan;
 use Illuminate\Http\Request;
 
 class BuktiPembayaranController extends Controller
@@ -12,25 +11,22 @@ class BuktiPembayaranController extends Controller
     /** GET /pesan/bayar/{kodePesanan} */
     public function show($kodePesanan)
     {
-        // Cari di kedua tabel
-        $pesanan = PesananCatering::where('kode_pesanan', $kodePesanan)->first();
-        $type = 'catering';
-
-        if (!$pesanan) {
-            $pesanan = PesananNasiBox::where('kode_pesanan', $kodePesanan)->first();
-            $type = 'nasi_box';
-        }
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran', 'pelanggan'])
+            ->where('nomor_pesanan', $kodePesanan)
+            ->first();
 
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
 
-        if (in_array($pesanan->status_bayar, ['lunas', 'paid'])) {
+        $type = match ($pesanan->jenis_pesanan_id) {
+            2 => 'catering',
+            3 => 'nasi_box',
+            default => 'dine_in',
+        };
+
+        $statusBayar = $this->statusBayar($pesanan);
+        if ($statusBayar === 'lunas') {
             return redirect()->route('lacak.index', ['kode_pesanan' => $kodePesanan])
                 ->with('success', 'Pesanan ini sudah lunas.');
-        }
-
-        // Generate/Refresh Snap Token untuk pembayaran (DP atau Pelunasan)
-        if (in_array($pesanan->status, ['ditinjau', 'dikonfirmasi', 'terkonfirmasi', 'menunggu_pelunasan'])) {
-            $pesanan->snap_token = \App\Http\Controllers\MidtransController::generateSnapToken($pesanan, $type);
         }
 
         return view('pos.pembayaran.index', compact('pesanan', 'type', 'kodePesanan'));
@@ -40,67 +36,81 @@ class BuktiPembayaranController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'kode_pesanan'     => 'required|string',
+            'kode_pesanan' => 'required|string',
             'jenis_pembayaran' => 'required|in:dp,pelunasan',
-            'file_bukti'       => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'file_bukti' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
         ]);
 
-        // Cari pesanan
-        $pesanan = PesananCatering::where('kode_pesanan', $request->kode_pesanan)->first();
-        $type = PesananCatering::class;
-
-        if (!$pesanan) {
-            $pesanan = PesananNasiBox::where('kode_pesanan', $request->kode_pesanan)->first();
-            $type = PesananNasiBox::class;
-        }
-
+        $pesanan = Pesanan::where('nomor_pesanan', $request->kode_pesanan)->first();
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
+
+        $total = (float) $pesanan->total_tagihan;
+        $dpSudahBayar = (float) $pesanan->pembayaran()
+            ->whereIn('status_pembayaran_id', [2, 3]) // Sebagian / Lunas
+            ->sum('jumlah_bayar');
+
+        $jenisBayarId = $request->jenis_pembayaran === 'pelunasan' ? 3 : 2; // PELUNASAN / UANG_MUKA
+        $jumlahBayar = $request->jenis_pembayaran === 'pelunasan'
+            ? max(0, $total - $dpSudahBayar)
+            : max(0, $total * 0.5 - $dpSudahBayar);
+
+        if ($jumlahBayar <= 0) {
+            return back()->with('error', 'Tagihan untuk pembayaran ini sudah lunas.');
+        }
 
         $path = $request->file('file_bukti')->store('bukti-pembayaran', 'public');
 
-        BuktiPembayaran::create([
-            'pesanan_id'       => $pesanan->id,
-            'pesanan_type'     => $type,
-            'jenis_pembayaran' => $request->jenis_pembayaran,
-            'file_path'        => $path,
-            'status'           => 'menunggu_verifikasi',
+        Pembayaran::create([
+            'nomor_pembayaran' => 'PAY-'.date('YmdHis').'-'.rand(100, 999),
+            'pesanan_id' => $pesanan->id,
+            'metode_pembayaran_id' => 3, // Transfer Bank
+            'status_pembayaran_id' => 1, // Menunggu
+            'jenis_pembayaran_id' => $jenisBayarId,
+            'jumlah_bayar' => $jumlahBayar,
+            'bukti_pembayaran' => $path,
+            'catatan' => 'Bukti diunggah oleh pemesan',
         ]);
 
-        // Update status pesanan
-        $pesanan->update(['status' => 'menunggu_konfirmasi']);
-
-
-        return redirect()->route('pesanan.bayar', $request->kode_pesanan)
+        return redirect()->route('pesanan.bayar', $pesanan->nomor_pesanan)
             ->with('success', 'Bukti pembayaran berhasil dikirim! Kami akan memverifikasi dalam 1×24 jam.');
     }
 
-
+    /** GET /pesan/invoice/{kodePesanan} */
     public function invoicePdf($kodePesanan)
     {
-        $pesanan = \App\Models\PesananCatering::with('buktiPembayarans', 'paket', 'details.menu')
-            ->where('kode_pesanan', $kodePesanan)->first();
-        $type = 'catering';
-
-        if (!$pesanan) {
-            $pesanan = \App\Models\PesananNasiBox::with('buktiPembayarans', 'paket', 'details.menu')
-                ->where('kode_pesanan', $kodePesanan)->first();
-            $type = 'nasi_box';
-        }
-
-        // Fallback: cari pesanan dine-in (Pesanan reguler)
-        if (!$pesanan) {
-            $pesanan = \App\Models\Pesanan::with('details.menu', 'pembayarans', 'user')
-                ->where('no_pesanan', $kodePesanan)->first();
-            $type = 'dine_in';
-        }
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran.metode_pembayaran'])
+            ->where('nomor_pesanan', $kodePesanan)
+            ->first();
 
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
 
-        $viewTemplate = $type === 'dine_in' ? 'pesanan.invoice-dinein' : 'pesanan.invoice-pdf';
+        $type = match ($pesanan->jenis_pesanan_id) {
+            2 => 'catering',
+            3 => 'nasi_box',
+            default => 'dine_in',
+        };
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView($viewTemplate, compact('pesanan', 'type', 'kodePesanan'))
-            ->setPaper('a4', 'portrait');
-        
-        return $pdf->stream("E-Receipt-{$kodePesanan}.pdf");
+        return view('pesanan.invoice-pdf', compact('pesanan', 'type', 'kodePesanan'));
+    }
+
+    /** Status bayar: belum_bayar / dp_terbayar / lunas */
+    public function statusBayar(Pesanan $pesanan): string
+    {
+        $total = (float) $pesanan->total_tagihan;
+        $lunas = (float) $pesanan->pembayaran()
+            ->where('status_pembayaran_id', 3)
+            ->sum('jumlah_bayar');
+        $dp = (float) $pesanan->pembayaran()
+            ->whereIn('status_pembayaran_id', [2, 3])
+            ->sum('jumlah_bayar');
+
+        if ($lunas >= $total || $dp >= $total) {
+            return 'lunas';
+        }
+        if ($dp > 0) {
+            return 'dp_terbayar';
+        }
+
+        return 'belum_bayar';
     }
 }

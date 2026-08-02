@@ -1,13 +1,12 @@
 @props(['paket', 'type'])
 
-<div class="bg-surface rounded-2xl border border-primary/10 overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-all duration-300 group">
-    {{-- Card Header Image / Foto --}}
-    <div class="relative h-44 w-full bg-primary/5 overflow-hidden">
+<div class="bg-white border border-neutral-200 rounded-2xl overflow-hidden flex flex-col transition-colors duration-300 hover:border-neutral-300">
+    {{-- Foto --}}
+    <div class="relative h-40 w-full bg-neutral-50 overflow-hidden">
         @if($paket->foto)
-            <img src="{{ Storage::url($paket->foto) }}" alt="{{ $paket->nama_paket ?? $paket->nama }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            <img src="{{ Storage::url($paket->foto) }}" alt="{{ $paket->nama_paket ?? $paket->nama }}" class="w-full h-full object-cover">
         @else
             @php
-                // Default high quality image based on package name/type
                 $defaultImg = asset('images/homepage.webp');
                 if ($type === 'nasi_box') {
                     $defaultImg = asset('images/saungbabakan.webp');
@@ -15,54 +14,50 @@
                     $defaultImg = asset('images/taman_kafe.webp');
                 }
             @endphp
-            <img src="{{ $defaultImg }}" alt="{{ $paket->nama_paket ?? $paket->nama }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            <img src="{{ $defaultImg }}" alt="{{ $paket->nama_paket ?? $paket->nama }}" class="w-full h-full object-cover">
         @endif
-
-        {{-- Type Badge --}}
-        <span class="absolute top-3 left-3 bg-surface/90 backdrop-blur-md text-primary font-extrabold text-[11px] px-3 py-1 rounded-full border border-primary/10 shadow-xs uppercase tracking-wider">
-            {{ $type === 'catering' ? 'Catering' : 'Nasi Box' }}
-        </span>
     </div>
 
-    {{-- Card Body Content --}}
-    <div class="p-6 flex-1 flex flex-col">
-        <x-typography.h3 class="text-primary mb-1.5 font-extrabold">{{ $paket->nama_menu ?? $paket->nama_paket ?? $paket->nama }}</x-typography.h3>
-        
-        <div class="text-secondary font-extrabold text-base mb-1">
+    {{-- Body --}}
+    <div class="p-5 flex-1 flex flex-col">
+        <span class="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400 mb-2">
+            {{ $type === 'catering' ? 'Catering' : 'Nasi Box' }}
+        </span>
+
+        <h3 class="text-lg font-semibold text-neutral-900 tracking-tight mb-1">{{ $paket->nama_menu ?? $paket->nama_paket ?? $paket->nama }}</h3>
+
+        <div class="mb-3">
             @if(($paket->harga_jual ?? $paket->harga) > 0)
-                Rp {{ number_format($paket->harga_jual ?? $paket->harga, 0, ',', '.') }}<span class="text-xs text-body/70 font-medium">/{{ $type === 'catering' ? 'porsi' : 'box' }}</span>
+                <span class="text-neutral-900 font-semibold">Rp {{ number_format($paket->harga_jual ?? $paket->harga, 0, ',', '.') }}</span>
+                <span class="text-xs text-neutral-400">/{{ $type === 'catering' ? 'porsi' : 'box' }}</span>
             @else
-                <span class="text-sm">By request</span>
+                <span class="text-sm text-neutral-500">By request</span>
             @endif
         </div>
 
         @if($type === 'nasi_box')
-            <p class="text-[11px] text-body/70 font-semibold mb-3 flex items-center gap-1">
-                <x-heroicon-o-sparkles class="w-3 h-3 text-secondary" /> Min. 10 box
-            </p>
-        @else
-            <div class="mb-3"></div>
+            <p class="text-xs text-neutral-500 mb-3">Min. 10 box</p>
         @endif
 
         @if($paket->deskripsi)
-            <x-typography.p variant="small" class="leading-relaxed mb-4 text-body/90 text-xs flex-1">{{ $paket->deskripsi }}</x-typography.p>
+            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">{{ $paket->deskripsi }}</p>
         @endif
 
-        @if($type === 'catering' && $paket->komponens && $paket->komponens->count() > 0)
-            <ul class="space-y-1.5 mb-4 text-xs text-body bg-primary/5 p-3 rounded-xl border border-primary/5">
-                @foreach($paket->komponens as $komp)
-                    <li class="flex items-start gap-2 font-medium">
-                        <x-heroicon-o-check class="text-secondary w-3 h-3 mt-0.5 shrink-0" />
+        @if($type === 'catering' && $paket->komponen_paket && $paket->komponen_paket->count() > 0)
+            <ul class="space-y-1.5 mb-5 text-sm text-neutral-600">
+                @foreach($paket->komponen_paket as $komp)
+                    <li class="flex items-start gap-2">
+                        <x-heroicon-o-check class="w-3.5 h-3.5 mt-0.5 shrink-0 text-neutral-400" />
                         <span>{{ $komp->nama_komponen }}</span>
                     </li>
                 @endforeach
             </ul>
         @endif
 
-        <a href="{{ $type === 'catering' ? route('pesan.catering') : route('pesan.nasibox') }}" 
-           class="mt-auto bg-primary hover:bg-primary-container text-white px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all shadow-sm text-center flex items-center justify-center gap-2 group-hover:bg-primary-container">
+        <a href="{{ $type === 'catering' ? route('pesan.catering') : route('pesan.nasibox') }}"
+           class="mt-auto inline-flex items-center justify-center gap-2 bg-neutral-900 hover:bg-neutral-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
             <span>Pesan {{ $type === 'catering' ? 'Catering' : 'Nasi Box' }}</span>
-            <x-heroicon-o-arrow-right class="w-3 h-3 transition-transform group-hover:translate-x-1" />
+            <x-heroicon-o-arrow-right class="w-3.5 h-3.5" />
         </a>
     </div>
 </div>

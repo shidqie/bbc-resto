@@ -73,7 +73,7 @@ $maxWidthClass = [
     {{-- Modal Content --}}
     <div
         x-show="show"
-        class="mb-6 bg-white rounded-2xl overflow-hidden shadow-2xl transform transition-all sm:w-full {{ $maxWidthClass }} sm:mx-auto border border-gray-100"
+        class="mb-6 bg-white rounded-[2.25rem] overflow-hidden shadow-2xl transform transition-all sm:w-full {{ $maxWidthClass }} sm:mx-auto border border-gray-100"
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -84,7 +84,7 @@ $maxWidthClass = [
         @if($title)
         <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <h3 class="text-lg font-bold text-gray-800">{{ $title }}</h3>
-            <button x-on:click="show = false" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md hover:bg-gray-100">
+            <button x-on:click="show = false" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-xl hover:bg-gray-100">
                 <x-heroicon-o-x-mark class="w-5 h-5" />
             </button>
         </div>
@@ -95,7 +95,7 @@ $maxWidthClass = [
         </div>
         
         @if(isset($footer))
-        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-[2rem]">
             {{ $footer }}
         </div>
         @endif

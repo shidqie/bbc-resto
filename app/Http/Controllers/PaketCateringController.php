@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PaketCatering;
-use App\Models\DetailPaketCatering;
-use App\Models\BahanBaku;
+use App\Models\KomponenPaket;
 use App\Models\Menu;
+use App\Models\PilihanKomponenPaket;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class PaketCateringController extends Controller
 {
     public function index(Request $request)
     {
-        $jenis = $request->input('jenis', 'all');
+        $jenis = $request->input('jenis', 'catering');
         $query = Menu::withCount('komponen_paket');
 
         if ($jenis === 'catering') {
@@ -24,12 +24,14 @@ class PaketCateringController extends Controller
         }
 
         $pakets = $query->latest()->get();
+
         return view('menu.paket.index', compact('pakets', 'jenis'));
     }
 
     public function create(Request $request)
     {
         $jenis = $request->query('jenis', 'catering');
+
         return view('menu.paket.create', compact('jenis'));
     }
 
@@ -57,7 +59,7 @@ class PaketCateringController extends Controller
 
         $paket = Menu::create([
             'nama_menu' => $request->nama_paket,
-            'kode_menu' => 'PKT-' . strtoupper(uniqid()),
+            'kode_menu' => 'PKT-'.strtoupper(uniqid()),
             'jenis_menu_id' => $jenisId,
             'kategori_menu_id' => null,
             'harga_jual' => $request->harga,
@@ -68,7 +70,7 @@ class PaketCateringController extends Controller
 
         foreach ($request->komponen as $komp) {
             $tipe = $komp['tipe'] === 'choice' ? 'pilihan' : 'tetap';
-            $komponen = \App\Models\KomponenPaket::create([
+            $komponen = KomponenPaket::create([
                 'menu_id' => $paket->id,
                 'nama_komponen' => $komp['nama_komponen'],
                 'tipe_komponen' => $tipe,
@@ -77,12 +79,12 @@ class PaketCateringController extends Controller
                 'urutan' => $komp['urutan'],
             ]);
 
-            if ($tipe === 'pilihan' && !empty($komp['pilihan'])) {
+            if ($tipe === 'pilihan' && ! empty($komp['pilihan'])) {
                 $pilihanList = array_map('trim', explode(',', $komp['pilihan']));
                 $urutanPilihan = 1;
                 foreach ($pilihanList as $namaPilihan) {
-                    if (!empty($namaPilihan)) {
-                        \App\Models\PilihanKomponenPaket::create([
+                    if (! empty($namaPilihan)) {
+                        PilihanKomponenPaket::create([
                             'komponen_paket_id' => $komponen->id,
                             'nama_pilihan' => $namaPilihan,
                             'urutan' => $urutanPilihan++,
@@ -98,6 +100,7 @@ class PaketCateringController extends Controller
     public function show($id)
     {
         $paketCatering = Menu::with('komponen_paket.opsi')->findOrFail($id);
+
         return view('menu.paket.show', compact('paketCatering'));
     }
 
@@ -105,6 +108,7 @@ class PaketCateringController extends Controller
     {
         $paketCatering = Menu::with('komponen_paket.opsi')->findOrFail($id);
         $jenis = $paketCatering->jenis_menu_id == 2 ? 'catering' : 'nasi_box';
+
         return view('menu.paket.edit', compact('paketCatering', 'jenis'));
     }
 
@@ -144,7 +148,7 @@ class PaketCateringController extends Controller
 
         foreach ($request->komponen as $komp) {
             $tipe = $komp['tipe'] === 'choice' ? 'pilihan' : 'tetap';
-            $komponen = \App\Models\KomponenPaket::create([
+            $komponen = KomponenPaket::create([
                 'menu_id' => $paketCatering->id,
                 'nama_komponen' => $komp['nama_komponen'],
                 'tipe_komponen' => $tipe,
@@ -153,12 +157,12 @@ class PaketCateringController extends Controller
                 'urutan' => $komp['urutan'],
             ]);
 
-            if ($tipe === 'pilihan' && !empty($komp['pilihan'])) {
+            if ($tipe === 'pilihan' && ! empty($komp['pilihan'])) {
                 $pilihanList = array_map('trim', explode(',', $komp['pilihan']));
                 $urutanPilihan = 1;
                 foreach ($pilihanList as $namaPilihan) {
-                    if (!empty($namaPilihan)) {
-                        \App\Models\PilihanKomponenPaket::create([
+                    if (! empty($namaPilihan)) {
+                        PilihanKomponenPaket::create([
                             'komponen_paket_id' => $komponen->id,
                             'nama_pilihan' => $namaPilihan,
                             'urutan' => $urutanPilihan++,
@@ -178,20 +182,23 @@ class PaketCateringController extends Controller
             $jenis = $paketCatering->jenis_menu_id == 2 ? 'catering' : 'nasi_box';
             $paketCatering->komponen_paket()->delete();
             $paketCatering->delete();
+
             return redirect()->route('paket-catering.index', ['jenis' => $jenis])->with('success', 'Paket berhasil dihapus!');
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             $errorCode = $e->errorInfo[1] ?? $e->getCode();
             if ($errorCode == 1451 || $errorCode == '23000' || strpos($e->getMessage(), '1451') !== false) {
-                return redirect()->back()->with('error', "Menu ini tidak dapat dihapus karena sudah ada di data pesanan. Silakan ubah status menjadi Disembunyikan/Nonaktif.");
+                return redirect()->back()->with('error', 'Menu ini tidak dapat dihapus karena sudah ada di data pesanan. Silakan ubah status menjadi Disembunyikan/Nonaktif.');
             }
-            return redirect()->back()->with('error', "Gagal menghapus menu: Terjadi kesalahan database. " . $e->getMessage());
+
+            return redirect()->back()->with('error', 'Gagal menghapus menu: Terjadi kesalahan database. '.$e->getMessage());
         }
     }
 
     public function toggleActive($id)
     {
         $paketCatering = Menu::findOrFail($id);
-        $paketCatering->update(['status_aktif' => !$paketCatering->status_aktif]);
+        $paketCatering->update(['status_aktif' => ! $paketCatering->status_aktif]);
+
         return redirect()->back()->with('success', 'Status menu diperbarui!');
     }
 }

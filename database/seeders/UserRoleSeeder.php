@@ -2,70 +2,99 @@
 
 namespace Database\Seeders;
 
+use App\Models\Pengguna;
+use App\Models\Peran;
 use Illuminate\Database\Seeder;
-use App\Models\User;
-use App\Models\Role;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserRoleSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Ensure Roles exist
-        $roleAdmin = Role::firstOrCreate(['name' => 'Admin'], ['description' => 'Administrator Sistem']);
-        $rolePemilik = Role::firstOrCreate(['name' => 'Pemilik'], ['description' => 'Pemilik Restoran']);
-        $roleManajer = Role::firstOrCreate(['name' => 'Manajer'], ['description' => 'Manajer Operasional']);
-        $roleKasir = Role::firstOrCreate(['name' => 'Kasir'], ['description' => 'Kasir Restoran']);
-        $roleTimPengantaran = Role::firstOrCreate(['name' => 'Tim Pengantaran'], ['description' => 'Tim Pengantaran Pesanan']);
-        $roleKonsumen = Role::firstOrCreate(['name' => 'Konsumen'], ['description' => 'Pelanggan / Konsumen']);
+        // 1. Ensure Roles exist - 7 roles as per requirements
+        $roles = [
+            'Pemilik' => Peran::firstOrCreate(['nama_peran' => 'Pemilik']),
+            'Manajer' => Peran::firstOrCreate(['nama_peran' => 'Manajer']),
+            'Kasir' => Peran::firstOrCreate(['nama_peran' => 'Kasir']),
+            'Pelayan' => Peran::firstOrCreate(['nama_peran' => 'Pelayan']),
+            'Dapur' => Peran::firstOrCreate(['nama_peran' => 'Dapur']),
+            'Pengantaran' => Peran::firstOrCreate(['nama_peran' => 'Pengantaran']),
+            'Pelanggan' => Peran::firstOrCreate(['nama_peran' => 'Pelanggan']),
+        ];
 
         // 2. Wipe existing users (Disable FK checks temporarily to avoid constraint errors)
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        User::truncate();
+        Pengguna::query()->delete();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $password = Hash::make('password');
+        // 2b. Hapus peran lama yang bukan bagian dari 7 role standar
+        $validRoleNames = array_keys($roles);
+        Peran::whereNotIn('nama_peran', $validRoleNames)->delete();        $password = Hash::make('password');
 
         // 3. Create New Users
-        User::create([
-            'name' => 'Admin System',
-            'email' => 'admin@bbc.com',
-            'password' => $password,
-            'role_id' => $roleAdmin->id,
-            'phone_number' => '08110000000',
-        ]);
-
-        User::create([
-            'name' => 'Pemilik BBC',
+        Pengguna::create([
+            'nama' => 'Pemilik BBC',
             'email' => 'pemilik@bbc.com',
-            'password' => $password,
-            'role_id' => $rolePemilik->id,
-            'phone_number' => '08110000001',
+            'kata_sandi' => $password,
+            'peran_id' => $roles['Pemilik']->id,
+            'nomor_telepon' => '08110000001',
+            'status_aktif' => true,
         ]);
 
-        User::create([
-            'name' => 'Manager BBC',
+        Pengguna::create([
+            'nama' => 'Manager BBC',
             'email' => 'manager@bbc.com',
-            'password' => $password,
-            'role_id' => $roleManajer->id,
-            'phone_number' => '08110000002',
+            'kata_sandi' => $password,
+            'peran_id' => $roles['Manajer']->id,
+            'nomor_telepon' => '08110000002',
+            'status_aktif' => true,
         ]);
 
-        User::create([
-            'name' => 'Kasir BBC',
+        Pengguna::create([
+            'nama' => 'Kasir BBC',
             'email' => 'kasir@bbc.com',
-            'password' => $password,
-            'role_id' => $roleKasir->id,
-            'phone_number' => '08110000003',
+            'kata_sandi' => $password,
+            'peran_id' => $roles['Kasir']->id,
+            'nomor_telepon' => '08110000003',
+            'status_aktif' => true,
+        ]);
+
+        Pengguna::create([
+            'nama' => 'Pelayan BBC',
+            'email' => 'pelayan@bbc.com',
+            'kata_sandi' => $password,
+            'peran_id' => $roles['Pelayan']->id,
+            'nomor_telepon' => '08110000004',
+            'status_aktif' => true,
+        ]);
+
+        Pengguna::create([
+            'nama' => 'Dapur BBC',
+            'email' => 'dapur@bbc.com',
+            'kata_sandi' => $password,
+            'peran_id' => $roles['Dapur']->id,
+            'nomor_telepon' => '08110000005',
+            'status_aktif' => true,
+        ]);
+
+        Pengguna::create([
+            'nama' => 'Pengantaran BBC',
+            'email' => 'pengantaran@bbc.com',
+            'kata_sandi' => $password,
+            'peran_id' => $roles['Pengantaran']->id,
+            'nomor_telepon' => '08110000006',
+            'status_aktif' => true,
         ]);
 
         $this->command->info('Semua data pengguna lama telah dihapus.');
         $this->command->info('Data pengguna baru berhasil dibuat:');
-        $this->command->info('- Admin (08110000000)');
         $this->command->info('- Pemilik (08110000001)');
         $this->command->info('- Manager (08110000002)');
         $this->command->info('- Kasir (08110000003)');
+        $this->command->info('- Pelayan (08110000004)');
+        $this->command->info('- Dapur (08110000005)');
+        $this->command->info('- Pengantaran (08110000006)');
         $this->command->info('Password untuk semua akun: password');
     }
 }

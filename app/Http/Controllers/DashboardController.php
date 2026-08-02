@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pesanan;
-use App\Models\Pembayaran;
 use App\Models\BahanBaku;
-use Illuminate\Http\Request;
+use App\Models\Pembayaran;
+use App\Models\Pesanan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,83 +21,83 @@ class DashboardController extends Controller
 
         // 1. Statistik Hari Ini
         $today = Carbon::today();
-        
+
         $pesananHariIni = Pesanan::whereDate('dibuat_pada', $today)->count();
 
         // 3 = LUNAS, asumsi status_pembayaran_id = 3 untuk Lunas
         $pendapatanHariIni = Pembayaran::whereDate('dibuat_pada', $today)
-                            ->where('status_pembayaran_id', 3)
-                            ->sum('jumlah_bayar');
-                                    
+            ->where('status_pembayaran_id', 3)
+            ->sum('jumlah_bayar');
+
         // Status 1 = Menunggu Konfirmasi, 3 = Sedang Diproses
         $pesananPending = Pesanan::whereIn('status_pesanan_id', [1, 3])->count();
-        
+
         // stok_minimal bukannya stok_minimum
         $stokMenipis = BahanBaku::join('stok_bahan_baku', 'bahan_baku.id', '=', 'stok_bahan_baku.bahan_baku_id')
-                                ->whereColumn('stok_bahan_baku.jumlah_stok', '<=', 'bahan_baku.stok_minimal')
-                                ->count();
+            ->whereColumn('stok_bahan_baku.jumlah_stok', '<=', 'bahan_baku.stok_minimal')
+            ->count();
 
         // 2. Data Grafik Pendapatan 7 Hari Terakhir
         $labels = [];
         $dataPendapatan = [];
-        
+
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
             $labels[] = $date->format('d M');
-            
+
             $totalPendapatan = Pembayaran::whereDate('dibuat_pada', $date)
-                                ->where('status_pembayaran_id', 3)
-                                ->sum('jumlah_bayar');
-                            
+                ->where('status_pembayaran_id', 3)
+                ->sum('jumlah_bayar');
+
             $dataPendapatan[] = $totalPendapatan;
         }
 
         // 3. Data Stok Menipis (List)
         $listStokMenipis = BahanBaku::with('satuan')
-                                    ->join('stok_bahan_baku', 'bahan_baku.id', '=', 'stok_bahan_baku.bahan_baku_id')
-                                    ->whereColumn('stok_bahan_baku.jumlah_stok', '<=', 'bahan_baku.stok_minimal')
-                                    ->take(5)
-                                    ->get();
+            ->join('stok_bahan_baku', 'bahan_baku.id', '=', 'stok_bahan_baku.bahan_baku_id')
+            ->whereColumn('stok_bahan_baku.jumlah_stok', '<=', 'bahan_baku.stok_minimal')
+            ->take(5)
+            ->get();
 
         // 4. Pesanan Terbaru
         $pesananTerbaru = collect();
-        
-        foreach(Pesanan::with('jenis_pesanan', 'status_pesanan')->latest()->take(10)->get() as $p) { 
-            $pesananTerbaru->push((object)[
+
+        foreach (Pesanan::with('jenis_pesanan', 'status_pesanan')->latest()->take(10)->get() as $p) {
+            $pesananTerbaru->push((object) [
                 'id' => $p->id,
                 'no' => $p->nomor_pesanan,
                 'tanggal' => $p->dibuat_pada,
                 'total' => $p->total_tagihan,
                 'status' => $p->status_pesanan->nama_status ?? '-',
                 'jenis' => $p->jenis_pesanan->nama_jenis ?? '-',
-                'url' => '#' // TODO: Fix routing later
-            ]); 
+                'url' => '#', // TODO: Fix routing later
+            ]);
         }
 
         // 5. Pesanan Catering & Nasi Box Menunggu Konfirmasi (Ditinjau)
         // 2 = Catering, 3 = Nasi Box, status 1 = Menunggu
         $cateringMenunggu = Pesanan::where('jenis_pesanan_id', 2)
-                                    ->where('status_pesanan_id', 1)
-                                    ->latest()
-                                    ->get();
-                                            
+            ->where('status_pesanan_id', 1)
+            ->latest()
+            ->get();
+
         $nasiBoxMenunggu = Pesanan::where('jenis_pesanan_id', 3)
-                                    ->where('status_pesanan_id', 1)
-                                    ->latest()
-                                    ->get();
-        
+            ->where('status_pesanan_id', 1)
+            ->latest()
+            ->get();
+
         // 6. Pesanan Mendekati Batas Konfirmasi (H-3)
         $cateringUrgent = Pesanan::where('jenis_pesanan_id', 2)
-                                  ->whereIn('status_pesanan_id', [2, 3])
-                                  ->join('jadwal_pesanan', 'pesanan.id', '=', 'jadwal_pesanan.pesanan_id')
-                                  ->whereDate('jadwal_pesanan.tanggal_acara', '<=', Carbon::today()->addDays(3))
-                                  ->get();
+            ->whereIn('status_pesanan_id', [2, 3])
+            ->join('jadwal_pesanan', 'pesanan.id', '=', 'jadwal_pesanan.pesanan_id')
+            ->whereDate('jadwal_pesanan.tanggal_acara', '<=', Carbon::today()->addDays(3))
+            ->get();
 
         $nasiBoxUrgent = Pesanan::where('jenis_pesanan_id', 3)
-                                  ->whereIn('status_pesanan_id', [2, 3])
-                                  ->join('jadwal_pesanan', 'pesanan.id', '=', 'jadwal_pesanan.pesanan_id')
-                                  ->whereDate('jadwal_pesanan.tanggal_acara', '<=', Carbon::today()->addDays(3))
-                                  ->get();
+            ->whereIn('status_pesanan_id', [2, 3])
+            ->join('jadwal_pesanan', 'pesanan.id', '=', 'jadwal_pesanan.pesanan_id')
+            ->whereDate('jadwal_pesanan.tanggal_acara', '<=', Carbon::today()->addDays(3))
+            ->get();
 
         return view('dashboard.index', compact(
             'pesananHariIni',

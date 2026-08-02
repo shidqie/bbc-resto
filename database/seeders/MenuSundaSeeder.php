@@ -33,7 +33,7 @@ class MenuSundaSeeder extends Seeder
             ['id' => 8, 'nama' => 'Classic Coffee'],
             ['id' => 9, 'nama' => 'Manual Brew Coffee'],
         ];
-        
+
         DB::table('kategori_menus')->insert($kategoriList);
 
         // 2. Menu Dine-in
@@ -129,7 +129,7 @@ class MenuSundaSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ];
 
         DB::table('paket_caterings')->insert($caterings);

@@ -1,5 +1,5 @@
 @php
-    $role = strtolower(auth()->user()?->role?->nama ?? 'pemilik');
+    $role = strtolower(auth()->user()?->peran?->nama_peran ?? 'pemilik');
     $isMobile = $mobile ?? false;
 
     // Helper function for active state
@@ -10,7 +10,7 @@
     // Styling classes based on mobile or desktop
     $baseClass = $isMobile 
         ? "flex flex-col items-center gap-0.5 text-[10px] px-2 transition-colors " 
-        : "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ";
+        : "flex items-center gap-3 px-3 py-2.5 rounded-3xl text-sm font-semibold transition-colors ";
     
     $activeClass = $isMobile 
         ? "text-brand-primary" 

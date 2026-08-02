@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pesanan;
 use Illuminate\Http\Request;
 
 class LacakPesananController extends Controller
@@ -13,30 +14,18 @@ class LacakPesananController extends Controller
         $jenisPesanan = null;
 
         if ($kodePesanan) {
-            // Cek di Catering
-            $pesanan = \App\Models\PesananCatering::where('kode_pesanan', $kodePesanan)
-                ->orWhere('kontak', $kodePesanan)
+            $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran', 'pelanggan'])
+                ->where('nomor_pesanan', $kodePesanan)
+                ->orWhere('nomor_pesanan', 'like', "%{$kodePesanan}%")
                 ->latest()
                 ->first();
-            
+
             if ($pesanan) {
-                $jenisPesanan = 'Catering';
-            } else {
-                // Cek di Nasi Box
-                $pesanan = \App\Models\PesananNasiBox::where('kode_pesanan', $kodePesanan)
-                    ->orWhere('kontak', $kodePesanan)
-                    ->latest()
-                    ->first();
-                
-                if ($pesanan) {
-                    $jenisPesanan = 'Nasi Box';
-                } else {
-                    // Cek di Dine In
-                    $pesanan = \App\Models\PesananDinein::where('kode_pesanan', $kodePesanan)->first();
-                    if ($pesanan) {
-                        $jenisPesanan = 'Dine In / Takeaway';
-                    }
-                }
+                $jenisPesanan = match ($pesanan->jenis_pesanan_id) {
+                    2 => 'Catering',
+                    3 => 'Nasi Box',
+                    default => 'Dine In / Takeaway',
+                };
             }
         }
 

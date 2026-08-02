@@ -36,7 +36,7 @@
 
             <!-- Teks Branding -->
             <div class="relative z-10 p-12 text-center max-w-lg mt-12">
-                <div class="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-white shadow-xl shadow-[#3B82F6]/10 mb-8 border border-gray-100">
+                <div class="inline-flex items-center justify-center w-24 h-24 rounded-[2.25rem] bg-white shadow-xl shadow-[#3B82F6]/10 mb-8 border border-gray-100">
                     <x-heroicon-s-building-storefront class="w-12 h-12 text-[#3B82F6]" />
                 </div>
                 <h1 class="text-4xl font-bold text-[#111827] mb-4 tracking-tight">Saung Babakan Cinta</h1>
@@ -52,7 +52,7 @@
             <!-- Logo untuk versi HP -->
             <div class="lg:hidden mb-8 flex flex-col items-center">
                 <a href="/" class="flex items-center gap-3">
-                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white shadow-lg shadow-[#3B82F6]/10 border border-gray-100">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-lg shadow-[#3B82F6]/10 border border-gray-100">
                         <x-heroicon-s-building-storefront class="w-7 h-7 text-[#3B82F6]" />
                     </div>
                     <span class="font-bold text-[#111827] text-2xl tracking-widest">SBC.</span>

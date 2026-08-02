@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\MutasiStok;
-use App\Models\BahanBaku;
 use Illuminate\Http\Request;
 
 class MutasiStokController extends Controller
@@ -14,7 +13,7 @@ class MutasiStokController extends Controller
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->whereHas('bahan_baku', function($q) use ($search) {
+            $query->whereHas('bahan_baku', function ($q) use ($search) {
                 $q->where('nama_bahan', 'like', "%{$search}%");
             });
         }
@@ -26,7 +25,7 @@ class MutasiStokController extends Controller
         if ($request->has('tanggal') && $request->tanggal != '') {
             $query->whereDate('tanggal_mutasi', $request->tanggal);
         }
-        
+
         if ($request->has('jenis_stok') && $request->jenis_stok != '') {
             $query->where('jenis_stok', $request->jenis_stok);
         }

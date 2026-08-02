@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Carbon\Carbon;
+use Illuminate\Foundation\Http\FormRequest;
 
 class StorePesananNasiBoxRequest extends FormRequest
 {
@@ -15,12 +15,12 @@ class StorePesananNasiBoxRequest extends FormRequest
     public function rules(): array
     {
         $minDate = Carbon::today()->addDays(2)->format('Y-m-d');
-        
+
         return [
             'nama_pemesan' => ['required', 'string', 'max:255'],
             'kontak' => ['required', 'string', 'max:20'],
             'alamat' => ['required', 'string'],
-            'tanggal_acara' => ['required', 'date', 'after_or_equal:' . $minDate],
+            'tanggal_acara' => ['required', 'date', 'after_or_equal:'.$minDate],
             'paket_id' => ['required', 'exists:paket_caterings,id'],
             'komponen' => ['required', 'array'],
             'komponen.*' => ['required', 'exists:menus,id'],
@@ -30,7 +30,7 @@ class StorePesananNasiBoxRequest extends FormRequest
             'latitude' => ['required_if:metode_pengiriman,delivery', 'nullable', 'string'],
             'longitude' => ['required_if:metode_pengiriman,delivery', 'nullable', 'string'],
             'jarak_km' => ['required_if:metode_pengiriman,delivery', 'nullable', 'numeric', 'min:0'],
-            'opsi_pembayaran' => ['required', 'in:dp,lunas']
+            'opsi_pembayaran' => ['required', 'in:dp,lunas'],
         ];
     }
 
@@ -40,7 +40,7 @@ class StorePesananNasiBoxRequest extends FormRequest
             'tanggal_acara.after_or_equal' => 'Pesanan nasi box maksimal H-2 sebelum acara.',
             'jumlah_box.min' => 'Minimal order 10 box.',
             'paket_id.exists' => 'Paket Nasi Box tidak valid.',
-            'komponen.required' => 'Pilihan menu komponen wajib diisi lengkap.'
+            'komponen.required' => 'Pilihan menu komponen wajib diisi lengkap.',
         ];
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,11 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'role' => CheckRole::class,
         ]);
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
+        $middleware->redirectGuestsTo(fn ($request) => $request->is('akun/*')
+            ? route('konsumen.login')
+            : route('admin.login'));
         $middleware->validateCsrfTokens(except: [
             '/api/midtrans/callback',
+            '/api/midtrans/localhost-fallback',
             '/api/payment/notification',
             'api/payment/notification',
         ]);

@@ -5,6 +5,7 @@ namespace App\Models;
 class PesananDinein extends BaseModel
 {
     protected $table = 'pesanan';
+
     protected $guarded = [];
 
     protected static function boot()
@@ -47,6 +48,7 @@ class PesananDinein extends BaseModel
         if (preg_match('/Pemesan:\s*([^|]+)/', $this->attributes['catatan'] ?? '', $matches)) {
             return trim($matches[1]);
         }
+
         return 'Pelanggan';
     }
 
@@ -82,7 +84,7 @@ class PesananDinein extends BaseModel
 
     public function getStatusAttribute()
     {
-        return match((int)($this->attributes['status_pesanan_id'] ?? 1)) {
+        return match ((int) ($this->attributes['status_pesanan_id'] ?? 1)) {
             5 => 'lunas',
             6 => 'batal',
             default => 'menunggu_pembayaran'
@@ -91,7 +93,7 @@ class PesananDinein extends BaseModel
 
     public function setStatusAttribute($value)
     {
-        $id = match($value) {
+        $id = match ($value) {
             'lunas', 'selesai' => 5,
             'batal', 'dibatalkan' => 6,
             default => 1

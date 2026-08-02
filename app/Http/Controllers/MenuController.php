@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Menu;
-use App\Models\KategoriMenu;
 use App\Models\BahanBaku;
-use App\Models\ResepMenu;
 use App\Models\JenisMenu;
+use App\Models\KategoriMenu;
+use App\Models\Menu;
+use App\Models\ResepMenu;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -19,25 +20,24 @@ class MenuController extends Controller
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nama_menu', 'like', "%{$search}%")
-                  ->orWhere('kode_menu', 'like', "%{$search}%");
+                    ->orWhere('kode_menu', 'like', "%{$search}%");
             });
         }
+
+        // Hanya tampilkan menu Dine In (jenis_menu_id = 1)
+        $query->where('jenis_menu_id', 1);
 
         if ($request->has('kategori') && $request->kategori != '') {
             $query->where('kategori_menu_id', $request->kategori);
         }
 
-        if ($request->has('jenis_menu') && $request->jenis_menu != '') {
-            $query->where('jenis_menu_id', $request->jenis_menu);
-        }
-
         $menus = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
 
         $kategoris = KategoriMenu::withCount('menu')->orderBy('id', 'asc')->paginate(10)->withQueryString();
-        $allKategoris = KategoriMenu::orderBy('nama_kategori', 'asc')->get();
-        
+        $allKategoris = KategoriMenu::orderBy('id', 'asc')->get();
+
         $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
 
         $stats = [
@@ -52,9 +52,10 @@ class MenuController extends Controller
 
     public function create()
     {
-        $kategoris = KategoriMenu::orderBy('nama_kategori')->get();
+        $kategoris = KategoriMenu::orderBy('id')->get();
         $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
         $jenis_menu = JenisMenu::all();
+
         return view('menu.menu.create', compact('kategoris', 'bahanBakus', 'jenis_menu'));
     }
 
@@ -62,7 +63,7 @@ class MenuController extends Controller
     {
         $namaMenu = $request->input('nama_menu') ?? $request->input('nama');
         $hargaJual = $request->input('harga_jual') ?? $request->input('harga');
-        
+
         $request->merge([
             'nama_menu' => $namaMenu,
             'harga_jual' => $hargaJual,
@@ -78,20 +79,22 @@ class MenuController extends Controller
             'jumlah_kebutuhan' => 'nullable|array',
         ]);
 
-        $jenisId = match((string)$request->input('jenis_menu_id')) {
+        $jenisId = match ((string) $request->input('jenis_menu_id')) {
             'catering', '2' => 2,
             'nasi_box', '3' => 3,
             default => 1
         };
 
-        $statusAktif = $request->has('status_aktif') 
-            ? (bool)$request->status_aktif 
-            : ($request->input('status') !== 'nonaktif');
+        $statusAktif = match (true) {
+            $request->has('status') => in_array($request->status, ['tersedia', 'aktif', '1', 'on'], true),
+            $request->has('status_aktif') => in_array($request->status_aktif, ['tersedia', 'aktif', '1', 'on'], true),
+            default => true,
+        };
 
         return DB::transaction(function () use ($request, $namaMenu, $hargaJual, $jenisId, $statusAktif) {
             $data = [
                 'nama_menu' => $namaMenu,
-                'kode_menu' => 'PRD-' . strtoupper(uniqid()),
+                'kode_menu' => 'PRD-'.strtoupper(uniqid()),
                 'kategori_menu_id' => $request->kategori_menu_id,
                 'jenis_menu_id' => $jenisId,
                 'harga_jual' => $hargaJual,
@@ -134,9 +137,10 @@ class MenuController extends Controller
     public function edit(Menu $menu)
     {
         $menu->load('resep_menu.bahan_baku.satuan');
-        $kategoris = KategoriMenu::orderBy('nama_kategori')->get();
+        $kategoris = KategoriMenu::orderBy('id')->get();
         $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
         $jenis_menu = JenisMenu::all();
+
         return view('menu.menu.edit', compact('menu', 'kategoris', 'bahanBakus', 'jenis_menu'));
     }
 
@@ -160,15 +164,17 @@ class MenuController extends Controller
             'jumlah_kebutuhan' => 'nullable|array',
         ]);
 
-        $jenisId = match((string)$request->input('jenis_menu_id')) {
+        $jenisId = match ((string) $request->input('jenis_menu_id')) {
             'catering', '2' => 2,
             'nasi_box', '3' => 3,
             default => 1
         };
 
-        $statusAktif = $request->has('status_aktif') 
-            ? (bool)$request->status_aktif 
-            : ($request->input('status') !== 'nonaktif');
+        $statusAktif = match (true) {
+            $request->has('status') => in_array($request->status, ['tersedia', 'aktif', '1', 'on'], true),
+            $request->has('status_aktif') => in_array($request->status_aktif, ['tersedia', 'aktif', '1', 'on'], true),
+            default => true,
+        };
 
         return DB::transaction(function () use ($request, $menu, $namaMenu, $hargaJual, $jenisId, $statusAktif) {
             $data = [
@@ -219,14 +225,16 @@ class MenuController extends Controller
 
     public function show(Menu $menu)
     {
-        $menu->load(['kategori_menu', 'resep_menu.bahan_baku.satuan']);
+        $menu->load(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'jenis_menu']);
+
         return view('menu.menu.show', compact('menu'));
     }
 
     public function toggleStatus(Menu $menu)
     {
-        $newStatus = !$menu->status_aktif;
+        $newStatus = ! $menu->status_aktif;
         $menu->update(['status_aktif' => $newStatus]);
+
         return redirect()->route('menu.index')->with('success', "Status menu '{$menu->nama_menu}' berhasil diubah.");
     }
 
@@ -240,14 +248,16 @@ class MenuController extends Controller
                 $menu->resep_menu()->delete();
                 $menu->komponen_paket()->delete(); // Hapus relasi komponen jika ada
                 $menu->delete();
+
                 return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' berhasil dihapus.");
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             $errorCode = $e->errorInfo[1] ?? $e->getCode();
             if ($errorCode == 1451 || $errorCode == '23000' || strpos($e->getMessage(), '1451') !== false) {
                 return redirect()->route('menu.index')->with('error', "Menu '{$menu->nama_menu}' tidak dapat dihapus karena sudah ada di data pesanan. Silakan ubah status menjadi Nonaktif.");
             }
-            return redirect()->route('menu.index')->with('error', "Gagal menghapus menu: Terjadi kesalahan database. " . $e->getMessage());
+
+            return redirect()->route('menu.index')->with('error', 'Gagal menghapus menu: Terjadi kesalahan database. '.$e->getMessage());
         }
     }
 }

@@ -2,18 +2,17 @@
 
 namespace App\Services;
 
-use App\Models\Meja;
-use App\Models\PesananDinein;
-use App\Models\ItemPesananDinein;
-use App\Models\PembayaranDinein;
-use App\Models\Produk as Menu;
 use App\Models\BahanBaku;
-use App\Models\MutasiStok;
-use App\Models\Pesanan;
 use App\Models\DetailPesanan;
-use App\Services\BOMService;
-use Illuminate\Support\Facades\DB;
+use App\Models\ItemPesananDinein;
+use App\Models\Meja;
+use App\Models\Menu;
+use App\Models\MutasiStok;
+use App\Models\PembayaranDinein;
+use App\Models\Pesanan;
+use App\Models\PesananDinein;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class DineInService
 {
@@ -24,14 +23,14 @@ class DineInService
     {
         return DB::transaction(function () use ($mejaId, $staffId) {
             $meja = Meja::findOrFail($mejaId);
-            
+
             if ($meja->status_meja_id == 4 || $meja->status === 'tidak_aktif') {
                 throw new Exception("Meja {$meja->nomor_meja} sedang tidak aktif.");
             }
 
             // Cari pesanan aktif
             $pesanan = PesananDinein::where('meja_id', $meja->id)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->where('status_pesanan_id', 1);
                     if (DB::getSchemaBuilder()->hasColumn('pesanan', 'status')) {
                         $q->orWhere('status', 'menunggu_pembayaran');
@@ -40,7 +39,7 @@ class DineInService
                 ->latest()
                 ->first();
 
-            if (!$pesanan) {
+            if (! $pesanan) {
                 $pesanan = PesananDinein::create([
                     'meja_id' => $meja->id,
                     'status' => 'menunggu_pembayaran',
@@ -68,15 +67,15 @@ class DineInService
         return DB::transaction(function () use ($pesananId, $items, $staffId) {
             $pesanan = PesananDinein::findOrFail($pesananId);
             if ($pesanan->status !== 'menunggu_pembayaran') {
-                throw new \Exception("Tidak bisa menambah pesanan ke meja yang sudah dibayar/selesai.");
+                throw new Exception('Tidak bisa menambah pesanan ke meja yang sudah dibayar/selesai.');
             }
 
             // Validasi BOM ketersediaan bahan baku untuk item tambahan
             foreach ($items as $item) {
-                if (!BOMService::cekKetersediaanBahan($item['menu_id'], $item['qty'])) {
+                if (! BOMService::cekKetersediaanBahan($item['menu_id'], $item['qty'])) {
                     $menu = Menu::find($item['menu_id']);
                     $namaMenu = $menu ? ($menu->nama_produk ?? $menu->nama) : 'Menu';
-                    throw new \Exception("Gagal menambah item: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
+                    throw new Exception("Gagal menambah item: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
                 }
             }
 
@@ -105,7 +104,7 @@ class DineInService
     {
         return DB::transaction(function () use ($mejaId, $namaKonsumen, $jumlahTamu, $items, $staffId) {
             $meja = Meja::findOrFail($mejaId);
-            
+
             if ($meja->status_meja_id == 4 || $meja->status === 'tidak_aktif') {
                 throw new Exception("Meja {$meja->nomor_meja} sedang tidak aktif.");
             }
@@ -126,13 +125,13 @@ class DineInService
                 $hargaUnit = $menu ? ($menu->harga_jual ?? $menu->harga ?? 0) : 0;
                 $subtotal += ($hargaUnit * $item['qty']);
             }
-            
+
             $pajak = $subtotal * 0.10;
             $totalTagihan = $subtotal + $pajak;
 
             $lastDinein = PesananDinein::latest()->first();
             $lastId = $lastDinein ? $lastDinein->id : 0;
-            $kodePesanan = 'DIN-' . date('Ymd') . '-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
+            $kodePesanan = 'DIN-'.date('Ymd').'-'.str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
 
             // Selalu buat pesanan baru khusus transaksi ini
             $pesanan = PesananDinein::create([
@@ -143,7 +142,7 @@ class DineInService
                 'dibuka_oleh' => $staffId,
                 'dibuka_pada' => now(),
                 'kode_pesanan' => $kodePesanan,
-                'total_tagihan' => $totalTagihan
+                'total_tagihan' => $totalTagihan,
             ]);
 
             $updateData = ['status_meja_id' => 2]; // 2 = TERISI
@@ -156,20 +155,20 @@ class DineInService
             foreach ($items as $item) {
                 ItemPesananDinein::create([
                     'pesanan_dinein_id' => $pesanan->id,
-                    'menu_id'           => $item['menu_id'],
-                    'qty'               => $item['qty'],
-                    'catatan'           => $item['catatan'] ?? null,
-                    'diinput_oleh'      => $staffId,
-                    'diinput_pada'      => now(),
+                    'menu_id' => $item['menu_id'],
+                    'qty' => $item['qty'],
+                    'catatan' => $item['catatan'] ?? null,
+                    'diinput_oleh' => $staffId,
+                    'diinput_pada' => now(),
                 ]);
             }
 
             // --- VALIDASI TERLEBIH DAHULU: Cek Ketersediaan Bahan Baku (BOM) ---
             foreach ($items as $item) {
-                if (!BOMService::cekKetersediaanBahan($item['menu_id'], $item['qty'])) {
+                if (! BOMService::cekKetersediaanBahan($item['menu_id'], $item['qty'])) {
                     $menu = Menu::find($item['menu_id']);
                     $namaMenu = $menu ? ($menu->nama_produk ?? $menu->nama) : 'Menu';
-                    throw new \Exception("Pesanan gagal: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
+                    throw new Exception("Pesanan gagal: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
                 }
             }
 
@@ -181,16 +180,16 @@ class DineInService
             // --- SYNC ke tabel Pesanan (normalized) agar kasir POS bisa membaca ---
             // Cek apakah sudah ada entry di pesanan untuk PesananDinein ini
             $pesananNorm = Pesanan::where('nomor_pesanan', $kodePesanan)->first();
-            if (!$pesananNorm) {
+            if (! $pesananNorm) {
                 $pesananNorm = Pesanan::create([
-                    'nomor_pesanan'      => $kodePesanan,
-                    'tanggal_pesanan'    => now(),
-                    'jenis_pesanan_id'   => 1, // Dine In
-                    'meja_id'            => $meja->id,
-                    'pelayan_id'         => $staffId,
-                    'status_pesanan_id'  => 1, // Menunggu Pembayaran
-                    'total_tagihan'      => $totalHarga,
-                    'catatan'            => 'Pemesan: ' . $namaKonsumen,
+                    'nomor_pesanan' => $kodePesanan,
+                    'tanggal_pesanan' => now(),
+                    'jenis_pesanan_id' => 1, // Dine In
+                    'meja_id' => $meja->id,
+                    'pelayan_id' => $staffId,
+                    'status_pesanan_id' => 1, // Menunggu Pembayaran
+                    'total_tagihan' => $totalTagihan,
+                    'catatan' => 'Pemesan: '.$namaKonsumen,
                 ]);
 
                 foreach ($items as $item) {
@@ -198,12 +197,12 @@ class DineInService
                     if ($menu) {
                         $harga = $menu->harga_jual ?? $menu->harga ?? 0;
                         DetailPesanan::create([
-                            'pesanan_id'  => $pesananNorm->id,
-                            'produk_id'   => $menu->id,
-                            'jumlah'      => $item['qty'],
-                            'harga_satuan'=> $harga,
-                            'subtotal'    => $harga * $item['qty'],
-                            'catatan'     => $item['catatan'] ?? null,
+                            'pesanan_id' => $pesananNorm->id,
+                            'produk_id' => $menu->id,
+                            'jumlah' => $item['qty'],
+                            'harga_satuan' => $harga,
+                            'subtotal' => $harga * $item['qty'],
+                            'catatan' => $item['catatan'] ?? null,
                         ]);
                     }
                 }
@@ -216,7 +215,6 @@ class DineInService
         });
     }
 
-
     /**
      * Proses pembayaran & Potong Stok (Bahan Baku)
      */
@@ -224,9 +222,9 @@ class DineInService
     {
         return DB::transaction(function () use ($pesananId, $metodeBayar, $total, $staffId) {
             $pesanan = PesananDinein::with('items.menu.resep')->findOrFail($pesananId);
-            
+
             if ($pesanan->status !== 'menunggu_pembayaran') {
-                throw new Exception("Pesanan sudah dibayar atau selesai.");
+                throw new Exception('Pesanan sudah dibayar atau selesai.');
             }
 
             // 1. Simpan pembayaran
@@ -254,15 +252,15 @@ class DineInService
             }
 
             // Update status Master Pesanan
-            $masterPesanan = Pesanan::where('keterangan', 'Order_ID_Dinein:' . $pesanan->id)->first();
+            $masterPesanan = Pesanan::where('keterangan', 'Order_ID_Dinein:'.$pesanan->id)->first();
             if ($masterPesanan) {
                 $masterPesanan->update([
                     'status_pembayaran' => 'lunas',
-                    'status_pesanan' => 'selesai'
+                    'status_pesanan' => 'selesai',
                 ]);
             }
 
-            // 3. Stok sudah dipotong saat pesanan diinput (createOrder), 
+            // 3. Stok sudah dipotong saat pesanan diinput (createOrder),
             // jadi di sini hanya mengupdate status pembayaran saja.
 
             return $pembayaran;
@@ -276,10 +274,10 @@ class DineInService
     {
         return DB::transaction(function () use ($mejaId) {
             $meja = Meja::findOrFail($mejaId);
-            
+
             // Selesaikan pesanan yang lunas (opsional, tapi disarankan)
             $pesananAktif = PesananDinein::where('meja_id', $mejaId)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->where('status_pesanan_id', 5); // 5 = Selesai
                     if (DB::getSchemaBuilder()->hasColumn('pesanan', 'status')) {
                         $q->orWhere('status', 'lunas');
@@ -289,8 +287,9 @@ class DineInService
             foreach ($pesananAktif as $pesanan) {
                 $pesanan->update(['status' => 'selesai']);
             }
-            
+
             $meja->update(['status' => 'kosong']);
+
             return true;
         });
     }
@@ -300,11 +299,11 @@ class DineInService
      */
     public function voidPesanan($pesananId, $staffId)
     {
-        return DB::transaction(function () use ($pesananId, $staffId) {
+        return DB::transaction(function () use ($pesananId) {
             $pesanan = PesananDinein::with('items.menu.resep')->findOrFail($pesananId);
-            
+
             if ($pesanan->status === 'batal') {
-                throw new \Exception("Pesanan ini sudah dibatalkan/void.");
+                throw new Exception('Pesanan ini sudah dibatalkan/void.');
             }
 
             // Kembalikan stok
@@ -339,14 +338,14 @@ class DineInService
                         'jenis_mutasi' => 'masuk',
                         'jumlah' => $totalKebutuhan,
                         'sisa_stok' => $bahanBaku->stok,
-                        'keterangan' => 'Void/Refund POS Dine-In (Order #' . $pesanan->id . ')',
+                        'keterangan' => 'Void/Refund POS Dine-In (Order #'.$pesanan->id.')',
                     ]);
                 }
             }
 
             // Update status Pesanan Dinein
             $pesanan->update(['status' => 'batal']);
-            
+
             // Jika ada pembayaran terkait, update status menjadi void
             $pembayaran = PembayaranDinein::where('pesanan_dinein_id', $pesanan->id)->first();
             if ($pembayaran) {
@@ -354,11 +353,11 @@ class DineInService
             }
 
             // Update status Master Pesanan
-            $masterPesanan = Pesanan::where('keterangan', 'Order_ID_Dinein:' . $pesanan->id)->first();
+            $masterPesanan = Pesanan::where('keterangan', 'Order_ID_Dinein:'.$pesanan->id)->first();
             if ($masterPesanan) {
                 $masterPesanan->update([
                     'status_pesanan' => 'dibatalkan',
-                    'status_pembayaran' => 'refund'
+                    'status_pembayaran' => 'refund',
                 ]);
             }
 

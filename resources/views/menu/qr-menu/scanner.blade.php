@@ -79,7 +79,7 @@
     <!-- Header Section -->
     <header class="p-5 flex items-center justify-between border-b border-white/10 bg-black/20 backdrop-blur-md">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-amber-400 shadow-md">
+            <div class="w-10 h-10 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-amber-400 shadow-md">
                 <x-heroicon-o-qr-code class="w-6 h-6" />
             </div>
             <div>
@@ -88,7 +88,7 @@
             </div>
         </div>
 
-        <a href="{{ route('qr.menu') }}" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition flex items-center gap-2">
+        <a href="{{ route('qr.menu') }}" class="px-3.5 py-2 rounded-3xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition flex items-center gap-2">
             <x-heroicon-o-sparkles class="text-amber-400 w-5 h-5" /> Menu
         </a>
     </header>
@@ -108,16 +108,16 @@
         </div>
 
         <!-- Camera Viewport Box -->
-        <div class="relative w-full max-w-[320px] aspect-square rounded-3xl bg-black/40 border-2 border-emerald-400/40 p-2 shadow-2xl overflow-hidden flex items-center justify-center">
+        <div class="relative w-full max-w-[320px] aspect-square rounded-[2.25rem] bg-black/40 border-2 border-emerald-400/40 p-2 shadow-2xl overflow-hidden flex items-center justify-center">
             
             <!-- Laser Animation -->
             <div class="scan-laser" x-show="isScanning"></div>
 
             <!-- Corner Frame Accents -->
-            <div class="absolute top-4 left-4 w-6 h-6 border-t-4 border-l-4 border-amber-400 rounded-tl-xl z-20 pointer-events-none"></div>
-            <div class="absolute top-4 right-4 w-6 h-6 border-t-4 border-r-4 border-amber-400 rounded-tr-xl z-20 pointer-events-none"></div>
-            <div class="absolute bottom-4 left-4 w-6 h-6 border-b-4 border-l-4 border-amber-400 rounded-bl-xl z-20 pointer-events-none"></div>
-            <div class="absolute bottom-4 right-4 w-6 h-6 border-b-4 border-r-4 border-amber-400 rounded-br-xl z-20 pointer-events-none"></div>
+            <div class="absolute top-4 left-4 w-6 h-6 border-t-4 border-l-4 border-amber-400 rounded-tl-3xl z-20 pointer-events-none"></div>
+            <div class="absolute top-4 right-4 w-6 h-6 border-t-4 border-r-4 border-amber-400 rounded-tr-3xl z-20 pointer-events-none"></div>
+            <div class="absolute bottom-4 left-4 w-6 h-6 border-b-4 border-l-4 border-amber-400 rounded-bl-3xl z-20 pointer-events-none"></div>
+            <div class="absolute bottom-4 right-4 w-6 h-6 border-b-4 border-r-4 border-amber-400 rounded-br-3xl z-20 pointer-events-none"></div>
 
             <!-- HTML5 QR Reader Container -->
             <div id="qr-reader" class="w-full h-full"></div>
@@ -133,14 +133,14 @@
         <div class="mt-6 w-full max-w-[320px] space-y-3">
 
             <!-- File Upload Option -->
-            <label class="w-full h-11 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+            <label class="w-full h-11 rounded-3xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                 <x-heroicon-o-photo class="text-emerald-300 w-5 h-5" />
                 <span>Unggah Foto QR Code</span>
                 <input type="file" id="qr-input-file" accept="image/*" class="hidden" @change="handleFileUpload($event)">
             </label>
 
             <!-- Manual Table Pick Modal Trigger -->
-            <button @click="showTableModal = true" class="w-full h-11 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-2">
+            <button @click="showTableModal = true" class="w-full h-11 rounded-3xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-2">
                 <x-heroicon-o-list-bullet class="w-4 h-4" />
                 <span>Atau Pilih Nomor Meja Manually</span>
             </button>
@@ -151,7 +151,7 @@
     <!-- Modal Manual Pick Table -->
     <div x-show="showTableModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showTableModal = false"></div>
-        <div class="relative bg-white text-gray-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-100 z-10 space-y-4">
+        <div class="relative bg-white text-gray-900 w-full max-w-sm rounded-[2.25rem] p-6 shadow-2xl border border-gray-100 z-10 space-y-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base font-extrabold text-[#0F2E23]">Pilih Nomor Meja</h3>
@@ -166,7 +166,7 @@
                 @foreach($mejas as $m)
                 @php $cleanNomor = trim(preg_replace('/^meja\s*/i', '', $m->nomor_meja)); @endphp
                 <a href="{{ route('qr.menu', ['meja' => $m->id]) }}" 
-                   class="bg-emerald-50/60 hover:bg-[#0F2E23] hover:text-white border border-emerald-200/80 rounded-2xl p-3 text-center transition-all group">
+                   class="bg-emerald-50/60 hover:bg-[#0F2E23] hover:text-white border border-emerald-200/80 rounded-[2.25rem] p-3 text-center transition-all group">
                     <span class="block text-[10px] uppercase font-bold text-gray-400 group-hover:text-emerald-300">Meja</span>
                     <span class="block text-base font-black text-[#0F2E23] group-hover:text-white mt-0.5">{{ $cleanNomor }}</span>
                 </a>

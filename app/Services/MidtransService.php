@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\PaymentTransaction;
 use Illuminate\Support\Facades\Log;
+use Midtrans\Config;
+use Midtrans\CoreApi;
 
 class MidtransService
 {
@@ -17,11 +19,11 @@ class MidtransService
      */
     protected function configureMidtrans(): void
     {
-        \Midtrans\Config::$serverKey = config('midtrans.server_key');
-        \Midtrans\Config::$clientKey = config('midtrans.client_key');
-        \Midtrans\Config::$isProduction = (bool) config('midtrans.is_production', false);
-        \Midtrans\Config::$isSanitized = (bool) config('midtrans.is_sanitized', true);
-        \Midtrans\Config::$is3ds = (bool) config('midtrans.is_3ds', true);
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$clientKey = config('midtrans.client_key');
+        Config::$isProduction = (bool) config('midtrans.is_production', false);
+        Config::$isSanitized = (bool) config('midtrans.is_sanitized', true);
+        Config::$is3ds = (bool) config('midtrans.is_3ds', true);
     }
 
     /**
@@ -30,7 +32,7 @@ class MidtransService
     public function createQrisPayment(int $amount, string $dinNumber, array $customer = []): array
     {
         $cleanDin = preg_replace('/[^A-Za-z0-9\-]/', '', $dinNumber);
-        $orderId = 'MID-' . $cleanDin . '-' . time() . rand(10, 99);
+        $orderId = 'MID-'.$cleanDin.'-'.time().rand(10, 99);
 
         $params = [
             'payment_type' => 'qris',
@@ -51,10 +53,10 @@ class MidtransService
 
         try {
             // Attempt 1: Core API QRIS Charge
-            $chargeResponse = \Midtrans\CoreApi::charge($params);
+            $chargeResponse = CoreApi::charge($params);
             $rawArray = json_decode(json_encode($chargeResponse), true);
         } catch (\Exception $e) {
-            Log::warning('Midtrans Core API QRIS Charge Warning: ' . $e->getMessage(), [
+            Log::warning('Midtrans Core API QRIS Charge Warning: '.$e->getMessage(), [
                 'din_number' => $dinNumber,
                 'amount' => $amount,
             ]);
@@ -63,22 +65,22 @@ class MidtransService
                 // Attempt 2: Core API GoPay Channel Fallback (Standard Midtrans Sandbox QRIS)
                 $params['payment_type'] = 'gopay';
                 unset($params['qris']);
-                $chargeResponse = \Midtrans\CoreApi::charge($params);
+                $chargeResponse = CoreApi::charge($params);
                 $rawArray = json_decode(json_encode($chargeResponse), true);
             } catch (\Exception $e2) {
-                Log::warning('Midtrans Core API GoPay Charge Fallback Warning: ' . $e2->getMessage());
+                Log::warning('Midtrans Core API GoPay Charge Fallback Warning: '.$e2->getMessage());
 
                 // Fallback 3: Standard Dynamic QR Code Generator untuk Kasir POS (jika channel Midtrans belum di-centang di MAP Sandbox)
-                $qrPayload = "00020101021226680016ID.CO.GOPAY.WWW0118936009143000000000021510000000000000005204581253033605802ID5909BBC RESTO6013KOTA SUKABUMI61054311162070703A016304" . strtoupper(dechex(crc32($orderId)));
+                $qrPayload = '00020101021226680016ID.CO.GOPAY.WWW0118936009143000000000021510000000000000005204581253033605802ID5909BBC RESTO6013KOTA SUKABUMI61054311162070703A016304'.strtoupper(dechex(crc32($orderId)));
                 $rawArray = [
                     'transaction_status' => 'pending',
                     'status_message' => 'POS Standalone QRIS Mode (Midtrans channel pending activation)',
                     'actions' => [
                         [
                             'name' => 'generate-qr-code',
-                            'url' => 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' . urlencode($qrPayload)
-                        ]
-                    ]
+                            'url' => 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data='.urlencode($qrPayload),
+                        ],
+                    ],
                 ];
             }
         }
@@ -94,16 +96,16 @@ class MidtransService
             }
         }
 
-        if (!$qrUrl && isset($rawArray['qr_string'])) {
-            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' . urlencode($rawArray['qr_string']);
+        if (! $qrUrl && isset($rawArray['qr_string'])) {
+            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data='.urlencode($rawArray['qr_string']);
         }
 
-        if (!$qrUrl && isset($rawArray['qr_code_url'])) {
+        if (! $qrUrl && isset($rawArray['qr_code_url'])) {
             $qrUrl = $rawArray['qr_code_url'];
         }
 
-        if (!$qrUrl) {
-            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' . urlencode("QRIS-{$orderId}-{$amount}");
+        if (! $qrUrl) {
+            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data='.urlencode("QRIS-{$orderId}-{$amount}");
         }
 
         $transactionStatus = $rawArray['transaction_status'] ?? 'pending';

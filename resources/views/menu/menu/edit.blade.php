@@ -19,7 +19,7 @@
 
         <x-ui.alert />
 
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden">
             <form action="{{ route('menu.update', $menu->id) }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
                 @csrf
                 @method('PUT')
@@ -27,7 +27,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {{-- Foto Menu --}}
                     <div class="md:col-span-2 flex items-start gap-6">
-                        <div class="w-32 h-32 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400 overflow-hidden relative group">
+                        <div class="w-32 h-32 rounded-[2.25rem] border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400 overflow-hidden relative group">
                             <img id="previewFoto" src="{{ $menu->foto ? Storage::url($menu->foto) : '' }}" class="w-full h-full object-cover {{ $menu->foto ? '' : 'hidden' }}">
                             <div id="placeholderFoto" class="flex flex-col items-center justify-center {{ $menu->foto ? 'hidden' : '' }}">
                                 <x-heroicon-o-camera class="text-3xl mb-2 w-[1em] h-[1em] inline-block shrink-0" />
@@ -38,7 +38,7 @@
                         <div class="flex-1 mt-2">
                             <h3 class="text-sm font-bold text-gray-900 mb-1">Foto Menu</h3>
                             <p class="text-xs text-gray-500 mb-3">Biarkan kosong jika tidak ingin mengubah foto. Format JPG, PNG, atau WEBP. Maks 2MB.</p>
-                            <button type="button" onclick="document.getElementById('foto').click()" class="text-xs font-medium bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors">
+                            <button type="button" onclick="document.getElementById('foto').click()" class="text-xs font-medium bg-gray-100 text-gray-600 px-3 py-1.5 rounded-2xl hover:bg-gray-200 transition-colors">
                                 Ganti File
                             </button>
                         </div>
@@ -51,13 +51,13 @@
                     {{-- Nama Menu --}}
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nama Menu <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama_menu" value="{{ old('nama', $menu->nama_menu) }}" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                        <input type="text" name="nama_menu" value="{{ old('nama_menu', $menu->nama_menu) }}" required class="w-full px-4 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
                     </div>
 
                     {{-- Kategori --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Menu <span class="text-red-500">*</span></label>
-                        <select name="kategori_menu_id" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                        <select name="kategori_menu_id" required class="w-full px-4 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
                             <option value="">Pilih Kategori</option>
                             @foreach($kategoris as $kategori)
                                 <option value="{{ $kategori->id }}" {{ old('kategori_menu_id', $menu->kategori_menu_id) == $kategori->id ? 'selected' : '' }}>{{ $kategori->nama_kategori_kategori ?? $kategori->nama_kategori }}</option>
@@ -68,32 +68,32 @@
                     {{-- Jenis Menu --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Menu <span class="text-red-500">*</span></label>
-                        <select name="jenis_menu_id" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
-                            <option value="dine_in" {{ old('jenis_menu_id', $menu->jenis_menu_id) == 'dine_in' ? 'selected' : '' }}>Dine-in (Makan di tempat)</option>
-                            <option value="catering" {{ old('jenis_menu_id', $menu->jenis_menu_id) == 'catering' ? 'selected' : '' }}>Catering</option>
-                            <option value="nasi_box" {{ old('jenis_menu_id', $menu->jenis_menu_id) == 'nasi_box' ? 'selected' : '' }}>Nasi Box</option>
+                        <select name="jenis_menu_id" required class="w-full px-4 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                            @foreach($jenis_menu as $jenis)
+                                <option value="{{ $jenis->id }}" {{ old('jenis_menu_id', $menu->jenis_menu_id) == $jenis->id ? 'selected' : '' }}>{{ $jenis->nama_jenis }}</option>
+                            @endforeach
                         </select>
                     </div>
 
                     {{-- Harga --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp) <span class="text-red-500">*</span></label>
-                        <input type="number" name="harga_jual" value="{{ old('harga', $menu->harga_jual) }}" required min="0" step="1" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                        <input type="number" name="harga_jual" value="{{ old('harga_jual', $menu->harga_jual) }}" required min="0" step="1" class="w-full px-4 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
                     </div>
 
                     {{-- Status --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Status Ketersediaan <span class="text-red-500">*</span></label>
-                        <select name="status_aktif" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
-                            <option value="tersedia" {{ old('status', $menu->status_aktif) == 'tersedia' ? 'selected' : '' }}>Tersedia</option>
-                            <option value="habis" {{ old('status', $menu->status_aktif) == 'habis' ? 'selected' : '' }}>Habis</option>
+                        <select name="status_aktif" required class="w-full px-4 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                            <option value="tersedia" {{ old('status_aktif', $menu->status_aktif ? 'tersedia' : 'habis') === 'tersedia' ? 'selected' : '' }}>Tersedia</option>
+                            <option value="habis" {{ old('status_aktif', $menu->status_aktif ? 'tersedia' : 'habis') === 'habis' ? 'selected' : '' }}>Habis</option>
                         </select>
                     </div>
 
                     {{-- Deskripsi --}}
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi / Keterangan Tambahan</label>
-                        <textarea name="deskripsi" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none resize-none transition-all">{{ old('deskripsi', $menu->deskripsi) }}</textarea>
+                        <textarea name="deskripsi" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none resize-none transition-all">{{ old('deskripsi', $menu->deskripsi) }}</textarea>
                     </div>
                 </div>
 

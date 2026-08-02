@@ -26,7 +26,7 @@
         name="{{ $name }}" 
         value="{{ $value }}" 
         placeholder="{{ $placeholder }}"
-        {{ $attributes->merge(['class' => "block w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 shadow-sm focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all duration-300 outline-none text-sm sm:text-base $class" . ($error ? ' border-danger focus:border-danger focus:ring-danger/20' : '')]) }}
+        {{ $attributes->merge(['class' => "block w-full rounded-3xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 shadow-sm focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all duration-300 outline-none text-sm sm:text-base $class" . ($error ? ' border-danger focus:border-danger focus:ring-danger/20' : '')]) }}
     >
     
     @if($error)

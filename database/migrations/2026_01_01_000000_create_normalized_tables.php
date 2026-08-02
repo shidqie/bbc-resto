@@ -439,7 +439,7 @@ return new class extends Migration
         // Drop in reverse order to respect foreign keys constraints
         Schema::dropIfExists('pengantaran');
         Schema::dropIfExists('status_pengantaran');
-        
+
         Schema::table('mutasi_stok', function (Blueprint $table) {
             $table->dropForeign(['detail_penyesuaian_stok_id']);
         });

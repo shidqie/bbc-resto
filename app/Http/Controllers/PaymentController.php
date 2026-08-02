@@ -3,17 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateQrisPaymentRequest;
-use App\Services\MidtransService;
-use App\Services\DineInService;
 use App\Models\PaymentTransaction;
 use App\Models\PesananDinein;
-use Illuminate\Http\Request;
+use App\Services\DineInService;
+use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
     protected MidtransService $midtransService;
+
     protected DineInService $dineInService;
 
     public function __construct(MidtransService $midtransService, DineInService $dineInService)
@@ -46,7 +47,7 @@ class PaymentController extends Controller
                 'data' => $result,
             ], 201);
         } catch (\Exception $e) {
-            Log::error('Create QRIS Payment Controller Error: ' . $e->getMessage());
+            Log::error('Create QRIS Payment Controller Error: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -63,10 +64,10 @@ class PaymentController extends Controller
     {
         $transaction = $this->midtransService->checkStatus($orderId);
 
-        if (!$transaction) {
+        if (! $transaction) {
             return response()->json([
                 'success' => false,
-                'message' => 'Transaksi tidak ditemukan dengan order_id: ' . $orderId,
+                'message' => 'Transaksi tidak ditemukan dengan order_id: '.$orderId,
             ], 404);
         }
 
@@ -91,7 +92,7 @@ class PaymentController extends Controller
     {
         try {
             $notificationData = $request->all();
-            
+
             $orderId = $notificationData['order_id'] ?? null;
             $statusCode = $notificationData['status_code'] ?? null;
             $grossAmount = $notificationData['gross_amount'] ?? null;
@@ -99,7 +100,7 @@ class PaymentController extends Controller
             $transactionStatus = $notificationData['transaction_status'] ?? null;
             $fraudStatus = $notificationData['fraud_status'] ?? null;
 
-            if (!$orderId || !$statusCode || !$grossAmount || !$reqSignatureKey) {
+            if (! $orderId || ! $statusCode || ! $grossAmount || ! $reqSignatureKey) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Payload notifikasi tidak lengkap.',
@@ -108,7 +109,7 @@ class PaymentController extends Controller
 
             // 1. VERIFIKASI SIGNATURE KEY SHA512
             $serverKey = config('midtrans.server_key');
-            $expectedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
+            $expectedSignature = hash('sha512', $orderId.$statusCode.$grossAmount.$serverKey);
 
             if ($reqSignatureKey !== $expectedSignature) {
                 Log::warning('Midtrans Webhook Invalid Signature Key', [
@@ -125,7 +126,7 @@ class PaymentController extends Controller
 
             // 2. AMBIL RECORD TRANSAKSI
             $transaction = PaymentTransaction::where('order_id', $orderId)->first();
-            if (!$transaction) {
+            if (! $transaction) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Order ID tidak ditemukan di database local.',
@@ -137,24 +138,24 @@ class PaymentController extends Controller
             if ($transactionStatus == 'capture') {
                 if ($fraudStatus == 'challenge') {
                     $transaction->transaction_status = 'challenge';
-                } else if ($fraudStatus == 'accept') {
+                } elseif ($fraudStatus == 'accept') {
                     $transaction->transaction_status = 'settlement';
                     $isPaid = true;
                 }
-            } else if ($transactionStatus == 'settlement') {
+            } elseif ($transactionStatus == 'settlement') {
                 $transaction->transaction_status = 'settlement';
                 $isPaid = true;
-            } else if ($transactionStatus == 'pending') {
+            } elseif ($transactionStatus == 'pending') {
                 $transaction->transaction_status = 'pending';
-            } else if ($transactionStatus == 'deny') {
+            } elseif ($transactionStatus == 'deny') {
                 $transaction->transaction_status = 'deny';
-            } else if ($transactionStatus == 'expire') {
+            } elseif ($transactionStatus == 'expire') {
                 $transaction->transaction_status = 'expire';
-            } else if ($transactionStatus == 'cancel') {
+            } elseif ($transactionStatus == 'cancel') {
                 $transaction->transaction_status = 'cancel';
             }
 
-            if ($isPaid && !$transaction->paid_at) {
+            if ($isPaid && ! $transaction->paid_at) {
                 $transaction->paid_at = now();
             }
 
@@ -164,7 +165,7 @@ class PaymentController extends Controller
             // 4. JIKA STATUS SETTLEMENT / LUNAS, OTOMATIS PROSES PESANAN & MEJA RESTO
             if ($isPaid) {
                 $dinNumber = $transaction->din_number;
-                
+
                 $pesanan = PesananDinein::where('kode_pesanan', $dinNumber)
                     ->orWhere('id', str_replace('DIN-', '', $dinNumber))
                     ->first();
@@ -189,7 +190,7 @@ class PaymentController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Midtrans Notification Handler Error: ' . $e->getMessage(), [
+            Log::error('Midtrans Notification Handler Error: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
 

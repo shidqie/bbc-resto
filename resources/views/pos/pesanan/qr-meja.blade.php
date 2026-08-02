@@ -124,12 +124,12 @@
             
             <div class="qr-page-container w-full flex justify-center">
                 <!-- Kartu QR EXACTLY AS USER PROVIDED -->
-                <div class="w-[300px] aspect-[1/1.55] rounded-3xl overflow-hidden shadow-xl border-4 border-emerald-500/30 flex flex-col justify-between p-5 relative text-white" style="background: linear-gradient(145deg, #0F2E23 0%, #164032 50%, #0A2219 100%); width: 300px; height: 465px;">
+                <div class="w-[300px] aspect-[1/1.55] rounded-[2.25rem] overflow-hidden shadow-xl border-4 border-emerald-500/30 flex flex-col justify-between p-5 relative text-white" style="background: linear-gradient(145deg, #0F2E23 0%, #164032 50%, #0A2219 100%); width: 300px; height: 465px;">
                     <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none"></div>
-                    <div class="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/60 rounded-tl-lg"></div>
-                    <div class="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400/60 rounded-tr-lg"></div>
-                    <div class="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-400/60 rounded-bl-lg"></div>
-                    <div class="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-400/60 rounded-br-lg"></div>
+                    <div class="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/60 rounded-tl-3xl"></div>
+                    <div class="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400/60 rounded-tr-3xl"></div>
+                    <div class="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-400/60 rounded-bl-3xl"></div>
+                    <div class="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-400/60 rounded-br-3xl"></div>
 
                     <div class="relative z-10 text-center pt-1 space-y-0.5">
                         <h2 class="text-2xl font-black uppercase tracking-wider text-amber-400 drop-shadow-md leading-none">SCAN MENU</h2>
@@ -141,11 +141,11 @@
                     </div>
 
                     <div class="relative z-10 my-auto py-1 flex flex-col items-center">
-                        <div class="bg-white rounded-3xl p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center">
+                        <div class="bg-white rounded-[2.25rem] p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center">
                             @if($qrSrc)
-                            <img src="{{ $qrSrc }}" alt="QR Code" class="w-44 h-44 object-contain rounded-xl">
+                            <img src="{{ $qrSrc }}" alt="QR Code" class="w-44 h-44 object-contain rounded-3xl">
                             @else
-                            <div class="w-44 h-44 bg-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-xs text-center p-2">Gagal memuat QR</div>
+                            <div class="w-44 h-44 bg-gray-200 rounded-3xl flex items-center justify-center text-gray-400 text-xs text-center p-2">Gagal memuat QR</div>
                             @endif
                             @if($logoSrc)
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">

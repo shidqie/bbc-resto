@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Pesanan;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class JadwalPengantaranController extends Controller
 {
@@ -13,13 +12,13 @@ class JadwalPengantaranController extends Controller
     {
         $selectedDate = $request->get('date', Carbon::today()->format('Y-m-d'));
         $selectedMonth = $request->get('month', Carbon::parse($selectedDate)->format('Y-m'));
-        
-        $startOfMonth = Carbon::parse($selectedMonth . '-01')->startOfMonth();
+
+        $startOfMonth = Carbon::parse($selectedMonth.'-01')->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         // Cari semua pesanan catering dan nasibox yang ada jadwalnya dalam bulan tersebut
         $ordersInMonth = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
-            ->whereHas('jadwal_pesanan', function($query) use ($startOfMonth, $endOfMonth) {
+            ->whereHas('jadwal_pesanan', function ($query) use ($startOfMonth, $endOfMonth) {
                 $query->whereBetween('tanggal_acara', [$startOfMonth, $endOfMonth]);
             })
             ->whereNotIn('status_pesanan_id', [6]) // 6 = Dibatalkan
@@ -29,8 +28,8 @@ class JadwalPengantaranController extends Controller
         $orderDates = [];
         foreach ($ordersInMonth as $order) {
             if ($order->jadwal_pesanan && $order->jadwal_pesanan->tanggal_acara) {
-                $dateStr = \Carbon\Carbon::parse($order->jadwal_pesanan->tanggal_acara)->format('Y-m-d');
-                if (!isset($orderDates[$dateStr])) {
+                $dateStr = Carbon::parse($order->jadwal_pesanan->tanggal_acara)->format('Y-m-d');
+                if (! isset($orderDates[$dateStr])) {
                     $orderDates[$dateStr] = 0;
                 }
                 $orderDates[$dateStr]++;
@@ -42,7 +41,7 @@ class JadwalPengantaranController extends Controller
 
         $query = Pesanan::with(['jadwal_pesanan', 'detail_pesanan.menu', 'pengantaran'])
             ->whereIn('jenis_pesanan_id', [2, 3])
-            ->whereHas('jadwal_pesanan', function($q) use ($selectedDate) {
+            ->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {
                 $q->whereDate('tanggal_acara', $selectedDate);
             });
 
@@ -51,34 +50,34 @@ class JadwalPengantaranController extends Controller
         }
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nomor_pesanan', 'like', "%{$search}%")
-                  ->orWhere('catatan', 'like', "%{$search}%");
+                    ->orWhere('catatan', 'like', "%{$search}%");
             });
         }
 
-        $orders = $query->get()->sortBy(function($order) {
-            return $order->jadwal_pesanan->tanggal_acara ? \Carbon\Carbon::parse($order->jadwal_pesanan->tanggal_acara)->format('H:i:s') : '23:59:59';
+        $orders = $query->get()->sortBy(function ($order) {
+            return $order->jadwal_pesanan->tanggal_acara ? Carbon::parse($order->jadwal_pesanan->tanggal_acara)->format('H:i:s') : '23:59:59';
         })->values();
 
         $allSummaryOrders = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
-            ->whereHas('jadwal_pesanan', function($q) use ($selectedDate) {
+            ->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {
                 $q->whereDate('tanggal_acara', $selectedDate);
             })->get();
 
         $summary = [
             'Semua' => $allSummaryOrders->count(),
             'baru' => $allSummaryOrders->where('status_pesanan_id', 1)->count(),
-            'diproses' => $allSummaryOrders->whereIn('status_pesanan_id', [2,3,4])->count(),
+            'diproses' => $allSummaryOrders->whereIn('status_pesanan_id', [2, 3, 4])->count(),
             'selesai' => $allSummaryOrders->where('status_pesanan_id', 5)->count(),
             'dibatalkan' => $allSummaryOrders->where('status_pesanan_id', 6)->count(),
         ];
 
         return view('order.jadwal.index', compact(
-            'selectedDate', 
-            'selectedMonth', 
-            'startOfMonth', 
-            'orderDates', 
+            'selectedDate',
+            'selectedMonth',
+            'startOfMonth',
+            'orderDates',
             'orders',
             'summary',
             'statusFilter',
@@ -89,7 +88,7 @@ class JadwalPengantaranController extends Controller
     public function updateStatus(Request $request, $jenis, $id)
     {
         $request->validate([
-            'status' => 'required|integer'
+            'status' => 'required|integer',
         ]);
 
         $order = Pesanan::findOrFail($id);

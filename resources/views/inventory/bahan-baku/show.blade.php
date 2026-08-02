@@ -24,7 +24,7 @@
             {{-- Left Column: Info & Status --}}
             <div class="lg:col-span-1 space-y-6">
                 {{-- Status Card --}}
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
+                <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm p-6 text-center">
                     <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center text-4xl mb-4 
                         {{ $bahanBaku->stok <= 0 ? 'bg-red-50 text-red-500' : ($bahanBaku->stok <= $bahanBaku->stok_minimal ? 'bg-yellow-50 text-yellow-500' : 'bg-emerald-50 text-emerald-500') }}">
                         @if($bahanBaku->stok <= 0)
@@ -35,10 +35,10 @@
                             <x-heroicon-o-check-circle class="w-5 h-5 inline-block shrink-0" />
                         @endif
                     </div>
-                    <h2 class="text-xl font-bold text-gray-900 mb-1">{{ $bahanBaku->nama_bahan_baku }}</h2>
-                    <p class="text-sm text-gray-500 mb-4">{{ $bahanBaku->kode_bahan_baku }}</p>
+                    <h2 class="text-xl font-bold text-gray-900 mb-1">{{ $bahanBaku->nama_bahan }}</h2>
+                    <p class="text-sm text-gray-500 mb-4">{{ $bahanBaku->kode_bahan }}</p>
                     
-                    <div class="inline-flex flex-col border border-gray-100 rounded-xl px-6 py-3 bg-gray-50/50 mb-4 w-full">
+                    <div class="inline-flex flex-col border border-gray-100 rounded-3xl px-6 py-3 bg-gray-50/50 mb-4 w-full">
                         <span class="text-xs text-gray-500 font-medium mb-1">Stok Saat Ini</span>
                         <span class="text-3xl font-bold {{ $bahanBaku->stok <= 0 ? 'text-red-600' : ($bahanBaku->stok <= $bahanBaku->stok_minimal ? 'text-yellow-600' : 'text-emerald-600') }}">
                             {{ rtrim(rtrim(number_format($bahanBaku->stok, 2, ',', '.'), '0'), ',') }} <span class="text-base font-normal text-gray-500">{{ $bahanBaku->satuan->singkatan }}</span>
@@ -59,7 +59,7 @@
                 </div>
 
                 {{-- Basic Info Card --}}
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-gray-100 bg-gray-50/50">
                         <h3 class="font-semibold text-gray-900">Identitas Bahan</h3>
                     </div>
@@ -84,23 +84,23 @@
             <div class="lg:col-span-2 space-y-6">
                 
                 {{-- Extra Details --}}
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                         <h3 class="font-semibold text-gray-900">Informasi Tambahan</h3>
                     </div>
                     <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <p class="text-xs text-gray-500 font-medium mb-1"><x-heroicon-o-information-circle class="text-gray-400 w-4 h-4 inline-block shrink-0" /> Keterangan / Deskripsi</p>
-                            <p class="text-sm text-gray-900">{{ $bahanBaku->deskripsi ?: '-' }}</p>
+                            <p class="text-xs text-gray-500 font-medium mb-1"><x-heroicon-o-information-circle class="text-gray-400 w-4 h-4 inline-block shrink-0" /> Stok Minimal</p>
+                            <p class="text-sm text-gray-900">{{ $bahanBaku->stok_minimal }} {{ $bahanBaku->satuan->singkatan }}</p>
                         </div>
                     </div>
                 </div>
 
                 {{-- Stock Mutations --}}
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                         <h3 class="font-semibold text-gray-900">Riwayat Stok (5 Terakhir)</h3>
-                        <a href="{{ route('mutasi-stok.index', ['search' => $bahanBaku->kode_bahan_baku]) }}" class="text-sm text-[#3B82F6] hover:text-[#2563EB] font-medium">
+                        <a href="{{ route('mutasi-stok.index', ['search' => $bahanBaku->kode_bahan]) }}" class="text-sm text-[#3B82F6] hover:text-[#2563EB] font-medium">
                             Lihat Semua Riwayat <x-heroicon-o-chevron-right class="ml-1 w-5 h-5 inline-block shrink-0" />
                         </a>
                     </div>
@@ -117,26 +117,30 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
+                                @php $runningSisa = (float) $bahanBaku->stok; @endphp
                                 @forelse($mutasiStoks as $mutasi)
+                                @php
+                                    $arahStok = $mutasi->jenis_mutasi_stok->arah_stok ?? 'KELUAR';
+                                    $isMasuk = $arahStok === 'MASUK';
+                                    $runningSisa = $isMasuk ? $runningSisa - (float)$mutasi->jumlah : $runningSisa + (float)$mutasi->jumlah;
+                                @endphp
                                 <tr class="hover:bg-gray-50 transition-colors">
                                     <td class="px-4 py-3 text-gray-500">{{ $mutasi->dibuat_pada->format('d/m/Y H:i') }}</td>
                                     <td class="px-4 py-3">
-                                        @if($mutasi->jenis_mutasi == 'masuk')
+                                        @if($isMasuk)
                                             <x-ui.badge color="success" size="sm">Masuk</x-ui.badge>
-                                        @elseif($mutasi->jenis_mutasi == 'keluar')
-                                            <x-ui.badge color="danger" size="sm">Keluar</x-ui.badge>
                                         @else
-                                            <x-ui.badge color="primary" size="sm">Penyesuaian</x-ui.badge>
+                                            <x-ui.badge color="danger" size="sm">Keluar</x-ui.badge>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-right font-medium {{ $mutasi->jenis_mutasi == 'keluar' ? 'text-red-600' : 'text-emerald-600' }}">
-                                        {{ $mutasi->jenis_mutasi == 'keluar' ? '-' : '+' }}{{ rtrim(rtrim(number_format($mutasi->jumlah, 2, ',', '.'), '0'), ',') }}
+                                    <td class="px-4 py-3 text-right font-medium {{ $isMasuk ? 'text-emerald-600' : 'text-red-600' }}">
+                                        {{ $isMasuk ? '+' : '-' }}{{ rtrim(rtrim(number_format($mutasi->jumlah, 2, ',', '.'), '0'), ',') }}
                                     </td>
                                     <td class="px-4 py-3 text-right text-gray-900 font-medium">
-                                        {{ rtrim(rtrim(number_format($mutasi->sisa_stok, 2, ',', '.'), '0'), ',') }}
+                                        {{ rtrim(rtrim(number_format($runningSisa, 2, ',', '.'), '0'), ',') }}
                                     </td>
                                     <td class="px-4 py-3 text-gray-600 text-xs">
-                                        {{ Str::limit($mutasi->deskripsi, 30) ?: '-' }}
+                                        {{ Str::limit($mutasi->catatan, 30) ?: '-' }}
                                     </td>
                                     <td class="px-4 py-3 text-gray-500 text-xs">
                                         {{ $mutasi->dibuat_oleh_pengguna->nama ?? 'Sistem' }}

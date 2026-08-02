@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentTransaction extends Model
 {
     protected $table = 'payment_transactions';
+
     protected $guarded = [];
 
     protected $casts = [
@@ -15,5 +16,6 @@ class PaymentTransaction extends Model
     ];
 
     const CREATED_AT = 'created_at';
+
     const UPDATED_AT = 'updated_at';
 }

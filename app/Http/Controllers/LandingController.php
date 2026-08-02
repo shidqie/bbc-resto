@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\KategoriMenu;
 use App\Models\Menu;
-use Illuminate\Http\Request;
 
 class LandingController extends Controller
 {
@@ -12,21 +11,21 @@ class LandingController extends Controller
     {
         // 1. Ambil Menu Dine-in beserta Kategori
         // Hanya ambil kategori yang memiliki menu dine-in aktif atau yang belum memiliki jenis (null)
-        $kategoris = KategoriMenu::with(['menu' => function($query) {
+        $kategoris = KategoriMenu::with(['menu' => function ($query) {
             $query->where('status_aktif', true)
-                  ->where(function($q) {
-                      $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
-                  });
-        }])->whereHas('menu', function($query) {
+                ->where(function ($q) {
+                    $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
+                });
+        }])->whereHas('menu', function ($query) {
             $query->where('status_aktif', true)
-                  ->where(function($q) {
-                      $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
-                  });
+                ->where(function ($q) {
+                    $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
+                });
         })->get();
 
         // 2. Ambil Semua Menu Dine-In aktif (untuk opsi tab "Semua")
         $semuaMenu = Menu::where('status_aktif', true)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
             })->get();
 

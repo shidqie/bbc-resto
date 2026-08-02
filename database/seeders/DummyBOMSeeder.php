@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Menu;
 use App\Models\BahanBaku;
-use App\Models\ResepMenu;
 use App\Models\KategoriBahan;
+use App\Models\Menu;
+use App\Models\ResepMenu;
 use App\Models\Satuan;
+use Illuminate\Database\Seeder;
 
 class DummyBOMSeeder extends Seeder
 {
@@ -82,49 +82,77 @@ class DummyBOMSeeder extends Seeder
                 if (str_contains($namaLower, 'gula aren') || str_contains($namaLower, 'caramel') || str_contains($namaLower, 'vanilla')) {
                     $ingredients[] = ['bahan_baku_id' => $gulaAren->id, 'qty' => 0.03, 'satuan' => 'L', 'ket' => 'Sirup Pemanis (30ml)'];
                 }
-            } 
+            }
             // B. Bebek
             elseif (str_contains($namaLower, 'bebek')) {
                 $ingredients[] = ['bahan_baku_id' => $dagingBebek->id, 'qty' => 0.25, 'satuan' => 'kg', 'ket' => '1 Potong Bebek (250g)'];
-                if ($minyak) $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.05, 'satuan' => 'L', 'ket' => 'Minyak Goreng'];
+                if ($minyak) {
+                    $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.05, 'satuan' => 'L', 'ket' => 'Minyak Goreng'];
+                }
                 if (str_contains($namaLower, 'nasi') || str_contains($namaLower, 'liwet') || str_contains($namaLower, 'to')) {
-                    if ($beras) $ingredients[] = ['bahan_baku_id' => $beras->id, 'qty' => 0.15, 'satuan' => 'kg', 'ket' => 'Beras Porsi'];
+                    if ($beras) {
+                        $ingredients[] = ['bahan_baku_id' => $beras->id, 'qty' => 0.15, 'satuan' => 'kg', 'ket' => 'Beras Porsi'];
+                    }
                 }
                 if (str_contains($namaLower, 'penyet') || str_contains($namaLower, 'bakar') || str_contains($namaLower, 'goreng')) {
-                    if ($cabai) $ingredients[] = ['bahan_baku_id' => $cabai->id, 'qty' => 0.03, 'satuan' => 'kg', 'ket' => 'Cabai Bumbu/Sambal'];
+                    if ($cabai) {
+                        $ingredients[] = ['bahan_baku_id' => $cabai->id, 'qty' => 0.03, 'satuan' => 'kg', 'ket' => 'Cabai Bumbu/Sambal'];
+                    }
                 }
             }
             // C. Ayam / Ayam Kampung
             elseif (str_contains($namaLower, 'ayam')) {
-                if ($ayam) $ingredients[] = ['bahan_baku_id' => $ayam->id, 'qty' => 0.20, 'satuan' => 'kg', 'ket' => '1 Potong Ayam (200g)'];
-                if ($minyak) $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.05, 'satuan' => 'L', 'ket' => 'Minyak Goreng'];
+                if ($ayam) {
+                    $ingredients[] = ['bahan_baku_id' => $ayam->id, 'qty' => 0.20, 'satuan' => 'kg', 'ket' => '1 Potong Ayam (200g)'];
+                }
+                if ($minyak) {
+                    $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.05, 'satuan' => 'L', 'ket' => 'Minyak Goreng'];
+                }
                 if (str_contains($namaLower, 'nasi') || str_contains($namaLower, 'liwet') || str_contains($namaLower, 'to')) {
-                    if ($beras) $ingredients[] = ['bahan_baku_id' => $beras->id, 'qty' => 0.15, 'satuan' => 'kg', 'ket' => 'Beras Porsi'];
+                    if ($beras) {
+                        $ingredients[] = ['bahan_baku_id' => $beras->id, 'qty' => 0.15, 'satuan' => 'kg', 'ket' => 'Beras Porsi'];
+                    }
                 }
                 if (str_contains($namaLower, 'penyet') || str_contains($namaLower, 'bakar')) {
-                    if ($cabai) $ingredients[] = ['bahan_baku_id' => $cabai->id, 'qty' => 0.02, 'satuan' => 'kg', 'ket' => 'Cabai Bumbu'];
-                    if ($kecap) $ingredients[] = ['bahan_baku_id' => $kecap->id, 'qty' => 0.02, 'satuan' => 'btl', 'ket' => 'Olesan Kecap'];
+                    if ($cabai) {
+                        $ingredients[] = ['bahan_baku_id' => $cabai->id, 'qty' => 0.02, 'satuan' => 'kg', 'ket' => 'Cabai Bumbu'];
+                    }
+                    if ($kecap) {
+                        $ingredients[] = ['bahan_baku_id' => $kecap->id, 'qty' => 0.02, 'satuan' => 'btl', 'ket' => 'Olesan Kecap'];
+                    }
                 }
             }
             // D. Tahu / Tempe
             elseif (str_contains($namaLower, 'tahu') || str_contains($namaLower, 'tempe')) {
                 $ingredients[] = ['bahan_baku_id' => $tahuTempe->id, 'qty' => 2, 'satuan' => 'pcs', 'ket' => '2 Potong Tahu/Tempe'];
-                if ($minyak) $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.03, 'satuan' => 'L', 'ket' => 'Minyak Goreng'];
+                if ($minyak) {
+                    $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.03, 'satuan' => 'L', 'ket' => 'Minyak Goreng'];
+                }
             }
             // E. Sayur / Lalapan / Karedok / Jengkol / Pete
             elseif (str_contains($namaLower, 'sayur') || str_contains($namaLower, 'karedok') || str_contains($namaLower, 'lotek') || str_contains($namaLower, 'lalab') || str_contains($namaLower, 'jengkol') || str_contains($namaLower, 'pete') || str_contains($namaLower, 'pencok') || str_contains($namaLower, 'sepat') || str_contains($namaLower, 'peda')) {
                 $ingredients[] = ['bahan_baku_id' => $sayurFresh->id, 'qty' => 0.15, 'satuan' => 'kg', 'ket' => 'Bahan Sayur Segar'];
-                if ($cabai) $ingredients[] = ['bahan_baku_id' => $cabai->id, 'qty' => 0.02, 'satuan' => 'kg', 'ket' => 'Bumbu Sambal / Bumbu Kacang'];
+                if ($cabai) {
+                    $ingredients[] = ['bahan_baku_id' => $cabai->id, 'qty' => 0.02, 'satuan' => 'kg', 'ket' => 'Bumbu Sambal / Bumbu Kacang'];
+                }
             }
             // F. Nasi / Liwet / Sambal Satuan
             elseif (str_contains($namaLower, 'nasi') || str_contains($namaLower, 'liwet')) {
-                if ($beras) $ingredients[] = ['bahan_baku_id' => $beras->id, 'qty' => 0.18, 'satuan' => 'kg', 'ket' => 'Beras Porsi'];
-                if ($minyak) $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.02, 'satuan' => 'L', 'ket' => 'Minyak Bumbu Liwet'];
+                if ($beras) {
+                    $ingredients[] = ['bahan_baku_id' => $beras->id, 'qty' => 0.18, 'satuan' => 'kg', 'ket' => 'Beras Porsi'];
+                }
+                if ($minyak) {
+                    $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.02, 'satuan' => 'L', 'ket' => 'Minyak Bumbu Liwet'];
+                }
             }
             // G. Default Fallback untuk menu lainnya
             else {
-                if ($ayam) $ingredients[] = ['bahan_baku_id' => $ayam->id, 'qty' => 0.15, 'satuan' => 'kg', 'ket' => 'Bahan Olahan Utama'];
-                if ($minyak) $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.03, 'satuan' => 'L', 'ket' => 'Minyak Goreng'];
+                if ($ayam) {
+                    $ingredients[] = ['bahan_baku_id' => $ayam->id, 'qty' => 0.15, 'satuan' => 'kg', 'ket' => 'Bahan Olahan Utama'];
+                }
+                if ($minyak) {
+                    $ingredients[] = ['bahan_baku_id' => $minyak->id, 'qty' => 0.03, 'satuan' => 'L', 'ket' => 'Minyak Goreng'];
+                }
             }
 
             // Simpan data ResepMenu / BOM
@@ -134,7 +162,7 @@ class DummyBOMSeeder extends Seeder
                     'bahan_baku_id' => $ing['bahan_baku_id'],
                     'jumlah_kebutuhan' => $ing['qty'],
                     'satuan' => $ing['satuan'],
-                    'keterangan' => $ing['ket'] ?? null
+                    'keterangan' => $ing['ket'] ?? null,
                 ]);
             }
         }

@@ -13,7 +13,7 @@
                 <p class="text-sm text-gray-500 font-medium mt-1">Analisis menu dengan penjualan tertinggi pada periode yang dipilih</p>
             </div>
             <a href="{{ route('laporan.menu-terlaris.cetak', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank"
-               class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-red-600 rounded-lg px-3 py-2 hover:bg-red-700 transition-colors">
+               class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-red-600 rounded-2xl px-3 py-2 hover:bg-red-700 transition-colors">
                 <x-heroicon-o-document class="w-5 h-5" />
                 Cetak PDF
             </a>
@@ -21,28 +21,28 @@
 
         {{-- Stat Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+            <div class="bg-white rounded-3xl border border-gray-200 px-5 py-4">
                 <p class="text-xs font-medium text-gray-500">Total Pendapatan dari Menu</p>
                 <p class="text-xl font-bold text-emerald-600 mt-1">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+            <div class="bg-white rounded-3xl border border-gray-200 px-5 py-4">
                 <p class="text-xs font-medium text-gray-500">Total Item Terjual</p>
                 <p class="text-xl font-bold text-gray-900 mt-1">{{ number_format($totalTerjual, 0, ',', '.') }} porsi</p>
             </div>
         </div>
 
         {{-- Filter --}}
-        <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+        <div class="bg-white rounded-3xl border border-gray-200 px-5 py-4">
             <form action="{{ route('laporan.menu-terlaris') }}" method="GET" class="flex flex-col md:flex-row gap-3 items-end">
                 <div class="flex-1">
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Mulai</label>
-                    <input type="date" name="start_date" value="{{ $startDate }}" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 transition-all">
+                    <input type="date" name="start_date" value="{{ $startDate }}" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-2xl outline-none focus:ring-1 focus:ring-gray-400 transition-all">
                 </div>
                 <div class="flex-1">
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Akhir</label>
-                    <input type="date" name="end_date" value="{{ $endDate }}" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 transition-all">
+                    <input type="date" name="end_date" value="{{ $endDate }}" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-2xl outline-none focus:ring-1 focus:ring-gray-400 transition-all">
                 </div>
-                <button type="submit" class="px-5 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors shrink-0">Terapkan Filter</button>
+                <button type="submit" class="px-5 py-2 bg-gray-900 text-white rounded-2xl text-sm font-semibold hover:bg-gray-800 transition-colors shrink-0">Terapkan Filter</button>
             </form>
         </div>
 
@@ -55,7 +55,7 @@
                 $colors = ['bg-yellow-50 border-yellow-200', 'bg-gray-50 border-gray-200', 'bg-amber-50 border-amber-200'];
                 $textColors = ['text-yellow-700', 'text-gray-700', 'text-amber-700'];
             @endphp
-            <div class="bg-white rounded-xl border {{ $colors[$idx] }} px-5 py-4 text-center">
+            <div class="bg-white rounded-3xl border {{ $colors[$idx] }} px-5 py-4 text-center">
                 <div class="text-3xl mb-2">{{ $medals[$idx] }}</div>
                 <p class="font-bold text-gray-900 text-sm">{{ $menu->nama }}</p>
                 <p class="text-2xl font-black {{ $textColors[$idx] }} mt-2">{{ number_format($menu->total_qty, 0, ',', '.') }}<span class="text-sm font-normal text-gray-500"> porsi</span></p>
@@ -66,7 +66,7 @@
         @endif
 
         {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-3xl border border-gray-200 overflow-hidden">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">

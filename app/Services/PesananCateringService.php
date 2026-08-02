@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\PaketCatering;
-use App\Models\LayananTambahan;
-use App\Models\PesananCatering;
-use App\Models\ResepMenu;
 use App\Models\BahanBaku;
+use App\Models\LayananTambahan;
+use App\Models\Menu;
 use App\Models\MutasiStok;
+use App\Models\PesananCatering;
+use App\Models\StokBahanBaku;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PesananCateringService
 {
@@ -26,7 +28,7 @@ class PesananCateringService
 
         $zona = '';
         $tarifZona = 0;
-        
+
         if ($jarakKm <= 10) {
             $zona = '0-10';
             $tarifZona = 50000;
@@ -56,84 +58,117 @@ class PesananCateringService
 
     public static function hitungTotal($paketId, $jumlahPorsi, $layananTambahanIds = [], $ongkir = 0)
     {
-        $paket = \App\Models\Produk::findOrFail($paketId);
+        $paket = Menu::findOrFail($paketId);
         $subtotalMenu = $paket->harga_jual * $jumlahPorsi;
-        
+
         $subtotalAddon = 0;
-        if (!empty($layananTambahanIds)) {
+        if (! empty($layananTambahanIds)) {
             $subtotalAddon = LayananTambahan::whereIn('id', $layananTambahanIds)->sum('harga');
         }
-        
+
         $total = $subtotalMenu + $subtotalAddon + $ongkir;
         $dp = ceil($total * 0.5); // 50% DP
-        
+
         return [
             'subtotal_menu' => $subtotalMenu,
             'subtotal_addon' => $subtotalAddon,
             'ongkir' => $ongkir,
             'total' => $total,
-            'dp' => $dp
+            'dp' => $dp,
         ];
     }
 
-    public static function potongStok(PesananCatering $pesanan)
+    public static function potongStok($pesanan)
     {
         $kebutuhan = [];
         $kekurangan = [];
-        
-        // 1. Kumpulkan kebutuhan bahan berdasarkan BOM tiap komponen menu yang dipilih
-        foreach ($pesanan->details as $detail) {
-            $menuId = $detail->menu_id_terpilih;
-            $reseps = ResepMenu::where('menu_id', $menuId)->get();
-            
-            foreach ($reseps as $resep) {
-                $bahanId = $resep->bahan_baku_id;
-                $qty = $resep->jumlah_kebutuhan * $pesanan->jumlah_porsi;
-                
-                if (isset($kebutuhan[$bahanId])) {
-                    $kebutuhan[$bahanId] += $qty;
-                } else {
-                    $kebutuhan[$bahanId] = $qty;
+
+        // Cari relasi yang benar (bisa PesananCatering atau Pesanan)
+        $pilihanMenus = method_exists($pesanan, 'pilihanKomponenPaket')
+            ? $pesanan->pilihanKomponenPaket()->with('menu.resep_menu.bahan_baku')->get()
+            : collect();
+
+        // Juga dari detail_pesanan jika ada
+        if (method_exists($pesanan, 'detail_pesanan')) {
+            $pesanan->loadMissing('detail_pesanan.menu.resep_menu.bahan_baku');
+            foreach ($pesanan->detail_pesanan as $detail) {
+                if ($detail->menu && $detail->menu->resep_menu) {
+                    foreach ($detail->menu->resep_menu as $resep) {
+                        $bahanId = $resep->bahan_baku_id;
+                        $qty = $resep->jumlah_kebutuhan * $detail->jumlah;
+                        $kebutuhan[$bahanId] = ($kebutuhan[$bahanId] ?? 0) + $qty;
+                    }
                 }
             }
         }
-        
+
+        // Dari pilihan komponen paket (format lama PesananCatering)
+        foreach ($pilihanMenus as $pilihan) {
+            if ($pilihan->menu && $pilihan->menu->resep_menu) {
+                $jumlahPorsi = $pesanan->jumlah_porsi ?? 1;
+                foreach ($pilihan->menu->resep_menu as $resep) {
+                    $bahanId = $resep->bahan_baku_id;
+                    $qty = $resep->jumlah_kebutuhan * $jumlahPorsi;
+                    $kebutuhan[$bahanId] = ($kebutuhan[$bahanId] ?? 0) + $qty;
+                }
+            }
+        }
+
+        if (empty($kebutuhan)) {
+            return true;
+        } // Tidak ada resep, skip
+
         // 2. Bandingkan dengan stok saat ini
         foreach ($kebutuhan as $bahanId => $qty_butuh) {
-            $bahan = BahanBaku::find($bahanId);
-            if (!$bahan || $bahan->stok < $qty_butuh) {
+            $bahan = BahanBaku::with('stok_bahan_baku')->find($bahanId);
+            $stokSaatIni = $bahan?->stok_bahan_baku?->jumlah_stok ?? 0;
+
+            if (! $bahan || $stokSaatIni < $qty_butuh) {
                 $kekurangan[] = [
-                    'nama_bahan' => $bahan ? $bahan->nama_bahan : 'Unknown',
-                    'stok_sekarang' => $bahan ? $bahan->stok : 0,
+                    'nama_bahan' => $bahan?->nama_bahan ?? 'Unknown',
+                    'stok_sekarang' => $stokSaatIni,
                     'kebutuhan' => $qty_butuh,
-                    'kurang' => $qty_butuh - ($bahan ? $bahan->stok : 0),
-                    'satuan' => $bahan ? $bahan->satuan->nama_satuan : '-'
+                    'kurang' => $qty_butuh - $stokSaatIni,
+                    'satuan' => $bahan?->satuan?->nama_satuan ?? '-',
                 ];
             }
         }
-        
-        // 3. Jika ada kekurangan, kembalikan array kekurangan
-        if (!empty($kekurangan)) {
+
+        // 3. Jika ada kekurangan, kembalikan array kekurangan (stok tidak cukup)
+        if (! empty($kekurangan)) {
             return $kekurangan;
         }
-        
-        // 4. Jika cukup, potong stok dan catat mutasi
-        foreach ($kebutuhan as $bahanId => $qty_butuh) {
-            $bahan = BahanBaku::find($bahanId);
-            
-            MutasiStok::create([
-                'bahan_baku_id' => $bahanId,
-                'user_id'       => auth()->id(),
-                'jenis_mutasi'  => 'keluar',
-                'jumlah'        => $qty_butuh,
-                'sisa_stok'     => $bahan->stok - $qty_butuh,
-                'keterangan'    => "Potong stok untuk Pesanan Catering: {$pesanan->kode_pesanan}",
-            ]);
-            
-            $bahan->stok -= $qty_butuh;
-            $bahan->save();
-        }
-        
+
+        // 4. Jika stok cukup, potong stok dan catat mutasi
+        DB::transaction(function () use ($kebutuhan, $pesanan) {
+            foreach ($kebutuhan as $bahanId => $qty_butuh) {
+                $bahan = BahanBaku::find($bahanId);
+                if (! $bahan) {
+                    continue;
+                }
+
+                $stok = StokBahanBaku::lockForUpdate()
+                    ->firstOrCreate(
+                        ['bahan_baku_id' => $bahanId],
+                        ['jumlah_stok' => 0, 'terakhir_diperbarui' => now()]
+                    );
+
+                $stok->jumlah_stok -= $qty_butuh;
+                $stok->terakhir_diperbarui = now();
+                $stok->save();
+
+                MutasiStok::create([
+                    'bahan_baku_id' => $bahanId,
+                    'jenis_mutasi_stok_id' => 2, // Keluar
+                    'jumlah' => $qty_butuh,
+                    'satuan_id' => $bahan->satuan_id,
+                    'tanggal_mutasi' => now(),
+                    'dibuat_oleh' => Auth::id() ?? 1,
+                    'catatan' => "Potong stok otomatis saat DP diterima - Pesanan: {$pesanan->kode_pesanan}",
+                ]);
+            }
+        });
+
         return true;
     }
 }

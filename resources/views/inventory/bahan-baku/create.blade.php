@@ -21,7 +21,7 @@
         <x-ui.alert />
 
         {{-- Form Card --}}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden">
             <div class="p-6 border-b border-gray-100 bg-gray-50/50">
                 <h2 class="text-lg font-semibold text-gray-900">Informasi Bahan Baku</h2>
                 <p class="text-sm text-gray-500 font-medium mt-1">Lengkapi data bahan baku baru yang akan ditambahkan ke sistem.</p>
@@ -36,13 +36,13 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kode Bahan <span class="text-red-500">*</span></label>
                             <input type="text" name="kode_bahan" value="{{ old('kode_bahan', $kodeBahan) }}" readonly 
-                                   class="bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-xl block w-full p-3 cursor-not-allowed">
+                                   class="bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-3xl block w-full p-3 cursor-not-allowed">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Bahan Baku <span class="text-red-500">*</span></label>
                             <input type="text" name="nama_bahan" value="{{ old('nama_bahan') }}" required 
-                                   class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#0F2E23]/10 focus:border-[#0F2E23] block w-full p-3 transition-colors outline-none placeholder-gray-400 font-medium" 
+                                   class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-[#0F2E23]/10 focus:border-[#0F2E23] block w-full p-3 transition-colors outline-none placeholder-gray-400 font-medium" 
                                    placeholder="Contoh: Beras Premium">
                         </div>
 
@@ -50,7 +50,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kategori <span class="text-red-500">*</span></label>
-                                <select name="kategori_bahan_baku_id" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
+                                <select name="kategori_bahan_baku_id" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
                                     <option value="">Pilih Kategori</option>
                                     @foreach($kategoris as $kategori)
                                         <option value="{{ $kategori->id }}" {{ old('kategori_bahan_baku_id') == $kategori->id ? 'selected' : '' }}>{{ $kategori->nama_kategori }}</option>
@@ -59,7 +59,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Satuan Dasar <span class="text-red-500">*</span></label>
-                                <select name="satuan_id" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
+                                <select name="satuan_id" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
                                     <option value="">Pilih Satuan</option>
                                     @foreach($satuans as $satuan)
                                         <option value="{{ $satuan->id }}" {{ old('satuan_id') == $satuan->id ? 'selected' : '' }}>{{ $satuan->nama_satuan }} ({{ $satuan->singkatan }})</option>
@@ -69,10 +69,18 @@
                         </div>
 
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Peruntukan <span class="text-red-500">*</span></label>
+                            <select name="jenis_peruntukan" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
+                                <option value="Semua" {{ old('jenis_peruntukan') == 'Semua' ? 'selected' : '' }}>Semua (Bisa dipakai Reguler & Catering)</option>
+                                <option value="Reguler" {{ old('jenis_peruntukan') == 'Reguler' ? 'selected' : '' }}>Khusus Reguler</option>
+                                <option value="Catering" {{ old('jenis_peruntukan') == 'Catering' ? 'selected' : '' }}>Khusus Catering</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status Data <span class="text-red-500">*</span></label>
-                            <select name="status" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
-                                <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Aktif</option>
-                                <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Nonaktif</option>
+                            <select name="status_aktif" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
+                                <option value="1" {{ old('status_aktif') == '1' ? 'selected' : '' }}>Aktif</option>
+                                <option value="0" {{ old('status_aktif') == '0' ? 'selected' : '' }}>Nonaktif</option>
                             </select>
                         </div>
                     </div>
@@ -83,22 +91,14 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Stok Awal <span class="text-red-500">*</span></label>
                                 <input type="number" step="0.01" min="0" name="stok" value="{{ old('stok', 0) }}" required 
-                                       class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
+                                       class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Batas Minimum <span class="text-red-500">*</span></label>
-                                <input type="number" step="0.01" min="0" name="stok_minimum" value="{{ old('stok_minimum', 0) }}" required 
-                                       class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
+                                <input type="number" step="0.01" min="0" name="stok_minimal" value="{{ old('stok_minimal', 0) }}" required 
+                                       class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none">
                             </div>
                         </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan / Deskripsi <span class="text-gray-400 text-xs font-normal">(Opsional)</span></label>
-                            <textarea name="keterangan" rows="4" 
-                                      class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] block w-full p-3 transition-colors outline-none placeholder-gray-400" 
-                                      placeholder="Deskripsi tambahan bahan baku...">{{ old('keterangan') }}</textarea>
-                        </div>
-                        
 
                     </div>
                 </div>

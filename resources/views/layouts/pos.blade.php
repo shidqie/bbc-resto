@@ -56,6 +56,10 @@
             scrollbar-width: none;
         }
 
+        [x-cloak] {
+            display: none !important;
+        }
+
         /* NProgress custom styling */
         #nprogress .bar {
             background: #0F2E23 !important;
@@ -155,10 +159,10 @@
                         cancelButtonText: 'Batal',
                         reverseButtons: true,
                         customClass: {
-                            popup: 'rounded-xl border border-gray-100 shadow-2xl',
+                            popup: 'rounded-3xl border border-gray-100 shadow-2xl',
                             title: 'text-lg font-semibold text-gray-900',
-                            confirmButton: 'rounded-lg px-5 py-2 text-sm font-semibold transition-colors',
-                            cancelButton: 'rounded-lg px-5 py-2 text-sm font-semibold transition-colors'
+                            confirmButton: 'rounded-2xl px-5 py-2 text-sm font-semibold transition-colors',
+                            cancelButton: 'rounded-2xl px-5 py-2 text-sm font-semibold transition-colors'
                         }
                     }).then((result) => {
                         if (result.isConfirmed) {
