@@ -23,8 +23,20 @@
                         sans: ['"Plus Jakarta Sans"', '"Google Sans"', 'sans-serif'],
                         mono: ['"Anonymous Pro"', 'monospace'],
                     },
+                    fontSize: {
+                        xs: ['13px', '1.45'],
+                        sm: ['15px', '1.5'],
+                        base: ['16px', '1.55'],
+                        lg: ['18px', '1.5'],
+                        xl: ['20px', '1.4'],
+                        '2xl': ['24px', '1.3'],
+                        '3xl': ['30px', '1.25'],
+                        '4xl': ['36px', '1.2'],
+                        '5xl': ['48px', '1.15'],
+                        '6xl': ['60px', '1.1'],
+                    },
                     colors: {
-                        brand:   '#0F2E23',
+                        brand:   '#0D3024',
                         primary: '#3B82F6',
                         accent:  '#D4A843',
                         surface: '#FFFFFF',
@@ -74,7 +86,7 @@
     </style>
 </head>
 
-<body class="bg-[#0F2E23] text-white min-h-screen font-sans flex flex-col justify-between selection:bg-emerald-500 selection:text-white" x-data="qrScannerPage()" x-cloak>
+<body class="bg-[#0D3024] text-white min-h-screen font-sans flex flex-col justify-between selection:bg-emerald-500 selection:text-white" x-data="qrScannerPage()" x-cloak>
 
     <!-- Header Section -->
     <header class="p-5 flex items-center justify-between border-b border-white/10 bg-black/20 backdrop-blur-md">
@@ -88,7 +100,7 @@
             </div>
         </div>
 
-        <a href="{{ route('qr.menu') }}" class="px-3.5 py-2 rounded-3xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition flex items-center gap-2">
+        <a href="{{ route('qr.menu') }}" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition flex items-center gap-2">
             <x-heroicon-o-sparkles class="text-amber-400 w-5 h-5" /> Menu
         </a>
     </header>
@@ -98,7 +110,7 @@
 
         <!-- Title instructions -->
         <div class="mb-4 space-y-1">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">
                 <x-heroicon-o-camera class="w-3 h-3" /> Kamera Aktif
             </span>
             <h2 class="text-xl font-black text-white tracking-tight">Arahkan Kamera ke QR Code Meja</h2>
@@ -108,7 +120,7 @@
         </div>
 
         <!-- Camera Viewport Box -->
-        <div class="relative w-full max-w-[320px] aspect-square rounded-[2.25rem] bg-black/40 border-2 border-emerald-400/40 p-2 shadow-2xl overflow-hidden flex items-center justify-center">
+        <div class="relative w-full max-w-[320px] aspect-square rounded-xl bg-black/40 border-2 border-emerald-400/40 p-2 shadow-2xl overflow-hidden flex items-center justify-center">
             
             <!-- Laser Animation -->
             <div class="scan-laser" x-show="isScanning"></div>
@@ -133,14 +145,14 @@
         <div class="mt-6 w-full max-w-[320px] space-y-3">
 
             <!-- File Upload Option -->
-            <label class="w-full h-11 rounded-3xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+            <label class="w-full h-11 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                 <x-heroicon-o-photo class="text-emerald-300 w-5 h-5" />
                 <span>Unggah Foto QR Code</span>
                 <input type="file" id="qr-input-file" accept="image/*" class="hidden" @change="handleFileUpload($event)">
             </label>
 
             <!-- Manual Table Pick Modal Trigger -->
-            <button @click="showTableModal = true" class="w-full h-11 rounded-3xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-2">
+            <button @click="showTableModal = true" class="w-full h-11 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-bold transition flex items-center justify-center gap-2">
                 <x-heroicon-o-list-bullet class="w-4 h-4" />
                 <span>Atau Pilih Nomor Meja Manually</span>
             </button>
@@ -151,13 +163,13 @@
     <!-- Modal Manual Pick Table -->
     <div x-show="showTableModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showTableModal = false"></div>
-        <div class="relative bg-white text-gray-900 w-full max-w-sm rounded-[2.25rem] p-6 shadow-2xl border border-gray-100 z-10 space-y-4">
+        <div class="relative bg-white text-gray-900 w-full max-w-sm rounded-xl p-6 shadow-2xl border border-gray-100 z-10 space-y-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-base font-extrabold text-[#0F2E23]">Pilih Nomor Meja</h3>
+                    <h3 class="text-base font-extrabold text-[#0D3024]">Pilih Nomor Meja</h3>
                     <p class="text-xs text-gray-500 font-medium">Klik meja tempat Anda duduk</p>
                 </div>
-                <button @click="showTableModal = false" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs hover:bg-gray-200 transition">
+                <button @click="showTableModal = false" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-sm hover:bg-gray-200 transition">
                     <x-heroicon-o-x-mark class="w-5 h-5" />
                 </button>
             </div>
@@ -166,9 +178,9 @@
                 @foreach($mejas as $m)
                 @php $cleanNomor = trim(preg_replace('/^meja\s*/i', '', $m->nomor_meja)); @endphp
                 <a href="{{ route('qr.menu', ['meja' => $m->id]) }}" 
-                   class="bg-emerald-50/60 hover:bg-[#0F2E23] hover:text-white border border-emerald-200/80 rounded-[2.25rem] p-3 text-center transition-all group">
-                    <span class="block text-[10px] uppercase font-bold text-gray-400 group-hover:text-emerald-300">Meja</span>
-                    <span class="block text-base font-black text-[#0F2E23] group-hover:text-white mt-0.5">{{ $cleanNomor }}</span>
+                   class="bg-emerald-50/60 hover:bg-[#0D3024] hover:text-white border border-emerald-200/80 rounded-xl p-3 text-center transition-all group">
+                    <span class="block text-xs uppercase font-bold text-gray-400 group-hover:text-emerald-300">Meja</span>
+                    <span class="block text-base font-black text-[#0D3024] group-hover:text-white mt-0.5">{{ $cleanNomor }}</span>
                 </a>
                 @endforeach
             </div>
@@ -176,7 +188,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="p-4 text-center border-t border-white/10 bg-black/20 text-[11px] text-emerald-200/60 font-medium">
+    <footer class="p-4 text-center border-t border-white/10 bg-black/20 text-xs text-emerald-200/60 font-medium">
         &copy; {{ date('Y') }} Saung Babakan Cinta &bull; Resto & Catering POS System
     </footer>
 
@@ -256,11 +268,13 @@
                     })
                     .catch(err => {
                         this.loading = false;
-                        alert("Tidak dapat membaca QR code dari gambar ini. Pastikan gambar jelas.");
+                        window.showToast('info', "Tidak dapat membaca QR code dari gambar ini. Pastikan gambar jelas.");
                     });
             }
         };
     }
     </script>
+
+    <x-toast />
 </body>
 </html>

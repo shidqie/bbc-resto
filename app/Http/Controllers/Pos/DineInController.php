@@ -16,9 +16,17 @@ use Illuminate\Support\Facades\DB;
 
 class DineInController extends Controller
 {
+    private function sortMejasByNumber($mejas)
+    {
+        return $mejas->sortBy(function ($m) {
+            preg_match_all('/\d+/', $m->nomor_meja ?? '', $m);
+            return (int) implode('', $m[0]);
+        }, SORT_REGULAR);
+    }
+
     public function index()
     {
-        $mejas = Meja::with('status_meja')->orderBy(DB::raw('CAST(REGEXP_REPLACE(nomor_meja, "[^0-9]", "") AS UNSIGNED)'), 'asc')->get();
+        $mejas = $this->sortMejasByNumber(Meja::with('status_meja')->get());
 
         // Jenis Menu Dine In (misal id 1)
         $menus = Menu::with(['kategori_menu', 'resep_menu.bahan_baku'])
@@ -151,6 +159,88 @@ class DineInController extends Controller
         return view('pos.pesanan.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'riwayatTransaksi', 'cashiers'));
     }
 
+    public function tableStatusApi()
+    {
+        $mejas = $this->sortMejasByNumber(Meja::with('status_meja')->get());
+
+        $openBillsRaw = Pesanan::with(['meja', 'detail_pesanan.menu', 'tiket_dapur'])
+            ->where('jenis_pesanan_id', 1)
+            ->where('status_pesanan_id', 1)
+            ->orderBy('dibuat_pada', 'desc')
+            ->get();
+
+        $activeMejaIds = $openBillsRaw->pluck('meja_id')->filter()->unique();
+
+        $mejas = $mejas->map(function ($m) use ($openBillsRaw) {
+            $arr = [
+                'id' => $m->id,
+                'nomor_meja' => $m->nomor_meja,
+                'status' => $m->status_meja_id == 2 ? 'terisi' : 'kosong',
+                'has_active_order' => false,
+                'active_order' => null,
+                'kot' => null,
+            ];
+
+            $order = $openBillsRaw->firstWhere('meja_id', $m->id);
+            if ($order) {
+                $namaKonsumen = 'Tamu';
+                if (! empty($order->catatan)) {
+                    if (preg_match('/^Pemesan:\s*(.+)$/m', $order->catatan, $mm)) {
+                        $namaKonsumen = trim($mm[1]);
+                    } elseif (preg_match('/Self-Order QR \(([^)]+)\)/', $order->catatan, $mm)) {
+                        $namaKonsumen = trim($mm[1]);
+                    } elseif (preg_match('/^(.+?)\s*\(\d+\s*tamu\)/', $order->catatan, $mm)) {
+                        $namaKonsumen = trim($mm[1]);
+                    } else {
+                        $namaKonsumen = trim(explode('|', $order->catatan)[0]);
+                        $namaKonsumen = strlen($namaKonsumen) > 40 ? substr($namaKonsumen, 0, 40).'…' : $namaKonsumen;
+                    }
+                }
+
+                $arr['has_active_order'] = true;
+                $arr['active_order'] = [
+                    'id' => $order->id,
+                    'meja_id' => $order->meja_id,
+                    'nomor_pesanan' => $order->nomor_pesanan,
+                    'nama_konsumen' => $namaKonsumen,
+                    'dibuat_pada' => $order->dibuat_pada ? $order->dibuat_pada->toDateTimeString() : null,
+                    'total_tagihan' => (float) ($order->total_tagihan ?: collect($order->detail_pesanan)->sum(fn ($d) => $d->subtotal)),
+                    'items' => $order->detail_pesanan->map(function ($d) {
+                        return [
+                            'id' => $d->id,
+                            'qty' => $d->jumlah,
+                            'harga_satuan' => (float) $d->harga_satuan,
+                            'subtotal' => (float) $d->subtotal,
+                            'catatan' => $d->catatan,
+                            'menu' => $d->menu ? [
+                                'id' => $d->menu->id,
+                                'nama' => $d->menu->nama_menu ?? $d->menu->nama ?? 'Menu',
+                                'harga' => (float) ($d->menu->harga_jual ?? $d->menu->harga ?? 0),
+                                'foto' => $d->menu->foto,
+                            ] : null,
+                        ];
+                    })->values()->all(),
+                ];
+
+                $kot = $order->tiket_dapur->sortByDesc('id')->first();
+                if ($kot) {
+                    $arr['kot'] = [
+                        'id' => $kot->id,
+                        'nomor_tiket' => $kot->nomor_tiket,
+                        'status_tiket_dapur_id' => $kot->status_tiket_dapur_id,
+                    ];
+                }
+            }
+
+            return $arr;
+        });
+
+        return response()->json([
+            'success' => true,
+            'mejas' => $mejas->values()->all(),
+        ]);
+    }
+
     public function storePosOrder(Request $request)
     {
         $request->validate([
@@ -167,8 +257,17 @@ class DineInController extends Controller
             DB::beginTransaction();
 
             $subtotal = 0;
+            $kebutuhanBahanService = app(\App\Services\KebutuhanBahanService::class);
             foreach ($request->items as $item) {
                 $menu = Menu::find($item['menu_id']);
+                if (! $menu) {
+                    throw new \Exception("Menu tidak ditemukan (ID {$item['menu_id']}).");
+                }
+
+                if (! $kebutuhanBahanService->bahanCukup($menu, (float) $item['qty'])) {
+                    throw new \Exception("Stok bahan baku untuk menu '{$menu->nama_menu}' tidak mencukupi.");
+                }
+
                 $subtotal += $menu->harga_jual * $item['qty'];
             }
 
@@ -269,7 +368,7 @@ class DineInController extends Controller
 
     public function printQrMeja(Request $request)
     {
-        $query = Meja::orderBy(DB::raw('CAST(REGEXP_REPLACE(nomor_meja, "[^0-9]", "") AS UNSIGNED)'), 'asc');
+        $query = Meja::query();
 
         if ($request->has('meja_id')) {
             $query->where('id', $request->meja_id);
@@ -278,7 +377,7 @@ class DineInController extends Controller
             $query->whereNotNull('qr_token');
         }
 
-        $mejas = $query->get();
+        $mejas = $this->sortMejasByNumber($query->get());
 
         if ($mejas->isEmpty()) {
             return response()->send('<h3>Tidak ada data QR Code yang bisa diunduh. Silakan generate QR terlebih dahulu.</h3>');
@@ -314,13 +413,15 @@ class DineInController extends Controller
 
     public function toggleStatusSajian($itemId)
     {
-        // Fitur ini butuh kolom baru di detail_pesanan jika mau dipertahankan
         $item = DetailPesanan::findOrFail($itemId);
-        // Dummy implementation since status_sajian is not in new schema
+
+        $item->status_item = $item->status_item === 'disajikan' ? null : 'disajikan';
+        $item->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Status sajian item berhasil diperbarui (Simulasi).',
+            'disajikan' => $item->status_item === 'disajikan',
+            'message' => $item->status_item === 'disajikan' ? 'Item ditandai sudah disajikan.' : 'Item ditandai belum disajikan.',
         ]);
     }
 

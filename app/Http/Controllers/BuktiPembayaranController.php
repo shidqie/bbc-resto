@@ -2,12 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaymentTransaction;
 use App\Models\Pembayaran;
 use App\Models\Pesanan;
 use Illuminate\Http\Request;
 
 class BuktiPembayaranController extends Controller
 {
+    /** GET /pesan/bayar (cari pesanan untuk bayar) */
+    public function cari(Request $request)
+    {
+        $kodePesanan = $request->query('kode_pesanan');
+
+        if ($kodePesanan) {
+            $pesanan = Pesanan::where('nomor_pesanan', $kodePesanan)->first();
+            if ($pesanan) {
+                return redirect()->route('pesanan.bayar', $kodePesanan);
+            }
+
+            return back()->with('error', 'Pesanan dengan nomor "'.$kodePesanan.'" tidak ditemukan.');
+        }
+
+        return view('pos.pembayaran.cari');
+    }
+
     /** GET /pesan/bayar/{kodePesanan} */
     public function show($kodePesanan)
     {
@@ -25,11 +43,39 @@ class BuktiPembayaranController extends Controller
 
         $statusBayar = $this->statusBayar($pesanan);
         if ($statusBayar === 'lunas') {
-            return redirect()->route('lacak.index', ['kode_pesanan' => $kodePesanan])
-                ->with('success', 'Pesanan ini sudah lunas.');
+            return view('pos.pembayaran.sukses', compact('pesanan', 'type', 'kodePesanan'));
         }
 
         return view('pos.pembayaran.index', compact('pesanan', 'type', 'kodePesanan'));
+    }
+
+    /** GET /pesan/bayar/status/{kodePesanan} — polling JSON status pembayaran */
+    public function statusJson($kodePesanan)
+    {
+        $pesanan = Pesanan::where('nomor_pesanan', $kodePesanan)->first();
+
+        if (! $pesanan) {
+            return response()->json([
+                'lunas' => false,
+                'transaction_status' => null,
+                'dp_terbayar' => 0,
+            ]);
+        }
+
+        $dpTerbayar = (float) $pesanan->pembayaran()
+            ->whereIn('status_pembayaran_id', [2, 3]) // Sebagian / Lunas
+            ->sum('jumlah_bayar');
+        $lunas = (float) $pesanan->pembayaran()
+            ->where('status_pembayaran_id', 3)
+            ->sum('jumlah_bayar');
+
+        $transaksi = PaymentTransaction::where('din_number', $kodePesanan)->latest()->first();
+
+        return response()->json([
+            'lunas' => $lunas >= (float) $pesanan->total_tagihan || $dpTerbayar >= (float) $pesanan->total_tagihan,
+            'transaction_status' => $transaksi?->transaction_status,
+            'dp_terbayar' => $dpTerbayar,
+        ]);
     }
 
     /** POST /pesan/bukti */

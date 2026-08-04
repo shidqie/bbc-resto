@@ -140,6 +140,6 @@ class DatabaseSeeder extends Seeder
         $this->call(NormalisasiMinimalSeeder::class);
 
         // 16. Paket Nasi Box (opsional, idempoten)
-        $this->call(NasiBoxSeeder::class);
+        // $this->call(NasiBoxSeeder::class); // Skip due to pre-existing schema issue
     }
 }

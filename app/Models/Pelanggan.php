@@ -21,4 +21,9 @@ class Pelanggan extends BaseModel implements AuthenticatableContract, CanResetPa
     {
         return $this->hasMany(Pesanan::class, 'pelanggan_id');
     }
+
+    public function pengguna()
+    {
+        return $this->belongsTo(Pengguna::class, 'user_id');
+    }
 }

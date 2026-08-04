@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pengantaran;
 use App\Models\Pesanan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class JadwalPengantaranController extends Controller
 {
@@ -92,9 +94,54 @@ class JadwalPengantaranController extends Controller
         ]);
 
         $order = Pesanan::findOrFail($id);
-        $order->status_pesanan_id = $request->status;
-        $order->save();
+
+        // Peta status pesanan → status pengantaran (FR-17)
+        $mapPengantaran = [
+            3 => 1, // DIPROSES → dijadwalkan
+            4 => 2, // SIAP → siap_dikirim
+            5 => 4, // SELESAI → diterima
+            6 => 5, // DIBATALKAN → gagal_dikirim
+        ];
+
+        DB::transaction(function () use ($order, $request, $mapPengantaran) {
+            $order->status_pesanan_id = $request->status;
+            $order->save();
+
+            // Sinkron status pengantaran bila pesanan punya catatan pengantaran
+            $pengantaran = Pengantaran::where('pesanan_id', $order->id)->first();
+            if ($pengantaran && isset($mapPengantaran[$request->status])) {
+                $update = ['status_pengantaran_id' => $mapPengantaran[$request->status]];
+                if ($request->status == 5) {
+                    $update['diterima_pada'] = now();
+                }
+                $pengantaran->update($update);
+            }
+        });
 
         return response()->json(['success' => true, 'message' => 'Status berhasil diubah', 'new_status' => $order->status_pesanan_id]);
+    }
+
+    /**
+     * Transisi status pengantaran khusus (FR-17): dijadwalkan → siap → perjalanan → diterima.
+     */
+    public function updatePengantaranStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status_pengantaran_id' => 'required|integer|min:1|max:5',
+        ]);
+
+        $pengantaran = Pengantaran::findOrFail($id);
+
+        $update = ['status_pengantaran_id' => $request->status_pengantaran_id];
+        if ($request->status_pengantaran_id == 3) {
+            $update['berangkat_pada'] = now();
+        }
+        if ($request->status_pengantaran_id == 4) {
+            $update['diterima_pada'] = now();
+        }
+
+        $pengantaran->update($update);
+
+        return back()->with('success', 'Status pengantaran diperbarui.');
     }
 }

@@ -24,6 +24,7 @@ class PesananNasiBoxController extends Controller
         // 3 = Nasi Box
         $pakets = Menu::where('jenis_menu_id', 3)
             ->where('status_aktif', true)
+            ->whereHas('komponen_paket')
             ->get();
 
         return view('order.nasi-box.create', compact('pakets'));
@@ -191,26 +192,21 @@ class PesananNasiBoxController extends Controller
 
     protected function hitungKebutuhanBahan(Pesanan $pesanan): array
     {
-        $pesanan->load(['detail_pesanan.menu.resep_menu.bahan_baku']);
+        $pesanan->load([
+            'detail_pesanan.menu',
+            'detail_pesanan.pilihan_pesanan_catering',
+        ]);
 
-        $kebutuhan = [];
-        foreach ($pesanan->detail_pesanan as $detail) {
-            $qtyMultiplier = $detail->jumlah;
-            if ($detail->menu && $detail->menu->resep_menu) {
-                foreach ($detail->menu->resep_menu as $resep) {
-                    $bahanId = $resep->bahan_baku_id;
-                    $kebutuhan[$bahanId] = ($kebutuhan[$bahanId] ?? 0) + ($resep->jumlah_kebutuhan * $qtyMultiplier);
-                }
-            }
-        }
+        $kebutuhanBahanService = app(\App\Services\KebutuhanBahanService::class);
+        $agregat = $kebutuhanBahanService->kebutuhanBahanPesanan($pesanan);
 
         $result = [];
-        foreach ($kebutuhan as $bahanId => $total) {
-            $bahan = BahanBaku::with('satuan')->find($bahanId);
+        foreach ($agregat as $item) {
+            $bahan = BahanBaku::with('satuan')->find($item['bahan_baku_id']);
             if ($bahan) {
                 $result[] = [
                     'nama_bahan' => $bahan->nama_bahan,
-                    'total_kebutuhan' => rtrim(rtrim(number_format($total, 2, ',', '.'), '0'), ','),
+                    'total_kebutuhan' => rtrim(rtrim(number_format($item['kebutuhan'], 2, ',', '.'), '0'), ','),
                     'satuan' => $bahan->satuan->singkatan ?? '',
                 ];
             }
@@ -260,8 +256,12 @@ class PesananNasiBoxController extends Controller
             return back()->with('success', 'Pesanan berhasil dibatalkan.');
         }
 
-        if ($status == 5) {
-            app(OrderService::class)->completeOrder($pesanan);
+        if ($status == 3 && $pesanan->status_pesanan_id < 3) {
+            // FR-10: Nasi Box memotong stok saat PRODUKSI DIMULAI.
+            app(OrderService::class)->potongStokPesanan($pesanan);
+            $pesanan->update(['status_pesanan_id' => 3]);
+        } elseif ($status == 5) {
+            $pesanan->update(['status_pesanan_id' => 5]);
         } else {
             $pesanan->update(['status_pesanan_id' => $status]);
         }

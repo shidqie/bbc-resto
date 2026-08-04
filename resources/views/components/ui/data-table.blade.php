@@ -32,7 +32,7 @@
     'paginator' => null,
 ])
 
-<div class="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
     {{-- Toolbar (Search, Filter, dll) --}}
     @if(isset($toolbar))
         <div class="p-3.5 border-b border-gray-100 bg-white">

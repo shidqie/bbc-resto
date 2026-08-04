@@ -21,6 +21,18 @@
                         'Google_Sans': ['Outfit', 'sans-serif'],
                         'Anonymous_Pro': ['Anonymous Pro', 'monospace'],
                     },
+                    fontSize: {
+                        xs: ['13px', '1.45'],
+                        sm: ['15px', '1.5'],
+                        base: ['16px', '1.55'],
+                        lg: ['18px', '1.5'],
+                        xl: ['20px', '1.4'],
+                        '2xl': ['24px', '1.3'],
+                        '3xl': ['30px', '1.25'],
+                        '4xl': ['36px', '1.2'],
+                        '5xl': ['48px', '1.15'],
+                        '6xl': ['60px', '1.1'],
+                    },
                     colors: {
                         primary: '#0D3024',
                         'primary-container': '#0a2219',

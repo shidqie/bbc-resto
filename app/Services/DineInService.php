@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\BahanBaku;
 use App\Models\DetailPesanan;
+use App\Models\DetailTiketDapur;
 use App\Models\ItemPesananDinein;
 use App\Models\Meja;
 use App\Models\Menu;
@@ -11,6 +12,8 @@ use App\Models\MutasiStok;
 use App\Models\PembayaranDinein;
 use App\Models\Pesanan;
 use App\Models\PesananDinein;
+use App\Models\TiketDapur;
+use App\Services\OrderService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -79,7 +82,7 @@ class DineInService
                 }
             }
 
-            // Buat item pesanan & potong stok BOM secara atomik
+            // Buat item pesanan & validasi ketersediaan BOM (stok dipotong saat pembayaran)
             foreach ($items as $item) {
                 ItemPesananDinein::create([
                     'pesanan_dinein_id' => $pesanan->id,
@@ -89,8 +92,6 @@ class DineInService
                     'diinput_oleh' => $staffId,
                     'diinput_pada' => now(),
                 ]);
-
-                BOMService::kurangiStokBahan($item['menu_id'], $item['qty'], $pesanan->id);
             }
 
             return true;
@@ -100,9 +101,9 @@ class DineInService
     /**
      * Buat pesanan baru secara langsung (Satu Pintu POS)
      */
-    public function createOrder($mejaId, $namaKonsumen, $jumlahTamu, $items, $staffId)
+    public function createOrder($mejaId, $namaKonsumen, $jumlahTamu, $items, $staffId, $sumberPesanan = 'pos')
     {
-        return DB::transaction(function () use ($mejaId, $namaKonsumen, $jumlahTamu, $items, $staffId) {
+        return DB::transaction(function () use ($mejaId, $namaKonsumen, $jumlahTamu, $items, $staffId, $sumberPesanan) {
             $meja = Meja::findOrFail($mejaId);
 
             if ($meja->status_meja_id == 4 || $meja->status === 'tidak_aktif') {
@@ -172,10 +173,9 @@ class DineInService
                 }
             }
 
-            // --- EKSEKUSI PENGURANGAN STOK ATOMIK VIA BOM ---
-            foreach ($items as $item) {
-                BOMService::kurangiStokBahan($item['menu_id'], $item['qty'], $pesanan->id);
-            }
+            // CATATAN: Stok TIDAK dipotong di sini (FR-10).
+            // Pengurangan stok dilakukan SATU KALI saat pembayaran berhasil
+            // via OrderService::potongStokPesanan, agar tidak terjadi double-deduction.
 
             // --- SYNC ke tabel Pesanan (normalized) agar kasir POS bisa membaca ---
             // Cek apakah sudah ada entry di pesanan untuk PesananDinein ini
@@ -198,7 +198,7 @@ class DineInService
                         $harga = $menu->harga_jual ?? $menu->harga ?? 0;
                         DetailPesanan::create([
                             'pesanan_id' => $pesananNorm->id,
-                            'produk_id' => $menu->id,
+                            'menu_id' => $menu->id,
                             'jumlah' => $item['qty'],
                             'harga_satuan' => $harga,
                             'subtotal' => $harga * $item['qty'],
@@ -210,6 +210,9 @@ class DineInService
 
             // Simpan id pesanan normalized ke pesananDinein agar bisa di-link
             $pesanan->pesanan_id = $pesananNorm->id;
+
+            // --- AUTO CREATE KOT (Tiket Dapur) ---
+            $this->createKot($pesananNorm, $pesanan, $items, $meja, $staffId, $sumberPesanan);
 
             return $pesanan;
         });
@@ -251,17 +254,22 @@ class DineInService
                 $pesanan->meja->update($mejaUpdate);
             }
 
-            // Update status Master Pesanan
-            $masterPesanan = Pesanan::where('keterangan', 'Order_ID_Dinein:'.$pesanan->id)->first();
+            // Update status Master Pesanan (PesananDinein menulis ke tabel pesanan yang sama)
+            $masterPesanan = Pesanan::where('nomor_pesanan', $pesanan->kode_pesanan)->first();
             if ($masterPesanan) {
                 $masterPesanan->update([
-                    'status_pembayaran' => 'lunas',
-                    'status_pesanan' => 'selesai',
+                    'status_pesanan_id' => 5, // Selesai
                 ]);
             }
 
-            // 3. Stok sudah dipotong saat pesanan diinput (createOrder),
-            // jadi di sini hanya mengupdate status pembayaran saja.
+            // 3. Potong stok bahan baku (FR-10): Dine-In dipotong saat pembayaran berhasil.
+            //    Idempoten via stock_deducted_at, sehingga aman jika QRIS & POS diproses bergantian.
+            $orderService = app(OrderService::class);
+            if ($masterPesanan) {
+                $orderService->potongStokPesanan($masterPesanan);
+            } else {
+                $orderService->potongStokPesanan($pesanan);
+            }
 
             return $pembayaran;
         });
@@ -371,6 +379,47 @@ class DineInService
             }
 
             return true;
+        });
+    }
+
+    /**
+     * Create KOT (Tiket Dapur) untuk pesanan Dine In
+     */
+    protected function createKot($pesananNorm, $pesananDinein, $items, $meja, $staffId, $sumberPesanan = 'pos')
+    {
+        return DB::transaction(function () use ($pesananNorm, $pesananDinein, $items, $meja, $staffId, $sumberPesanan) {
+            $kot = TiketDapur::create([
+                'pesanan_id' => $pesananNorm->id,
+                'meja_id' => $meja->id,
+                'nomor_meja' => $meja->nomor_meja,
+                'nama_konsumen' => $pesananDinein->nama_konsumen ?? $pesananNorm->catatan,
+                'jumlah_tamu' => $pesananDinein->jumlah_tamu ?? 1,
+                'sumber_pesanan' => $sumberPesanan,
+                'status_tiket_dapur_id' => 1, // MENUNGGU
+                'dicetak_pada' => now(),
+            ]);
+
+            // Create detail tiket dapur for each item
+            foreach ($items as $item) {
+                $menu = Menu::find($item['menu_id']);
+                if ($menu) {
+                    // Find the corresponding detail_pesanan
+                    $detailPesanan = DetailPesanan::where('pesanan_id', $pesananNorm->id)
+                        ->where('menu_id', $menu->id)
+                        ->first();
+
+                    if ($detailPesanan) {
+                        DetailTiketDapur::create([
+                            'tiket_dapur_id' => $kot->id,
+                            'detail_pesanan_id' => $detailPesanan->id,
+                            'jumlah' => $item['qty'],
+                            'catatan' => $item['catatan'] ?? null,
+                        ]);
+                    }
+                }
+            }
+
+            return $kot;
         });
     }
 }

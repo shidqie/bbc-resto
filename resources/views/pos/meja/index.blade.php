@@ -11,7 +11,7 @@
                 <p class="text-sm text-gray-500 font-medium mt-1">Kelola data meja restoran, kapasitas, dan pantau statusnya.</p>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="openMejaModal()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-2xl px-3 py-2 hover:bg-gray-800 transition-colors">
+                <button onclick="openMejaModal()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Meja Baru
                 </button>
@@ -25,13 +25,13 @@
             <form action="{{ route('meja.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
                 <div class="relative flex-1 sm:flex-none sm:w-56">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nomor meja…" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-2xl focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nomor meja…" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
                 </div>
-                <button type="submit" class="text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-2xl px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+                <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
             </form>
             
             <div class="flex items-center gap-2">
-                <a href="{{ url('pos/dinein/qr-codes') }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-2xl px-3 py-2 hover:bg-emerald-100 transition-colors shadow-sm">
+                <a href="{{ url('pos/dinein/qr-codes') }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 hover:bg-emerald-100 transition-colors shadow-sm">
                     <x-heroicon-o-document class="w-4 h-4" />
                     Unduh Semua QR
                 </a>
@@ -39,10 +39,10 @@
         </div>
 
         {{-- Table Container --}}
-        <div class="bg-white rounded-3xl border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
                         <th class="px-4 py-3 text-left w-12">No.</th>
                         <th class="px-4 py-3 text-left">Nomor Meja</th>
                         <th class="px-4 py-3 text-left">Area</th>
@@ -54,7 +54,7 @@
                 <tbody class="divide-y divide-gray-50">
                     @forelse($mejas as $meja)
                     <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-xs text-gray-500 font-medium align-middle">
+                        <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
                             {{ $mejas->firstItem() + $loop->index }}
                         </td>
                         <td class="px-4 py-3 font-semibold text-gray-900">
@@ -96,9 +96,9 @@
                                 </button>
 
                                 {{-- Delete (Hapus) --}}
-                                <form action="{{ route('meja.destroy', $meja->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus meja {{ addslashes($meja->nomor_meja) }}?');">
+                                <form id="delete-meja-{{ $meja->id }}" action="{{ route('meja.destroy', $meja->id) }}" method="POST" class="inline">
                                     @csrf @method('DELETE')
-                                    <button type="submit" title="Hapus" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
+                                    <button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Meja', name: 'Meja {{ addslashes($meja->nomor_meja) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-meja-{{ $meja->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
                                         <x-heroicon-o-trash class="w-3 h-3" />
                                     </button>
                                 </form>
@@ -143,23 +143,23 @@
                 <input type="hidden" name="_method" id="formMejaMethod" value="POST">
                 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-900 mb-1.5">Nomor Meja <span class="text-red-500">*</span></label>
-                    <input type="text" name="nomor_meja" id="inputNomorMeja" required class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white" placeholder="Contoh: 01, A1, VVIP-1">
+                    <label class="block text-sm font-semibold text-gray-900 mb-1.5">Nomor Meja <span class="text-red-500">*</span></label>
+                    <input type="text" name="nomor_meja" id="inputNomorMeja" required class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white" placeholder="Contoh: 01, A1, VVIP-1">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-900 mb-1.5">Kapasitas (Orang) <span class="text-red-500">*</span></label>
-                    <input type="number" name="kapasitas" id="inputKapasitas" min="1" value="4" required class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                    <label class="block text-sm font-semibold text-gray-900 mb-1.5">Kapasitas (Orang) <span class="text-red-500">*</span></label>
+                    <input type="number" name="kapasitas" id="inputKapasitas" min="1" value="4" required class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-900 mb-1.5">Area</label>
-                    <input type="text" name="area" id="inputArea" class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white" placeholder="Contoh: Indoor, Outdoor, VIP">
+                    <label class="block text-sm font-semibold text-gray-900 mb-1.5">Area</label>
+                    <input type="text" name="area" id="inputArea" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white" placeholder="Contoh: Indoor, Outdoor, VIP">
                 </div>
 
                 <div id="statusContainer" class="hidden">
-                    <label class="block text-xs font-semibold text-gray-900 mb-1.5">Status <span class="text-red-500">*</span></label>
-                    <select name="status_meja_id" id="inputStatus" class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                    <label class="block text-sm font-semibold text-gray-900 mb-1.5">Status <span class="text-red-500">*</span></label>
+                    <select name="status_meja_id" id="inputStatus" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
                         <option value="1">Tersedia</option>
                         <option value="2">Terisi</option>
                         <option value="4">Tidak Aktif</option>
@@ -169,8 +169,8 @@
         </div>
         
         <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/50">
-            <button type="button" onclick="closeMejaModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-3xl transition-colors">Batal</button>
-            <button type="submit" form="formMeja" class="px-5 py-2.5 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-3xl transition-colors shadow-sm">Simpan Meja</button>
+            <button type="button" onclick="closeMejaModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors">Batal</button>
+            <button type="submit" form="formMeja" class="px-5 py-2.5 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-xl transition-colors shadow-sm">Simpan Meja</button>
         </div>
     </div>
 </div>
@@ -192,7 +192,7 @@
         <div class="flex-1 overflow-y-auto p-6 flex flex-col items-center bg-gray-100">
             
             <!-- Detail Meja -->
-            <div class="w-full max-w-[300px] mb-6 bg-white rounded-3xl shadow-sm border border-gray-200 p-4">
+            <div class="w-full max-w-[300px] mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                 <h4 class="text-base font-bold text-gray-900 mb-3" id="detailNomorMeja">Meja 01</h4>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between"><span class="text-gray-500">Kode Meja</span> <span class="font-medium text-gray-900" id="detailKodeMeja">-</span></div>
@@ -211,7 +211,7 @@
             </div>
 
             <!-- Kartu QR -->
-            <div id="qrCardContainer" class="w-full max-w-[300px] aspect-[1/1.55] rounded-[2.25rem] overflow-hidden shadow-xl border-4 border-emerald-500/30 flex flex-col justify-between p-5 relative text-white" style="background: linear-gradient(145deg, #0F2E23 0%, #164032 50%, #0A2219 100%);">
+            <div id="qrCardContainer" class="w-full max-w-[300px] aspect-[1/1.55] rounded-xl overflow-hidden shadow-xl border-4 border-emerald-500/30 flex flex-col justify-between p-5 relative text-white" style="background: linear-gradient(145deg, #0D3024 0%, #164032 50%, #0A2219 100%);">
                 <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none"></div>
                 <div class="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/60 rounded-tl-3xl"></div>
                 <div class="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400/60 rounded-tr-3xl"></div>
@@ -221,15 +221,15 @@
                 <div class="relative z-10 text-center pt-1 space-y-0.5">
                     <h2 class="text-2xl font-black uppercase tracking-wider text-amber-400 drop-shadow-md leading-none">SCAN MENU</h2>
                     <div class="pt-2">
-                        <span class="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-white border border-amber-400/40 text-[12px] font-extrabold shadow-sm">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-white border border-amber-400/40 text-xs font-extrabold shadow-sm">
                             <x-heroicon-o-users class="w-3 h-3 text-amber-400" /> <span id="qrMejaName">Meja</span>
                         </span>
                     </div>
                 </div>
 
                 <div class="relative z-10 my-auto py-1 flex flex-col items-center">
-                    <div class="bg-white rounded-[2.25rem] p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center">
-                        <img id="drawerQrImage" src="" alt="QR Code" class="w-44 h-44 object-contain rounded-3xl">
+                    <div class="bg-white rounded-xl p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center">
+                        <img id="drawerQrImage" src="" alt="QR Code" class="w-44 h-44 object-contain rounded-xl">
                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div class="w-11 h-11 rounded-full bg-white p-1 shadow-xl border-2 border-emerald-800 flex items-center justify-center overflow-hidden">
                                 <img src="{{ asset('images/logo-saung.png') }}" alt="Logo" class="w-full h-full object-contain">
@@ -237,8 +237,8 @@
                         </div>
                     </div>
                     <div class="mt-3 text-center">
-                        <p class="text-[11px] font-bold text-white tracking-wide">Scan QR Code untuk pesan sendiri</p>
-                        <p class="text-[9px] font-medium text-amber-300 mt-0.5">Arahkan kamera HP Anda</p>
+                        <p class="text-xs font-bold text-white tracking-wide">Scan QR Code untuk pesan sendiri</p>
+                        <p class="text-xs font-medium text-amber-300 mt-0.5">Arahkan kamera HP Anda</p>
                     </div>
                 </div>
 
@@ -247,8 +247,8 @@
                         <img src="{{ asset('images/logo-saung.png') }}" alt="Logo" class="w-full h-full object-contain">
                     </div>
                     <div class="text-left">
-                        <h3 class="text-[11px] font-black tracking-wider text-white uppercase leading-none">SAUNG BABAKAN CINTA</h3>
-                        <span class="text-[8px] font-semibold text-amber-300 block leading-tight mt-0.5">Rumah Makan Khas Sunda</span>
+                        <h3 class="text-xs font-black tracking-wider text-white uppercase leading-none">SAUNG BABAKAN CINTA</h3>
+                        <span class="text-xs font-semibold text-amber-300 block leading-tight mt-0.5">Rumah Makan Khas Sunda</span>
                     </div>
                 </div>
             </div>
@@ -256,20 +256,20 @@
         </div>
         
         <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/50">
-            <button type="button" onclick="closeQrDrawer()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-3xl transition-colors">Tutup</button>
+            <button type="button" onclick="closeQrDrawer()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors">Tutup</button>
             
             <form id="formGenerateQr" method="POST" action="" class="hidden">
                 @csrf
-                <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-3xl transition-colors shadow-sm flex items-center gap-1.5">
+                <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition-colors shadow-sm flex items-center gap-1.5">
                     <x-heroicon-o-arrow-path class="w-4 h-4" /> Generate QR
                 </button>
             </form>
 
             <div id="btnGroupQrActions" class="flex items-center gap-2 hidden">
-                <button type="button" onclick="downloadQrPng()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-3xl transition-colors shadow-sm flex items-center gap-1.5 hidden" title="Fitur coming soon">
+                <button type="button" onclick="downloadQrPng()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors shadow-sm flex items-center gap-1.5 hidden" title="Fitur coming soon">
                     <x-heroicon-o-arrow-down-tray class="w-5 h-5" /> Unduh PNG
                 </button>
-                <a id="btnPrintQr" href="#" target="_blank" class="px-5 py-2.5 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-3xl transition-colors shadow-sm flex items-center gap-1.5">
+                <a id="btnPrintQr" href="#" target="_blank" class="px-5 py-2.5 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors shadow-sm flex items-center gap-1.5">
                     <x-heroicon-o-printer class="w-5 h-5" /> Cetak QR
                 </a>
             </div>

@@ -1,53 +1,62 @@
+{{-- Halaman: Daftar Pengadaan Bahan Baku --}}
 @extends('layouts.pos')
+@section('title', 'Pengadaan Bahan')
+
 @section('content')
-<div class="flex-1 overflow-auto bg-gray-50/50">
-    <div class="w-full p-6 space-y-6">
-        <x-ui.page-header title="Pengadaan Bahan" :breadcrumbs="['Pengadaan', 'Daftar PO']">
+<div class="flex-1 bg-gray-50 text-gray-800">
+    <div class="w-full p-6 space-y-5">
+
+        {{-- Page Header --}}
+        <x-ui.page-header
+            title="Pengadaan Bahan"
+            subtitle="Buat dan pantau Purchase Order bahan baku untuk kebutuhan operasional & catering."
+            :breadcrumbs="['Persediaan', 'Pengadaan']">
             <x-slot:actions>
-                <a href="{{ route('pengadaan.create', ['tipe' => 'harian']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-3xl hover:bg-amber-600 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <x-ui.button href="{{ route('pengadaan.create', ['tipe' => 'harian']) }}" variant="outline" icon="clipboard-document-list">
                     Pengadaan Harian
-                </a>
-                <a href="{{ route('pengadaan.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-[#3B82F6] text-white text-sm font-semibold rounded-3xl hover:bg-blue-700 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </x-ui.button>
+                <x-ui.button href="{{ route('pengadaan.create') }}" variant="primary" icon="plus">
                     Buat Pengadaan Baru
-                </a>
+                </x-ui.button>
             </x-slot:actions>
         </x-ui.page-header>
+
         <x-ui.alert />
+
+        {{-- Stat Cards --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white rounded-[2.25rem] border border-gray-100 p-4 shadow-sm">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total PO</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['total'] }}</p>
-            </div>
-            <div class="bg-white rounded-[2.25rem] border border-gray-100 p-4 shadow-sm">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Nilai</p>
-                <p class="text-lg font-bold text-gray-900 mt-1">Rp {{ number_format($stats['total_pengadaan'], 0, ',', '.') }}</p>
-            </div>
+            <x-ui.stat-card label="Total PO" :value="$stats['total']" icon="document-text" color="blue" />
+            <x-ui.stat-card label="Total Nilai" :value="'Rp ' . number_format($stats['total_pengadaan'], 0, ',', '.')" icon="banknotes" color="green" />
         </div>
-        <div class="bg-white rounded-[2.25rem] border border-gray-100 p-4 shadow-sm">
-            <form method="GET" class="flex gap-3">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nomor pengadaan..." class="flex-1 border border-gray-200 rounded-3xl px-4 py-2.5 text-sm text-gray-700 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6]">
-                <button type="submit" class="px-4 py-2.5 bg-gray-100 rounded-3xl text-sm font-medium text-gray-600 hover:bg-gray-200 transition">Cari</button>
-                <a href="{{ route('pengadaan.index') }}" class="px-4 py-2.5 bg-gray-100 rounded-3xl text-sm font-medium text-gray-600 hover:bg-gray-200 transition">Reset</a>
+
+        {{-- Filter Bar --}}
+        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center mb-3">
+            <form method="GET" action="{{ route('pengadaan.index') }}" class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nomor pengadaan..." />
+                <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+                @if(request()->filled('search'))
+                    <a href="{{ route('pengadaan.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                @endif
             </form>
-        </div>
-        <div class="bg-white rounded-3xl border border-gray-200 overflow-hidden">
-            <div class="p-5 border-b border-gray-100 flex items-center justify-between">
-                <h2 class="text-sm font-semibold text-gray-700">Daftar Purchase Order</h2>
-                <a href="{{ route('pengadaan.terima-barang') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-green-600 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-2xl transition">
-                    Penerimaan Bahan &rarr;
+            <div class="ml-auto">
+                <a href="{{ route('pengadaan.terima-barang') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition">
+                    <x-heroicon-o-inbox-arrow-down class="w-3.5 h-3.5" />
+                    Penerimaan Bahan
                 </a>
             </div>
+        </div>
+
+        {{-- Table --}}
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
                             <th class="px-4 py-3 text-left">No. PO</th>
                             <th class="px-4 py-3 text-left">Tanggal</th>
                             <th class="px-4 py-3 text-left">Pemasok</th>
                             <th class="px-4 py-3 text-left">Jenis</th>
-                            <th class="px-4 py-3 text-left">Total</th>
+                            <th class="px-4 py-3 text-right">Total</th>
                             <th class="px-4 py-3 text-left">Status</th>
                             <th class="px-4 py-3 text-center">Aksi</th>
                         </tr>
@@ -56,19 +65,20 @@
                         @forelse($pengadaans as $po)
                         <tr class="hover:bg-gray-50/60 transition-colors group">
                             <td class="px-4 py-3">
-                                <span class="font-mono text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-2xl">{{ $po->nomor_pengadaan }}</span>
+                                <span class="font-mono text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">{{ $po->nomor_pengadaan }}</span>
                             </td>
-                            <td class="px-4 py-3 text-gray-600 text-xs">{{ \Carbon\Carbon::parse($po->tanggal_pengadaan)->format('d M Y') }}</td>
+                            <td class="px-4 py-3 text-gray-600 text-xs font-medium">{{ \Carbon\Carbon::parse($po->tanggal_pengadaan)->translatedFormat('d M Y') }}</td>
                             <td class="px-4 py-3 font-semibold text-gray-900">{{ $po->nama_pemasok ?? '-' }}</td>
                             <td class="px-4 py-3">
-                                <span class="text-xs px-2 py-0.5 rounded-full {{ $po->jenis_pengadaan == 'CATERING' ? 'bg-purple-50 text-purple-700' : 'bg-orange-50 text-orange-700' }} font-semibold">
-                                    {{ $po->jenis_pengadaan }}
-                                </span>
+                                @php $jenisColor = $po->jenis_pengadaan == 'CATERING' ? 'bg-violet-50 text-violet-700' : 'bg-orange-50 text-orange-700'; @endphp
+                                <span class="text-xs px-2 py-0.5 rounded-lg {{ $jenisColor }} font-semibold">{{ $po->jenis_pengadaan }}</span>
                             </td>
-                            <td class="px-4 py-3 font-semibold text-gray-900">Rp {{ number_format($po->total_pengadaan, 0, ',', '.') }}</td>
+                            <td class="px-4 py-3 font-semibold text-gray-900 text-right">Rp {{ number_format($po->total_pengadaan, 0, ',', '.') }}</td>
                             <td class="px-4 py-3">
                                 @php $sid = $po->status_pengadaan_id; @endphp
-                                <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold {{ $sid==1 ? 'bg-amber-50 text-amber-700' : ($sid==2 ? 'bg-blue-50 text-blue-700' : ($sid==3 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700')) }}">
+                                @php $statusColor = $sid==1 ? 'bg-amber-50 text-amber-700' : ($sid==2 ? 'bg-blue-50 text-blue-700' : ($sid==3 ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700')); @endphp
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold {{ $statusColor }}">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
                                     {{ $po->status_pengadaan?->nama_status ?? '-' }}
                                 </span>
                             </td>
@@ -78,13 +88,15 @@
                                         <x-heroicon-o-eye class="w-3 h-3" />
                                     </a>
                                     @if(in_array($po->status_pengadaan_id, [1, 2]))
-                                    <a href="{{ route('pengadaan.form-terima', $po->id) }}" class="text-xs px-2.5 py-1.5 bg-green-100 text-green-700 rounded-2xl hover:bg-green-200 transition font-medium">Terima</a>
+                                    <a href="{{ route('pengadaan.form-terima', $po->id) }}" title="Terima Barang" class="w-7 h-7 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors">
+                                        <x-heroicon-o-inbox-arrow-down class="w-3 h-3" />
+                                    </a>
                                     @endif
                                 </div>
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="7" class="px-4 py-12 text-center text-gray-400 text-sm">Belum ada pengadaan</td></tr>
+                        <x-empty-state icon="document-text" title="Belum ada pengadaan" message="Buat pengadaan baru untuk memulai." :colspan="7" />
                         @endforelse
                     </tbody>
                 </table>
@@ -93,6 +105,7 @@
             <div class="px-5 py-3 border-t border-gray-100">{{ $pengadaans->links() }}</div>
             @endif
         </div>
+
     </div>
 </div>
 @endsection

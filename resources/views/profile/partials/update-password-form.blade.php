@@ -13,7 +13,7 @@
         @method('put')
 
         <div>
-            <label for="update_password_current_password" class="block text-xs font-medium text-neutral-700 mb-1.5">
+            <label for="update_password_current_password" class="block text-sm font-medium text-neutral-700 mb-1.5">
                 Kata Sandi Saat Ini
             </label>
             <input id="update_password_current_password" name="current_password" type="password"
@@ -23,7 +23,7 @@
         </div>
 
         <div>
-            <label for="update_password_password" class="block text-xs font-medium text-neutral-700 mb-1.5">
+            <label for="update_password_password" class="block text-sm font-medium text-neutral-700 mb-1.5">
                 Kata Sandi Baru
             </label>
             <input id="update_password_password" name="password" type="password"
@@ -33,7 +33,7 @@
         </div>
 
         <div>
-            <label for="update_password_password_confirmation" class="block text-xs font-medium text-neutral-700 mb-1.5">
+            <label for="update_password_password_confirmation" class="block text-sm font-medium text-neutral-700 mb-1.5">
                 Konfirmasi Kata Sandi Baru
             </label>
             <input id="update_password_password_confirmation" name="password_confirmation" type="password"
@@ -43,7 +43,7 @@
         </div>
 
         <div class="flex items-center gap-4 pt-2">
-            <button type="submit" class="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-700 text-white text-xs font-medium rounded-xl transition-colors flex items-center gap-2">
+            <button type="submit" class="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-700 text-white text-sm font-medium rounded-xl transition-colors flex items-center gap-2">
                 Simpan Password Baru
             </button>
 

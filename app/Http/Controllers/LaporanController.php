@@ -127,7 +127,7 @@ class LaporanController extends Controller
                 ->whereBetween('tanggal_mutasi', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
                 ->with('jenis_mutasi_stok');
             if ($jenisPersediaan) {
-                $qMutasi->where('jenis_stok', strtoupper($jenisPersediaan));
+                $qMutasi->where('jenis_persediaan', strtolower($jenisPersediaan) === 'operasional' ? 'harian' : strtolower($jenisPersediaan));
             }
 
             $mutasiPeriode = $qMutasi->get();
@@ -188,7 +188,7 @@ class LaporanController extends Controller
                 ->whereBetween('tanggal_mutasi', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
                 ->with('jenis_mutasi_stok');
             if ($jenisPersediaan) {
-                $qMutasi->where('jenis_stok', strtoupper($jenisPersediaan));
+                $qMutasi->where('jenis_persediaan', strtolower($jenisPersediaan) === 'operasional' ? 'harian' : strtolower($jenisPersediaan));
             }
             $mutasiPeriode = $qMutasi->get();
             $stokMasuk = $mutasiPeriode->filter(fn ($m) => ($m->jenis_mutasi_stok->arah_stok ?? '') === 'MASUK')->sum('jumlah');
@@ -213,7 +213,7 @@ class LaporanController extends Controller
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
 
-        $pengadaans = PengadaanBahan::with(['detail_pengadaan.bahan_baku.kategori_bahan_baku', 'pengguna'])
+        $pengadaans = PengadaanBahan::with(['detail_pengadaan_bahan.bahan_baku.kategori_bahan_baku', 'diajukan_oleh_pengguna'])
             ->whereBetween('tanggal_pengadaan', [$startDate, $endDate])
             ->latest()
             ->paginate(15)
@@ -240,13 +240,13 @@ class LaporanController extends Controller
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
 
-        $pengadaans = PengadaanBahan::with(['detail_pengadaan.bahan_baku', 'pengguna'])
+        $pengadaans = PengadaanBahan::with(['detail_pengadaan_bahan.bahan_baku', 'diajukan_oleh_pengguna'])
             ->whereBetween('tanggal_pengadaan', [$startDate, $endDate])
             ->latest()->get();
 
         $totalBiaya = $pengadaans->sum('total_pengadaan');
 
-        $pdf = Pdf::loadView('laporan.pdf-pengadaan', compact('pengadaans', 'totalBiaya', 'startDate', 'endDate'));
+        $pdf = Pdf::loadView('laporan.pengadaan.pdf', compact('pengadaans', 'totalBiaya', 'startDate', 'endDate'));
 
         return $pdf->stream('laporan-pengadaan-'.$startDate.'-sd-'.$endDate.'.pdf');
     }
@@ -292,7 +292,7 @@ class LaporanController extends Controller
         $totalTerjual = $menuTerlaris->sum('total_qty');
         $totalPendapatan = $menuTerlaris->sum('total_pendapatan');
 
-        $pdf = Pdf::loadView('laporan.pdf-menu-terlaris', compact('menuTerlaris', 'totalTerjual', 'totalPendapatan', 'startDate', 'endDate'));
+        $pdf = Pdf::loadView('laporan.menu.pdf', compact('menuTerlaris', 'totalTerjual', 'totalPendapatan', 'startDate', 'endDate'));
 
         return $pdf->stream('laporan-menu-terlaris-'.$startDate.'-sd-'.$endDate.'.pdf');
     }

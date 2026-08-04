@@ -27,7 +27,7 @@
 ])
 
 @php
-    $base = 'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-3xl focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]';
+    $base = 'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-xl focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]';
 
     $variants = [
         'primary'   => 'bg-primary text-white hover:bg-primary-container focus:ring-primary/30 shadow-sm',
@@ -39,7 +39,7 @@
     ];
 
     $sizes = [
-        'sm' => 'px-3 py-1.5 text-xs',
+        'sm' => 'px-3 py-1.5 text-sm',
         'md' => 'px-5 py-2.5 text-sm',
     ];
 

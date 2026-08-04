@@ -33,9 +33,15 @@ class Menu extends BaseModel
         return $this->belongsTo(KategoriMenu::class, 'kategori_menu_id');
     }
 
+    public function item_paket()
+    {
+        return $this->hasMany(ItemPaket::class, 'menu_id')->orderBy('urutan');
+    }
+
+    // Alias for backward compatibility
     public function komponen_paket()
     {
-        return $this->hasMany(KomponenPaket::class, 'menu_id')->orderBy('urutan');
+        return $this->hasMany(ItemPaket::class, 'menu_id')->orderBy('urutan');
     }
 
     public function ketentuan_paket()

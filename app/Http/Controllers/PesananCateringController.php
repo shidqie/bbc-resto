@@ -24,6 +24,7 @@ class PesananCateringController extends Controller
         // 2 = Catering
         $pakets = Menu::where('jenis_menu_id', 2)
             ->where('status_aktif', true)
+            ->whereHas('komponen_paket')
             ->get();
 
         return view('order.catering.create', compact('pakets'));
@@ -147,8 +148,8 @@ class PesananCateringController extends Controller
                 foreach ($request->komponen as $komponenPaketId => $pilihanId) {
                     DB::table('pilihan_pesanan_catering')->insert([
                         'detail_pesanan_id' => $detail->id,
-                        'komponen_paket_id' => $komponenPaketId,
-                        'pilihan_komponen_paket_id' => $pilihanId,
+                        'item_paket_id' => $komponenPaketId,
+                        'pilihan_item_paket_id' => $pilihanId,
                     ]);
                 }
             }
@@ -237,26 +238,22 @@ class PesananCateringController extends Controller
             'status_pesanan',
         ])->findOrFail($id);
 
-        // Kebutuhan bahan baku (BOM) untuk acara ini
+        // Kebutuhan bahan baku (BOM) untuk acara ini (FR-08)
+        $kebutuhanBahanService = app(\App\Services\KebutuhanBahanService::class);
+        $agregat = $kebutuhanBahanService->kebutuhanBahanPesanan($pesanan);
+
         $kebutuhan = [];
-        foreach ($pesanan->detail_pesanan as $detail) {
-            $qty = (int) $detail->jumlah;
-            foreach ($detail->menu->resep_menu as $resep) {
-                $bahan = $resep->bahan_baku;
-                if (! $bahan) {
-                    continue;
-                }
-                $total = ((float) $resep->jumlah) * $qty;
-                if (! isset($kebutuhan[$bahan->id])) {
-                    $kebutuhan[$bahan->id] = [
-                        'nama_bahan' => $bahan->nama_bahan,
-                        'satuan' => ($resep->satuan->nama_satuan ?? $bahan->satuan->nama_satuan ?? '-'),
-                        'stok_sekarang' => (float) ($bahan->stok_relasi->jumlah_stok ?? 0),
-                        'total_kebutuhan' => 0,
-                    ];
-                }
-                $kebutuhan[$bahan->id]['total_kebutuhan'] += $total;
+        foreach ($agregat as $item) {
+            $bahan = \App\Models\BahanBaku::with('stok_relasi', 'satuan')->find($item['bahan_baku_id']);
+            if (! $bahan) {
+                continue;
             }
+            $kebutuhan[$bahan->id] = [
+                'nama_bahan' => $bahan->nama_bahan,
+                'satuan' => ($bahan->satuan->nama_satuan ?? '-'),
+                'stok_sekarang' => (float) ($bahan->stok_relasi->jumlah_stok ?? 0),
+                'total_kebutuhan' => $item['kebutuhan'],
+            ];
         }
         $kebutuhanBahan = array_values($kebutuhan);
 
@@ -348,9 +345,13 @@ class PesananCateringController extends Controller
             return back()->with('success', 'Pesanan dibatalkan.');
         }
 
-        if ($status == 5 && $pesanan->status_pesanan_id != 5) {
-            app(OrderService::class)->completeOrder($pesanan);
-        } elseif ($status != 5) {
+        if ($status == 3 && $pesanan->status_pesanan_id < 3) {
+            // FR-10: Catering memotong stok saat PRODUKSI DIMULAI.
+            app(OrderService::class)->potongStokPesanan($pesanan);
+            $pesanan->update(['status_pesanan_id' => 3]);
+        } elseif ($status == 5 && $pesanan->status_pesanan_id != 5) {
+            $pesanan->update(['status_pesanan_id' => 5]);
+        } elseif ($status != 5 && $status != 3) {
             $pesanan->update(['status_pesanan_id' => $status]);
         }
 

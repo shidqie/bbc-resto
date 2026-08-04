@@ -5,8 +5,7 @@ namespace App\Services;
 use App\Models\BahanBaku;
 use App\Models\LayananTambahan;
 use App\Models\Menu;
-use App\Models\MutasiStok;
-use App\Models\PesananCatering;
+use App\Models\StokBahan;
 use App\Models\StokBahanBaku;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -118,10 +117,10 @@ class PesananCateringService
             return true;
         } // Tidak ada resep, skip
 
-        // 2. Bandingkan dengan stok saat ini
+        // 2. Bandingkan dengan stok Catering saat ini (jenis persediaan catering)
         foreach ($kebutuhan as $bahanId => $qty_butuh) {
-            $bahan = BahanBaku::with('stok_bahan_baku')->find($bahanId);
-            $stokSaatIni = $bahan?->stok_bahan_baku?->jumlah_stok ?? 0;
+            $bahan = BahanBaku::with('stok_catering_balance')->find($bahanId);
+            $stokSaatIni = (float) ($bahan?->stok_catering_balance?->jumlah_stok ?? 0);
 
             if (! $bahan || $stokSaatIni < $qty_butuh) {
                 $kekurangan[] = [
@@ -139,33 +138,25 @@ class PesananCateringService
             return $kekurangan;
         }
 
-        // 4. Jika stok cukup, potong stok dan catat mutasi
+        // 4. Jika stok cukup, potong stok Catering dan catat mutasi
         DB::transaction(function () use ($kebutuhan, $pesanan) {
+            $stockService = app(StockService::class);
             foreach ($kebutuhan as $bahanId => $qty_butuh) {
                 $bahan = BahanBaku::find($bahanId);
                 if (! $bahan) {
                     continue;
                 }
 
-                $stok = StokBahanBaku::lockForUpdate()
-                    ->firstOrCreate(
-                        ['bahan_baku_id' => $bahanId],
-                        ['jumlah_stok' => 0, 'terakhir_diperbarui' => now()]
-                    );
-
-                $stok->jumlah_stok -= $qty_butuh;
-                $stok->terakhir_diperbarui = now();
-                $stok->save();
-
-                MutasiStok::create([
-                    'bahan_baku_id' => $bahanId,
-                    'jenis_mutasi_stok_id' => 2, // Keluar
-                    'jumlah' => $qty_butuh,
-                    'satuan_id' => $bahan->satuan_id,
-                    'tanggal_mutasi' => now(),
-                    'dibuat_oleh' => Auth::id() ?? 1,
-                    'catatan' => "Potong stok otomatis saat DP diterima - Pesanan: {$pesanan->kode_pesanan}",
-                ]);
+                $stockService->deductStock(
+                    $bahanId,
+                    (float) $qty_butuh,
+                    "Potong stok Catering - Pesanan: {$pesanan->kode_pesanan}",
+                    2,
+                    Auth::id() ?? 1,
+                    [],
+                    false,
+                    StokBahan::JENIS_CATERING,
+                );
             }
         });
 

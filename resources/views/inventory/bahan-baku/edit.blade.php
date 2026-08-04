@@ -21,13 +21,14 @@
         <x-ui.alert />
 
         {{-- Form Card --}}
-        <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="p-6 border-b border-gray-100 bg-gray-50/50">
                 <h2 class="text-lg font-semibold text-gray-900">Informasi Bahan Baku</h2>
                 <p class="text-sm text-gray-500 font-medium mt-1">Perbarui data bahan baku yang ada di sistem.</p>
             </div>
             
             <form action="{{ route('bahan-baku.update', $bahanBaku->id) }}" method="POST" class="p-6">
+                <x-form-error />
                 @csrf
                 @method('PUT')
                 
@@ -36,19 +37,19 @@
                     <div class="space-y-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kode Bahan <span class="text-red-500">*</span></label>
-                            <input type="text" name="kode_bahan" value="{{ $bahanBaku->kode_bahan }}" readonly class="bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-3xl block w-full p-3 cursor-not-allowed outline-none">
+                            <input type="text" name="kode_bahan" value="{{ $bahanBaku->kode_bahan }}" readonly class="bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-xl block w-full p-3 cursor-not-allowed outline-none">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Bahan Baku <span class="text-red-500">*</span></label>
-                            <input type="text" name="nama_bahan" value="{{ old('nama_bahan', $bahanBaku->nama_bahan) }}" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-[#0F2E23]/10 focus:border-[#0F2E23] outline-none block w-full p-3 transition-colors placeholder-gray-400 font-medium" placeholder="Contoh: Beras Premium">
+                            <input type="text" name="nama_bahan" value="{{ old('nama_bahan', $bahanBaku->nama_bahan) }}" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#0D3024]/10 focus:border-[#0D3024] outline-none block w-full p-3 transition-colors placeholder-gray-400 font-medium" placeholder="Contoh: Beras Premium">
                         </div>
 
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kategori <span class="text-red-500">*</span></label>
-                                <select name="kategori_bahan_baku_id" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
+                                <select name="kategori_bahan_baku_id" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
                                     <option value="">Pilih Kategori</option>
                                     @foreach($kategoris as $kategori)
                                         <option value="{{ $kategori->id }}" {{ old('kategori_bahan_baku_id', $bahanBaku->kategori_bahan_baku_id) == $kategori->id ? 'selected' : '' }}>{{ $kategori->nama_kategori }}</option>
@@ -57,7 +58,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Satuan Dasar <span class="text-red-500">*</span></label>
-                                <select name="satuan_id" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
+                                <select name="satuan_id" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
                                     <option value="">Pilih Satuan</option>
                                     @foreach($satuans as $satuan)
                                         <option value="{{ $satuan->id }}" {{ old('satuan_id', $bahanBaku->satuan_id) == $satuan->id ? 'selected' : '' }}>{{ $satuan->nama_satuan }} ({{ $satuan->singkatan }})</option>
@@ -68,7 +69,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Peruntukan <span class="text-red-500">*</span></label>
-                            <select name="jenis_peruntukan" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
+                            <select name="jenis_peruntukan" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
                                 <option value="Semua" {{ old('jenis_peruntukan', $bahanBaku->jenis_peruntukan) == 'Semua' ? 'selected' : '' }}>Semua (Bisa dipakai Reguler & Catering)</option>
                                 <option value="Reguler" {{ old('jenis_peruntukan', $bahanBaku->jenis_peruntukan) == 'Reguler' ? 'selected' : '' }}>Khusus Reguler</option>
                                 <option value="Catering" {{ old('jenis_peruntukan', $bahanBaku->jenis_peruntukan) == 'Catering' ? 'selected' : '' }}>Khusus Catering</option>
@@ -76,7 +77,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status Data <span class="text-red-500">*</span></label>
-                            <select name="status_aktif" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
+                            <select name="status_aktif" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
                                 <option value="1" {{ old('status_aktif', $bahanBaku->status_aktif) == '1' ? 'selected' : '' }}>Aktif</option>
                                 <option value="0" {{ old('status_aktif', $bahanBaku->status_aktif) == '0' ? 'selected' : '' }}>Nonaktif</option>
                             </select>
@@ -88,14 +89,14 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Stok Saat Ini</label>
-                                <div class="bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-3xl block w-full p-3 cursor-not-allowed">
+                                <div class="bg-gray-100 border border-gray-200 text-gray-500 text-sm rounded-xl block w-full p-3 cursor-not-allowed">
                                     {{ rtrim(rtrim(number_format($bahanBaku->stok_bahan_baku->jumlah_stok ?? 0, 2, ',', '.'), '0'), ',') }} {{ $bahanBaku->satuan->singkatan }}
                                 </div>
-                                <p class="text-[11px] text-gray-500 mt-1">Stok hanya dapat diubah melalui fitur Penyesuaian Stok atau Transaksi.</p>
+                                <p class="text-xs text-gray-500 mt-1">Stok hanya dapat diubah melalui fitur Penyesuaian Stok atau Transaksi.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Batas Minimum <span class="text-red-500">*</span></label>
-                                <input type="number" step="0.01" min="0" name="stok_minimal" value="{{ old('stok_minimal', $bahanBaku->stok_minimal) }}" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
+                                <input type="number" step="0.01" min="0" name="stok_minimal" value="{{ old('stok_minimal', $bahanBaku->stok_minimal) }}" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none block w-full p-3 transition-colors">
                             </div>
                         </div>
 

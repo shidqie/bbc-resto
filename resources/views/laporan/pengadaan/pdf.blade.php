@@ -73,8 +73,8 @@
                 <td>{{ $i + 1 }}</td>
                 <td><strong style="font-family: monospace;">{{ $po->nomor_pengadaan }}</strong></td>
                 <td>{{ $po->tanggal_pengadaan->format('d/m/Y') }}</td>
-                <td>{{ $po->asal_pembelian ?: '-' }}</td>
-                <td>{{ $po->details->count() }} item</td>
+                <td>{{ $po->nama_pemasok ?: '-' }}</td>
+                <td>{{ $po->detail_pengadaan_bahan->count() }} item</td>
                 <td style="text-align: right; color: #16a34a; font-weight: bold;">Rp {{ number_format($po->total_pengadaan, 0, ',', '.') }}</td>
                 <td>{{ $po->diajukan_oleh_pengguna->nama ?? '-' }}</td>
             </tr>

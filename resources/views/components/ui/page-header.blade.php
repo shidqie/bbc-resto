@@ -15,7 +15,7 @@
     <div>
         {{-- Breadcrumb --}}
         @if(count($breadcrumbs) > 0)
-            <nav class="flex text-gray-500 text-xs mb-2" aria-label="Breadcrumb">
+            <nav class="flex text-gray-500 text-sm mb-2" aria-label="Breadcrumb">
                 <ol class="inline-flex items-center space-x-1">
                     @foreach($breadcrumbs as $i => $crumb)
                         @if($i > 0)
@@ -23,7 +23,7 @@
                         @endif
                         @if($i === count($breadcrumbs) - 1)
                             {{-- Item terakhir = halaman aktif --}}
-                            <li class="text-gray-900 font-bold">{{ $crumb }}</li>
+                            <li class="text-[#0D3024] font-bold">{{ $crumb }}</li>
                         @else
                             <li class="inline-flex items-center">{{ $crumb }}</li>
                         @endif
@@ -33,11 +33,14 @@
         @endif
 
         {{-- Judul --}}
-        <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">{{ $title }}</h1>
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2.5">
+            <span class="w-1 h-7 rounded-full bg-[#0D3024] shrink-0"></span>
+            {{ $title }}
+        </h1>
 
         {{-- Subtitle --}}
         @if($subtitle)
-            <p class="text-[13px] text-gray-500 mt-1 font-medium">{{ $subtitle }}</p>
+            <p class="text-sm text-gray-500 mt-1.5 font-medium">{{ $subtitle }}</p>
         @endif
     </div>
 

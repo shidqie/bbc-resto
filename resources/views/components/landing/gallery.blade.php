@@ -7,7 +7,7 @@
             asset('images/saungbabakan.webp'),
             asset('images/homepage.webp')
         ] as $img)
-            <div class="rounded-2xl overflow-hidden aspect-square">
+            <div class="rounded-lg overflow-hidden aspect-square">
                 <img src="{{ $img }}" alt="Galeri" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
             </div>
         @endforeach

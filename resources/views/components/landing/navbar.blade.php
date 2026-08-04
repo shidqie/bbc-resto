@@ -8,7 +8,7 @@
             <a href="{{ route('home') }}" class="flex items-center gap-2.5 shrink-0">
                 <img src="{{ asset('images/logo-saung.png') }}" alt="Saung Babakan Cinta"
                      class="w-8 h-8 rounded object-contain">
-                <span class="text-[15px] font-semibold tracking-tight text-neutral-900">Saung Babakan Cinta</span>
+                <span class="text-sm font-semibold tracking-tight text-neutral-900">Saung Babakan Cinta</span>
             </a>
 
             {{-- Desktop Menu --}}

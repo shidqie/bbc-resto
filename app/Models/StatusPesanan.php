@@ -7,4 +7,6 @@ class StatusPesanan extends BaseModel
     protected $table = 'status_pesanan';
 
     protected $guarded = [];
+
+    public $timestamps = false;
 }

@@ -17,7 +17,7 @@
             <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Hak Akses Pengguna</h1>
             <p class="text-gray-500 text-sm mt-1">Kelola peran (hak akses) pengguna di sistem.</p>
         </div>
-        <button @click="showCreateModal = true" class="bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-5 rounded-2xl flex items-center gap-2 shadow-sm transition-colors text-sm">
+        <button @click="showCreateModal = true" class="bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
             <x-heroicon-o-plus class="w-4 h-4" />
             Tambah Hak Akses
         </button>
@@ -25,13 +25,13 @@
 
     <!-- Alert Messages -->
     @if (session('success'))
-        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-2xl relative flex items-center gap-2 text-sm" role="alert">
+        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg relative flex items-center gap-2 text-sm" role="alert">
             <x-heroicon-o-check-circle class="w-5 h-5 text-green-500"/>
             <span class="block sm:inline font-medium">{{ session('success') }}</span>
         </div>
     @endif
     @if ($errors->any())
-        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl relative text-sm" role="alert">
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative text-sm" role="alert">
             <div class="flex items-center gap-2 font-medium mb-1">
                 <x-heroicon-o-x-circle class="w-5 h-5 text-red-500"/>
                 <span>Gagal menyimpan data:</span>
@@ -45,13 +45,13 @@
     @endif
 
     <!-- Table Container -->
-    <div class="flex-1 bg-white rounded-3xl border border-gray-200 overflow-hidden flex flex-col">
+    <div class="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
         
         <!-- Toolbar -->
         <div class="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-start items-start md:items-center gap-4 bg-white">
             <form action="{{ route('roles.index') }}" method="GET" class="relative w-full md:w-72">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari hak akses..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
-                <button type="submit" class="absolute left-3 top-2.5">
+                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari hak akses..." />
+                <button type="submit" class="absolute right-3 top-2.5">
                     <x-heroicon-o-magnifying-glass class="w-5 h-5 text-gray-400 hover:text-primary transition-colors" />
                 </button>
             </form>
@@ -59,7 +59,7 @@
 
         <table class="w-full text-sm">
             <thead>
-                <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
                     <th class="px-4 py-3 text-left w-12">No</th>
                     <th class="px-4 py-3 text-left">Nama Hak Akses</th>
                     <th class="px-4 py-3 text-left">Jumlah Pengguna</th>
@@ -91,11 +91,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr>
-                    <td colspan="4" class="px-4 py-12 text-center text-gray-400">
-                        Belum ada data hak akses.
-                    </td>
-                </tr>
+                <x-empty-state icon="users" title="Belum ada data hak akses" message="Tambahkan hak akses baru menggunakan tombol di atas." :colspan="4" />
                 @endforelse
             </tbody>
         </table>
@@ -111,7 +107,7 @@
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div x-show="showCreateModal" x-transition.opacity class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showCreateModal = false"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div x-show="showCreateModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div x-show="showCreateModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
                 <form action="{{ route('roles.store') }}" method="POST">
                     @csrf
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-100">
@@ -124,15 +120,15 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Hak Akses</label>
-                                <input type="text" name="nama_peran" required class="w-full border-gray-300 rounded-2xl shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                                <input type="text" name="nama_peran" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                             </div>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-[2rem]">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-2xl border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
                             Simpan Data
                         </button>
-                        <button type="button" @click="showCreateModal = false" class="mt-3 w-full inline-flex justify-center rounded-2xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="button" @click="showCreateModal = false" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Batal
                         </button>
                     </div>
@@ -146,7 +142,7 @@
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div x-show="showEditModal" x-transition.opacity class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showEditModal = false"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div x-show="showEditModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div x-show="showEditModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
                 <form :action="`/roles/${editForm.id}`" method="POST">
                     @csrf
                     @method('PUT')
@@ -160,15 +156,15 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Hak Akses</label>
-                                <input type="text" name="nama_peran" x-model="editForm.nama_peran" required class="w-full border-gray-300 rounded-2xl shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                                <input type="text" name="nama_peran" x-model="editForm.nama_peran" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                             </div>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-[2rem]">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-2xl border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
                             Perbarui Data
                         </button>
-                        <button type="button" @click="showEditModal = false" class="mt-3 w-full inline-flex justify-center rounded-2xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="button" @click="showEditModal = false" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Batal
                         </button>
                     </div>
@@ -182,7 +178,7 @@
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div x-show="showDeleteModal" x-transition.opacity class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showDeleteModal = false"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div x-show="showDeleteModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full">
+            <div x-show="showDeleteModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full">
                 <form :action="`/roles/${deleteForm.id}`" method="POST">
                     @csrf
                     @method('DELETE')
@@ -202,10 +198,10 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-[2rem]">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-2xl border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
                             Ya, Hapus
                         </button>
-                        <button type="button" @click="showDeleteModal = false" class="mt-3 w-full inline-flex justify-center rounded-2xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="button" @click="showDeleteModal = false" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Batal
                         </button>
                     </div>

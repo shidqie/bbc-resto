@@ -117,6 +117,16 @@ class Pengguna extends Authenticatable
         return $this->peran && $this->peran->nama_peran === 'Pelanggan';
     }
 
+    public function pelanggan()
+    {
+        return $this->hasOne(Pelanggan::class, 'user_id');
+    }
+
+    public function isAdminSistem(): bool
+    {
+        return $this->peran && $this->peran->nama_peran === 'Admin Sistem';
+    }
+
     public function isAdmin(): bool
     {
         return $this->peran && in_array($this->peran->nama_peran, ['Admin', 'Super Admin', 'Admin Sistem']);

@@ -53,7 +53,7 @@
                              icon: 'warning',
                              title: 'Nominal Uang Kurang',
                              text: 'Uang yang diterima kurang dari total tagihan!',
-                             confirmButtonColor: '#0F2E23'
+                             confirmButtonColor: '#0D3024'
                          });
                          return;
                      }
@@ -81,7 +81,7 @@
                                      icon: 'info',
                                      title: 'Menunggu Pembayaran',
                                      text: 'Silakan selesaikan pembayaran sesuai instruksi.',
-                                     confirmButtonColor: '#0F2E23'
+                                     confirmButtonColor: '#0D3024'
                                  }).then(() => {
                                      form.submit();
                                  });
@@ -91,7 +91,7 @@
                                      icon: 'error',
                                      title: 'Pembayaran Gagal',
                                      text: 'Transaksi digital gagal.',
-                                     confirmButtonColor: '#0F2E23'
+                                     confirmButtonColor: '#0D3024'
                                  });
                              }
                          });
@@ -116,7 +116,7 @@
                         icon: 'error',
                         title: 'Terjadi Kesalahan',
                         text: '{{ session('error') }}',
-                        confirmButtonColor: '#0F2E23'
+                        confirmButtonColor: '#0D3024'
                     });
                 });
             </script>
@@ -136,13 +136,13 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <a href="{{ route('pos.dinein.index') }}?view=open_bills" 
-                                   class="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#0F2E23] hover:text-white text-slate-700 flex items-center justify-center transition-all shadow-2xs group"
+                                   class="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#0D3024] hover:text-white text-slate-700 flex items-center justify-center transition-all shadow-2xs group"
                                    title="Kembali ke Pesanan Belum Dibayar">
                                     <x-heroicon-o-arrow-left class="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
                                 </a>
-                                <h2 class="text-base font-extrabold text-[#0F2E23] tracking-tight">Ringkasan Pesanan</h2>
+                                <h2 class="text-base font-extrabold text-[#0D3024] tracking-tight">Ringkasan Pesanan</h2>
                             </div>
-                            <span class="px-3 py-1 bg-[#0F2E23] text-emerald-300 rounded-3xl text-xs font-black shrink-0 shadow-2xs">
+                            <span class="px-3 py-1 bg-[#0D3024] text-emerald-300 rounded-xl text-xs font-black shrink-0 shadow-2xs">
                                 <x-heroicon-o-users class="w-3 h-3 mr-1" />
                                 {{ Str::startsWith($meja->nomor_meja, 'Meja') ? $meja->nomor_meja : 'Meja ' . $meja->nomor_meja }}
                             </span>
@@ -179,7 +179,7 @@
                                     <p class="text-xs font-extrabold text-slate-900 truncate">{{ $namaKonsumen }}</p>
                                 </div>
                             </div>
-                            <span class="px-2.5 py-1 bg-slate-100 rounded-2xl text-[11px] font-mono font-bold text-slate-600 shrink-0">
+                            <span class="px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-mono font-bold text-slate-600 shrink-0">
                                 #{{ $pesanan->nomor_pesanan ?? 'DIN-'.str_pad($pesanan->id, 4, '0', STR_PAD_LEFT) }}
                             </span>
                         </div>
@@ -194,12 +194,12 @@
                                         <span class="font-black text-slate-900 text-sm w-5 shrink-0">{{ $item->jumlah }}x</span>
                                         <span class="font-extrabold text-slate-800 text-sm leading-snug">{{ $item->menu->nama_menu ?? $item->menu->nama ?? 'Menu' }}</span>
                                     </div>
-                                    <span class="font-black text-[#0F2E23] text-sm shrink-0">
+                                    <span class="font-black text-[#0D3024] text-sm shrink-0">
                                         Rp {{ number_format($item->subtotal ?: ($item->jumlah * ($item->harga_satuan ?? $item->menu->harga_jual ?? 0)), 0, ',', '.') }}
                                     </span>
                                 </div>
                                 @if($item->catatan)
-                                    <p class="text-[11px] text-slate-400 pl-7 italic font-medium">Catatan: {{ $item->catatan }}</p>
+                                    <p class="text-xs text-slate-400 pl-7 italic font-medium">Catatan: {{ $item->catatan }}</p>
                                 @endif
                             </div>
                         @endforeach
@@ -222,7 +222,7 @@
                     </div>
                     <div class="flex justify-between text-sm pt-2 border-t border-slate-200/60">
                         <span class="font-bold text-slate-700">Total Tagihan</span>
-                        <span class="font-black text-base text-[#0F2E23]">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</span>
+                        <span class="font-black text-base text-[#0D3024]">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between pt-1">
                         <span class="text-xs font-bold text-slate-600">Kembalian</span>
@@ -250,22 +250,22 @@
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-bold text-gray-800">Select Payment Method</h3>
                             <div class="text-right">
-                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Amount</p>
-                                <p class="text-2xl font-black text-[#0F2E23] leading-none mt-1">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</p>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Amount</p>
+                                <p class="text-2xl font-black text-[#0D3024] leading-none mt-1">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</p>
                             </div>
                         </div>
 
                         {{-- ── 2. TABS NAVIGASI (CASH, QRIS, BANK) ── --}}
                         <div class="grid grid-cols-2 gap-2 mb-6">
                             <button type="button" @click="selectMetode('cash')"
-                                    :class="metodeBayar === 'cash' ? 'bg-[#0F2E23] text-white border-[#0F2E23]' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'"
-                                    class="border rounded-[2.25rem] py-3 flex flex-col items-center justify-center gap-1.5 transition-all">
+                                    :class="metodeBayar === 'cash' ? 'bg-[#0D3024] text-white border-[#0D3024]' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'"
+                                    class="border rounded-xl py-3 flex flex-col items-center justify-center gap-1.5 transition-all">
                                 <i class="ph ph-money text-2xl"></i>
                                 <span class="text-xs font-bold">TUNAI (CASH)</span>
                             </button>
                             <button type="button" @click="selectMetode('nontunai')"
-                                    :class="metodeBayar === 'nontunai' ? 'bg-[#0F2E23] text-white border-[#0F2E23]' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'"
-                                    class="border rounded-[2.25rem] py-3 flex flex-col items-center justify-center gap-1.5 transition-all">
+                                    :class="metodeBayar === 'nontunai' ? 'bg-[#0D3024] text-white border-[#0D3024]' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'"
+                                    class="border rounded-xl py-3 flex flex-col items-center justify-center gap-1.5 transition-all">
                                 <i class="ph ph-qr-code text-2xl"></i>
                                 <span class="text-xs font-bold">MIDTRANS SNAP</span>
                             </button>
@@ -275,14 +275,14 @@
                         <div x-show="metodeBayar === 'cash'" class="space-y-3">
                             
                             {{-- MINIMALIST INPUT CASH PELANGGAN & KEMBALIAN DISPLAY --}}
-                            <div class="bg-slate-50 border border-slate-200/80 rounded-[2.25rem] p-3.5 space-y-2">
+                            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-2">
                                 <div class="flex items-center justify-between text-xs text-slate-500 font-bold">
                                     <span>Uang Diterima</span>
                                     <button type="button" @click="uangDiterima = 0" class="text-red-500 font-extrabold hover:underline">
                                         Reset (C)
                                     </button>
                                 </div>
-                                <div class="flex items-baseline justify-between bg-white border border-slate-200 rounded-3xl px-3.5 py-2.5">
+                                <div class="flex items-baseline justify-between bg-white border border-slate-200 rounded-xl px-3.5 py-2.5">
                                     <span class="text-lg font-bold text-slate-400">Rp</span>
                                     <span class="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight" x-text="formatPrice(uangDiterima)">0</span>
                                 </div>
@@ -298,7 +298,7 @@
 
                             {{-- WARNING NOMINAL KURANG --}}
                             <div x-show="uangDiterima > 0 && selisih < 0" x-transition
-                                 class="bg-amber-50 border border-amber-200 text-amber-900 rounded-3xl px-3.5 py-2 text-xs font-bold flex items-center justify-between">
+                                 class="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl px-3.5 py-2 text-xs font-bold flex items-center justify-between">
                                 <span class="flex items-center gap-1.5">
                                     <x-heroicon-o-exclamation-circle class="text-amber-500 w-5 h-5" />
                                     Kurang Rp <span x-text="formatPrice(Math.abs(selisih))"></span>
@@ -311,29 +311,29 @@
                             {{-- QUICK ACCESS BUTTONS --}}
                             <div class="grid grid-cols-3 gap-2">
                                 <button type="button" @click="uangDiterima = totalTagihan"
-                                        :class="uangDiterima === totalTagihan ? 'bg-[#0F2E23] text-white border-[#0F2E23]' : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'"
-                                        class="h-10 border rounded-3xl text-xs font-extrabold transition-all flex items-center justify-center gap-1">
+                                        :class="uangDiterima === totalTagihan ? 'bg-[#0D3024] text-white border-[#0D3024]' : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'"
+                                        class="h-10 border rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1">
                                     <x-heroicon-o-check class="w-3 h-3" x-show="uangDiterima === totalTagihan" />
                                     <span>Uang Pas</span>
                                 </button>
                                 <button type="button" @click="addShortcut(10000)"
-                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-3xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
+                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
                                     10.000
                                 </button>
                                 <button type="button" @click="addShortcut(20000)"
-                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-3xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
+                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
                                     20.000
                                 </button>
                                 <button type="button" @click="addShortcut(50000)"
-                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-3xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
+                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
                                     50.000
                                 </button>
                                 <button type="button" @click="addShortcut(100000)"
-                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-3xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
+                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
                                     100.000
                                 </button>
                                 <button type="button" @click="addShortcut(200000)"
-                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-3xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
+                                        class="h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-extrabold text-slate-800 transition-all flex items-center justify-center">
                                     200.000
                                 </button>
                             </div>
@@ -342,21 +342,21 @@
                             <div class="grid grid-cols-3 gap-2">
                                 @foreach([7,8,9,4,5,6,1,2,3] as $n)
                                 <button type="button" @click="appendNum({{ $n }})"
-                                        class="bg-white border border-slate-200 text-slate-900 text-xl font-black py-2.5 rounded-3xl hover:bg-slate-50 active:scale-95 transition-all shadow-2xs">
+                                        class="bg-white border border-slate-200 text-slate-900 text-xl font-black py-2.5 rounded-xl hover:bg-slate-50 active:scale-95 transition-all shadow-2xs">
                                     {{ $n }}
                                 </button>
                                 @endforeach
                                 <button type="button" @click="appendNum('00')"
-                                        class="bg-white border border-slate-200 text-slate-900 text-xl font-black py-2.5 rounded-3xl hover:bg-slate-50 active:scale-95 transition-all shadow-2xs">00</button>
+                                        class="bg-white border border-slate-200 text-slate-900 text-xl font-black py-2.5 rounded-xl hover:bg-slate-50 active:scale-95 transition-all shadow-2xs">00</button>
                                 <button type="button" @click="appendNum(0)"
-                                        class="bg-white border border-slate-200 text-slate-900 text-xl font-black py-2.5 rounded-3xl hover:bg-slate-50 active:scale-95 transition-all shadow-2xs">0</button>
+                                        class="bg-white border border-slate-200 text-slate-900 text-xl font-black py-2.5 rounded-xl hover:bg-slate-50 active:scale-95 transition-all shadow-2xs">0</button>
                                 <button type="button" @click="uangDiterima = 0"
-                                        class="bg-red-50 border border-red-200 text-red-600 text-xl font-black py-2.5 rounded-3xl hover:bg-red-100 active:scale-95 transition-all shadow-2xs">C</button>
+                                        class="bg-red-50 border border-red-200 text-red-600 text-xl font-black py-2.5 rounded-xl hover:bg-red-100 active:scale-95 transition-all shadow-2xs">C</button>
                             </div>
                         </div>
 
                         {{-- ── 4. MIDTRANS SNAP SECTION ── --}}
-                        <div x-show="metodeBayar === 'nontunai'" class="space-y-3 text-center py-10 border-2 border-dashed border-gray-200 rounded-[2.25rem]">
+                        <div x-show="metodeBayar === 'nontunai'" class="space-y-3 text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
                             <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i class="ph ph-credit-card text-3xl"></i>
                             </div>
@@ -371,8 +371,8 @@
                                 :disabled="metodeBayar === 'cash' && uangDiterima < totalTagihan"
                                 :class="metodeBayar === 'cash' && uangDiterima < totalTagihan
                                     ? 'opacity-50 cursor-not-allowed bg-slate-400'
-                                    : 'bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] shadow-md'"
-                                class="w-full py-4 rounded-[2.25rem] text-white font-black text-sm flex items-center justify-center gap-2 transition-all">
+                                    : 'bg-[#0D3024] hover:bg-[#0a1f17] active:scale-[0.99] shadow-md'"
+                                class="w-full py-4 rounded-xl text-white font-black text-sm flex items-center justify-center gap-2 transition-all">
                             <span x-text="metodeBayar === 'cash' && uangDiterima < totalTagihan ? 'NOMINAL KURANG' : 'PROSES PEMBAYARAN'">PROSES PEMBAYARAN</span>
                         </button>
                     </div>

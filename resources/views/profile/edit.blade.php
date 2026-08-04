@@ -11,7 +11,7 @@
                 <h1 class="text-2xl font-semibold text-neutral-900 tracking-tight flex items-center gap-2">
                     <x-heroicon-o-cog class="text-neutral-400 w-7 h-7" /> Pengaturan Akun Saya
                 </h1>
-                <p class="text-xs text-neutral-500 font-medium mt-0.5">Kelola data profil pengguna & keamanan kata sandi akun Anda.</p>
+                <p class="text-sm text-neutral-500 font-medium mt-0.5">Kelola data profil pengguna & keamanan kata sandi akun Anda.</p>
             </div>
         </div>
 
@@ -33,7 +33,7 @@
 
         {{-- TAB 1: Edit Profil --}}
         <div x-show="activeTab === 'profile'" x-transition:enter="transition ease-out duration-150"
-             class="bg-white rounded-2xl p-6 md:p-8 border border-neutral-200">
+             class="bg-white rounded-lg p-6 md:p-8 border border-neutral-200">
             <div class="max-w-xl">
                 @include('profile.partials.update-profile-information-form')
             </div>
@@ -41,7 +41,7 @@
 
         {{-- TAB 2: Ubah Password --}}
         <div x-show="activeTab === 'password'" x-transition:enter="transition ease-out duration-150"
-             class="bg-white rounded-2xl p-6 md:p-8 border border-neutral-200">
+             class="bg-white rounded-lg p-6 md:p-8 border border-neutral-200">
             <div class="max-w-xl">
                 @include('profile.partials.update-password-form')
             </div>

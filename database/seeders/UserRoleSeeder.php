@@ -21,6 +21,7 @@ class UserRoleSeeder extends Seeder
             'Dapur' => Peran::firstOrCreate(['nama_peran' => 'Dapur']),
             'Pengantaran' => Peran::firstOrCreate(['nama_peran' => 'Pengantaran']),
             'Pelanggan' => Peran::firstOrCreate(['nama_peran' => 'Pelanggan']),
+            'Admin Sistem' => Peran::firstOrCreate(['nama_peran' => 'Admin Sistem']),
         ];
 
         // 2. Wipe existing users (Disable FK checks temporarily to avoid constraint errors)
@@ -87,6 +88,15 @@ class UserRoleSeeder extends Seeder
             'status_aktif' => true,
         ]);
 
+        Pengguna::create([
+            'nama' => 'Admin Sistem BBC',
+            'email' => 'adminsistem@bbc.com',
+            'kata_sandi' => $password,
+            'peran_id' => $roles['Admin Sistem']->id,
+            'nomor_telepon' => '08110000007',
+            'status_aktif' => true,
+        ]);
+
         $this->command->info('Semua data pengguna lama telah dihapus.');
         $this->command->info('Data pengguna baru berhasil dibuat:');
         $this->command->info('- Pemilik (08110000001)');
@@ -95,6 +105,7 @@ class UserRoleSeeder extends Seeder
         $this->command->info('- Pelayan (08110000004)');
         $this->command->info('- Dapur (08110000005)');
         $this->command->info('- Pengantaran (08110000006)');
+        $this->command->info('- Admin Sistem (08110000007)');
         $this->command->info('Password untuk semua akun: password');
     }
 }

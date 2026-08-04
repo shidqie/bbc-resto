@@ -14,7 +14,7 @@
 
 {{-- Alert Sukses --}}
 @if(session('success'))
-    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-3xl flex items-center gap-3">
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3">
         <x-heroicon-o-check-circle class="shrink-0 w-5 h-5 inline-block shrink-0" />
         <p class="text-sm font-medium">{{ session('success') }}</p>
     </div>
@@ -22,7 +22,7 @@
 
 {{-- Alert Error --}}
 @if(session('error'))
-    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-3xl flex items-center gap-3">
+    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex items-center gap-3">
         <x-heroicon-o-exclamation-circle class="shrink-0 w-5 h-5 inline-block shrink-0" />
         <p class="text-sm font-medium">{{ session('error') }}</p>
     </div>
@@ -30,7 +30,7 @@
 
 {{-- Validation Errors --}}
 @if($errors->any())
-    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-3xl flex flex-col gap-1">
+    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex flex-col gap-1">
         @foreach($errors->all() as $error)
             <div class="flex items-center gap-2">
                 <x-heroicon-o-exclamation-circle class="text-xs shrink-0 w-5 h-5 inline-block shrink-0" />

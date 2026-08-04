@@ -15,11 +15,11 @@ class PilihanPesananCatering extends BaseModel
 
     public function komponen_paket()
     {
-        return $this->belongsTo(KomponenPaket::class, 'komponen_paket_id');
+        return $this->belongsTo(ItemPaket::class, 'item_paket_id');
     }
 
     public function pilihan_komponen_paket()
     {
-        return $this->belongsTo(PilihanKomponenPaket::class, 'pilihan_komponen_paket_id');
+        return $this->belongsTo(PilihanItemPaket::class, 'pilihan_item_paket_id');
     }
 }

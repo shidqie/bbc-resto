@@ -83,6 +83,18 @@
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                     },
+                    fontSize: {
+                        xs: ['13px', '1.45'],
+                        sm: ['15px', '1.5'],
+                        base: ['16px', '1.55'],
+                        lg: ['18px', '1.5'],
+                        xl: ['20px', '1.4'],
+                        '2xl': ['24px', '1.3'],
+                        '3xl': ['30px', '1.25'],
+                        '4xl': ['36px', '1.2'],
+                        '5xl': ['48px', '1.15'],
+                        '6xl': ['60px', '1.1'],
+                    },
                 }
             }
         }
@@ -124,7 +136,7 @@
             
             <div class="qr-page-container w-full flex justify-center">
                 <!-- Kartu QR EXACTLY AS USER PROVIDED -->
-                <div class="w-[300px] aspect-[1/1.55] rounded-[2.25rem] overflow-hidden shadow-xl border-4 border-emerald-500/30 flex flex-col justify-between p-5 relative text-white" style="background: linear-gradient(145deg, #0F2E23 0%, #164032 50%, #0A2219 100%); width: 300px; height: 465px;">
+                <div class="w-[300px] aspect-[1/1.55] rounded-xl overflow-hidden shadow-xl border-4 border-emerald-500/30 flex flex-col justify-between p-5 relative text-white" style="background: linear-gradient(145deg, #0D3024 0%, #164032 50%, #0A2219 100%); width: 300px; height: 465px;">
                     <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none"></div>
                     <div class="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/60 rounded-tl-3xl"></div>
                     <div class="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400/60 rounded-tr-3xl"></div>
@@ -134,18 +146,18 @@
                     <div class="relative z-10 text-center pt-1 space-y-0.5">
                         <h2 class="text-2xl font-black uppercase tracking-wider text-amber-400 drop-shadow-md leading-none">SCAN MENU</h2>
                         <div class="pt-2">
-                            <span class="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-white border border-amber-400/40 text-[12px] font-extrabold shadow-sm">
+                            <span class="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-white border border-amber-400/40 text-xs font-extrabold shadow-sm">
                                 <x-heroicon-o-users class="w-3 h-3 text-amber-400" /> <span>Meja {{ $cleanNomorMeja }}</span>
                             </span>
                         </div>
                     </div>
 
                     <div class="relative z-10 my-auto py-1 flex flex-col items-center">
-                        <div class="bg-white rounded-[2.25rem] p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center">
+                        <div class="bg-white rounded-xl p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center">
                             @if($qrSrc)
-                            <img src="{{ $qrSrc }}" alt="QR Code" class="w-44 h-44 object-contain rounded-3xl">
+                            <img src="{{ $qrSrc }}" alt="QR Code" class="w-44 h-44 object-contain rounded-xl">
                             @else
-                            <div class="w-44 h-44 bg-gray-200 rounded-3xl flex items-center justify-center text-gray-400 text-xs text-center p-2">Gagal memuat QR</div>
+                            <div class="w-44 h-44 bg-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-xs text-center p-2">Gagal memuat QR</div>
                             @endif
                             @if($logoSrc)
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -156,8 +168,8 @@
                             @endif
                         </div>
                         <div class="mt-3 text-center">
-                            <p class="text-[11px] font-bold text-white tracking-wide">Scan QR Code untuk pesan sendiri</p>
-                            <p class="text-[9px] font-medium text-amber-300 mt-0.5">Arahkan kamera HP Anda</p>
+                            <p class="text-xs font-bold text-white tracking-wide">Scan QR Code untuk pesan sendiri</p>
+                            <p class="text-xs font-medium text-amber-300 mt-0.5">Arahkan kamera HP Anda</p>
                         </div>
                     </div>
 
@@ -168,8 +180,8 @@
                         </div>
                         @endif
                         <div class="text-left">
-                            <h3 class="text-[11px] font-black tracking-wider text-white uppercase leading-none">SAUNG BABAKAN CINTA</h3>
-                            <span class="text-[8px] font-semibold text-amber-300 block leading-tight mt-0.5">Rumah Makan Khas Sunda</span>
+                            <h3 class="text-xs font-black tracking-wider text-white uppercase leading-none">SAUNG BABAKAN CINTA</h3>
+                            <span class="text-xs font-semibold text-amber-300 block leading-tight mt-0.5">Rumah Makan Khas Sunda</span>
                         </div>
                     </div>
                 </div>

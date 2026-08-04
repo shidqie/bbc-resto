@@ -19,6 +19,18 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    fontSize: {
+                        xs: ['13px', '1.45'],
+                        sm: ['15px', '1.5'],
+                        base: ['16px', '1.55'],
+                        lg: ['18px', '1.5'],
+                        xl: ['20px', '1.4'],
+                        '2xl': ['24px', '1.3'],
+                        '3xl': ['30px', '1.25'],
+                        '4xl': ['36px', '1.2'],
+                        '5xl': ['48px', '1.15'],
+                        '6xl': ['60px', '1.1'],
+                    },
                     colors: {
                         brand:   '#171717',
                         accent:  '#525252',
@@ -47,20 +59,20 @@
                 <x-heroicon-o-shopping-bag class="w-4 h-4 text-neutral-400" />
             </div>
             <div>
-                <p class="text-[15px] font-semibold text-neutral-900 leading-none">BBC Resto</p>
-                <p class="text-[10px] text-neutral-400 mt-0.5 leading-none">Saung Babakan Cinta</p>
+                <p class="text-sm font-semibold text-neutral-900 leading-none">BBC Resto</p>
+                <p class="text-xs text-neutral-400 mt-0.5 leading-none">Saung Babakan Cinta</p>
             </div>
         </div>
         {{-- Meja Badge (locked from QR, tidak bisa diklik) --}}
         <div class="flex items-center gap-1.5">
             @if($selectedMeja)
-            <div class="h-8 px-3 rounded-xl bg-neutral-900 text-white text-[11px] font-medium flex items-center gap-1.5">
+            <div class="h-8 px-3 rounded-xl bg-neutral-900 text-white text-xs font-medium flex items-center gap-1.5">
                 <x-heroicon-o-users class="w-3 h-3 opacity-70" />
                 <span>{{ Str::startsWith($selectedMeja->nomor_meja,'Meja') ? $selectedMeja->nomor_meja : 'Meja '.$selectedMeja->nomor_meja }}</span>
             </div>
             @endif
             <template x-if="namaUser">
-                <div class="h-8 px-2.5 rounded-xl bg-neutral-100 text-neutral-700 text-[11px] font-medium flex items-center gap-1.5">
+                <div class="h-8 px-2.5 rounded-xl bg-neutral-100 text-neutral-700 text-xs font-medium flex items-center gap-1.5">
                     <x-heroicon-o-user class="w-3 h-3 text-neutral-400" />
                     <span x-text="namaUser" class="max-w-[80px] truncate"></span>
                 </div>
@@ -73,8 +85,8 @@
         <div class="relative">
             <x-heroicon-o-magnifying-glass class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-3 h-3" />
             <input x-model="q" type="text" placeholder="Cari menu favorit Anda..."
-                   class="w-full h-9 pl-8 pr-8 bg-white border border-neutral-200 rounded-xl text-xs font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
-            <button x-show="q" @click="q=''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 text-[11px]">
+                   class="w-full h-9 pl-8 pr-8 bg-white border border-neutral-200 rounded-xl text-sm font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
+            <button x-show="q" @click="q=''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 text-xs">
                 <x-heroicon-o-x-mark class="w-4 h-4" />
             </button>
         </div>
@@ -84,13 +96,13 @@
     <div class="max-w-lg mx-auto px-4 pb-2.5 overflow-x-auto no-scrollbar flex gap-1.5">
         <button @click="cat='all'"
                 :class="cat==='all' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'"
-                class="shrink-0 h-7 px-3.5 rounded-xl text-[11px] font-semibold transition-all">
+                class="shrink-0 h-7 px-3.5 rounded-xl text-xs font-semibold transition-all">
             Semua
         </button>
         @foreach($kategoris as $k)
         <button @click="cat='{{ $k->id }}'"
                 :class="cat=='{{ $k->id }}' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'"
-                class="shrink-0 h-7 px-3.5 rounded-xl text-[11px] font-semibold transition-all whitespace-nowrap">
+                class="shrink-0 h-7 px-3.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap">
             {{ $k->nama_kategori ?? $k->nama }}
         </button>
         @endforeach
@@ -103,7 +115,7 @@
     {{-- Menu Grid --}}
     <div class="grid grid-cols-2 gap-3.5">
         <template x-for="m in filtered" :key="m.id">
-            <div class="bg-white rounded-2xl overflow-hidden border border-neutral-200 transition-colors hover:border-neutral-300 cursor-pointer"
+            <div class="bg-white rounded-lg overflow-hidden border border-neutral-200 transition-colors hover:border-neutral-300 cursor-pointer"
                  @click="openDetail(m)">
                 {{-- Image --}}
                 <div class="relative w-full aspect-[4/3] bg-neutral-50">
@@ -120,20 +132,20 @@
                     {{-- Habis badge --}}
                     <template x-if="m.status==='habis'||m.is_habis">
                         <div class="absolute inset-0 bg-white/70 flex items-center justify-center">
-                            <span class="bg-neutral-900 text-white text-[9px] font-semibold px-2.5 py-1 rounded uppercase tracking-wider">HABIS</span>
+                            <span class="bg-neutral-900 text-white text-xs font-semibold px-2.5 py-1 rounded uppercase tracking-wider">HABIS</span>
                         </div>
                     </template>
                     {{-- Qty badge --}}
                     <template x-if="qty(m.id)>0">
-                        <div class="absolute top-2 right-2 w-6 h-6 rounded-full bg-neutral-900 text-white text-[10px] font-semibold flex items-center justify-center"
+                        <div class="absolute top-2 right-2 w-6 h-6 rounded-full bg-neutral-900 text-white text-xs font-semibold flex items-center justify-center"
                              x-text="qty(m.id)"></div>
                     </template>
                 </div>
                 {{-- Info --}}
                 <div class="p-3">
-                    <h3 class="text-[12.5px] font-semibold text-neutral-900 leading-snug line-clamp-2 mb-2" x-text="m.nama"></h3>
+                    <h3 class="text-base font-semibold text-neutral-900 leading-snug line-clamp-2 mb-2" x-text="m.nama"></h3>
                     <div class="flex items-center justify-between">
-                        <span class="text-[13px] font-semibold text-neutral-900" x-text="rp(m.harga)"></span>
+                        <span class="text-sm font-semibold text-neutral-900" x-text="rp(m.harga)"></span>
                         <template x-if="m.status!=='habis'&&!m.is_habis">
                             <template x-if="qty(m.id)===0">
                                 <button @click.stop="add(m)"
@@ -147,7 +159,7 @@
                                 <button @click.stop="dec(m.id)" class="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded-l-full transition">
                                     <x-heroicon-o-minus class="w-3 h-3" />
                                 </button>
-                                <span class="text-[11px] font-semibold w-4 text-center" x-text="qty(m.id)"></span>
+                                <span class="text-xs font-semibold w-4 text-center" x-text="qty(m.id)"></span>
                                 <button @click.stop="add(m)" class="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded-r-full transition">
                                     <x-heroicon-o-plus class="w-3 h-3" />
                                 </button>
@@ -179,15 +191,15 @@
      x-transition:leave-end="translate-y-full opacity-0"
      class="fixed bottom-0 inset-x-0 z-40 p-4 flex justify-center pointer-events-none">
     <div @click="modal='cart'"
-         class="pointer-events-auto w-full max-w-lg bg-white border border-neutral-200 rounded-2xl px-5 py-3 flex items-center justify-between cursor-pointer hover:border-neutral-300 transition-colors">
+         class="pointer-events-auto w-full max-w-lg bg-white border border-neutral-200 rounded-lg px-5 py-3 flex items-center justify-between cursor-pointer hover:border-neutral-300 transition-colors">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-full bg-neutral-900 text-white flex items-center justify-center text-sm font-semibold" x-text="totalQty"></div>
             <div>
-                <span class="text-[9px] text-neutral-400 block uppercase font-semibold tracking-wider">Total Pesanan</span>
-                <span class="text-[15px] font-semibold text-neutral-900" x-text="rp(totalPrice)"></span>
+                <span class="text-xs text-neutral-400 block uppercase font-semibold tracking-wider">Total Pesanan</span>
+                <span class="text-sm font-semibold text-neutral-900" x-text="rp(totalPrice)"></span>
             </div>
         </div>
-        <div class="flex items-center gap-2 bg-neutral-900 text-white px-3.5 py-2 rounded-xl text-[11px] font-medium">
+        <div class="flex items-center gap-2 bg-neutral-900 text-white px-3.5 py-2 rounded-xl text-xs font-medium">
             Lihat Keranjang <x-heroicon-o-arrow-right class="w-3 h-3" />
         </div>
     </div>
@@ -199,14 +211,14 @@
 <div x-show="modal==='welcome'"
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60"
      x-transition.opacity>
-    <div class="relative bg-white w-full max-w-sm rounded-2xl border border-neutral-200 overflow-hidden">
+    <div class="relative bg-white w-full max-w-sm rounded-lg border border-neutral-200 overflow-hidden">
         {{-- Top --}}
         <div class="bg-neutral-900 px-6 pt-8 pb-6 text-white text-center">
             <div class="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-3">
                 <x-heroicon-o-shopping-bag class="w-7 h-7 text-neutral-300" />
             </div>
             <h2 class="text-lg font-semibold leading-snug">Selamat Datang!</h2>
-            <p class="text-[12px] text-neutral-400 mt-1">
+            <p class="text-sm text-neutral-400 mt-1">
                 @if($selectedMeja)
                     {{ Str::startsWith($selectedMeja->nomor_meja,'Meja') ? $selectedMeja->nomor_meja : 'Meja '.$selectedMeja->nomor_meja }}
                     &bull; BBC Resto
@@ -219,7 +231,7 @@
         {{-- Form --}}
         <div class="p-6 space-y-4">
             <div>
-                <label class="block text-[11px] font-semibold text-neutral-500 mb-1.5 uppercase tracking-wider">
+                <label class="block text-sm font-semibold text-neutral-500 mb-1.5 uppercase tracking-wider">
                     Nama Pemesan <span class="text-red-400">*</span>
                 </label>
                 <input x-model="namaInput" type="text" placeholder="Masukkan nama Anda..."
@@ -227,7 +239,7 @@
                        class="w-full h-11 px-4 bg-white border border-neutral-200 rounded-xl text-sm font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
             </div>
             <div>
-                <label class="block text-[11px] font-semibold text-neutral-500 mb-1.5 uppercase tracking-wider">
+                <label class="block text-sm font-semibold text-neutral-500 mb-1.5 uppercase tracking-wider">
                     No. HP <span class="text-neutral-400 normal-case font-normal">(opsional)</span>
                 </label>
                 <input x-model="nomorHpInput" type="tel" placeholder="Contoh: 0812xxxxxxxx"
@@ -253,7 +265,7 @@
      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
      x-transition.opacity>
     <div class="absolute inset-0 bg-neutral-900/60" @click="modal=null"></div>
-    <div class="relative bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden border border-neutral-200 max-h-[88vh] flex flex-col z-10">
+    <div class="relative bg-white w-full max-w-md rounded-t-2xl sm:rounded-lg overflow-hidden border border-neutral-200 max-h-[88vh] flex flex-col z-10">
         {{-- Image --}}
         <div class="relative aspect-video bg-neutral-50 shrink-0">
             <template x-if="dm.foto">
@@ -276,12 +288,12 @@
                 <h2 class="text-base font-semibold text-neutral-900 leading-snug" x-text="dm.nama"></h2>
                 <span class="text-base font-semibold text-neutral-900 whitespace-nowrap" x-text="rp(dm.harga)"></span>
             </div>
-            <p class="text-xs text-neutral-500 leading-relaxed" x-text="dm.deskripsi||'Sajian lezat khas Saung Babakan Cinta.'"></p>
+             <p class="text-sm text-neutral-500 leading-relaxed" x-text="dm.deskripsi||'Sajian lezat khas Saung Babakan Cinta.'"></p>
             {{-- Catatan --}}
             <div>
-                <label class="block text-[11px] font-semibold text-neutral-700 mb-1.5">Catatan Khusus</label>
+                <label class="block text-sm font-semibold text-neutral-700 mb-1.5">Catatan Khusus</label>
                 <input x-model="dNote" type="text" placeholder="Contoh: Tidak pedas, extra sambal..."
-                       class="w-full h-9 px-3 bg-white border border-neutral-200 rounded-xl text-xs focus:outline-none focus:border-neutral-900 transition-all">
+                       class="w-full h-9 px-3 bg-white border border-neutral-200 rounded-xl text-sm focus:outline-none focus:border-neutral-900 transition-all">
             </div>
             {{-- Qty stepper --}}
             <div class="flex items-center justify-between border border-neutral-200 rounded-xl px-4 py-3">
@@ -322,7 +334,7 @@
         <div class="px-5 py-4 border-b border-neutral-100 flex items-center justify-between shrink-0">
             <div>
                 <h2 class="text-sm font-semibold text-neutral-900">Keranjang Pesanan</h2>
-                <p class="text-[10px] text-neutral-400 mt-0.5">
+                <p class="text-sm text-neutral-400 mt-0.5">
                     @if($selectedMeja)
                         {{ Str::startsWith($selectedMeja->nomor_meja,'Meja') ? $selectedMeja->nomor_meja : 'Meja '.$selectedMeja->nomor_meja }}
                     @endif
@@ -330,14 +342,14 @@
                 </p>
             </div>
             <button @click="modal=null"
-                    class="w-8 h-8 rounded-full bg-neutral-100 text-neutral-500 flex items-center justify-center text-[11px] hover:bg-neutral-200 transition">
+                    class="w-8 h-8 rounded-full bg-neutral-100 text-neutral-500 flex items-center justify-center text-xs hover:bg-neutral-200 transition">
                 <x-heroicon-o-x-mark class="w-5 h-5" />
             </button>
         </div>
 
         {{-- Metode Pembayaran --}}
         <div class="px-5 py-3.5 bg-neutral-50/70 border-b border-neutral-100 shrink-0">
-            <p class="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">Metode Pembayaran</p>
+            <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Metode Pembayaran</p>
             <div class="grid grid-cols-2 gap-2">
                 <label @click="metodePembayaran='kasir'"
                        :class="metodePembayaran==='kasir'
@@ -349,8 +361,8 @@
                         <x-heroicon-o-currency-dollar class="w-4 h-4" />
                     </div>
                     <div>
-                        <span class="block text-[11px] font-semibold text-neutral-900 leading-tight">Bayar di Kasir</span>
-                        <span class="block text-[9px] text-neutral-400 mt-0.5">Tunai / Transfer</span>
+                        <span class="block text-xs font-semibold text-neutral-900 leading-tight">Bayar di Kasir</span>
+                        <span class="block text-xs text-neutral-400 mt-0.5">Tunai / Transfer</span>
                     </div>
                 </label>
                 <label @click="metodePembayaran='qris'"
@@ -363,8 +375,8 @@
                         <x-heroicon-o-qr-code class="w-4 h-4" />
                     </div>
                     <div>
-                        <span class="block text-[11px] font-semibold text-neutral-900 leading-tight">Bayar QRIS</span>
-                        <span class="block text-[9px] text-neutral-400 mt-0.5">Scan langsung</span>
+                        <span class="block text-xs font-semibold text-neutral-900 leading-tight">Bayar QRIS</span>
+                        <span class="block text-xs text-neutral-400 mt-0.5">Scan langsung</span>
                     </div>
                 </label>
             </div>
@@ -376,18 +388,18 @@
                 <div class="py-3.5 flex items-start gap-3">
                     <div class="flex-1 min-w-0">
                         <h4 class="text-xs font-semibold text-neutral-900" x-text="c.nama"></h4>
-                        <span class="text-[11px] font-semibold text-neutral-900" x-text="rp(c.harga)"></span>
+                        <span class="text-xs font-semibold text-neutral-900" x-text="rp(c.harga)"></span>
                         <template x-if="c.catatan">
-                            <p class="text-[10px] text-neutral-400 italic mt-0.5 truncate" x-text="'📝 '+c.catatan"></p>
+                            <p class="text-sm text-neutral-400 italic mt-0.5 truncate" x-text="'📝 '+c.catatan"></p>
                         </template>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <div class="flex items-center border border-neutral-200 rounded-xl overflow-hidden">
-                            <button @click="dec(c.id)" class="w-7 h-7 flex items-center justify-center text-[10px] text-neutral-600 hover:bg-neutral-100">
+                            <button @click="dec(c.id)" class="w-7 h-7 flex items-center justify-center text-sm text-neutral-600 hover:bg-neutral-100">
                                 <x-heroicon-o-minus class="w-5 h-5" />
                             </button>
-                            <span class="text-[11px] font-semibold px-2" x-text="c.qty"></span>
-                            <button @click="inc(c.id)" class="w-7 h-7 flex items-center justify-center text-[10px] text-neutral-600 hover:bg-neutral-100">
+                            <span class="text-xs font-semibold px-2" x-text="c.qty"></span>
+                            <button @click="inc(c.id)" class="w-7 h-7 flex items-center justify-center text-sm text-neutral-600 hover:bg-neutral-100">
                                 <x-heroicon-o-plus class="w-5 h-5" />
                             </button>
                         </div>
@@ -402,20 +414,20 @@
         {{-- Footer --}}
         <div class="p-4 border-t border-neutral-100 bg-white shrink-0 space-y-3">
             <div class="space-y-1">
-                <div class="flex justify-between items-center text-[11px] text-neutral-500 font-medium">
+                <div class="flex justify-between items-center text-xs text-neutral-500 font-medium">
                     <span>Subtotal</span>
                     <span x-text="rp(subTotal)"></span>
                 </div>
-                <div class="flex justify-between items-center text-[11px] text-neutral-500 font-medium pb-2 border-b border-neutral-100">
+                <div class="flex justify-between items-center text-xs text-neutral-500 font-medium pb-2 border-b border-neutral-100">
                     <span>PB1 (10%)</span>
                     <span x-text="rp(totalTax)"></span>
                 </div>
                 <div class="flex justify-between items-end pt-1">
                     <div>
-                        <span class="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider block">Total Tagihan</span>
+                        <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider block">Total Tagihan</span>
                         <span class="text-xl font-bold text-neutral-900" x-text="rp(totalPrice)"></span>
                     </div>
-                    <span class="text-[11px] text-neutral-400 font-medium mb-1" x-text="totalQty+' item'"></span>
+                    <span class="text-xs text-neutral-400 font-medium mb-1" x-text="totalQty+' item'"></span>
                 </div>
             </div>
             <button @click="submit()"
@@ -443,19 +455,19 @@
 <div x-show="modal==='qris'"
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/70"
      x-transition.opacity>
-    <div class="relative bg-white w-full max-w-xs rounded-2xl p-6 border border-neutral-200 text-center">
+    <div class="relative bg-white w-full max-w-xs rounded-lg p-6 border border-neutral-200 text-center">
         <button @click="closeQrisModal()" class="absolute top-3.5 right-3.5 text-neutral-400 hover:text-neutral-600 text-sm">
             <x-heroicon-o-x-mark class="w-5 h-5" />
         </button>
 
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 text-neutral-900 rounded-full text-[10px] font-semibold border border-neutral-200 mb-3">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 text-neutral-900 rounded-full text-xs font-semibold border border-neutral-200 mb-3">
             <x-heroicon-o-qr-code class="w-5 h-5" /> Pembayaran QRIS
         </div>
 
         <h3 class="text-sm font-semibold text-neutral-900">Scan untuk Membayar</h3>
-        <p class="text-[11px] text-neutral-400 mt-0.5 mb-4">GoPay, OVO, ShopeePay, Dana, Mobile Banking</p>
+        <p class="text-xs text-neutral-400 mt-0.5 mb-4">GoPay, OVO, ShopeePay, Dana, Mobile Banking</p>
 
-        <div class="my-2 bg-white p-3 border border-neutral-200 rounded-2xl inline-block">
+        <div class="my-2 bg-white p-3 border border-neutral-200 rounded-lg inline-block">
             <template x-if="qrisData.qr_url">
                 <img :src="qrisData.qr_url" alt="QRIS Code" class="w-48 h-48 object-contain rounded-xl mx-auto">
             </template>
@@ -473,7 +485,7 @@
             </div>
             <div class="flex justify-between text-xs">
                 <span class="text-neutral-400">Kode Pesanan</span>
-                <span class="font-mono font-semibold text-neutral-700 text-[10px]" x-text="qrisData.order_id||lastCode||'-'"></span>
+                <span class="font-mono font-semibold text-neutral-700 text-xs" x-text="qrisData.order_id||lastCode||'-'"></span>
             </div>
         </div>
 
@@ -490,12 +502,12 @@
 <div x-show="modal==='success'"
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/70"
      x-transition.opacity>
-    <div class="relative bg-white w-full max-w-xs rounded-2xl p-7 border border-neutral-200 text-center">
+    <div class="relative bg-white w-full max-w-xs rounded-lg p-7 border border-neutral-200 text-center">
         <div class="w-16 h-16 bg-neutral-900 text-white rounded-full flex items-center justify-center mx-auto mb-4">
             <x-heroicon-o-check class="w-7 h-7" />
         </div>
         <h2 class="text-base font-semibold text-neutral-900 mb-1">Pesanan Terkirim!</h2>
-        <p class="text-xs text-neutral-400 mb-5 leading-relaxed">
+        <p class="text-sm text-neutral-400 mb-5 leading-relaxed">
             Pesanan Anda sudah diterima. Silakan bersantai — hidangan akan segera disajikan.
         </p>
         <div class="bg-neutral-50 border border-neutral-200 rounded-xl p-3.5 mb-5 text-left space-y-2">
@@ -618,11 +630,11 @@ function qrMenu(){
                         this.modal='success';
                     }
                 } else {
-                    alert(d.message||'Gagal mengirim pesanan.');
+                    window.showToast('info', d.message||'Gagal mengirim pesanan.');
                 }
             }catch(e){
                 console.error(e);
-                alert('Terjadi kesalahan koneksi. Coba lagi.');
+                window.showToast('info', 'Terjadi kesalahan koneksi. Coba lagi.');
             }finally{
                 this.sending=false;
             }
@@ -649,5 +661,7 @@ function qrMenu(){
     };
 }
 </script>
+
+<x-toast />
 </body>
 </html>

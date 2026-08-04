@@ -20,7 +20,7 @@
                         elseif($pesanan->status_pesanan_id == 6) $color = 'red';
                         else $color = 'blue';
                     @endphp
-                    <span class="px-2.5 py-1 bg-{{$color}}-50 text-{{$color}}-700 border border-{{$color}}-200 rounded-2xl text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
+                    <span class="px-2.5 py-1 bg-{{$color}}-50 text-{{$color}}-700 border border-{{$color}}-200 rounded-lg text-xs font-extrabold uppercase tracking-wider shadow-sm">
                         {{ optional($pesanan->status_pesanan)->nama_status ?? 'Unknown' }}
                     </span>
                 </h3>
@@ -36,9 +36,9 @@
     <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/50">
         
         {{-- Info Panel (Lebih Rinci) --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-5 rounded-[2.25rem] border border-gray-200 shadow-sm">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
             <div>
-                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-user class="mr-1 w-5 h-5" /> Pemesan</label>
+                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-user class="mr-1 w-5 h-5" /> Pemesan</label>
                 @php
                     $nama = 'Tamu';
                     if (!empty($pesanan->catatan)) {
@@ -57,24 +57,24 @@
             </div>
             
             <div>
-                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-users class="mr-1 w-5 h-5" /> Meja/Lokasi</label>
+                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-users class="mr-1 w-5 h-5" /> Meja/Lokasi</label>
                 <p class="text-sm font-bold text-gray-900">{{ $pesanan->meja ? 'Meja '.$pesanan->meja->nomor_meja : '-' }}</p>
             </div>
             
             <div>
-                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-sparkles class="mr-1 w-5 h-5" /> Kasir</label>
+                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-sparkles class="mr-1 w-5 h-5" /> Kasir</label>
                 <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->kasir)->nama ?? '-' }}</p>
             </div>
 
             <div>
-                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-sparkles class="mr-1 w-5 h-5" /> Pelayan</label>
+                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-sparkles class="mr-1 w-5 h-5" /> Pelayan</label>
                 <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->pelayan)->nama ?? '-' }}</p>
             </div>
         </div>
 
         {{-- Jadwal Pesanan (Hanya Muncul jika ada) --}}
         @if($pesanan->jadwal_pesanan)
-        <div class="bg-amber-50/50 p-4 rounded-[2.25rem] border border-amber-200/60 shadow-sm flex items-start gap-3">
+        <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-200/60 shadow-sm flex items-start gap-3">
             <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
                 <x-heroicon-o-sparkles class="w-6 h-6" />
             </div>
@@ -91,7 +91,7 @@
         @endif
 
         {{-- Daftar Item --}}
-        <div class="bg-white rounded-[2.25rem] border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 bg-slate-50/50 flex justify-between items-center">
                 <h4 class="text-sm font-bold text-gray-900"><x-heroicon-o-sparkles class="mr-1.5 text-gray-400 w-5 h-5" /> Daftar Item Pesanan</h4>
                 <span class="text-xs font-bold bg-white border border-gray-200 px-2.5 py-1 rounded-xl text-gray-600">{{ $pesanan->detail_pesanan->count() }} Menu</span>
@@ -105,9 +105,9 @@
                             </div>
                             <div>
                                 <h4 class="text-sm font-bold text-gray-900">{{ optional($item->menu)->nama_menu ?? 'Menu Dihapus' }}</h4>
-                                <p class="text-[11px] font-medium text-gray-500 mt-0.5">@ Rp{{ number_format($item->harga_satuan, 0, ',', '.') }}</p>
+                                <p class="text-sm font-medium text-gray-500 mt-0.5">@ Rp{{ number_format($item->harga_satuan, 0, ',', '.') }}</p>
                                 @if($item->catatan)
-                                    <p class="text-[10px] text-amber-600 font-medium mt-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 inline-block">
+                                    <p class="text-xs text-amber-600 font-medium mt-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 inline-block">
                                         <x-heroicon-o-sparkles class="mr-1 w-5 h-5" />{{ $item->catatan }}
                                     </p>
                                 @endif
@@ -153,24 +153,24 @@
                 
                 <div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-200 border-dashed">
                     <span class="text-sm font-bold text-gray-700 uppercase tracking-wider">Total Keseluruhan</span>
-                    <span class="text-xl font-black text-[#0F2E23]">Rp{{ number_format($pesanan->total_tagihan, 0, ',', '.') }}</span>
+                    <span class="text-xl font-black text-[#0D3024]">Rp{{ number_format($pesanan->total_tagihan, 0, ',', '.') }}</span>
                 </div>
             </div>
         </div>
 
         {{-- Catatan Tambahan (Bila ada, selain ekstrak nama) --}}
         @if(!empty($pesanan->catatan) && !preg_match('/^Pemesan:/', $pesanan->catatan) && !preg_match('/Self-Order QR/', $pesanan->catatan))
-        <div class="bg-blue-50/50 p-4 rounded-[2.25rem] border border-blue-100 shadow-sm flex items-start gap-3">
+        <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 shadow-sm flex items-start gap-3">
             <div class="text-blue-400 shrink-0 mt-0.5"><x-heroicon-o-sparkles class="w-5 h-5" /></div>
             <div>
-                <h4 class="text-[11px] font-bold text-blue-800 uppercase tracking-wider mb-1">Catatan Pesanan</h4>
-                <p class="text-xs text-blue-900 font-medium leading-relaxed">{{ $pesanan->catatan }}</p>
+                <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">Catatan Pesanan</h4>
+                <p class="text-sm text-blue-900 font-medium leading-relaxed">{{ $pesanan->catatan }}</p>
             </div>
         </div>
         @endif
 
         {{-- Riwayat Pembayaran Lebih Rinci --}}
-        <div class="bg-white rounded-[2.25rem] border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 bg-slate-50/50 flex justify-between items-center">
                 <h4 class="text-sm font-bold text-gray-900"><x-heroicon-o-wallet class="mr-1.5 text-gray-400 w-5 h-5" /> Status & Riwayat Pembayaran</h4>
                 @php
@@ -186,14 +186,14 @@
             
             <div class="p-5 space-y-3">
                 @forelse($pesanan->pembayaran as $bayar)
-                    <div class="bg-white p-3.5 rounded-3xl border border-slate-200 flex items-center justify-between shadow-sm hover:border-emerald-200 transition-colors group">
+                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm hover:border-emerald-200 transition-colors group">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
                                 <x-heroicon-o-sparkles class="w-5 h-5" />
                             </div>
                             <div>
                                 <span class="block text-sm font-bold text-gray-900">{{ optional($bayar->metode_pembayaran)->nama_metode ?? 'CASH' }}</span>
-                                <span class="block text-[11px] text-gray-500 font-medium mt-0.5">
+                                <span class="block text-xs text-gray-500 font-medium mt-0.5">
                                     {{ \Carbon\Carbon::parse($bayar->dibayar_pada)->format('d M Y, H:i') }} &bull; {{ optional($bayar->jenis_pembayaran)->nama_jenis ?? 'Lunas' }}
                                 </span>
                             </div>
@@ -201,7 +201,7 @@
                         <div class="text-right">
                             <span class="block text-sm font-black text-emerald-600">+ Rp{{ number_format($bayar->jumlah_bayar, 0, ',', '.') }}</span>
                             @if($bayar->diproses_oleh)
-                                <span class="block text-[10px] text-gray-400 mt-1">oleh {{ optional($bayar->diproses_oleh_pengguna)->nama ?? 'Kasir' }}</span>
+                                <span class="block text-xs text-gray-400 mt-1">oleh {{ optional($bayar->diproses_oleh_pengguna)->nama ?? 'Kasir' }}</span>
                             @endif
                         </div>
                     </div>
@@ -218,7 +218,7 @@
             {{-- Progress Bar Pembayaran --}}
             @if($pesanan->total_tagihan > 0)
             <div class="px-5 py-4 border-t border-gray-100 bg-slate-50">
-                <div class="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                <div class="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                     <span>Progress Pembayaran</span>
                     <span>{{ min(100, round(($terbayar / max(1, $pesanan->total_tagihan)) * 100)) }}%</span>
                 </div>

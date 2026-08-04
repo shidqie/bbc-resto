@@ -65,7 +65,7 @@ class InventoryService
 
             // Jika ada bahan yang kurang, buat draft pengadaan
             if (count($bahanKurang) > 0) {
-                $this->createDraftPengadaan($bahanKurang, 'CATERING', $pesanan_id);
+                $this->createDraftPengadaan($bahanKurang, 'catering', $pesanan_id);
             }
         });
     }
@@ -95,14 +95,14 @@ class InventoryService
             }
 
             // Cek apakah sudah ada draft pengadaan operasional yang belum diproses untuk menghindari duplikasi
-            $existingDraft = PengadaanBahan::where('jenis_pengadaan', 'OPERASIONAL')
+            $existingDraft = PengadaanBahan::where('jenis_pengadaan',  'harian')
                 ->whereHas('status_pengadaan', function ($q) {
                     $q->where('kode_status', 'DRAFT'); // asumsi DRAFT
                 })
                 ->first();
 
             if (! $existingDraft) {
-                $this->createDraftPengadaan($bahanKurang, 'OPERASIONAL', null);
+                $this->createDraftPengadaan($bahanKurang,  'harian', null);
             }
         }
     }
@@ -131,7 +131,7 @@ class InventoryService
             'diajukan_oleh' => 1, // Sistem/Admin ID
             'status_pengadaan_id' => $statusDraft->id,
             'tanggal_pengadaan' => date('Y-m-d'),
-            'catatan' => $jenis == 'CATERING' ? 'Draft otomatis kebutuhan Catering' : 'Draft otomatis Stok Minimum',
+            'catatan' => $jenis ==  'catering' ? 'Draft otomatis kebutuhan Catering' : 'Draft otomatis Stok Minimum',
         ]);
 
         foreach ($bahanList as $bahan) {

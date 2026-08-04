@@ -4,11 +4,9 @@ namespace App\Services;
 
 use App\Models\BahanBaku;
 use App\Models\Menu;
-use App\Models\MutasiStok;
 use App\Models\PaketCatering;
 use App\Models\PesananNasiBox;
-use App\Models\StokBahanBaku;
-use Illuminate\Support\Facades\Auth;
+use App\Models\StokBahan;
 use Illuminate\Support\Facades\DB;
 
 class PesananNasiBoxService
@@ -84,10 +82,10 @@ class PesananNasiBoxService
             }
         }
 
-        // 2. Bandingkan dengan stok saat ini
+        // 2. Bandingkan dengan Stok Harian saat ini (Nasi Box memakai stok Harian)
         foreach ($kebutuhan as $bahanId => $qty_butuh) {
-            $bahan = BahanBaku::with('stok_bahan_baku')->find($bahanId);
-            $stokSaatIni = $bahan?->stok_bahan_baku?->jumlah_stok ?? 0;
+            $bahan = BahanBaku::with('stok_harian')->find($bahanId);
+            $stokSaatIni = (float) ($bahan?->stok_harian?->jumlah_stok ?? 0);
 
             if (! $bahan || $stokSaatIni < $qty_butuh) {
                 $kekurangan[] = [
@@ -105,33 +103,25 @@ class PesananNasiBoxService
             return $kekurangan;
         }
 
-        // 4. Jika cukup, potong stok dan catat mutasi
+        // 4. Jika cukup, potong stok Harian dan catat mutasi
         DB::transaction(function () use ($kebutuhan, $pesanan) {
+            $stockService = app(StockService::class);
             foreach ($kebutuhan as $bahanId => $qty_butuh) {
                 $bahan = BahanBaku::find($bahanId);
                 if (! $bahan) {
                     continue;
                 }
 
-                $stok = StokBahanBaku::lockForUpdate()
-                    ->firstOrCreate(
-                        ['bahan_baku_id' => $bahanId],
-                        ['jumlah_stok' => 0, 'terakhir_diperbarui' => now()]
-                    );
-
-                $stok->jumlah_stok -= $qty_butuh;
-                $stok->terakhir_diperbarui = now();
-                $stok->save();
-
-                MutasiStok::create([
-                    'bahan_baku_id' => $bahanId,
-                    'jenis_mutasi_stok_id' => 2, // Keluar
-                    'jumlah' => $qty_butuh,
-                    'satuan_id' => $bahan->satuan_id,
-                    'tanggal_mutasi' => now(),
-                    'dibuat_oleh' => Auth::id() ?? 1,
-                    'catatan' => "Potong stok otomatis saat DP diterima - Pesanan NasiBox: {$pesanan->kode_pesanan}",
-                ]);
+                $stockService->deductStock(
+                    $bahanId,
+                    (float) $qty_butuh,
+                    "Potong stok Harian (Nasi Box) - Pesanan: {$pesanan->kode_pesanan}",
+                    2,
+                    null,
+                    [],
+                    false,
+                    StokBahan::JENIS_HARIAN,
+                );
             }
         });
 

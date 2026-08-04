@@ -73,13 +73,13 @@
         @foreach($pesanan->detail_pesanan as $item)
         <tr>
             <td class="item-name font-bold">
-                {{ $item->menu->nama_menu ?? $item->nama_menu ?? 'Menu' }}
+                {{ $item->menu->nama_menu ?? $item->menu->nama ?? 'Menu' }}
                 @if($item->catatan)
                     <div class="notes">* {{ $item->catatan }}</div>
                 @endif
             </td>
             <td class="text-right font-bold" style="width: 40px;">
-                {{ $item->kuantitas }}
+                {{ $item->jumlah }}
             </td>
         </tr>
         @endforeach
@@ -130,13 +130,13 @@
         @foreach($pesanan->detail_pesanan as $item)
         <tr>
             <td class="item-name font-bold">
-                {{ $item->menu->nama_menu ?? $item->nama_menu ?? 'Menu' }}
+                {{ $item->menu->nama_menu ?? $item->menu->nama ?? 'Menu' }}
                 @if($item->catatan)
                     <div class="notes">* {{ $item->catatan }}</div>
                 @endif
             </td>
             <td class="text-right font-bold" style="width: 40px;">
-                {{ $item->kuantitas }}
+                {{ $item->jumlah }}
             </td>
         </tr>
         @endforeach

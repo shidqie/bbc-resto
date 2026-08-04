@@ -7,4 +7,6 @@ class StatusPengantaran extends BaseModel
     protected $table = 'status_pengantaran';
 
     protected $guarded = [];
+
+    public $timestamps = false;
 }

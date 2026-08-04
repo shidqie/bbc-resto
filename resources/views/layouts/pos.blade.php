@@ -16,6 +16,26 @@
 
     <!-- Tailwind CSS CDN Fallback for LAN/Wi-Fi Access -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontSize: {
+                        xs: ['13px', '1.45'],
+                        sm: ['15px', '1.5'],
+                        base: ['16px', '1.55'],
+                        lg: ['18px', '1.5'],
+                        xl: ['20px', '1.4'],
+                        '2xl': ['24px', '1.3'],
+                        '3xl': ['30px', '1.25'],
+                        '4xl': ['36px', '1.2'],
+                        '5xl': ['48px', '1.15'],
+                        '6xl': ['60px', '1.1'],
+                    },
+                }
+            }
+        }
+    </script>
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -26,7 +46,7 @@
         :root {
             --font-primary: 'Plus Jakarta Sans', 'Google Sans', sans-serif;
             --font-mono: 'Anonymous Pro', monospace;
-            --color-primary: #0F2E23;
+            --color-primary: #0D3024;
             --color-secondary: #3B82F6;
             --color-surface: #FFFFFF;
             --color-text: #111827;
@@ -62,16 +82,16 @@
 
         /* NProgress custom styling */
         #nprogress .bar {
-            background: #0F2E23 !important;
+            background: #0D3024 !important;
             height: 3px !important;
             z-index: 99999 !important;
         }
         #nprogress .peg {
-            box-shadow: 0 0 10px #0F2E23, 0 0 5px #0F2E23 !important;
+            box-shadow: 0 0 10px #0D3024, 0 0 5px #0D3024 !important;
         }
         #nprogress .spinner-icon {
-            border-top-color: #0F2E23 !important;
-            border-left-color: #0F2E23 !important;
+            border-top-color: #0D3024 !important;
+            border-left-color: #0D3024 !important;
         }
 
         .page-fade-in {
@@ -95,6 +115,10 @@
         @include('partials.topbar')
         @yield('content')
     </main>
+
+    {{-- Komponen UI Global: Toast & Modal Konfirmasi --}}
+    <x-toast />
+    <x-confirm-modal />
 
     <!-- Instant Link Prefetcher & NProgress Speed Booster -->
     <script>
@@ -132,54 +156,35 @@
         }
     });
 
-    // Global SweetAlert2 Interceptor for Native Confirm Dialogs
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof Swal !== 'undefined') {
-            const confirmElements = document.querySelectorAll('[onsubmit*="confirm("], [onclick*="confirm("]');
-            confirmElements.forEach(el => {
-                const isForm = el.tagName === 'FORM';
-                const attrName = isForm ? 'onsubmit' : 'onclick';
-                const attrValue = el.getAttribute(attrName);
-                
-                const match = attrValue.match(/confirm\(\s*['"](.*?)['"]\s*\)/);
+    // Global Interceptor untuk Konfirmasi Form Hapus (menggunakan Modal UI)
+    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            if (form.hasAttribute('data-confirm-modal')) return; // sudah memakai modal komponen
+
+            const confirmMsg = form.getAttribute('onsubmit');
+            if (confirmMsg && confirmMsg.includes('confirm(')) {
+                e.preventDefault();
+                const match = confirmMsg.match(/confirm\(\s*['"](.*?)['"]\s*\)/);
                 const msg = match ? match[1] : 'Apakah Anda yakin?';
-                
-                el.removeAttribute(attrName);
-                
-                el.addEventListener(isForm ? 'submit' : 'click', function(e) {
-                    e.preventDefault();
-                    Swal.fire({
-                        title: 'Konfirmasi',
-                        text: msg,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#0F2E23',
-                        cancelButtonColor: '#ef4444',
-                        confirmButtonText: 'Ya, Lanjutkan',
-                        cancelButtonText: 'Batal',
-                        reverseButtons: true,
-                        customClass: {
-                            popup: 'rounded-3xl border border-gray-100 shadow-2xl',
-                            title: 'text-lg font-semibold text-gray-900',
-                            confirmButton: 'rounded-2xl px-5 py-2 text-sm font-semibold transition-colors',
-                            cancelButton: 'rounded-2xl px-5 py-2 text-sm font-semibold transition-colors'
-                        }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            if (isForm) {
-                                el.submit();
-                            } else {
-                                if (el.tagName === 'A' && el.href) {
-                                    window.location.href = el.href;
-                                } else if (el.type === 'submit' && el.closest('form')) {
-                                    el.closest('form').submit();
-                                }
-                            }
-                        }
+                const name = msg.replace(/\?$/, '').replace(/^Hapus\s+/i, '');
+
+                if (window.confirmDialog) {
+                    window.confirmDialog({
+                        title: 'Konfirmasi Hapus',
+                        name: name,
+                        message: 'Data yang dihapus tidak dapat dikembalikan.',
+                        form: form,
+                        confirmText: 'Hapus',
+                        cancelText: 'Batal',
                     });
-                });
-            });
-        }
+                } else {
+                    form.setAttribute('data-confirm-modal', '');
+                    form.onsubmit = null;
+                    form.submit();
+                }
+            }
+        });
     });
     </script>
 

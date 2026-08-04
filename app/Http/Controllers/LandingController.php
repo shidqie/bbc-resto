@@ -30,10 +30,10 @@ class LandingController extends Controller
             })->get();
 
         // 3. Ambil Paket Catering aktif (jenis_menu_id = 2)
-        $paketCatering = Menu::where('status_aktif', true)->where('jenis_menu_id', 2)->get();
+        $paketCatering = Menu::where('status_aktif', true)->where('jenis_menu_id', 2)->whereHas('komponen_paket')->with('komponen_paket.opsi')->get();
 
         // 4. Ambil Paket Nasi Box aktif (jenis_menu_id = 3)
-        $paketNasiBox = Menu::where('status_aktif', true)->where('jenis_menu_id', 3)->get();
+        $paketNasiBox = Menu::where('status_aktif', true)->where('jenis_menu_id', 3)->whereHas('komponen_paket')->with('komponen_paket.opsi')->get();
 
         return view('landing', compact('kategoris', 'semuaMenu', 'paketCatering', 'paketNasiBox'));
     }

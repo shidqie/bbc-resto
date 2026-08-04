@@ -7,10 +7,10 @@
     <div class="w-full p-6 flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Detail Pesanan Catering #{{ $pesanan->nomor_pesanan }}</h1>
         <div class="flex gap-2">
-            <a href="{{ route('admin.pesanan.catering.pdf', $pesanan->id) }}" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-2xl font-bold transition-colors">
+            <a href="{{ route('admin.pesanan.catering.pdf', $pesanan->id) }}" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">
                 <x-heroicon-o-document class="mr-1 w-5 h-5" /> Cetak Rincian (PDF)
             </a>
-            <a href="{{ route('admin.pesanan.catering.index') }}" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-2xl font-bold transition-colors">&larr; Kembali</a>
+            <a href="{{ route('admin.pesanan.catering.index') }}" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold transition-colors">&larr; Kembali</a>
         </div>
     </div>
 
@@ -40,7 +40,7 @@
             @endif
 
             @if(session('kekurangan_stok'))
-                <div class="bg-red-50 border border-red-200 p-6 rounded-2xl shadow-sm">
+                <div class="bg-red-50 border border-red-200 p-6 rounded-lg shadow-sm">
                     <h3 class="text-lg font-bold text-red-800 mb-2">Konfirmasi Gagal: Stok Bahan Kurang!</h3>
                     <p class="text-sm text-red-700 mb-4">Stok bahan baku saat ini tidak mencukupi untuk memenuhi BOM pesanan ini. Silakan buat pengadaan bahan terlebih dahulu.</p>
                     <table class="w-full text-sm text-left border text-red-800">
@@ -71,7 +71,7 @@
 
             <div class="grid md:grid-cols-2 gap-6">
                 {{-- Info Pemesan --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
                         <h3 class="text-lg font-semibold mb-4 border-b pb-2">Informasi Pemesan</h3>
                         <div class="space-y-3 text-sm">
@@ -91,7 +91,7 @@
                 </div>
 
                 {{-- Info Paket --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
                         <h3 class="text-lg font-semibold mb-4 border-b pb-2">Informasi Paket</h3>
                         <div class="space-y-3 text-sm mb-4">
@@ -120,7 +120,7 @@
             </div>
 
             {{-- ── TABEL ANALISIS STOK BAHAN BAKU CATERING INI ── --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 mb-4 gap-2">
                         <div>
@@ -131,7 +131,7 @@
                             <p class="text-sm text-gray-500 font-medium mt-1">Kebutuhan resep untuk {{ $detailPesanan->jumlah ?? 0 }} porsi pesanan catering ini</p>
                         </div>
                         @if(!in_array($pesanan->status_pesanan_id, [1, 6]))
-                        <a href="{{ route('pengadaan.create', ['pesanan_id' => $pesanan->id]) }}" class="inline-flex items-center gap-2 bg-[#0F2E23] hover:bg-[#0a1f17] text-white text-xs font-bold px-4 py-2 rounded-3xl transition-all shadow-xs">
+                        <a href="{{ route('pengadaan.create', ['pesanan_id' => $pesanan->id]) }}" class="inline-flex items-center gap-2 bg-[#0D3024] hover:bg-[#0a1f17] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">
                             <x-heroicon-o-plus class="w-4 h-4" />
                             Buat Pengadaan Catering
                         </a>
@@ -141,7 +141,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm border-collapse">
                             <thead>
-                                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b">
+                                <tr class="bg-gray-50 text-gray-500 text-sm uppercase tracking-wider border-b">
                                     <th class="px-4 py-3 font-semibold">Bahan Baku</th>
                                     <th class="px-4 py-3 font-semibold">Stok Resto Saat Ini</th>
                                     <th class="px-4 py-3 font-semibold">Total Kebutuhan Acara</th>
@@ -181,7 +181,7 @@
             </div>
 
             {{-- Bukti Pembayaran & Aksi --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-lg font-semibold mb-4 border-b pb-2">Riwayat Pembayaran</h3>
 
@@ -190,7 +190,7 @@
                     @else
                         <div class="grid md:grid-cols-2 gap-4">
                             @foreach($pesanan->pembayaran as $pemb)
-                                <div class="border rounded-2xl p-4 {{ $pemb->status_pembayaran_id === 3 ? 'bg-green-50/40 border-green-200/60' : 'bg-yellow-50/40 border-yellow-200/60' }}">
+                                <div class="border rounded-lg p-4 {{ $pemb->status_pembayaran_id === 3 ? 'bg-green-50/40 border-green-200/60' : 'bg-yellow-50/40 border-yellow-200/60' }}">
                                     <div class="flex justify-between mb-2">
                                         <span class="font-bold uppercase text-sm">{{ $pemb->jenis_pembayaran->nama_jenis ?? '-' }}</span>
                                         <span class="text-xs px-2 py-1 rounded {{ $pemb->status_pembayaran_id === 3 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
@@ -225,7 +225,7 @@
 
                     {{-- INFO: Sisa Pelunasan --}}
                     @if(!$isLunas && $dpBayar > 0)
-                        <div class="mt-6 bg-yellow-50 p-4 rounded-3xl border border-yellow-200">
+                        <div class="mt-6 bg-yellow-50 p-4 rounded-xl border border-yellow-200">
                             <h4 class="text-yellow-800 font-bold mb-1"><x-heroicon-o-clock class="w-4 h-4 mr-2" />Menunggu Pelunasan dari Konsumen</h4>
                             <p class="text-yellow-700 text-sm">Pesanan ini sudah memiliki pembayaran. Konsumen perlu melunasi sisa tagihan sebelum bisa diselesaikan.</p>
                             <p class="text-yellow-800 font-bold mt-2">Sisa Tagihan: Rp {{ number_format(max(0, $total - $dpBayar), 0, ',', '.') }}</p>
@@ -233,7 +233,7 @@
                     @endif
 
                     @if($pesanan->status_pesanan_id === 6 && $pesanan->catatan && str_contains($pesanan->catatan, '[BATAL:'))
-                        <div class="mt-6 bg-red-50 p-4 rounded-3xl border border-red-100">
+                        <div class="mt-6 bg-red-50 p-4 rounded-xl border border-red-100">
                             <h4 class="text-red-800 font-bold mb-1"><x-heroicon-o-no-symbol class="mr-2 w-5 h-5" />Alasan Pembatalan:</h4>
                             <p class="text-red-700 text-sm">{{ Str::after($pesanan->catatan, '[BATAL:') }}</p>
                         </div>
@@ -246,10 +246,10 @@
 
                                 {{-- Konfirmasi (dari Menunggu) --}}
                                 @if($pesanan->status_pesanan_id === 1)
-                                <form action="{{ route('admin.pesanan.catering.konfirmasi', $pesanan->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin mengonfirmasi pesanan ini? Pastikan DP sudah terbayar & terverifikasi.')">
+                                <form id="form-konfirmasi-catering" action="{{ route('admin.pesanan.catering.konfirmasi', $pesanan->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-2xl shadow">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Konfirmasi Pesanan', name: '{{ $pesanan->nomor_pesanan }}', message: 'Anda yakin ingin mengonfirmasi pesanan ini? Pastikan DP sudah terbayar & terverifikasi.', formId: 'form-konfirmasi-catering', confirmText: 'Konfirmasi', cancelText: 'Batal', type: 'warning' })" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-check class="mr-2 w-5 h-5" />Konfirmasi Pesanan
                                     </button>
                                 </form>
@@ -257,11 +257,11 @@
 
                                 {{-- Mulai Diproses Dapur (dari Dikonfirmasi) --}}
                                 @if($pesanan->status_pesanan_id === 2)
-                                <form action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST" onsubmit="return confirm('Mulai proses dapur untuk pesanan ini?')">
+                                <form id="form-proses-catering" action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="3">
-                                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-2xl shadow">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Proses Dapur', name: '{{ $pesanan->nomor_pesanan }}', message: 'Mulai proses dapur untuk pesanan ini?', formId: 'form-proses-catering', confirmText: 'Proses', cancelText: 'Batal', type: 'warning' })" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-sparkles class="mr-2 w-5 h-5" />Mulai Proses Dapur
                                     </button>
                                 </form>
@@ -269,11 +269,11 @@
 
                                 {{-- Tandai Siap (dari Diproses) --}}
                                 @if($pesanan->status_pesanan_id === 3)
-                                <form action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST" onsubmit="return confirm('Tandai pesanan sebagai Siap?')">
+                                <form id="form-siap-catering" action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="4">
-                                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-2xl shadow">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Tandai Siap', name: '{{ $pesanan->nomor_pesanan }}', message: 'Tandai pesanan sebagai Siap?', formId: 'form-siap-catering', confirmText: 'Siap', cancelText: 'Batal', type: 'warning' })" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-cube class="mr-2 w-5 h-5" />Tandai Siap
                                     </button>
                                 </form>
@@ -281,18 +281,18 @@
 
                                 {{-- Tandai Selesai (dari Siap) --}}
                                 @if($pesanan->status_pesanan_id === 4)
-                                <form action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST" onsubmit="return confirm('Tandai pesanan sebagai Selesai? Stok bahan akan dipotong otomatis.')">
+                                <form id="form-selesai-catering" action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="5">
-                                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-2xl shadow">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Tandai Selesai', name: '{{ $pesanan->nomor_pesanan }}', message: 'Tandai pesanan sebagai Selesai? Stok bahan akan dipotong otomatis.', formId: 'form-selesai-catering', confirmText: 'Selesai', cancelText: 'Batal', type: 'warning' })" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-flag class="mr-2 w-5 h-5" />Tandai Selesai
                                     </button>
                                 </form>
                                 @endif
 
                                 {{-- Batalkan (semua status kecuali selesai) --}}
-                                <button @click="showBatalModal = true" type="button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-2xl shadow">
+                                <button @click="showBatalModal = true" type="button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow">
                                     <x-heroicon-o-x-mark class="mr-2 w-5 h-5" />Batalkan Pesanan
                                 </button>
                             </div>
@@ -302,7 +302,7 @@
                                 <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                                     <div x-show="showBatalModal" x-transition.opacity class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showBatalModal = false"></div>
                                     <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                                    <div x-show="showBatalModal" x-transition class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                    <div x-show="showBatalModal" x-transition class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                                         <form action="{{ route('admin.pesanan.catering.update-status', $pesanan->id) }}" method="POST">
                                             @csrf
                                             @method('PATCH')

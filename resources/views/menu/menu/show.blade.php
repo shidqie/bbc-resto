@@ -23,7 +23,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {{-- Informasi Menu --}}
             <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     @if($menu->foto)
                         <img src="{{ Storage::url($menu->foto) }}" class="w-full h-64 object-cover">
                     @else
@@ -51,12 +51,18 @@
 
                         <div class="space-y-3 pt-4 border-t border-gray-100">
                             <div>
-                                <div class="text-xs font-medium text-gray-500 mb-1">Jenis Menu</div>
-                                <div class="text-sm font-medium text-gray-900 capitalize">{{ str_replace('_', ' ', $menu->jenis_menu->nama_jenis ?? '-') }}</div>
+                                <div class="text-sm font-medium text-gray-500 mb-1">Layanan</div>
+                                <div class="text-sm font-medium text-gray-900 capitalize">
+                                    @php $jk = strtolower($menu->jenis_menu->kode_jenis ?? ''); @endphp
+                                    @if($jk == 'dine_in' || $jk == 'reguler') Dine In
+                                    @elseif($jk == 'catering') Catering
+                                    @elseif($jk == 'nasi_box') Nasi Box
+                                    @else {{ $menu->jenis_menu->nama_jenis ?? '-' }} @endif
+                                </div>
                             </div>
                             @if($menu->deskripsi)
                             <div>
-                                <div class="text-xs font-medium text-gray-500 mb-1">Deskripsi</div>
+                                <div class="text-sm font-medium text-gray-500 mb-1">Deskripsi</div>
                                 <div class="text-sm text-gray-700">{{ $menu->deskripsi }}</div>
                             </div>
                             @endif
@@ -67,10 +73,10 @@
 
             {{-- Komposisi Resep --}}
             <div class="lg:col-span-2">
-                <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden h-full flex flex-col">
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden h-full flex flex-col">
                     <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                         <h2 class="text-lg font-bold text-gray-900">Komposisi Resep</h2>
-                        <a href="{{ route('resep.create', $menu->id) }}" class="inline-flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-3xl font-medium text-sm transition-colors">
+                        <a href="{{ route('resep.create', $menu->id) }}" class="inline-flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-xl font-medium text-sm transition-colors">
                             <x-heroicon-o-list-bullet class="w-5 h-5 inline-block shrink-0" /> Atur Resep
                         </a>
                     </div>
@@ -79,7 +85,7 @@
                         @if($menu->resep->count() > 0)
                             <table class="w-full text-left border-collapse">
                                 <thead>
-                                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
+                                    <tr class="bg-gray-50 text-gray-500 text-sm uppercase tracking-wider border-b border-gray-100">
                                         <th class="px-6 py-4 font-semibold">Nama Bahan Baku</th>
                                         <th class="px-6 py-4 font-semibold text-right">Kebutuhan per Porsi</th>
                                         <th class="px-6 py-4 font-semibold">Keterangan</th>

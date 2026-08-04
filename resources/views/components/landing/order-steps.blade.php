@@ -8,8 +8,8 @@
         ] as [$num, $title, $desc])
             <div class="text-center">
                 <div class="w-10 h-10 bg-secondary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-3 text-sm font-bold">{{ $num }}</div>
-                <h4 class="font-bold text-primary text-sm mb-1">{{ $title }}</h4>
-                <p class="text-body text-xs">{{ $desc }}</p>
+                <h4 class="font-bold text-primary text-base mb-1">{{ $title }}</h4>
+                <p class="text-body text-sm">{{ $desc }}</p>
             </div>
         @endforeach
     </div>

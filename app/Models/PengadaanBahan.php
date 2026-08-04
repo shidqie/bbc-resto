@@ -8,6 +8,30 @@ class PengadaanBahan extends BaseModel
 
     protected $guarded = [];
 
+    protected $casts = [
+        'tanggal_pengadaan' => 'date:Y-m-d',
+        'perkiraan_tanggal_datang' => 'date:Y-m-d',
+    ];
+
+    public const JENIS_HARIAN = 'harian';
+
+    public const JENIS_CATERING = 'catering';
+
+    public function scopeHarian($query)
+    {
+        return $query->where('jenis_pengadaan', self::JENIS_HARIAN);
+    }
+
+    public function scopeCatering($query)
+    {
+        return $query->where('jenis_pengadaan', self::JENIS_CATERING);
+    }
+
+    public function getJenisPengadaanNamaAttribute(): string
+    {
+        return $this->jenis_pengadaan === self::JENIS_CATERING ? 'Catering' : 'Harian';
+    }
+
     public function pemasok()
     {
         return $this->belongsTo(Pemasok::class, 'pemasok_id');

@@ -72,4 +72,25 @@ class Pesanan extends BaseModel
     {
         return $this->hasMany(StokCatering::class, 'pesanan_id');
     }
+
+    /**
+     * Persentase uang muka (DP) berdasarkan jenis pesanan:
+     * Dine In = bayar penuh (100%), Catering = 50%, Nasi Box = 25%.
+     */
+    public function persentaseDP(): int
+    {
+        return match ((int) $this->jenis_pesanan_id) {
+            1 => 100, // Dine In / Takeaway
+            3 => 25,  // Nasi Box
+            default => 50, // Catering
+        };
+    }
+
+    /**
+     * Besaran uang muka (DP) dalam rupiah
+     */
+    public function nominalDP(): float
+    {
+        return (float) $this->total_tagihan * ($this->persentaseDP() / 100);
+    }
 }

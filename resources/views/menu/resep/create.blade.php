@@ -18,9 +18,9 @@
 
         {{-- Panel Summary HPP & Profit --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-            <div class="bg-white rounded-3xl border border-gray-200 p-4 flex items-center justify-between">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Total Modal (HPP)</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total Modal (HPP)</p>
                     <p class="text-lg font-black text-gray-900" id="textTotalHpp">Rp 0</p>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
@@ -28,9 +28,9 @@
                 </div>
             </div>
             
-            <div class="bg-white rounded-3xl border border-gray-200 p-4 flex items-center justify-between">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Harga Jual</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Harga Jual</p>
                     <p class="text-lg font-black text-gray-900" id="textHargaJual">Rp {{ number_format($menu->harga_jual, 0, ',', '.') }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
@@ -38,9 +38,9 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl border border-gray-200 p-4 flex items-center justify-between" id="cardProfit">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between" id="cardProfit">
                 <div>
-                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Estimasi Profit Kotor</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Estimasi Profit Kotor</p>
                     <p class="text-lg font-black" id="textProfit">Rp 0 (0%)</p>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-600" id="iconProfit">
@@ -49,13 +49,13 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <form action="{{ route('resep.store', $menu->id) }}" method="POST">
                 @csrf
                 
                 <div class="mb-5 flex justify-between items-end">
                     <h2 class="text-sm font-bold text-gray-900">Komposisi Bahan Baku</h2>
-                    <button type="button" onclick="addBahanBakuRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gray-900 text-white rounded-2xl hover:bg-gray-800 transition-colors">
+                    <button type="button" onclick="addBahanBakuRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         Tambah Bahan
                     </button>
@@ -65,8 +65,8 @@
                     @forelse($menu->resep_menu as $resep)
                         <div class="flex gap-3 items-start bahan-baku-row">
                             <div class="flex-1">
-                                <label class="block text-[11px] font-semibold text-gray-500 mb-1">Pilih Bahan Baku</label>
-                                <select name="bahan_baku_id[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-2xl focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-select" required onchange="calculateHPP()">
+                                <label class="block text-sm font-semibold text-gray-500 mb-1">Pilih Bahan Baku</label>
+                                <select name="bahan_baku_id[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-select" required onchange="calculateHPP()">
                                     <option value="" disabled>-- Pilih Bahan --</option>
                                     @foreach($bahanBakus as $bb)
                                         <option value="{{ $bb->id }}" data-harga="{{ $bb->harga_satuan }}" {{ $resep->bahan_baku_id == $bb->id ? 'selected' : '' }}>
@@ -76,8 +76,8 @@
                                 </select>
                             </div>
                             <div class="w-32">
-                                <label class="block text-[11px] font-semibold text-gray-500 mb-1">Jml. Kebutuhan</label>
-                                <input type="number" step="0.01" name="jumlah_kebutuhan[]" value="{{ $resep->jumlah_kebutuhan }}" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-2xl focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-qty" required placeholder="0.00" oninput="calculateHPP()">
+                                <label class="block text-sm font-semibold text-gray-500 mb-1">Jml. Kebutuhan</label>
+                                <input type="number" step="0.01" name="jumlah_kebutuhan[]" value="{{ $resep->jumlah_kebutuhan }}" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-qty" required placeholder="0.00" oninput="calculateHPP()">
                             </div>
                             <div class="pt-6">
                                 <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
@@ -88,8 +88,8 @@
                     @empty
                         <div class="flex gap-3 items-start bahan-baku-row">
                             <div class="flex-1">
-                                <label class="block text-[11px] font-semibold text-gray-500 mb-1">Pilih Bahan Baku</label>
-                                <select name="bahan_baku_id[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-2xl focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-select" required onchange="calculateHPP()">
+                                <label class="block text-sm font-semibold text-gray-500 mb-1">Pilih Bahan Baku</label>
+                                <select name="bahan_baku_id[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-select" required onchange="calculateHPP()">
                                     <option value="" disabled selected data-harga="0">-- Pilih Bahan --</option>
                                     @foreach($bahanBakus as $bb)
                                         <option value="{{ $bb->id }}" data-harga="{{ $bb->harga_satuan }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
@@ -97,8 +97,8 @@
                                 </select>
                             </div>
                             <div class="w-32">
-                                <label class="block text-[11px] font-semibold text-gray-500 mb-1">Jml. Kebutuhan</label>
-                                <input type="number" step="0.01" name="jumlah_kebutuhan[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-2xl focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-qty" required placeholder="0.00" oninput="calculateHPP()">
+                                <label class="block text-sm font-semibold text-gray-500 mb-1">Jml. Kebutuhan</label>
+                                <input type="number" step="0.01" name="jumlah_kebutuhan[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-qty" required placeholder="0.00" oninput="calculateHPP()">
                             </div>
                             <div class="pt-6">
                                 <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
@@ -110,8 +110,8 @@
                 </div>
 
                 <div class="mt-8 pt-5 border-t border-gray-100 flex justify-end gap-2">
-                    <a href="{{ route('resep.index') }}" class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors">Batal</a>
-                    <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-gray-900 rounded-2xl hover:bg-gray-800 transition-colors">Simpan Resep</button>
+                    <a href="{{ route('resep.index') }}" class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Batal</a>
+                    <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors">Simpan Resep</button>
                 </div>
             </form>
         </div>
@@ -121,7 +121,7 @@
 <template id="bahanBakuTemplate">
     <div class="flex gap-3 items-start bahan-baku-row mt-3">
         <div class="flex-1">
-            <select name="bahan_baku_id[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-2xl focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-select" required onchange="calculateHPP()">
+            <select name="bahan_baku_id[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-select" required onchange="calculateHPP()">
                 <option value="" disabled selected data-harga="0">-- Pilih Bahan --</option>
                 @foreach($bahanBakus as $bb)
                     <option value="{{ $bb->id }}" data-harga="{{ $bb->harga_satuan }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
@@ -129,7 +129,7 @@
             </select>
         </div>
         <div class="w-32">
-            <input type="number" step="0.01" name="jumlah_kebutuhan[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-2xl focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-qty" required placeholder="0.00" oninput="calculateHPP()">
+            <input type="number" step="0.01" name="jumlah_kebutuhan[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-qty" required placeholder="0.00" oninput="calculateHPP()">
         </div>
         <div class="pt-2">
             <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">

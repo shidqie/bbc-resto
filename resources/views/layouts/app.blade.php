@@ -16,13 +16,33 @@
 
         <!-- Tailwind CSS CDN Fallback for LAN/Wi-Fi Access -->
         <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontSize: {
+                            xs: ['13px', '1.45'],
+                            sm: ['15px', '1.5'],
+                            base: ['16px', '1.55'],
+                            lg: ['18px', '1.5'],
+                            xl: ['20px', '1.4'],
+                            '2xl': ['24px', '1.3'],
+                            '3xl': ['30px', '1.25'],
+                            '4xl': ['36px', '1.2'],
+                            '5xl': ['48px', '1.15'],
+                            '6xl': ['60px', '1.1'],
+                        },
+                    }
+                }
+            }
+        </script>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
 
         <style>
-            #nprogress .bar { background: #0F2E23 !important; height: 3px !important; z-index: 99999 !important; }
+            #nprogress .bar { background: #0D3024 !important; height: 3px !important; z-index: 99999 !important; }
             .page-fade-in { animation: fadeInPage 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
             @keyframes fadeInPage { from { opacity: 0.85; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
         </style>
@@ -49,6 +69,9 @@
                 @endif
             </main>
         </div>
+
+        <x-toast />
+        <x-confirm-modal />
 
         <script>
         document.addEventListener('DOMContentLoaded', function() {

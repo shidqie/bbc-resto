@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MutasiStok;
+use App\Models\StokBahan;
 use Illuminate\Http\Request;
 
 class MutasiStokController extends Controller
@@ -27,7 +28,19 @@ class MutasiStokController extends Controller
         }
 
         if ($request->has('jenis_stok') && $request->jenis_stok != '') {
-            $query->where('jenis_stok', $request->jenis_stok);
+            // Kompatibilitas nilai lama OPERASIONAL/CATERING.
+            $jenisStok = strtolower($request->jenis_stok);
+            if (in_array($jenisStok, ['operasional', 'harian'], true)) {
+                $query->where('jenis_persediaan', StokBahan::JENIS_HARIAN);
+            } elseif (in_array($jenisStok, ['catering'], true)) {
+                $query->where('jenis_persediaan', StokBahan::JENIS_CATERING);
+            } else {
+                $query->where('jenis_persediaan', $jenisStok);
+            }
+        }
+
+        if ($request->has('jenis_persediaan') && $request->jenis_persediaan != '') {
+            $query->where('jenis_persediaan', $request->jenis_persediaan);
         }
 
         if ($request->has('referensi_id') && $request->referensi_id != '') {

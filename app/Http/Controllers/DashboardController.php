@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\BahanBaku;
+use App\Models\NotifikasiStok;
 use App\Models\Pembayaran;
 use App\Models\Pesanan;
+use App\Models\StokBahan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -32,10 +34,12 @@ class DashboardController extends Controller
         // Status 1 = Menunggu Konfirmasi, 3 = Sedang Diproses
         $pesananPending = Pesanan::whereIn('status_pesanan_id', [1, 3])->count();
 
-        // stok_minimal bukannya stok_minimum
-        $stokMenipis = BahanBaku::join('stok_bahan_baku', 'bahan_baku.id', '=', 'stok_bahan_baku.bahan_baku_id')
-            ->whereColumn('stok_bahan_baku.jumlah_stok', '<=', 'bahan_baku.stok_minimal')
+        // stok_minimal bukannya stok_minimum (Stok Harian: Dine-In & Nasi Box)
+        $stokMenipis = StokBahan::harian()
+            ->whereColumn('jumlah_stok', '<=', 'stok_minimal')
             ->count();
+
+        $unreadNotifikasiStok = NotifikasiStok::where('dibaca', false)->count();
 
         // 2. Data Grafik Pendapatan 7 Hari Terakhir
         $labels = [];
@@ -53,9 +57,8 @@ class DashboardController extends Controller
         }
 
         // 3. Data Stok Menipis (List)
-        $listStokMenipis = BahanBaku::with('satuan')
-            ->join('stok_bahan_baku', 'bahan_baku.id', '=', 'stok_bahan_baku.bahan_baku_id')
-            ->whereColumn('stok_bahan_baku.jumlah_stok', '<=', 'bahan_baku.stok_minimal')
+        $listStokMenipis = StokBahan::harian()->with('bahan_baku.satuan')
+            ->whereColumn('jumlah_stok', '<=', 'stok_minimal')
             ->take(5)
             ->get();
 
@@ -104,6 +107,7 @@ class DashboardController extends Controller
             'pendapatanHariIni',
             'pesananPending',
             'stokMenipis',
+            'unreadNotifikasiStok',
             'labels',
             'dataPendapatan',
             'listStokMenipis',

@@ -7,7 +7,7 @@
     // Small: 12px mobile, 14px desktop
     // Large: 16px mobile, 18px desktop
     $variantClass = match($variant) {
-        'small' => 'text-xs md:text-sm',
+        'small' => 'text-sm md:text-base',
         'large' => 'text-base md:text-lg',
         default => 'text-sm md:text-base',
     };

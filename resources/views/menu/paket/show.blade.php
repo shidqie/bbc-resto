@@ -26,7 +26,7 @@
             
             {{-- Info Ringkas Paket (Kolom Kiri) --}}
             <div class="lg:col-span-4 space-y-4">
-                <div class="bg-white rounded-[2.25rem] border border-gray-200/80 shadow-2xs p-5 space-y-4">
+                <div class="bg-white rounded-xl border border-gray-200/80 shadow-2xs p-5 space-y-4">
                     <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                         <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Jenis Paket:</span>
                         @if($paketCatering->jenis_menu_id == 3)
@@ -38,12 +38,12 @@
 
                     <div>
                         <h2 class="text-lg font-black text-gray-900 leading-tight">{{ $paketCatering->nama_menu }}</h2>
-                        <p class="text-xs text-gray-500 font-medium mt-1">{{ $paketCatering->deskripsi ?: 'Tidak ada deskripsi' }}</p>
+                        <p class="text-sm text-gray-500 font-medium mt-1">{{ $paketCatering->deskripsi ?: 'Tidak ada deskripsi' }}</p>
                     </div>
 
-                    <div class="bg-gray-50 rounded-3xl p-3 border border-gray-100 space-y-1">
-                        <span class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Harga per Porsi / Box</span>
-                        <div class="text-xl font-black text-[#0F2E23]">Rp {{ number_format($paketCatering->harga_jual, 0, ',', '.') }}</div>
+                    <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-1">
+                        <span class="text-xs font-extrabold uppercase text-gray-400 tracking-wider">Harga per Porsi / Box</span>
+                        <div class="text-xl font-black text-[#0D3024]">Rp {{ number_format($paketCatering->harga_jual, 0, ',', '.') }}</div>
                     </div>
 
                     <div class="flex items-center justify-between pt-2 border-t border-gray-100">
@@ -60,17 +60,17 @@
 
             {{-- Struktur Komponen Menu (Kolom Kanan - Match Mockup) --}}
             <div class="lg:col-span-8">
-                <div class="bg-white rounded-[2.25rem] border border-gray-200/80 shadow-2xs p-5 space-y-4">
+                <div class="bg-white rounded-xl border border-gray-200/80 shadow-2xs p-5 space-y-4">
                     <div class="border-b border-gray-100 pb-3 flex justify-between items-center">
                         <div>
-                            <h3 class="text-sm font-extrabold text-gray-900">Struktur Komponen Paket</h3>
-                            <p class="text-xs text-gray-500">Susunan menu yang didapatkan atau dipilih pemesan ({{ $paketCatering->komponen_paket->count() }} Komponen)</p>
+                            <h3 class="text-sm font-extrabold text-gray-900">Struktur Item Menu</h3>
+                            <p class="text-xs text-gray-500">Susunan menu yang didapatkan atau dipilih pemesan ({{ $paketCatering->komponen_paket->count() }} Item Menu)</p>
                         </div>
                     </div>
 
                     <div class="space-y-3.5">
                         @forelse($paketCatering->komponen_paket as $komponen)
-                            <div class="bg-gray-50/80 border border-gray-200/90 rounded-[2.25rem] p-4 space-y-3 shadow-2xs">
+                            <div class="bg-gray-50/80 border border-gray-200/90 rounded-xl p-4 space-y-3 shadow-2xs">
                                 
                                 {{-- Judul Komponen & Badge Tipe --}}
                                 <div class="flex items-center justify-between">
@@ -82,7 +82,7 @@
                                             <span class="text-emerald-800 font-extrabold text-xs bg-emerald-100/80 border border-emerald-200 px-2.5 py-0.5 rounded-full">(pasti dapat)</span>
                                         @endif
                                     </div>
-                                    <span class="text-[11px] font-mono font-bold text-gray-400">Urutan #{{ $komponen->urutan }}</span>
+                                    <span class="text-xs font-mono font-bold text-gray-400">Urutan #{{ $komponen->urutan }}</span>
                                 </div>
 
                                 {{-- Pills Opsi Menu (Exact Match Mockup) --}}
@@ -101,7 +101,7 @@
 
                             </div>
                         @empty
-                            <div class="text-center py-10 bg-gray-50 rounded-[2.25rem] border border-dashed border-gray-200">
+                            <div class="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                                 <x-heroicon-o-cube class="w-8 h-8 text-gray-300 mx-auto mb-1" />
                                 <p class="text-xs font-bold text-gray-600">Belum ada komponen menu yang ditambahkan</p>
                             </div>

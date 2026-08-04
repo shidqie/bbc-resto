@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\KomponenPaket;
+use App\Models\ItemPaket;
 use App\Models\Menu;
-use App\Models\PilihanKomponenPaket;
+use App\Models\PilihanItemPaket;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
@@ -13,7 +13,7 @@ class PaketCateringController extends Controller
     public function index(Request $request)
     {
         $jenis = $request->input('jenis', 'catering');
-        $query = Menu::withCount('komponen_paket');
+        $query = Menu::withCount('komponen_paket')->whereHas('komponen_paket');
 
         if ($jenis === 'catering') {
             $query->where('jenis_menu_id', 2);
@@ -21,6 +21,10 @@ class PaketCateringController extends Controller
             $query->where('jenis_menu_id', 3);
         } else {
             $query->whereIn('jenis_menu_id', [2, 3]);
+        }
+
+        if ($search = trim((string) $request->input('search'))) {
+            $query->where('nama_menu', 'like', '%'.$search.'%');
         }
 
         $pakets = $query->latest()->get();
@@ -70,10 +74,10 @@ class PaketCateringController extends Controller
 
         foreach ($request->komponen as $komp) {
             $tipe = $komp['tipe'] === 'choice' ? 'pilihan' : 'tetap';
-            $komponen = KomponenPaket::create([
+            $komponen = ItemPaket::create([
                 'menu_id' => $paket->id,
-                'nama_komponen' => $komp['nama_komponen'],
-                'tipe_komponen' => $tipe,
+                'nama_item' => $komp['nama_komponen'],
+                'tipe_item' => $tipe,
                 'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                 'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                 'urutan' => $komp['urutan'],
@@ -84,8 +88,8 @@ class PaketCateringController extends Controller
                 $urutanPilihan = 1;
                 foreach ($pilihanList as $namaPilihan) {
                     if (! empty($namaPilihan)) {
-                        PilihanKomponenPaket::create([
-                            'komponen_paket_id' => $komponen->id,
+                        PilihanItemPaket::create([
+                            'item_paket_id' => $komponen->id,
                             'nama_pilihan' => $namaPilihan,
                             'urutan' => $urutanPilihan++,
                         ]);
@@ -148,10 +152,10 @@ class PaketCateringController extends Controller
 
         foreach ($request->komponen as $komp) {
             $tipe = $komp['tipe'] === 'choice' ? 'pilihan' : 'tetap';
-            $komponen = KomponenPaket::create([
+            $komponen = ItemPaket::create([
                 'menu_id' => $paketCatering->id,
-                'nama_komponen' => $komp['nama_komponen'],
-                'tipe_komponen' => $tipe,
+                'nama_item' => $komp['nama_komponen'],
+                'tipe_item' => $tipe,
                 'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                 'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                 'urutan' => $komp['urutan'],
@@ -162,8 +166,8 @@ class PaketCateringController extends Controller
                 $urutanPilihan = 1;
                 foreach ($pilihanList as $namaPilihan) {
                     if (! empty($namaPilihan)) {
-                        PilihanKomponenPaket::create([
-                            'komponen_paket_id' => $komponen->id,
+                        PilihanItemPaket::create([
+                            'item_paket_id' => $komponen->id,
                             'nama_pilihan' => $namaPilihan,
                             'urutan' => $urutanPilihan++,
                         ]);

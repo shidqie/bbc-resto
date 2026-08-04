@@ -20,11 +20,11 @@
 
         <x-ui.alert />
 
-        <div class="bg-white rounded-[2.25rem] border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <form action="{{ route('resep.store', $menu->id) }}" method="POST" class="p-6">
                 @csrf
                 
-                <div class="bg-blue-50 border border-blue-200 rounded-3xl p-4 mb-6 flex items-start gap-3">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3">
                     <x-heroicon-o-information-circle class="text-blue-500 mt-0.5 w-5 h-5 inline-block shrink-0" />
                     <div>
                         <h4 class="text-sm font-bold text-blue-900">Petunjuk Pengisian</h4>
@@ -37,7 +37,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[700px]">
                         <thead>
-                            <tr class="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
+                            <tr class="bg-gray-50/50 text-gray-500 text-sm uppercase tracking-wider border-b border-gray-100">
                                 <th class="px-4 py-3 font-semibold w-1/3">Bahan Baku</th>
                                 <th class="px-4 py-3 font-semibold w-1/4">Kebutuhan</th>
                                 <th class="px-4 py-3 font-semibold w-1/3">Keterangan</th>
@@ -49,7 +49,7 @@
                                 @foreach(old('bahan_baku_id') as $index => $oldBahanId)
                                     <tr class="resep-row">
                                         <td class="px-4 py-3 align-top">
-                                            <select name="bahan_baku_id[]" required class="bahan-select w-full px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white text-sm" onchange="updateSatuan(this)">
+                                            <select name="bahan_baku_id[]" required class="bahan-select w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white text-sm" onchange="updateSatuan(this)">
                                                 <option value="">Pilih Bahan</option>
                                                 @foreach($bahanBakus as $bahan)
                                                     <option value="{{ $bahan->id }}" data-satuan="{{ $bahan->satuan->nama_satuan ?? '' }}" {{ $oldBahanId == $bahan->id ? 'selected' : '' }}>
@@ -60,14 +60,14 @@
                                         </td>
                                         <td class="px-4 py-3 align-top">
                                             <div class="flex gap-2 items-center">
-                                                <input type="number" name="jumlah_kebutuhan[]" value="{{ old('jumlah_kebutuhan')[$index] }}" required min="0.01" step="0.01" class="w-24 px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
+                                                <input type="number" name="jumlah_kebutuhan[]" value="{{ old('jumlah_kebutuhan')[$index] }}" required min="0.01" step="0.01" class="w-24 px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
                                                 <span class="text-xs text-gray-500 satuan-label font-medium min-w-[40px]">
                                                     {{-- Let JS handle this on load --}}
                                                 </span>
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 align-top">
-                                            <input type="text" name="keterangan[]" value="{{ old('keterangan')[$index] }}" placeholder="Misal: untuk garnish" class="w-full px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
+                                            <input type="text" name="keterangan[]" value="{{ old('keterangan')[$index] }}" placeholder="Misal: untuk garnish" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
                                         </td>
                                         <td class="px-4 py-3 align-top text-center pt-4">
                                             <button type="button" class="text-red-500 hover:text-red-700 transition-colors" onclick="removeRow(this)">
@@ -80,7 +80,7 @@
                                 @foreach($menu->resep as $resep)
                                     <tr class="resep-row">
                                         <td class="px-4 py-3 align-top">
-                                            <select name="bahan_baku_id[]" required class="bahan-select w-full px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white text-sm" onchange="updateSatuan(this)">
+                                            <select name="bahan_baku_id[]" required class="bahan-select w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white text-sm" onchange="updateSatuan(this)">
                                                 <option value="">Pilih Bahan</option>
                                                 @foreach($bahanBakus as $bahan)
                                                     <option value="{{ $bahan->id }}" data-satuan="{{ $bahan->satuan->nama_satuan ?? '' }}" {{ $resep->bahan_baku_id == $bahan->id ? 'selected' : '' }}>
@@ -91,14 +91,14 @@
                                         </td>
                                         <td class="px-4 py-3 align-top">
                                             <div class="flex gap-2 items-center">
-                                                <input type="number" name="jumlah_kebutuhan[]" value="{{ (float)$resep->jumlah_kebutuhan }}" required min="0.01" step="0.01" class="w-24 px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
+                                                <input type="number" name="jumlah_kebutuhan[]" value="{{ (float)$resep->jumlah_kebutuhan }}" required min="0.01" step="0.01" class="w-24 px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
                                                 <span class="text-xs text-gray-500 satuan-label font-medium min-w-[40px]">
                                                     {{ $resep->satuan }}
                                                 </span>
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 align-top">
-                                            <input type="text" name="keterangan[]" value="{{ $resep->keterangan }}" placeholder="Opsional" class="w-full px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
+                                            <input type="text" name="keterangan[]" value="{{ $resep->keterangan }}" placeholder="Opsional" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
                                         </td>
                                         <td class="px-4 py-3 align-top text-center pt-4">
                                             <button type="button" class="text-red-500 hover:text-red-700 transition-colors" onclick="removeRow(this)">
@@ -111,7 +111,7 @@
                                 <!-- Baris Default Jika Kosong -->
                                 <tr class="resep-row">
                                     <td class="px-4 py-3 align-top">
-                                        <select name="bahan_baku_id[]" required class="bahan-select w-full px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white text-sm" onchange="updateSatuan(this)">
+                                        <select name="bahan_baku_id[]" required class="bahan-select w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white text-sm" onchange="updateSatuan(this)">
                                             <option value="">Pilih Bahan</option>
                                             @foreach($bahanBakus as $bahan)
                                                 <option value="{{ $bahan->id }}" data-satuan="{{ $bahan->satuan->nama_satuan ?? '' }}">
@@ -122,12 +122,12 @@
                                     </td>
                                     <td class="px-4 py-3 align-top">
                                         <div class="flex gap-2 items-center">
-                                            <input type="number" name="jumlah_kebutuhan[]" required min="0.01" step="0.01" class="w-24 px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
+                                            <input type="number" name="jumlah_kebutuhan[]" required min="0.01" step="0.01" class="w-24 px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
                                             <span class="text-xs text-gray-500 satuan-label font-medium min-w-[40px]">-</span>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 align-top">
-                                        <input type="text" name="keterangan[]" placeholder="Opsional" class="w-full px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
+                                        <input type="text" name="keterangan[]" placeholder="Opsional" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
                                     </td>
                                     <td class="px-4 py-3 align-top text-center pt-4">
                                         <button type="button" class="text-red-500 hover:text-red-700 transition-colors" onclick="removeRow(this)">
@@ -141,7 +141,7 @@
                 </div>
 
                 <div class="mt-4">
-                    <button type="button" onclick="addRow()" class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 bg-blue-50 px-4 py-2 rounded-3xl hover:bg-blue-100 transition-colors">
+                    <button type="button" onclick="addRow()" class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 transition-colors">
                         <x-heroicon-o-plus class="w-5 h-5 inline-block shrink-0" /> Tambah Bahan
                     </button>
                 </div>
@@ -159,7 +159,7 @@
 <template id="row-template">
     <tr class="resep-row">
         <td class="px-4 py-3 align-top">
-            <select name="bahan_baku_id[]" required class="bahan-select w-full px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white text-sm" onchange="updateSatuan(this)">
+            <select name="bahan_baku_id[]" required class="bahan-select w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white text-sm" onchange="updateSatuan(this)">
                 <option value="">Pilih Bahan</option>
                 @foreach($bahanBakus as $bahan)
                     <option value="{{ $bahan->id }}" data-satuan="{{ $bahan->satuan->nama_satuan ?? '' }}">
@@ -170,12 +170,12 @@
         </td>
         <td class="px-4 py-3 align-top">
             <div class="flex gap-2 items-center">
-                <input type="number" name="jumlah_kebutuhan[]" required min="0.01" step="0.01" class="w-24 px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
+                <input type="number" name="jumlah_kebutuhan[]" required min="0.01" step="0.01" class="w-24 px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
                 <span class="text-xs text-gray-500 satuan-label font-medium min-w-[40px]">-</span>
             </div>
         </td>
         <td class="px-4 py-3 align-top">
-            <input type="text" name="keterangan[]" placeholder="Opsional" class="w-full px-3 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
+            <input type="text" name="keterangan[]" placeholder="Opsional" class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm">
         </td>
         <td class="px-4 py-3 align-top text-center pt-4">
             <button type="button" class="text-red-500 hover:text-red-700 transition-colors" onclick="removeRow(this)">
@@ -211,7 +211,7 @@
         if (container.querySelectorAll('.resep-row').length > 1) {
             btn.closest('tr').remove();
         } else {
-            alert('Resep harus memiliki minimal 1 bahan baku.');
+            window.showToast('info', 'Resep harus memiliki minimal 1 bahan baku.');
         }
     }
 

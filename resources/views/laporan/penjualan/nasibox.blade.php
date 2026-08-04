@@ -10,14 +10,14 @@
             </x-slot:actions>
         </x-ui.page-header>
 
-        <form action="{{ route('laporan.nasibox') }}" method="GET" class="bg-white p-4 rounded-[2.25rem] shadow-sm border border-gray-100 flex flex-wrap gap-4 items-end">
+        <form action="{{ route('laporan.nasibox') }}" method="GET" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-end">
             <div class="flex-1 min-w-[200px]">
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Dari Tanggal (Acara)</label>
-                <input type="date" name="start_date" value="{{ $startDate }}" class="w-full px-4 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm transition-all bg-white">
+                <input type="date" name="start_date" value="{{ $startDate }}" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm transition-all bg-white">
             </div>
             <div class="flex-1 min-w-[200px]">
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Sampai Tanggal (Acara)</label>
-                <input type="date" name="end_date" value="{{ $endDate }}" class="w-full px-4 py-2 border border-gray-200 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm transition-all bg-white">
+                <input type="date" name="end_date" value="{{ $endDate }}" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none text-sm transition-all bg-white">
             </div>
             <x-ui.button type="submit" icon="sparkles">Filter Data</x-ui.button>
         </form>
@@ -30,7 +30,7 @@
         <x-ui.data-table>
             <table class="w-full text-left border-collapse min-w-[800px]">
                 <thead>
-                    <tr class="bg-white text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
+                    <tr class="bg-white text-gray-500 text-sm uppercase tracking-wider border-b border-gray-100">
                         <th class="px-6 py-4 font-semibold">Tgl Acara</th>
                         <th class="px-6 py-4 font-semibold">Kode Pesanan</th>
                         <th class="px-6 py-4 font-semibold">Pelanggan</th>

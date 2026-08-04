@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\BahanBaku;
 use App\Models\DetailPenyesuaianStok;
-use App\Models\MutasiStok;
 use App\Models\PenyesuaianStok;
-use App\Models\StokBahanBaku;
+use App\Models\StokBahan;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +24,12 @@ class PenyesuaianStokController extends Controller
                 ->orWhere('alasan', 'like', "%{$search}%");
         }
 
+        if ($request->has('jenis_persediaan') && $request->jenis_persediaan != '') {
+            $query->whereHas('detail_penyesuaian_stok', function ($q) use ($request) {
+                $q->where('jenis_persediaan', $request->jenis_persediaan);
+            });
+        }
+
         $penyesuaians = $query->paginate(15)->withQueryString();
 
         $stats = [
@@ -37,7 +43,7 @@ class PenyesuaianStokController extends Controller
 
     public function create()
     {
-        $bahanBakus = BahanBaku::with(['satuan', 'stok_bahan_baku'])->where('status_aktif', true)->get();
+        $bahanBakus = BahanBaku::with(['satuan', 'stok_harian', 'stok_catering_balance'])->where('status_aktif', true)->get();
 
         return view('inventory.penyesuaian-stok.create', compact('bahanBakus'));
     }
@@ -48,6 +54,8 @@ class PenyesuaianStokController extends Controller
             'alasan' => 'required|string',
             'bahan_baku_id' => 'required|array|min:1',
             'bahan_baku_id.*' => 'required|exists:bahan_baku,id',
+            'jenis_persediaan' => 'required|array',
+            'jenis_persediaan.*' => 'required|in:harian,catering',
             'jumlah_fisik' => 'required|array',
             'jumlah_fisik.*' => 'required|numeric|min:0',
         ]);
@@ -65,21 +73,26 @@ class PenyesuaianStokController extends Controller
                 'status_penyesuaian' => 'DISETUJUI', // auto approve
             ]);
 
+            $stockService = app(StockService::class);
+
             foreach ($request->bahan_baku_id as $idx => $bahanId) {
                 $bahan = BahanBaku::find($bahanId);
-                $stok = $bahan->stok_bahan_baku;
+                $jenisPersediaan = $request->jenis_persediaan[$idx] ?? StokBahan::JENIS_HARIAN;
+                $stokRow = StokBahan::where('bahan_baku_id', $bahanId)
+                    ->where('jenis_persediaan', $jenisPersediaan)->first();
 
-                $jumlahSistem = $stok ? $stok->jumlah_stok : 0;
+                $jumlahSistem = $stokRow ? (float) $stokRow->jumlah_stok : 0;
                 $jumlahFisik = $request->jumlah_fisik[$idx];
                 $selisih = $jumlahFisik - $jumlahSistem;
 
-                if ($selisih == 0) {
+                if (abs($selisih) < 0.0001) {
                     continue;
                 }
 
-                DetailPenyesuaianStok::create([
+                $detail = DetailPenyesuaianStok::create([
                     'penyesuaian_stok_id' => $penyesuaian->id,
                     'bahan_baku_id' => $bahanId,
+                    'jenis_persediaan' => $jenisPersediaan,
                     'jumlah_sistem' => $jumlahSistem,
                     'jumlah_fisik' => $jumlahFisik,
                     'jumlah_selisih' => $selisih,
@@ -87,31 +100,16 @@ class PenyesuaianStokController extends Controller
                     'catatan' => $request->catatan_item[$idx] ?? null,
                 ]);
 
-                // Update stok aktual
-                if ($stok) {
-                    $stok->jumlah_stok = $jumlahFisik;
-                    $stok->save();
-                } else {
-                    StokBahanBaku::create([
-                        'bahan_baku_id' => $bahanId,
-                        'jumlah_stok' => $jumlahFisik,
-                        'terakhir_diperbarui' => now(),
-                    ]);
-                }
-
-                // Catat mutasi
-                MutasiStok::create([
-                    'bahan_baku_id' => $bahanId,
-                    'dibuat_oleh' => Auth::id(),
-                    'jenis_mutasi_stok_id' => $selisih > 0 ? 3 : 4, // 3=PENYESUAIAN_MASUK, 4=PENYESUAIAN_KELUAR
-                    'jumlah' => abs($selisih),
-                    'satuan_id' => $bahan->satuan_id ?? 1,
-                    'tanggal_mutasi' => now(),
-                    'jenis_stok' => 'OPERASIONAL',
-                    'referensi_id' => $penyesuaian->id,
-                    'catatan' => "Penyesuaian Stok: {$nomorPenyesuaian} | {$request->alasan}",
-                    'detail_penyesuaian_stok_id' => DetailPenyesuaianStok::where('penyesuaian_stok_id', $penyesuaian->id)->where('bahan_baku_id', $bahanId)->value('id'),
-                ]);
+                // Update saldo + buat mutasi penyesuaian secara atomic (kartu stok).
+                $stockService->adjustStock(
+                    $bahanId,
+                    (float) $jumlahFisik,
+                    "Penyesuaian Stok: {$nomorPenyesuaian} | {$request->alasan}",
+                    null,
+                    Auth::id(),
+                    ['detail_penyesuaian_stok_id' => $detail->id],
+                    $jenisPersediaan,
+                );
             }
 
             DB::commit();

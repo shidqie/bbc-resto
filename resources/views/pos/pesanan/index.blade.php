@@ -1,12 +1,14 @@
 @extends('layouts.pos')
 
+@php $isPelayan = auth()->user()->peran->nama_peran === 'Pelayan'; @endphp
+
 @section('content')
 {{-- ╔══════════════════════════════════════╗ --}}
 {{-- ║  BBC RESTO — POINT OF SALE (POS)     ║ --}}
 {{-- ╚══════════════════════════════════════╝ --}}
 <style>
   .pos-root        { font-family: 'Plus Jakarta Sans', sans-serif; }
-  .chip-active     { background:#0F2E23; color:#ffffff; border: 1px solid #0F2E23; }
+  .chip-active     { background:#0D3024; color:#ffffff; border: 1px solid #0D3024; }
   .chip-default    { background:#FFFFFF; color:#374151; border: 1px solid #E5E7EB; }
   .chip-default:hover { background:#F9FAFB; color:#111827; border-color:#D1D5DB; }
   .card-menu:hover { border-color:rgba(15,46,35,.35); box-shadow:0 8px 24px rgba(15,46,35,.08); transform: translateY(-2px); }
@@ -16,7 +18,7 @@
 function posSystemData() {
   return {
     // View state
-    leftView: '{{ in_array(request("view"), ["open_bills", "pesanan_belum_dibayar"]) ? "open_bills" : (request("view", "menu")) }}',
+    leftView: '{{ $isPelayan ? "open_bills" : (in_array(request("view"), ["open_bills", "pesanan_belum_dibayar"]) ? "open_bills" : (request("view", "menu"))) }}',
     activeCategory: 'semua',
     searchQuery: '',
     tableSearch: '',
@@ -34,9 +36,15 @@ function posSystemData() {
     mejasList: @json($mejas ?? []),
     showTableDropdown: false,
 
+    // Real-time table status polling
+    tableStatusPolling: null,
+    mejaStatusMap: {}, // meja_id -> { has_active_order, active_order, kot }
+
     // Modals Detail & Void & Cetak Struk
     selectedTrxDetail: null,
     showTrxDetailModal: false,
+    showCheckerModal: false,
+    checkerBill: null,
     showVoidModal: false,
     trxToVoid: null,
     alasanVoidInput: 'Salah Input Menu',
@@ -72,7 +80,7 @@ function posSystemData() {
     },
     async executePrintSelection() {
       if (!this.selectedPrintOptions.length) {
-        return Swal.fire({ icon: 'warning', title: 'Pilih Struk', text: 'Pilih minimal 1 jenis struk yang akan dicetak!', confirmButtonColor: '#0F2E23' });
+        return Swal.fire({ icon: 'warning', title: 'Pilih Struk', text: 'Pilih minimal 1 jenis struk yang akan dicetak!', confirmButtonColor: '#0D3024' });
       }
       
       const targetId = this.savedPesananId || this.cetakStrukTargetId;
@@ -194,12 +202,12 @@ function posSystemData() {
             found.status = 'void';
             if (found.pembayaran) found.pembayaran.status = 'void';
           }
-          Swal.fire({ icon: 'success', title: 'Transaksi Dibatalkan (Void)!', text: data.message, confirmButtonColor: '#0F2E23' });
+          Swal.fire({ icon: 'success', title: 'Transaksi Dibatalkan (Void)!', text: data.message, confirmButtonColor: '#0D3024' });
         } else {
-          Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Gagal void transaksi', confirmButtonColor: '#0F2E23' });
+          Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Gagal void transaksi', confirmButtonColor: '#0D3024' });
         }
       } catch(e) {
-        Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Terjadi kesalahan jaringan.', confirmButtonColor: '#0F2E23' });
+        Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Terjadi kesalahan jaringan.', confirmButtonColor: '#0D3024' });
       } finally {
         this.isSubmitting = false;
       }
@@ -366,7 +374,7 @@ function posSystemData() {
           text: nomorMeja + ' masih memiliki tagihan aktif yang belum dibayar. Lanjutkan ke pembayaran?',
           icon: 'warning',
           showCancelButton: true,
-          confirmButtonColor: '#0F2E23',
+          confirmButtonColor: '#0D3024',
           confirmButtonText: 'Bayar Sekarang',
           cancelButtonText: 'Batal'
         }).then(res => {
@@ -408,18 +416,18 @@ function posSystemData() {
         if (res.ok && data.success) {
           window.location.reload();
         } else {
-          Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Gagal mengubah status ketersediaan menu', confirmButtonColor: '#0F2E23' });
+          Swal.fire({ icon: 'error', title: 'Gagal', text: data.message || 'Gagal mengubah status ketersediaan menu', confirmButtonColor: '#0D3024' });
         }
       } catch(e) {
-        Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Terjadi kesalahan koneksi internet / server.', confirmButtonColor: '#0F2E23' });
+        Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Terjadi kesalahan koneksi internet / server.', confirmButtonColor: '#0D3024' });
       }
     },
 
     // ── Submit Order ────────────────────────────────
     async submitOrder(action) {
-      if (!this.selectedTable) return Swal.fire({ icon: 'warning', title: 'Pilih Meja', text: 'Mohon pilih nomor meja terlebih dahulu!', confirmButtonColor: '#0F2E23' });
-      if (!this.customerName.trim()) return Swal.fire({ icon: 'warning', title: 'Nama Konsumen Kosong', text: 'Mohon isi nama konsumen terlebih dahulu!', confirmButtonColor: '#0F2E23' });
-      if (!this.cart.length) return Swal.fire({ icon: 'warning', title: 'Keranjang Kosong', text: 'Keranjang belanjaan masih kosong!', confirmButtonColor: '#0F2E23' });
+      if (!this.selectedTable) return Swal.fire({ icon: 'warning', title: 'Pilih Meja', text: 'Mohon pilih nomor meja terlebih dahulu!', confirmButtonColor: '#0D3024' });
+      if (!this.customerName.trim()) return Swal.fire({ icon: 'warning', title: 'Nama Konsumen Kosong', text: 'Mohon isi nama konsumen terlebih dahulu!', confirmButtonColor: '#0D3024' });
+      if (!this.cart.length) return Swal.fire({ icon: 'warning', title: 'Keranjang Kosong', text: 'Keranjang belanjaan masih kosong!', confirmButtonColor: '#0D3024' });
 
       this.isSubmitting = true;
       try {
@@ -480,8 +488,8 @@ function posSystemData() {
             this.selectedTable = null;
             this.selectedTableLabel = '';
 
-        } else { Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: data.message || 'Gagal menyimpan pesanan', confirmButtonColor: '#0F2E23' }); }
-      } catch(e) { Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Terjadi kesalahan jaringan.', confirmButtonColor: '#0F2E23' }); }
+        } else { Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: data.message || 'Gagal menyimpan pesanan', confirmButtonColor: '#0D3024' }); }
+      } catch(e) { Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Terjadi kesalahan jaringan.', confirmButtonColor: '#0D3024' }); }
       finally { this.isSubmitting = false; }
     },
 
@@ -493,23 +501,88 @@ function posSystemData() {
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                // Update local state
+                // Update local state (openBills + checker modal + mejaStatusMap)
                 const bill = this.openBills.find(b => b.id === billId);
                 if (bill && bill.items) {
                     const item = bill.items.find(i => i.id === itemId);
                     if (item) {
-                        item.catatan = data.catatan;
+                        item.status_item = data.status_item;
                     }
                 }
+                if (this.checkerBill && this.checkerBill.items) {
+                    const cItem = this.checkerBill.items.find(i => i.id === itemId);
+                    if (cItem) {
+                        cItem.status_item = data.status_item;
+                    }
+                }
+                Object.values(this.mejaStatusMap).forEach(m => {
+                    if (m.active_order && m.active_order.items) {
+                        const item = m.active_order.items.find(i => i.id === itemId);
+                        if (item) item.status_item = data.status_item;
+                    }
+                });
             }
         } catch(e) {
             console.error('Toggle sajian error:', e);
         }
     },
 
+    openChecker(bill) {
+        this.checkerBill = bill;
+        this.showCheckerModal = true;
+    },
+
     proceedToCheckout(bill) {
         if (!bill.items || bill.items.length === 0) return;
         window.location.href = '/pos/dinein/meja/' + bill.id + '/checkout';
+    },
+
+    // ── Real-time Table Status Polling ─────────────────
+    startTableStatusPolling() {
+        if (this.tableStatusPolling) clearInterval(this.tableStatusPolling);
+        this.fetchTableStatus();
+        this.tableStatusPolling = setInterval(() => this.fetchTableStatus(), 5000);
+    },
+
+    async fetchTableStatus() {
+        try {
+            const res = await fetch('{{ route("pos.dinein.table-status") }}');
+            const data = await res.json();
+            if (data.success && data.mejas) {
+                this.mejaStatusMap = {};
+                this.openBills = [];
+                data.mejas.forEach(m => {
+                    this.mejaStatusMap[m.id] = m;
+                    if (m.has_active_order && m.active_order) {
+                        this.openBills.push(m.active_order);
+                    }
+                });
+                // Update mejasList status
+                this.mejasList = this.mejasList.map(m => {
+                    const status = this.mejaStatusMap[m.id];
+                    if (status) {
+                        return { ...m, status: status.has_active_order ? 'terisi' : 'kosong' };
+                    }
+                    return m;
+                });
+            }
+        } catch (e) {
+            console.error('Failed to fetch table status:', e);
+        }
+    },
+
+    stopTableStatusPolling() {
+        if (this.tableStatusPolling) clearInterval(this.tableStatusPolling);
+    },
+
+    getKotStatusLabel(kotStatusId) {
+        const labels = { 1: 'Menunggu', 2: 'Dimasak', 3: 'Selesai' };
+        return labels[kotStatusId] || 'Unknown';
+    },
+
+    getKotStatusClass(kotStatusId) {
+        const classes = { 1: 'bg-neutral-100 text-neutral-700 border-neutral-300', 2: 'bg-amber-100 text-amber-800 border-amber-300', 3: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+        return classes[kotStatusId] || 'bg-neutral-100 text-neutral-700 border-neutral-300';
     }
   };
 }
@@ -522,7 +595,7 @@ document.addEventListener('alpine:init', () => {
 });
 </script>
 
-<div x-data="posSystem()" class="pos-root h-screen w-full flex overflow-hidden bg-[#f5f5f0] text-[#111827]">
+<div x-data="posSystem()" x-init="startTableStatusPolling()" class="pos-root h-screen w-full flex overflow-hidden bg-[#f5f5f0] text-[#111827]">
 
   {{-- ─────────────────────────────── LEFT PANEL ────────────────────────────── --}}
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -534,7 +607,7 @@ document.addEventListener('alpine:init', () => {
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {{-- Brand Mark --}}
         <div class="shrink-0 flex items-center gap-2">
-          <h1 class="text-xl font-semibold text-neutral-900 flex items-center gap-2 tracking-tight">
+          <h1 class="text-2xl font-bold text-neutral-900 flex items-center gap-2 tracking-tight">
               Point of Sale
           </h1>
         </div>
@@ -542,10 +615,12 @@ document.addEventListener('alpine:init', () => {
         {{-- TAB UTAMA (Katalog Menu, List Pesanan, Riwayat, Meja) --}}
         <x-ui.tab-list align="right">
           {{-- Tab 1: Katalog Menu --}}
+          @if(!$isPelayan)
           <x-ui.tab @click="leftView = 'menu'"
                     x-bind:class="leftView === 'menu' ? 'border-gray-900 text-gray-900 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'">
             Katalog Menu
           </x-ui.tab>
+          @endif
 
           {{-- Tab 2: List Pesanan Dine In --}}
           <x-ui.tab @click="leftView = 'open_bills'"
@@ -553,7 +628,7 @@ document.addEventListener('alpine:init', () => {
             <span class="inline-flex items-center gap-2">
               <span>List Pesanan Dine In</span>
               {{-- Badge Angka (Pill) --}}
-              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-semibold transition-colors"
+              <span class="px-1.5 py-0.5 rounded-full text-xs font-semibold transition-colors"
                     x-bind:class="leftView === 'open_bills' ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500'"
                     x-text="openBills.length"></span>
             </span>
@@ -581,19 +656,19 @@ document.addEventListener('alpine:init', () => {
           <x-heroicon-o-magnifying-glass class="w-4 h-4 absolute left-3 top-2.5 text-gray-400 pointer-events-none" style="width: 16px; height: 16px;" />
           <template x-if="leftView === 'menu'">
             <input x-model="searchQuery" type="text" placeholder="Cari menu…"
-                   class="w-full h-9 pl-9 pr-7 text-xs font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
+                   class="w-full h-9 pl-9 pr-7 text-sm font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
           </template>
           <template x-if="leftView === 'meja'">
             <input x-model="tableSearch" type="text" placeholder="Cari meja…"
-                   class="w-full h-9 pl-9 pr-7 text-xs font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
+                   class="w-full h-9 pl-9 pr-7 text-sm font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
           </template>
           <template x-if="leftView === 'open_bills'">
             <input x-model="openBillSearch" type="text" placeholder="Cari pesanan…"
-                   class="w-full h-9 pl-9 pr-7 text-xs font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
+                   class="w-full h-9 pl-9 pr-7 text-sm font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
           </template>
           <template x-if="leftView === 'riwayat'">
             <input x-model="riwayatSearch" type="text" placeholder="Cari riwayat (order / pelanggan)…"
-                   class="w-full h-9 pl-9 pr-7 text-xs font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
+                   class="w-full h-9 pl-9 pr-7 text-sm font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
           </template>
           <button x-show="(leftView === 'menu' && searchQuery) || (leftView === 'meja' && tableSearch) || (leftView === 'open_bills' && openBillSearch) || (leftView === 'riwayat' && riwayatSearch)"
                   @click="searchQuery = ''; tableSearch = ''; openBillSearch = ''; riwayatSearch = ''"
@@ -605,14 +680,14 @@ document.addEventListener('alpine:init', () => {
           <div x-show="leftView === 'menu'" class="flex overflow-x-auto no-scrollbar gap-2">
             <button @click="activeCategory = 'semua'"
                     :class="activeCategory === 'semua' ? 'chip-active shadow-xs' : 'chip-default'"
-                    class="shrink-0 inline-flex items-center gap-1.5 px-4 h-9 rounded-3xl text-xs font-extrabold transition-all hover:scale-[1.02]">
+                    class="shrink-0 inline-flex items-center gap-1.5 px-4 h-9 rounded-xl text-xs font-extrabold transition-all hover:scale-[1.02]">
               <x-heroicon-o-sparkles class="w-4 h-4 shrink-0" style="width: 15px; height: 15px;" />
               <span>Semua Menu</span>
             </button>
             @foreach($kategoris as $kategori)
             <button @click="activeCategory = '{{ $kategori->id }}'"
                     :class="activeCategory === '{{ $kategori->id }}' ? 'chip-active shadow-xs' : 'chip-default'"
-                    class="shrink-0 inline-flex items-center px-4 h-9 rounded-3xl text-xs font-extrabold whitespace-nowrap transition-all hover:scale-[1.02]">
+                    class="shrink-0 inline-flex items-center px-4 h-9 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all hover:scale-[1.02]">
               {{ $kategori->nama_kategori }}
             </button>
             @endforeach
@@ -621,13 +696,13 @@ document.addEventListener('alpine:init', () => {
           <div x-show="leftView === 'meja'" class="flex items-center gap-2 overflow-x-auto no-scrollbar">
             <span class="text-xs text-gray-500 font-bold mr-1 shrink-0">Filter Meja:</span>
             <button @click="tableFilter = 'semua'" :class="tableFilter === 'semua' ? 'chip-active shadow-xs' : 'chip-default'"
-                    class="inline-flex items-center px-3.5 h-9 rounded-3xl text-xs font-extrabold transition-all shrink-0">Semua</button>
-            <button @click="tableFilter = 'kosong'" :class="tableFilter === 'kosong' ? 'bg-[#0F2E23] text-white font-extrabold' : 'bg-white text-emerald-900 border border-emerald-200 font-bold'"
-                    class="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-3xl text-xs transition-all shrink-0">
+                    class="inline-flex items-center px-3.5 h-9 rounded-xl text-xs font-extrabold transition-all shrink-0">Semua</button>
+            <button @click="tableFilter = 'kosong'" :class="tableFilter === 'kosong' ? 'bg-[#0D3024] text-white font-extrabold' : 'bg-white text-emerald-900 border border-emerald-200 font-bold'"
+                    class="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-xs transition-all shrink-0">
               <span class="w-2 h-2 rounded-full bg-emerald-500"></span>Kosong
             </button>
             <button @click="tableFilter = 'terisi'" :class="tableFilter === 'terisi' ? 'bg-amber-800 text-white font-extrabold' : 'bg-white text-amber-950 border border-amber-300 font-bold'"
-                    class="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-3xl text-xs transition-all shrink-0">
+                    class="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-xs transition-all shrink-0">
               <span class="w-2 h-2 rounded-full bg-amber-600"></span>Terisi
             </button>
           </div>
@@ -635,9 +710,9 @@ document.addEventListener('alpine:init', () => {
           <div x-show="leftView === 'open_bills'" class="flex items-center gap-2 overflow-x-auto no-scrollbar">
             <span class="text-xs text-gray-500 font-bold mr-1 shrink-0">Filter Tagihan:</span>
             <button @click="openBillFilter = 'semua'" :class="openBillFilter === 'semua' ? 'chip-active shadow-xs' : 'chip-default'"
-                    class="inline-flex items-center px-3.5 h-9 rounded-3xl text-xs font-extrabold transition-all shrink-0">Semua Tagihan</button>
+                    class="inline-flex items-center px-3.5 h-9 rounded-xl text-xs font-extrabold transition-all shrink-0">Semua Tagihan</button>
             <button @click="openBillFilter = 'menunggu_bayar'" :class="openBillFilter === 'menunggu_bayar' ? 'bg-amber-800 text-white font-extrabold' : 'bg-white text-amber-950 border border-amber-300 font-bold'"
-                    class="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-3xl text-xs transition-all shrink-0">
+                    class="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-xs transition-all shrink-0">
               <span class="w-2 h-2 rounded-full bg-amber-500"></span>Menunggu Bayar
             </button>
           </div>
@@ -645,24 +720,24 @@ document.addEventListener('alpine:init', () => {
           <div x-show="leftView === 'riwayat'" class="flex items-center gap-2 overflow-x-auto no-scrollbar">
             <button type="button" @click="riwayatDateQuick = 'today'"
                     :class="riwayatDateQuick === 'today' ? 'chip-active shadow-2xs' : 'chip-default'"
-                    class="px-3.5 h-9 rounded-3xl text-xs font-extrabold transition-all shrink-0">Hari Ini</button>
+                    class="px-3.5 h-9 rounded-xl text-xs font-extrabold transition-all shrink-0">Hari Ini</button>
             <button type="button" @click="riwayatDateQuick = 'yesterday'"
                     :class="riwayatDateQuick === 'yesterday' ? 'chip-active shadow-2xs' : 'chip-default'"
-                    class="px-3.5 h-9 rounded-3xl text-xs font-extrabold transition-all shrink-0">Kemarin</button>
+                    class="px-3.5 h-9 rounded-xl text-xs font-extrabold transition-all shrink-0">Kemarin</button>
             <button type="button" @click="riwayatDateQuick = 'last7'"
                     :class="riwayatDateQuick === 'last7' ? 'chip-active shadow-2xs' : 'chip-default'"
-                    class="px-3.5 h-9 rounded-3xl text-xs font-extrabold transition-all shrink-0">7 Hari Terakhir</button>
+                    class="px-3.5 h-9 rounded-xl text-xs font-extrabold transition-all shrink-0">7 Hari Terakhir</button>
             
             <div class="h-5 w-px bg-gray-300 mx-1 shrink-0"></div>
 
-            <select x-model="riwayatStatusFilter" class="h-9 px-3 text-xs font-bold rounded-3xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-[#0F2E23]">
+            <select x-model="riwayatStatusFilter" class="h-9 px-3 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-[#0D3024]">
               <option value="semua">Semua Status</option>
               <option value="lunas">Lunas</option>
               <option value="menunggu_pembayaran">Pending</option>
               <option value="void">Void / Batal</option>
             </select>
 
-            <select x-model="riwayatPayFilter" class="h-9 px-3 text-xs font-bold rounded-3xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-[#0F2E23]">
+            <select x-model="riwayatPayFilter" class="h-9 px-3 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-[#0D3024]">
               <option value="semua">Semua Bayar</option>
               <option value="cash">Tunai (Cash)</option>
               <option value="qris">Nontunai (QRIS)</option>
@@ -670,7 +745,7 @@ document.addEventListener('alpine:init', () => {
 
             <button type="button" @click="exportToCsv()"
                     title="Export CSV"
-                    class="h-9 px-3.5 rounded-3xl bg-[#0F2E23] hover:bg-[#0a1f17] text-white font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-2xs">
+                    class="h-9 px-3.5 rounded-xl bg-[#0D3024] hover:bg-[#0a1f17] text-white font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-2xs">
               <x-heroicon-o-arrow-down-tray class="w-3 h-3" />
               <span>Export CSV</span>
             </button>
@@ -681,10 +756,10 @@ document.addEventListener('alpine:init', () => {
       {{-- BARIS 2: Filter QR Scan Menu --}}
       <div x-show="leftView === 'qr'" class="flex items-center justify-between pt-1 pb-0.5">
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-          <button type="button" class="chip-active shadow-2xs px-3.5 h-8 rounded-3xl text-xs font-extrabold transition-all shrink-0">Semua Meja ({{ $mejas->count() }})</button>
+          <button type="button" class="chip-active shadow-2xs px-3.5 h-8 rounded-xl text-sm font-extrabold transition-all shrink-0">Semua Meja ({{ $mejas->count() }})</button>
         </div>
         <a href="{{ route('pos.dinein.print-qr') }}" target="_blank"
-           class="h-8 px-3.5 rounded-3xl bg-[#0F2E23] hover:bg-[#0a1f17] text-white font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-2xs">
+           class="h-8 px-3.5 rounded-xl bg-[#0D3024] hover:bg-[#0a1f17] text-white font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-2xs">
           <x-heroicon-o-printer class="w-3 h-3 text-emerald-400" />
           <span>Cetak Semua QR</span>
         </a>
@@ -701,7 +776,7 @@ document.addEventListener('alpine:init', () => {
              x-transition:enter-start="opacity-0 translate-y-1"
              x-transition:enter-end="opacity-100 translate-y-0"
              @if(!$isHabis) @click="addToCart({{ $menu->id }}, '{{ addslashes($menu->nama_menu) }}', {{ $menu->harga_jual }})" @endif
-             class="group cursor-pointer flex flex-col bg-white border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-gray-300 transition-all duration-300 rounded-[2.25rem] overflow-hidden {{ $isHabis ? 'opacity-50 grayscale pointer-events-none select-none' : '' }}">
+             class="group cursor-pointer flex flex-col bg-white border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-gray-300 transition-all duration-300 rounded-xl overflow-hidden {{ $isHabis ? 'opacity-50 grayscale pointer-events-none select-none' : '' }}">
 
           {{-- Thumbnail --}}
           <div class="relative w-full aspect-[4/3] bg-gray-50 border-b border-gray-100">
@@ -721,14 +796,14 @@ document.addEventListener('alpine:init', () => {
             @endif
 
             {{-- Category Label --}}
-            <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-gray-100">
+            <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-bold px-2.5 py-1 rounded-full border border-gray-100">
               {{ Str::limit($menu->kategori_menu->nama_kategori ?? 'Menu', 18) }}
             </span>
 
             {{-- Overlay Habis Badge --}}
             @if($isHabis)
             <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center">
-              <span class="bg-red-600 text-white text-[11px] font-black px-3 py-1 rounded-3xl shadow-md tracking-wider uppercase">
+              <span class="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-xl shadow-md tracking-wider uppercase">
                 HABIS
               </span>
             </div>
@@ -738,12 +813,12 @@ document.addEventListener('alpine:init', () => {
           {{-- Info --}}
           <div class="p-3.5 flex-1 flex flex-col justify-between gap-2">
             <div>
-              <p class="text-[14px] font-extrabold text-[#111827] leading-snug line-clamp-2">{{ $menu->nama_menu }}</p>
+              <p class="text-sm font-extrabold text-[#111827] leading-snug line-clamp-2">{{ $menu->nama_menu }}</p>
             </div>
             <div class="flex items-center justify-between mt-auto pt-1">
-              <span class="text-[15px] font-black text-[#0F2E23]">Rp {{ number_format($menu->harga_jual, 0, ',', '.') }}</span>
+              <span class="text-sm font-black text-[#0D3024]">Rp {{ number_format($menu->harga_jual, 0, ',', '.') }}</span>
               @if(!$isHabis)
-              <button type="button" class="w-7 h-7 rounded-full bg-[#0F2E23]/10 text-[#0F2E23] flex items-center justify-center hover:bg-[#0F2E23] hover:text-white transition-colors">
+              <button type="button" class="w-7 h-7 rounded-full bg-[#0D3024]/10 text-[#0D3024] flex items-center justify-center hover:bg-[#0D3024] hover:text-white transition-colors">
                 <x-heroicon-o-plus class="w-3 h-3" />
               </button>
               @endif
@@ -758,18 +833,18 @@ document.addEventListener('alpine:init', () => {
     <div x-show="leftView === 'meja'" class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0]">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h2 class="text-base font-extrabold text-[#0F2E23]">Manajemen Meja Resto</h2>
+          <h2 class="text-base font-extrabold text-[#0D3024]">Manajemen Meja Resto</h2>
           <p class="text-xs text-gray-500 font-medium">Pilih meja untuk membuat pesanan baru atau melihat tagihan aktif</p>
         </div>
       </div>
 
-      <div class="bg-white border border-gray-200/80 rounded-[2.25rem] shadow-xs overflow-hidden">
+      <div class="bg-white border border-gray-200/80 rounded-xl shadow-xs overflow-hidden">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-gray-50/50 border-b border-gray-100">
-              <th class="py-4 px-5 text-xs font-extrabold text-gray-500 uppercase tracking-wider w-1/3">No. Meja</th>
-              <th class="py-4 px-5 text-xs font-extrabold text-gray-500 uppercase tracking-wider w-1/3">Status Ketersediaan</th>
-              <th class="py-4 px-5 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-right w-1/3">Aksi Kasir</th>
+              <th class="py-4 px-5 text-sm font-extrabold text-gray-500 uppercase tracking-wider w-1/3">No. Meja</th>
+              <th class="py-4 px-5 text-sm font-extrabold text-gray-500 uppercase tracking-wider w-1/3">Status Meja / KOT</th>
+              <th class="py-4 px-5 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-right w-1/3">Aksi Kasir</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -789,31 +864,48 @@ document.addEventListener('alpine:init', () => {
                   </div>
                   <div>
                     <span class="text-sm font-black text-slate-900 block leading-tight">{{ $meja->nomor_meja }}</span>
-                    <span class="text-[10px] font-bold text-gray-400">Kapasitas: {{ $meja->kapasitas ?? 4 }} Orang</span>
+                    <span class="text-xs font-bold text-gray-400">Kapasitas: {{ $meja->kapasitas ?? 4 }} Orang</span>
                   </div>
                 </div>
               </td>
               
               {{-- Status --}}
               <td class="py-4 px-5">
-                <span class="px-3 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-wider border inline-flex items-center gap-1.5 {{ $meja->status === 'kosong' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-amber-100 text-amber-900 border-amber-300' }}">
-                  @if($meja->status === 'kosong')
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Kosong & Tersedia
-                  @else
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span> Sedang Terisi
-                  @endif
-                </span>
+                <div class="space-y-1.5">
+                  <span class="px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider border inline-flex items-center gap-1.5 {{ $meja->status === 'kosong' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-amber-100 text-amber-900 border-amber-300' }}">
+                    @if($meja->status === 'kosong')
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Kosong & Tersedia
+                    @else
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span> Sedang Terisi
+                    @endif
+                  </span>
+                  {{-- KOT Status from polling --}}
+                  <template x-if="mejaStatusMap[{{ $meja->id }}] && mejaStatusMap[{{ $meja->id }}].kot">
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1"
+                          :class="getKotStatusClass(mejaStatusMap[{{ $meja->id }}].kot.status_tiket_dapur_id)">
+                      <x-heroicon-o-fire class="w-3 h-3" />
+                      <span x-text="getKotStatusLabel(mejaStatusMap[{{ $meja->id }}].kot.status_tiket_dapur_id)"></span>
+                      <span class="mono text-xs bg-white/50 px-1.5 rounded" x-text="mejaStatusMap[{{ $meja->id }}].kot.nomor_tiket"></span>
+                    </span>
+                  </template>
+                  <template x-if="mejaStatusMap[{{ $meja->id }}] && !mejaStatusMap[{{ $meja->id }}].kot && mejaStatusMap[{{ $meja->id }}].has_active_order">
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1 bg-blue-50 text-blue-800 border-blue-200">
+                      <x-heroicon-o-clock class="w-3 h-3" />
+                      KOT Menunggu
+                    </span>
+                  </template>
+                </div>
               </td>
               
               {{-- Aksi --}}
               <td class="py-4 px-5 text-right flex items-center justify-end gap-2 h-full">
                 @if($meja->status === 'kosong')
                   <button type="button" @click="selectTable({{ $meja->id }}, '{{ addslashes($meja->nomor_meja) }}')"
-                          class="px-4 py-2 rounded-3xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5 min-w-[120px] justify-center bg-[#0F2E23] hover:bg-[#0a1f17] text-white cursor-pointer active:scale-95">
+                          class="px-4 py-2 rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5 min-w-[120px] justify-center bg-[#0D3024] hover:bg-[#0a1f17] text-white cursor-pointer active:scale-95">
                     <span x-text="selectedTable == {{ $meja->id }} ? '✓ Terpilih' : 'Pilih Meja'"></span>
                   </button>
                 @else
-                  <span class="px-4 py-2 rounded-3xl text-xs font-black bg-gray-50 text-gray-400 border border-gray-200 cursor-not-allowed flex items-center justify-center gap-1.5 min-w-[120px]">
+                  <span class="px-4 py-2 rounded-xl text-xs font-black bg-gray-50 text-gray-400 border border-gray-200 cursor-not-allowed flex items-center justify-center gap-1.5 min-w-[120px]">
                     <x-heroicon-s-lock-closed class="w-3.5 h-3.5 opacity-70" />
                     <span>Terisi</span>
                   </span>
@@ -825,7 +917,7 @@ document.addEventListener('alpine:init', () => {
                   @method('PATCH')
                   <button type="button" 
                           @click="confirmClearTable({{ $meja->id }}, '{{ addslashes($meja->nomor_meja) }}')"
-                          class="px-3 py-2 rounded-3xl text-[11px] font-black text-amber-900 bg-amber-100/90 border border-amber-300 hover:bg-amber-200 transition-colors flex items-center justify-center gap-1.5 shadow-xs">
+                          class="px-3 py-2 rounded-xl text-xs font-black text-amber-900 bg-amber-100/90 border border-amber-300 hover:bg-amber-200 transition-colors flex items-center justify-center gap-1.5 shadow-xs">
                     <x-heroicon-s-x-circle class="w-3.5 h-3.5 text-amber-700" />
                     <span>Kosongkan Meja</span>
                   </button>
@@ -844,19 +936,19 @@ document.addEventListener('alpine:init', () => {
     <div x-show="leftView === 'open_bills'" class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0]">
 
       {{-- Header strip --}}
-      <div class="flex items-center justify-between mb-4 bg-white border border-gray-200/80 rounded-[2.25rem] px-5 py-3.5 shadow-xs">
+      <div class="flex items-center justify-between mb-4 bg-white border border-gray-200/80 rounded-xl px-5 py-3.5 shadow-xs">
         <div>
-          <p class="text-[16px] font-extrabold text-[#0F2E23]">List Pesanan Dine In</p>
-          <p class="text-[12px] text-gray-500 mt-0.5">Daftar pesanan aktif konsumen yang belum diselesaikan pembayarannya di meja</p>
+          <p class="text-base font-extrabold text-[#0D3024]">List Pesanan Dine In</p>
+          <p class="text-xs text-gray-500 mt-0.5">Daftar pesanan aktif konsumen yang belum diselesaikan pembayarannya di meja</p>
         </div>
-        <span class="mono text-[12px] text-gray-500">
-          <span class="font-black text-[#0F2E23]" x-text="openBills.length"></span> Pesanan Aktif
+        <span class="mono text-xs text-gray-500">
+          <span class="font-black text-[#0D3024]" x-text="openBills.length"></span> Pesanan Aktif
         </span>
       </div>
 
       {{-- Empty state --}}
       <template x-if="openBills.length === 0">
-        <div class="bg-white rounded-[2.25rem] border border-gray-200/80 p-12 text-center shadow-xs max-w-md mx-auto my-8">
+        <div class="bg-white rounded-xl border border-gray-200/80 p-12 text-center shadow-xs max-w-md mx-auto my-8">
           <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-2xl">
             <x-heroicon-o-check-circle class="w-5 h-5" />
           </div>
@@ -867,17 +959,17 @@ document.addEventListener('alpine:init', () => {
 
       {{-- List Open Bills --}}
       {{-- List Open Bills Table --}}
-      <div x-show="openBills.length > 0" class="bg-white border border-gray-200/80 rounded-[2.25rem] shadow-xs overflow-x-auto">
+      <div x-show="openBills.length > 0" class="bg-white border border-gray-200/80 rounded-xl shadow-xs overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[700px]">
           <thead>
             <tr class="bg-gray-50/50 border-b border-gray-100">
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-center w-12">No</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">Hari & Tanggal</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">Order ID / Pelanggan</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">Meja</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">Total Tagihan</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-center">Status Pembayaran</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-center w-12">No</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Hari & Tanggal</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Order ID / Pelanggan</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Meja</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Total Tagihan</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-center">Status Pesanan / KOT</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -889,7 +981,7 @@ document.addEventListener('alpine:init', () => {
                 
                 {{-- Hari Tanggal --}}
                 <td class="py-4 px-4">
-                  <div class="text-[11px] font-bold text-slate-700 leading-tight">
+                  <div class="text-xs font-bold text-slate-700 leading-tight">
                     <span class="block" x-text="bill.dibuat_pada ? bill.dibuat_pada.substring(0,10) : '-'"></span>
                     <span class="text-gray-400 font-medium" x-text="bill.dibuat_pada ? bill.dibuat_pada.substring(11,16) + ' WIB' : '-'"></span>
                   </div>
@@ -899,13 +991,13 @@ document.addEventListener('alpine:init', () => {
                 <td class="py-4 px-4">
                   <div class="flex flex-col">
                     <span class="font-black text-sm text-slate-900 leading-snug" x-text="bill.nama_konsumen"></span>
-                    <span class="text-[11px] font-mono text-gray-400 font-bold mt-0.5" x-text="'#' + (bill.nomor_pesanan || ('DIN-' + bill.id))"></span>
+                    <span class="text-xs font-mono text-gray-400 font-bold mt-0.5" x-text="'#' + (bill.nomor_pesanan || ('DIN-' + bill.id))"></span>
                   </div>
                 </td>
                 
                 {{-- Meja --}}
                 <td class="py-4 px-4">
-                  <span class="px-3 py-1.5 bg-[#0F2E23]/5 text-[#0F2E23] font-black text-xs rounded-2xl shadow-2xs inline-flex items-center gap-1.5 border border-[#0F2E23]/20 whitespace-nowrap">
+                  <span class="px-3 py-1.5 bg-[#0D3024]/5 text-[#0D3024] font-black text-xs rounded-lg shadow-2xs inline-flex items-center gap-1.5 border border-[#0D3024]/20 whitespace-nowrap">
                     <x-heroicon-s-users class="w-3.5 h-3.5 opacity-80" />
                     <span x-text="bill.meja ? (bill.meja.nomor_meja.startsWith('Meja') ? bill.meja.nomor_meja : 'Meja ' + bill.meja.nomor_meja) : 'Meja -'"></span>
                   </span>
@@ -913,44 +1005,67 @@ document.addEventListener('alpine:init', () => {
                 
                 {{-- Total Tagihan --}}
                 <td class="py-4 px-4">
-                  <span class="font-black text-base text-[#0F2E23]"
+                  <span class="font-black text-base text-[#0D3024]"
                         x-text="'Rp ' + formatPrice(bill.total_tagihan || (bill.items || []).reduce((s, i) => s + (i.subtotal || ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * (i.qty || 0))), 0))"></span>
                 </td>
                 
-                {{-- Status Pembayaran --}}
+                {{-- Status Pesanan / KOT --}}
                 <td class="py-4 px-4 text-center">
-                  <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-2xl font-extrabold text-[11px] whitespace-nowrap inline-block">
-                    Menunggu Bayar
-                  </span>
+                  <div class="flex flex-col items-center gap-1">
+                    <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg font-extrabold text-xs whitespace-nowrap inline-block">
+                      Menunggu Bayar
+                    </span>
+                    <template x-if="mejaStatusMap[bill.id] && mejaStatusMap[bill.id].kot">
+                      <span class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider border rounded-xl inline-block whitespace-nowrap"
+                            :class="getKotStatusClass(mejaStatusMap[bill.id].kot.status_tiket_dapur_id)">
+                        <x-heroicon-o-fire class="w-2.5 h-2.5 inline-block mr-0.5" />
+                        <span x-text="getKotStatusLabel(mejaStatusMap[bill.id].kot.status_tiket_dapur_id)"></span>
+                      </span>
+                    </template>
+                    <template x-if="mejaStatusMap[bill.id] && !mejaStatusMap[bill.id].kot">
+                      <span class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider border rounded-xl inline-block whitespace-nowrap bg-blue-50 text-blue-800 border-blue-200">
+                        <x-heroicon-o-clock class="w-2.5 h-2.5 inline-block mr-0.5" />
+                        KOT Menunggu
+                      </span>
+                    </template>
+                  </div>
                 </td>
                 
                 {{-- Action Buttons --}}
                 <td class="py-4 px-4 text-right">
                   <div class="flex items-center justify-end gap-1.5">
+                    <!-- Checker Meja (Sajikan) -->
+                    <button type="button" @click="openChecker(bill)"
+                            title="Checker Meja — cocokkan & sajikan pesanan"
+                            class="flex items-center justify-center p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl transition-all shadow-xs">
+                      <x-heroicon-o-clipboard-document-check class="w-4 h-4" />
+                    </button>
                     <!-- Struk Meja -->
                     <a :href="'/pos/dinein/pesanan/' + bill.id + '/print-meja'" target="_blank" 
                        title="Cetak Struk Meja" 
-                       class="flex items-center justify-center p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-3xl transition-all shadow-xs">
+                       class="flex items-center justify-center p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all shadow-xs">
                       <x-heroicon-o-document-text class="w-4 h-4" />
                     </a>
+                    @if(!$isPelayan)
                     <!-- Checker Dapur -->
                     <a :href="'/pos/dinein/pesanan/' + bill.id + '/print-dapur'" target="_blank" 
                        title="Cetak Checker Dapur" 
-                       class="flex items-center justify-center p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-3xl transition-all shadow-xs">
+                       class="flex items-center justify-center p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all shadow-xs">
                       <x-heroicon-o-sparkles class="w-4 h-4" />
                     </a>
                     <!-- Struk Konsumen -->
                     <a :href="'/pos/dinein/pesanan/' + bill.id + '/print-nota'" target="_blank" 
                        title="Cetak Struk Konsumen" 
-                       class="flex items-center justify-center p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-3xl transition-all shadow-xs">
+                       class="flex items-center justify-center p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all shadow-xs">
                       <x-heroicon-o-document-text class="w-4 h-4" />
                     </a>
                     <!-- Tombol Bayar -->
                     <button type="button" @click="proceedToCheckout(bill)"
-                            class="px-4 py-2 bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] text-white rounded-3xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5">
+                            class="px-4 py-2 bg-[#0D3024] hover:bg-[#0a1f17] active:scale-[0.99] text-white rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5">
                       <span>BAYAR</span>
                       <x-heroicon-o-chevron-right class="w-3 h-3" />
                     </button>
+                    @endif
                   </div>
                 </td>
                 
@@ -968,7 +1083,7 @@ document.addEventListener('alpine:init', () => {
       {{-- ── 2 SUMMARY CARDS: TOTAL TRANSAKSI & TOTAL PENDAPATAN ── --}}
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {{-- Card 1: Total Transaksi --}}
-        <div class="bg-white border border-gray-200/80 rounded-[2.25rem] p-4 shadow-2xs flex items-center justify-between">
+        <div class="bg-white border border-gray-200/80 rounded-xl p-4 shadow-2xs flex items-center justify-between">
           <div>
             <p class="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Total Transaksi</p>
             <p class="text-xl font-black text-slate-900 mt-1" x-text="filteredRiwayat.length + ' Transaksi'"></p>
@@ -979,10 +1094,10 @@ document.addEventListener('alpine:init', () => {
         </div>
 
         {{-- Card 2: Total Pendapatan --}}
-        <div class="bg-white border border-gray-200/80 rounded-[2.25rem] p-4 shadow-2xs flex items-center justify-between">
+        <div class="bg-white border border-gray-200/80 rounded-xl p-4 shadow-2xs flex items-center justify-between">
           <div>
             <p class="text-xs font-extrabold text-emerald-800 uppercase tracking-wider">Total Pendapatan</p>
-            <p class="text-xl font-black text-[#0F2E23] mt-1" x-text="'Rp ' + formatPrice(summaryOmzet)"></p>
+            <p class="text-xl font-black text-[#0D3024] mt-1" x-text="'Rp ' + formatPrice(summaryOmzet)"></p>
           </div>
           <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg">
             <x-heroicon-o-wallet class="w-5 h-5" />
@@ -993,14 +1108,14 @@ document.addEventListener('alpine:init', () => {
       {{-- Section Title --}}
       <div class="flex items-center justify-between pt-1">
         <div>
-          <h2 class="text-base font-extrabold text-[#0F2E23]">Daftar Riwayat Pesanan</h2>
+          <h2 class="text-base font-extrabold text-[#0D3024]">Daftar Riwayat Pesanan</h2>
           <p class="text-xs text-gray-500 font-medium">Riwayat transaksi pesanan lunas dan audit trail kasir</p>
         </div>
       </div>
 
       {{-- Empty state --}}
       <template x-if="filteredRiwayat.length === 0">
-        <div class="bg-white rounded-[2.25rem] border border-gray-200/80 p-12 text-center shadow-xs max-w-md mx-auto my-8">
+        <div class="bg-white rounded-xl border border-gray-200/80 p-12 text-center shadow-xs max-w-md mx-auto my-8">
           <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-xl">
             <x-heroicon-o-document-text class="w-5 h-5" />
           </div>
@@ -1010,11 +1125,11 @@ document.addEventListener('alpine:init', () => {
       </template>
 
       {{-- TABEL DATA RIWAYAT TRANSAKSI (MINIMALIST & CLEAN) --}}
-      <div x-show="filteredRiwayat.length > 0" class="bg-white border border-gray-200/90 rounded-[2.25rem] shadow-xs overflow-hidden">
+      <div x-show="filteredRiwayat.length > 0" class="bg-white border border-gray-200/90 rounded-xl shadow-xs overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-50/80 border-b border-gray-200/80 text-gray-500 font-extrabold uppercase text-[11px] tracking-wider">
+              <tr class="bg-slate-50/80 border-b border-gray-200/80 text-gray-500 font-extrabold uppercase text-sm tracking-wider">
                 <th class="py-3 px-4">No. Order</th>
                 <th class="py-3 px-4">Waktu</th>
                 <th class="py-3 px-4">Kasir</th>
@@ -1040,13 +1155,13 @@ document.addEventListener('alpine:init', () => {
                   </td>
 
                   {{-- Waktu --}}
-                  <td class="py-3.5 px-4 text-gray-500 text-[11px]">
+                  <td class="py-3.5 px-4 text-gray-500 text-sm">
                     <span class="block font-bold text-gray-800" x-text="trx.dibuat_pada ? (new Date(trx.dibuat_pada)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'"></span>
-                    <span class="text-[10px] text-gray-400" x-text="trx.dibuat_pada ? (new Date(trx.dibuat_pada)).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : ''"></span>
+                    <span class="text-xs text-gray-400" x-text="trx.dibuat_pada ? (new Date(trx.dibuat_pada)).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : ''"></span>
                   </td>
 
                   {{-- Kasir --}}
-                  <td class="py-3.5 px-4 text-xs font-bold text-gray-700">
+                  <td class="py-3.5 px-4 text-sm font-bold text-gray-700">
                     <span x-text="trx.kasir_name || 'Kasir'"></span>
                   </td>
 
@@ -1055,22 +1170,22 @@ document.addEventListener('alpine:init', () => {
 
                   {{-- Meja --}}
                   <td class="py-3.5 px-4">
-                    <span class="px-2.5 py-1 bg-slate-100 text-slate-800 font-extrabold text-[11px] rounded-3xl"
+                    <span class="px-2.5 py-1 bg-slate-100 text-slate-800 font-extrabold text-xs rounded-xl"
                           x-text="trx.meja ? (trx.meja.nomor_meja.startsWith('Meja') ? trx.meja.nomor_meja : 'Meja ' + trx.meja.nomor_meja) : 'Meja -'"></span>
                   </td>
 
                   {{-- Jumlah Item --}}
-                  <td class="py-3.5 px-4 text-xs font-bold text-gray-600">
+                  <td class="py-3.5 px-4 text-sm font-bold text-gray-600">
                     <span x-text="(trx.items ? trx.items.reduce((s, i) => s + i.qty, 0) : 0) + ' Item'"></span>
                   </td>
 
                   {{-- Total Tagihan --}}
-                  <td class="py-3.5 px-4 text-right font-black text-[#0F2E23] text-sm"
+                  <td class="py-3.5 px-4 text-right font-black text-[#0D3024] text-sm"
                       x-text="'Rp ' + formatPrice((trx.items || []).reduce((s, i) => s + ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * i.qty), 0))"></td>
 
                   {{-- Metode Bayar --}}
                   <td class="py-3.5 px-4">
-                    <span class="px-2.5 py-0.5 rounded-2xl font-extrabold text-[10px] uppercase tracking-wider"
+                    <span class="px-2.5 py-0.5 rounded-lg font-extrabold text-xs uppercase tracking-wider"
                           :class="(trx.metode_bayar && trx.metode_bayar.toLowerCase() === 'cash') ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-blue-50 text-blue-900 border border-blue-200'"
                           x-text="trx.metode_bayar ? trx.metode_bayar : 'LUNAS'"></span>
                   </td>
@@ -1078,17 +1193,17 @@ document.addEventListener('alpine:init', () => {
                   {{-- Status (Minimalist Dot) --}}
                   <td class="py-3.5 px-4 text-center">
                     <template x-if="trx.status === 'selesai' || trx.status === 5">
-                      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-extrabold text-[11px]">
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-extrabold text-xs">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>Lunas
                       </span>
                     </template>
                     <template x-if="trx.status === 'menunggu_pembayaran'">
-                      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-full font-extrabold text-[11px]">
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-full font-extrabold text-xs">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending
                       </span>
                     </template>
                     <template x-if="trx.status === 'dibatalkan' || trx.status === 'void'">
-                      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-red-50 text-red-800 border border-red-200 rounded-full font-extrabold text-[11px]">
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-red-50 text-red-800 border border-red-200 rounded-full font-extrabold text-xs">
                         <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>Batal
                       </span>
                     </template>
@@ -1099,7 +1214,7 @@ document.addEventListener('alpine:init', () => {
                     <div class="flex items-center justify-center gap-1">
                       <a :href="'/pos/dinein/receipts/' + trx.id" target="_blank"
                          title="Struk Nota"
-                         class="w-7 h-7 bg-slate-100 hover:bg-[#0F2E23] hover:text-white text-slate-700 rounded-full text-xs flex items-center justify-center transition-all">
+                         class="w-7 h-7 bg-slate-100 hover:bg-[#0D3024] hover:text-white text-slate-700 rounded-full text-xs flex items-center justify-center transition-all">
                         <x-heroicon-o-printer class="w-5 h-5" />
                       </a>
                       <button type="button" @click="openDetailModal(trx)"
@@ -1128,7 +1243,7 @@ document.addEventListener('alpine:init', () => {
     <div x-show="leftView === 'qr'" class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0] space-y-4">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-base font-extrabold text-[#0F2E23]">QR Scan Menu (Kartu Meja Digital)</h2>
+          <h2 class="text-base font-extrabold text-[#0D3024]">QR Scan Menu (Kartu Meja Digital)</h2>
           <p class="text-xs text-gray-500 font-medium">Kartu QR Code Meja untuk pemesanan mandiri oleh pelanggan Saung Babakan Cinta</p>
         </div>
       </div>
@@ -1143,8 +1258,8 @@ document.addEventListener('alpine:init', () => {
             $cleanNomorMeja = trim(preg_replace('/^meja\s*/i', '', $m->nomor_meja));
           @endphp
           
-          <div class="card-qr-stand w-full max-w-[300px] aspect-[1/1.55] rounded-[2.25rem] overflow-hidden shadow-xl border-4 border-emerald-500/30 flex flex-col justify-between p-5 relative text-white selection:bg-transparent"
-               style="background: linear-gradient(145deg, #0F2E23 0%, #164032 50%, #0A2219 100%);">
+          <div class="card-qr-stand w-full max-w-[300px] aspect-[1/1.55] rounded-xl overflow-hidden shadow-xl border-4 border-emerald-500/30 flex flex-col justify-between p-5 relative text-white selection:bg-transparent"
+               style="background: linear-gradient(145deg, #0D3024 0%, #164032 50%, #0A2219 100%);">
               
               <!-- Dark Overlay -->
               <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none"></div>
@@ -1161,7 +1276,7 @@ document.addEventListener('alpine:init', () => {
                       SCAN MENU
                   </h2>
                   <div class="pt-2">
-                      <span class="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-white border border-amber-400/40 text-[12px] font-extrabold shadow-sm">
+                      <span class="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-white border border-amber-400/40 text-xs font-extrabold shadow-sm">
                           <x-heroicon-o-users class="w-3 h-3 text-amber-400" /> Meja {{ $cleanNomorMeja }}
                       </span>
                   </div>
@@ -1169,8 +1284,8 @@ document.addEventListener('alpine:init', () => {
 
               <!-- QR Code Frame -->
               <div class="relative z-10 my-auto py-1 flex flex-col items-center">
-                  <div class="bg-white rounded-[2.25rem] p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center transform transition-transform hover:scale-[1.02]">
-                      <img src="{{ $qrApiUrl }}" alt="QR Code Meja {{ $m->nomor_meja }}" class="w-44 h-44 object-contain rounded-3xl">
+                  <div class="bg-white rounded-xl p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center transform transition-transform hover:scale-[1.02]">
+                      <img src="{{ $qrApiUrl }}" alt="QR Code Meja {{ $m->nomor_meja }}" class="w-44 h-44 object-contain rounded-xl">
                       <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <div class="w-11 h-11 rounded-full bg-white p-1 shadow-xl border-2 border-emerald-800 flex items-center justify-center overflow-hidden">
                               <img src="{{ $logoUrl }}" alt="Logo Saung" class="w-full h-full object-contain">
@@ -1178,8 +1293,8 @@ document.addEventListener('alpine:init', () => {
                       </div>
                   </div>
                   <div class="mt-3 text-center">
-                      <p class="text-[11px] font-bold text-white tracking-wide">Scan QR Code untuk melihat menu</p>
-                      <p class="text-[9px] font-medium text-amber-300 mt-0.5">Arahkan kamera HP Anda memesan langsung</p>
+                      <p class="text-xs font-bold text-white tracking-wide">Scan QR Code untuk melihat menu</p>
+                      <p class="text-xs font-medium text-amber-300 mt-0.5">Arahkan kamera HP Anda memesan langsung</p>
                   </div>
               </div>
 
@@ -1189,14 +1304,14 @@ document.addEventListener('alpine:init', () => {
                       <img src="{{ $logoUrl }}" alt="Logo Saung" class="w-full h-full object-contain">
                   </div>
                   <div class="text-left">
-                      <h3 class="text-[11px] font-black tracking-wider text-white uppercase leading-none">SAUNG BABAKAN CINTA</h3>
-                      <span class="text-[8px] font-semibold text-amber-300 block leading-tight mt-0.5">Rumah Makan Khas Sunda</span>
+                      <h3 class="text-xs font-black tracking-wider text-white uppercase leading-none">SAUNG BABAKAN CINTA</h3>
+                      <span class="text-xs font-semibold text-amber-300 block leading-tight mt-0.5">Rumah Makan Khas Sunda</span>
                   </div>
               </div>
 
           </div>
         @empty
-          <div class="col-span-full py-16 text-center text-gray-400 bg-white rounded-[2.25rem] border border-gray-200 w-full shadow-xs">
+          <div class="col-span-full py-16 text-center text-gray-400 bg-white rounded-xl border border-gray-200 w-full shadow-xs">
               <x-heroicon-o-qr-code class="w-10 h-10 mb-2 text-gray-300" />
               <p class="text-sm font-semibold text-gray-700">Belum ada data meja.</p>
           </div>
@@ -1215,14 +1330,14 @@ document.addEventListener('alpine:init', () => {
         {{-- Header & Customer Input --}}
         <div class="p-5 border-b border-gray-100 space-y-3 shrink-0">
           <div class="flex items-center justify-between">
-            <h2 class="text-base font-extrabold text-[#0F2E23]">Detail Pesanan</h2>
+            <h2 class="text-base font-extrabold text-[#0D3024]">Detail Pesanan</h2>
           </div>
 
           <div class="space-y-2 pt-1">
             {{-- Input 1: Pilih Meja (Custom Dropdown) --}}
             <div class="relative" @click.outside="showTableDropdown = false">
               <button type="button" @click.stop="showTableDropdown = !showTableDropdown"
-                      class="w-full h-10 px-3.5 text-xs font-medium rounded-3xl border border-gray-200 bg-gray-50/50 hover:bg-white focus:border-[#0F2E23] focus:ring-2 focus:ring-[#0F2E23]/10 outline-none transition text-left flex items-center justify-between cursor-pointer">
+                      class="w-full h-10 px-3.5 text-xs font-medium rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-white focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none transition text-left flex items-center justify-between cursor-pointer">
                 <span :class="selectedTable ? 'text-gray-900 font-extrabold' : 'text-gray-400'"
                       x-text="selectedTableLabel ? (selectedTableLabel.startsWith('Meja') ? selectedTableLabel : 'Meja ' + selectedTableLabel) : 'Pilih Meja Resto *'"></span>
                 <x-heroicon-o-chevron-down class="w-3 h-3 text-gray-400 transition-transform" x-bind:class="showTableDropdown ? 'rotate-180' : ''" />
@@ -1230,11 +1345,11 @@ document.addEventListener('alpine:init', () => {
 
               {{-- Custom Dropdown Panel --}}
               <div x-show="showTableDropdown" x-transition.opacity style="display: none;"
-                   class="absolute left-0 right-0 top-11 bg-white rounded-[2.25rem] border border-gray-200/90 shadow-2xl z-50 p-2 space-y-1 max-h-60 overflow-y-auto">
+                   class="absolute left-0 right-0 top-11 bg-white rounded-xl border border-gray-200/90 shadow-2xl z-50 p-2 space-y-1 max-h-60 overflow-y-auto">
                 
                 <div class="px-2 py-1 flex items-center justify-between border-b border-gray-100 mb-1">
-                  <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">Pilih Meja Resto</span>
-                  <button type="button" @click.stop="leftView = 'meja'; showTableDropdown = false" class="text-[10px] font-bold text-emerald-800 hover:underline">
+                  <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Pilih Meja Resto</span>
+                  <button type="button" @click.stop="leftView = 'meja'; showTableDropdown = false" class="text-sm font-bold text-emerald-800 hover:underline">
                     Denah Meja ➔
                   </button>
                 </div>
@@ -1243,10 +1358,10 @@ document.addEventListener('alpine:init', () => {
                   <button type="button"
                           @click.stop="if (m.status === 'kosong') { selectTable(m.id, m.nomor_meja); showTableDropdown = false }"
                           :disabled="m.status !== 'kosong'"
-                          :class="m.status !== 'kosong' ? 'opacity-40 bg-gray-100/70 text-gray-400 cursor-not-allowed border-transparent' : (selectedTable == m.id ? 'bg-emerald-50 text-[#0F2E23] font-black border-emerald-200 cursor-pointer' : 'hover:bg-gray-50 text-gray-700 font-bold border-transparent cursor-pointer')"
-                          class="w-full text-left px-3 py-2 text-xs rounded-3xl border flex items-center justify-between transition-all">
+                          :class="m.status !== 'kosong' ? 'opacity-40 bg-gray-100/70 text-gray-400 cursor-not-allowed border-transparent' : (selectedTable == m.id ? 'bg-emerald-50 text-[#0D3024] font-black border-emerald-200 cursor-pointer' : 'hover:bg-gray-50 text-gray-700 font-bold border-transparent cursor-pointer')"
+                          class="w-full text-left px-3 py-2 text-xs rounded-xl border flex items-center justify-between transition-all">
                     <span x-text="m.nomor_meja.startsWith('Meja') ? m.nomor_meja : 'Meja ' + m.nomor_meja"></span>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                    <span class="text-xs px-2 py-0.5 rounded-full font-bold"
                           :class="m.status === 'kosong' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900 border border-amber-200'"
                           x-text="m.status === 'kosong' ? 'Kosong' : 'Terisi (Penuh)'"></span>
                   </button>
@@ -1256,11 +1371,11 @@ document.addEventListener('alpine:init', () => {
 
             {{-- Input 2: Nama Pelanggan --}}
             <input type="text" x-model="customerName" placeholder="Nama Pelanggan / Konsumen *"
-                   class="w-full h-10 px-3.5 text-xs font-medium rounded-3xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0F2E23] focus:ring-2 focus:ring-[#0F2E23]/10 outline-none transition">
+                   class="w-full h-10 px-3.5 text-sm font-medium rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none transition">
 
             {{-- Input 3: No HP --}}
             <input type="text" x-model="customerPhone" placeholder="No. HP / Telepon (Opsional)"
-                   class="w-full h-10 px-3.5 text-xs font-medium rounded-3xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0F2E23] focus:ring-2 focus:ring-[#0F2E23]/10 outline-none transition">
+                   class="w-full h-10 px-3.5 text-sm font-medium rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none transition">
           </div>
         </div>
 
@@ -1272,7 +1387,7 @@ document.addEventListener('alpine:init', () => {
                 <x-heroicon-o-shopping-bag class="w-5 h-5" />
               </div>
               <p class="text-xs font-bold">Keranjang Masih Kosong</p>
-              <p class="text-[11px] text-gray-400 max-w-[200px]">Pilih menu makanan / minuman dari katalog di sebelah kiri.</p>
+              <p class="text-xs text-gray-400 max-w-[200px]">Pilih menu makanan / minuman dari katalog di sebelah kiri.</p>
             </div>
           </template>
 
@@ -1280,17 +1395,17 @@ document.addEventListener('alpine:init', () => {
             <div class="pt-3 first:pt-0 space-y-1.5">
               <div class="flex items-start justify-between gap-2">
                 <span class="font-extrabold text-sm text-gray-900 flex-1 leading-snug" x-text="item.nama"></span>
-                <span class="font-black text-sm text-[#0F2E23]" x-text="'Rp ' + formatPrice(item.harga * item.qty)"></span>
+                <span class="font-black text-sm text-[#0D3024]" x-text="'Rp ' + formatPrice(item.harga * item.qty)"></span>
               </div>
 
               <div class="flex items-center justify-between pt-1">
                 <input type="text" x-model="item.catatan" placeholder="Catatan khusus…"
-                       class="h-7 text-[11px] px-2.5 rounded-2xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0F2E23] outline-none w-44">
+                       class="h-7 text-sm px-2.5 rounded-lg border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0D3024] outline-none w-44">
 
-                <div class="flex items-center gap-1.5 bg-gray-100 p-1 rounded-3xl">
-                  <button @click="updateQty(index, -1)" class="w-6 h-6 rounded-full bg-white text-gray-700 font-extrabold text-xs flex items-center justify-center hover:bg-gray-200 transition-colors">-</button>
+                <div class="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+                  <button @click="updateQty(index, -1)" class="w-6 h-6 rounded-full bg-white text-gray-700 font-extrabold text-sm flex items-center justify-center hover:bg-gray-200 transition-colors">-</button>
                   <span class="w-6 text-center text-xs font-black text-gray-900" x-text="item.qty"></span>
-                  <button @click="addToCart(item.menu_id, item.nama, item.harga)" class="w-6 h-6 rounded-full bg-white text-gray-700 font-extrabold text-xs flex items-center justify-center hover:bg-gray-200 transition-colors">+</button>
+                  <button @click="addToCart(item.menu_id, item.nama, item.harga)" class="w-6 h-6 rounded-full bg-white text-gray-700 font-extrabold text-sm flex items-center justify-center hover:bg-gray-200 transition-colors">+</button>
                 </div>
               </div>
             </div>
@@ -1299,24 +1414,24 @@ document.addEventListener('alpine:init', () => {
 
         {{-- Bottom Summary & Action Bar --}}
         <div class="p-5 border-t border-gray-200/80 bg-gray-50/60 space-y-3 shrink-0">
-          <div class="space-y-1 text-xs font-medium text-gray-500">
+          <div class="space-y-1 text-sm font-medium text-gray-500">
             <div class="flex justify-between">
               <span>Total Item</span>
               <span class="font-bold text-gray-900" x-text="totalQty + ' Item'"></span>
             </div>
             <div class="flex justify-between text-sm pt-1 border-t border-gray-200/60">
               <span class="font-bold text-gray-700">Subtotal</span>
-              <span class="font-black text-base text-[#0F2E23]" x-text="'Rp ' + formatPrice(totalPrice)"></span>
+              <span class="font-black text-base text-[#0D3024]" x-text="'Rp ' + formatPrice(totalPrice)"></span>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-2 pt-1">
             <button type="button" @click.stop="submitOrder('simpan')" :disabled="isSubmitting"
-                    class="py-3.5 px-3 rounded-[2.25rem] border border-gray-300 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-xs transition-all shadow-2xs cursor-pointer">
+                    class="py-3.5 px-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-xs transition-all shadow-2xs cursor-pointer">
               SIMPAN
             </button>
             <button type="button" @click.stop="submitOrder('bayar')" :disabled="isSubmitting"
-                    class="py-3.5 px-3 rounded-[2.25rem] bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+                    class="py-3.5 px-3 rounded-xl bg-[#0D3024] hover:bg-[#0a1f17] active:scale-[0.99] text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
               <span>BAYAR</span>
               <x-heroicon-o-chevron-right class="w-3 h-3" />
             </button>
@@ -1331,19 +1446,19 @@ document.addEventListener('alpine:init', () => {
         {{-- Header Status Banner --}}
         <div class="p-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-white flex items-center justify-between shrink-0 shadow-2xs">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-full bg-[#0F2E23] text-emerald-400 flex items-center justify-center text-sm font-black shadow-xs ring-4 ring-emerald-500/10">
+            <div class="w-9 h-9 rounded-full bg-[#0D3024] text-emerald-400 flex items-center justify-center text-sm font-black shadow-xs ring-4 ring-emerald-500/10">
               <x-heroicon-o-check class="w-5 h-5" />
             </div>
             <div>
               <div class="flex items-center gap-1.5">
                 <h2 class="text-xs font-black text-slate-900 uppercase tracking-wider">PESANAN DISIMPAN</h2>
-                <span class="px-2 py-0.5 rounded-full bg-[#0F2E23] text-emerald-300 font-black text-[10px] tracking-wide" x-text="savedPesananObject ? ('#' + (savedPesananObject.nomor_pesanan || ('DIN-' + savedPesananObject.id))) : ''"></span>
+                <span class="px-2 py-0.5 rounded-full bg-[#0D3024] text-emerald-300 font-black text-xs tracking-wide" x-text="savedPesananObject ? ('#' + (savedPesananObject.nomor_pesanan || ('DIN-' + savedPesananObject.id))) : ''"></span>
               </div>
-              <p class="text-[11px] font-bold text-emerald-800 mt-0.5" x-text="savedPesananObject ? ((savedPesananObject.meja ? (savedPesananObject.meja.nomor_meja.startsWith('Meja') ? savedPesananObject.meja.nomor_meja : 'Meja ' + savedPesananObject.meja.nomor_meja) : 'Meja -') + ' • ' + savedPesananObject.nama_konsumen) : ''"></p>
+              <p class="text-xs font-bold text-emerald-800 mt-0.5" x-text="savedPesananObject ? ((savedPesananObject.meja ? (savedPesananObject.meja.nomor_meja.startsWith('Meja') ? savedPesananObject.meja.nomor_meja : 'Meja ' + savedPesananObject.meja.nomor_meja) : 'Meja -') + ' • ' + savedPesananObject.nama_konsumen) : ''"></p>
             </div>
           </div>
 
-          <button type="button" @click="resetCartPanel()" class="text-xs font-extrabold text-[#0F2E23] hover:bg-emerald-100 bg-white px-3 py-1.5 rounded-3xl border border-emerald-200/90 shadow-2xs transition-all active:scale-95 cursor-pointer">
+          <button type="button" @click="resetCartPanel()" class="text-sm font-extrabold text-[#0D3024] hover:bg-emerald-100 bg-white px-3 py-1.5 rounded-xl border border-emerald-200/90 shadow-2xs transition-all active:scale-95 cursor-pointer">
             + Pesanan Baru
           </button>
         </div>
@@ -1351,18 +1466,18 @@ document.addEventListener('alpine:init', () => {
         {{-- Receipt View Filter Tabs --}}
         <div class="px-4 py-2 bg-gray-50 border-b border-gray-200/60 flex items-center gap-1 shrink-0">
           <button type="button" @click="receiptTab = 'all'"
-                  :class="receiptTab === 'all' ? 'bg-[#0F2E23] text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
-                  class="flex-1 py-1.5 text-[11px] rounded-3xl transition-all text-center cursor-pointer">
+                  :class="receiptTab === 'all' ? 'bg-[#0D3024] text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
+                  class="flex-1 py-1.5 text-xs rounded-xl transition-all text-center cursor-pointer">
             Semua (Gabungan)
           </button>
           <button type="button" @click="receiptTab = 'dapur'"
-                  :class="receiptTab === 'dapur' ? 'bg-[#0F2E23] text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
-                  class="flex-1 py-1.5 text-[11px] rounded-3xl transition-all text-center cursor-pointer">
+                  :class="receiptTab === 'dapur' ? 'bg-[#0D3024] text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
+                  class="flex-1 py-1.5 text-xs rounded-xl transition-all text-center cursor-pointer">
             Dapur
           </button>
           <button type="button" @click="receiptTab = 'meja'"
-                  :class="receiptTab === 'meja' ? 'bg-[#0F2E23] text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
-                  class="flex-1 py-1.5 text-[11px] rounded-3xl transition-all text-center cursor-pointer">
+                  :class="receiptTab === 'meja' ? 'bg-[#0D3024] text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
+                  class="flex-1 py-1.5 text-xs rounded-xl transition-all text-center cursor-pointer">
             Meja
           </button>
         </div>
@@ -1372,17 +1487,17 @@ document.addEventListener('alpine:init', () => {
           
           {{-- Section 1: Checker Dapur --}}
           <template x-if="receiptTab === 'all' || receiptTab === 'dapur'">
-            <div class="bg-white rounded-[2.25rem] p-5 border border-gray-200/90 shadow-sm space-y-3 relative overflow-hidden">
+            <div class="bg-white rounded-xl p-5 border border-gray-200/90 shadow-sm space-y-3 relative overflow-hidden">
               <div class="text-center space-y-1">
                 <div class="font-black text-sm text-slate-900 tracking-wider font-sans">SAUNG BABAKAN CINTA</div>
-                <div class="inline-block px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-[10px] uppercase tracking-wider font-sans">
+                <div class="inline-block px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-xs uppercase tracking-wider font-sans">
                   ** CHECKER DAPUR (KOT) **
                 </div>
               </div>
               
               <div class="border-b border-dashed border-gray-300 py-0.5"></div>
 
-              <div class="bg-slate-50 p-2.5 rounded-[2.25rem] border border-slate-200/60 space-y-1 text-[11px]">
+              <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 space-y-1 text-xs">
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">No. Order:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? ('#' + (savedPesananObject.nomor_pesanan || ('DIN-' + savedPesananObject.id))) : '-'"></span></div>
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">Meja:</span><span class="font-extrabold text-emerald-800" x-text="savedPesananObject && savedPesananObject.meja ? (savedPesananObject.meja.nomor_meja.startsWith('Meja') ? savedPesananObject.meja.nomor_meja : 'Meja ' + savedPesananObject.meja.nomor_meja) : '-'"></span></div>
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">Pelanggan:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? savedPesananObject.nama_konsumen : '-'"></span></div>
@@ -1391,18 +1506,18 @@ document.addEventListener('alpine:init', () => {
               <div class="border-b border-dashed border-gray-300 py-0.5"></div>
 
               {{-- Items List --}}
-              <div class="space-y-2 text-[11px] pt-0.5">
+              <div class="space-y-2 text-xs pt-0.5">
                 <template x-for="item in (savedPesananObject ? savedPesananObject.items : [])" :key="'panel-dapur-' + item.id">
-                  <div class="p-2 rounded-3xl bg-slate-50/70 border border-slate-100 space-y-1">
+                  <div class="p-2 rounded-xl bg-slate-50/70 border border-slate-100 space-y-1">
                     <div class="flex justify-between font-bold text-gray-900">
                       <span class="flex items-center gap-1.5">
-                        <span class="px-1.5 py-0.5 bg-slate-200 text-slate-800 rounded-xl font-extrabold text-[10px]" x-text="item.qty + 'x'"></span>
+                        <span class="px-1.5 py-0.5 bg-slate-200 text-slate-800 rounded-xl font-extrabold text-xs" x-text="item.qty + 'x'"></span>
                         <span x-text="item.menu ? item.menu.nama : (item.nama_menu || 'Menu')"></span>
                       </span>
                       <span class="font-extrabold text-slate-800" x-text="'Rp ' + formatPrice((item.menu ? item.menu.harga : (item.harga_satuan || 0)) * item.qty)"></span>
                     </div>
                     <template x-if="item.catatan">
-                      <p class="text-[10px] text-amber-800 font-medium italic flex items-center gap-1 pl-6">
+                      <p class="text-xs text-amber-800 font-medium italic flex items-center gap-1 pl-6">
                         <x-heroicon-o-document-text class="w-3 h-3 text-amber-600" />
                         <span x-text="item.catatan"></span>
                       </p>
@@ -1415,7 +1530,7 @@ document.addEventListener('alpine:init', () => {
 
               <div class="flex justify-between items-center font-extrabold text-xs pt-0.5">
                 <span class="text-gray-600">TOTAL ITEM:</span>
-                <span class="px-2.5 py-1 bg-emerald-100 text-emerald-900 rounded-2xl text-xs font-black" x-text="(savedPesananObject && savedPesananObject.items) ? savedPesananObject.items.reduce((s, i) => s + i.qty, 0) : 0"></span>
+                <span class="px-2.5 py-1 bg-emerald-100 text-emerald-900 rounded-lg text-xs font-black" x-text="(savedPesananObject && savedPesananObject.items) ? savedPesananObject.items.reduce((s, i) => s + i.qty, 0) : 0"></span>
               </div>
             </div>
           </template>
@@ -1424,7 +1539,7 @@ document.addEventListener('alpine:init', () => {
           <template x-if="receiptTab === 'all'">
             <div class="relative my-2 py-1 flex items-center justify-center">
               <div class="absolute inset-0 flex items-center"><div class="w-full border-t-2 border-dashed border-gray-300"></div></div>
-              <div class="relative px-3 py-0.5 bg-white text-gray-500 font-bold text-[10px] rounded-full border border-gray-300 shadow-2xs flex items-center gap-1.5 uppercase tracking-wider font-sans">
+              <div class="relative px-3 py-0.5 bg-white text-gray-500 font-bold text-xs rounded-full border border-gray-300 shadow-2xs flex items-center gap-1.5 uppercase tracking-wider font-sans">
                 <x-heroicon-o-scissors class="text-gray-400 w-3 h-3" />
                 <span>Potong Di Sini</span>
               </div>
@@ -1433,17 +1548,17 @@ document.addEventListener('alpine:init', () => {
 
           {{-- Section 2: Checker Meja --}}
           <template x-if="receiptTab === 'all' || receiptTab === 'meja'">
-            <div class="bg-white rounded-[2.25rem] p-5 border border-gray-200/90 shadow-sm space-y-3 relative overflow-hidden">
+            <div class="bg-white rounded-xl p-5 border border-gray-200/90 shadow-sm space-y-3 relative overflow-hidden">
               <div class="text-center space-y-1">
                 <div class="font-black text-sm text-slate-900 tracking-wider font-sans">SAUNG BABAKAN CINTA</div>
-                <div class="inline-block px-3 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200/80 font-bold text-[10px] uppercase tracking-wider font-sans">
+                <div class="inline-block px-3 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200/80 font-bold text-xs uppercase tracking-wider font-sans">
                   ** CHECKER MEJA **
                 </div>
               </div>
               
               <div class="border-b border-dashed border-gray-300 py-0.5"></div>
 
-              <div class="bg-slate-50 p-2.5 rounded-[2.25rem] border border-slate-200/60 space-y-1 text-[11px]">
+              <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 space-y-1 text-xs">
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">No. Order:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? ('#' + (savedPesananObject.nomor_pesanan || ('DIN-' + savedPesananObject.id))) : '-'"></span></div>
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">Meja:</span><span class="font-extrabold text-emerald-800" x-text="savedPesananObject && savedPesananObject.meja ? (savedPesananObject.meja.nomor_meja.startsWith('Meja') ? savedPesananObject.meja.nomor_meja : 'Meja ' + savedPesananObject.meja.nomor_meja) : '-'"></span></div>
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">Pelanggan:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? savedPesananObject.nama_konsumen : '-'"></span></div>
@@ -1452,18 +1567,18 @@ document.addEventListener('alpine:init', () => {
               <div class="border-b border-dashed border-gray-300 py-0.5"></div>
 
               {{-- Items List --}}
-              <div class="space-y-2 text-[11px] pt-0.5">
+              <div class="space-y-2 text-xs pt-0.5">
                 <template x-for="item in (savedPesananObject ? savedPesananObject.items : [])" :key="'panel-meja-' + item.id">
-                  <div class="p-2 rounded-3xl bg-slate-50/70 border border-slate-100 space-y-1">
+                  <div class="p-2 rounded-xl bg-slate-50/70 border border-slate-100 space-y-1">
                     <div class="flex justify-between font-bold text-gray-900">
                       <span class="flex items-center gap-1.5">
-                        <span class="px-1.5 py-0.5 bg-slate-200 text-slate-800 rounded-xl font-extrabold text-[10px]" x-text="item.qty + 'x'"></span>
+                        <span class="px-1.5 py-0.5 bg-slate-200 text-slate-800 rounded-xl font-extrabold text-xs" x-text="item.qty + 'x'"></span>
                         <span x-text="item.menu ? item.menu.nama : (item.nama_menu || 'Menu')"></span>
                       </span>
                       <span class="font-extrabold text-slate-800" x-text="'Rp ' + formatPrice((item.menu ? item.menu.harga : (item.harga_satuan || 0)) * item.qty)"></span>
                     </div>
                     <template x-if="item.catatan">
-                      <p class="text-[10px] text-amber-800 font-medium italic flex items-center gap-1 pl-6">
+                      <p class="text-xs text-amber-800 font-medium italic flex items-center gap-1 pl-6">
                         <x-heroicon-o-document-text class="w-3 h-3 text-amber-600" />
                         <span x-text="item.catatan"></span>
                       </p>
@@ -1476,7 +1591,7 @@ document.addEventListener('alpine:init', () => {
 
               <div class="flex justify-between items-center font-extrabold text-xs pt-0.5">
                 <span class="text-gray-600">TOTAL ITEM:</span>
-                <span class="px-2.5 py-1 bg-blue-100 text-blue-900 rounded-2xl text-xs font-black" x-text="(savedPesananObject && savedPesananObject.items) ? savedPesananObject.items.reduce((s, i) => s + i.qty, 0) : 0"></span>
+                <span class="px-2.5 py-1 bg-blue-100 text-blue-900 rounded-lg text-xs font-black" x-text="(savedPesananObject && savedPesananObject.items) ? savedPesananObject.items.reduce((s, i) => s + i.qty, 0) : 0"></span>
               </div>
             </div>
           </template>
@@ -1486,18 +1601,18 @@ document.addEventListener('alpine:init', () => {
         <div class="p-4 border-t border-gray-200/80 bg-white space-y-2 shrink-0 shadow-lg">
           <button type="button"
                   @click="printSilentIframe(receiptTab === 'all' ? ('/pos/dinein/pesanan/' + savedPesananId + '/print-gabungan') : (receiptTab === 'dapur' ? ('/pos/dinein/pesanan/' + savedPesananId + '/print-dapur') : ('/pos/dinein/pesanan/' + savedPesananId + '/print-meja')))"
-                  class="w-full py-3.5 px-4 bg-[#0F2E23] hover:bg-[#0a1f17] active:scale-[0.99] text-white font-extrabold rounded-[2.25rem] text-xs transition-all flex items-center justify-center gap-2 shadow-md text-center cursor-pointer">
+                  class="w-full py-3.5 px-4 bg-[#0D3024] hover:bg-[#0a1f17] active:scale-[0.99] text-white font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md text-center cursor-pointer">
             <x-heroicon-o-printer class="text-emerald-400 w-5 h-5" />
             <span x-text="receiptTab === 'all' ? 'Cetak Struk Dapur & Meja (1 Halaman)' : (receiptTab === 'dapur' ? 'Cetak Struk Dapur' : 'Cetak Struk Meja')"></span>
           </button>
 
           <div class="grid grid-cols-2 gap-2">
             <button type="button" @click="resetCartPanel()"
-                    class="py-3 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold rounded-[2.25rem] text-xs transition-all text-center active:scale-95 cursor-pointer">
+                    class="py-3 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold rounded-xl text-xs transition-all text-center active:scale-95 cursor-pointer">
               + Pesanan Baru
             </button>
             <a :href="'/pos/dinein/meja/' + (savedPesananObject ? savedPesananObject.meja_id : '') + '/checkout'"
-               class="py-3 px-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-extrabold rounded-[2.25rem] text-xs transition-all flex items-center justify-center gap-1.5 text-center active:scale-95 cursor-pointer">
+               class="py-3 px-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 text-center active:scale-95 cursor-pointer">
               <span>BAYAR</span>
               <x-heroicon-o-chevron-right class="w-3 h-3" />
             </a>
@@ -1511,7 +1626,7 @@ document.addEventListener('alpine:init', () => {
   </div>
   {{-- ── MODAL DETAIL TRANSAKSI LENGKAP ── --}}
   <div x-show="showTrxDetailModal" x-cloak x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4" style="display: none;">
-    <div class="bg-white rounded-[2.25rem] p-6 max-w-lg w-full space-y-4 shadow-2xl border border-gray-100" @click.outside="showTrxDetailModal = false">
+    <div class="bg-white rounded-xl p-6 max-w-lg w-full space-y-4 shadow-2xl border border-gray-100" @click.outside="showTrxDetailModal = false">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div>
           <h3 class="text-base font-extrabold text-slate-900" x-text="'Detail Transaksi #' + (selectedTrxDetail ? (selectedTrxDetail.nomor_pesanan || ('DIN-' + selectedTrxDetail.id)) : '')"></h3>
@@ -1523,7 +1638,7 @@ document.addEventListener('alpine:init', () => {
       <template x-if="selectedTrxDetail">
         <div class="space-y-3 text-xs">
           {{-- Info Utama --}}
-          <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-[2.25rem] border border-slate-200/80">
+          <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
             <div><span class="text-slate-400 font-bold block">Pelanggan:</span> <span class="font-extrabold text-slate-900" x-text="selectedTrxDetail.nama_konsumen"></span></div>
             <div><span class="text-slate-400 font-bold block">Meja:</span> <span class="font-extrabold text-emerald-800" x-text="selectedTrxDetail.meja ? selectedTrxDetail.meja.nomor_meja : '-'"></span></div>
             <div><span class="text-slate-400 font-bold block">Kasir Bertugas:</span> <span class="font-extrabold text-slate-800" x-text="(selectedTrxDetail.pembayaran && selectedTrxDetail.pembayaran.diproses_oleh_pengguna && selectedTrxDetail.pembayaran.diproses_oleh_pengguna.name) ? selectedTrxDetail.pembayaran.diproses_oleh_pengguna.name : 'Kasir'"></span></div>
@@ -1533,12 +1648,12 @@ document.addEventListener('alpine:init', () => {
           {{-- Item List --}}
           <div class="space-y-1.5">
             <p class="font-extrabold text-slate-700">Rincian Menu Dipesan:</p>
-            <div class="border border-slate-200 rounded-[2.25rem] overflow-hidden divide-y divide-slate-100 max-h-48 overflow-y-auto">
+            <div class="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100 max-h-48 overflow-y-auto">
               <template x-for="item in (selectedTrxDetail.items || [])" :key="item.id">
                 <div class="p-2.5 flex items-center justify-between">
                   <div>
                     <p class="font-extrabold text-slate-800" x-text="item.qty + 'x ' + (item.menu ? item.menu.nama : (item.nama_menu || 'Menu'))"></p>
-                    <p class="text-[10px] text-slate-400" x-text="item.catatan ? ('Catatan: ' + item.catatan) : ''"></p>
+                    <p class="text-xs text-slate-400" x-text="item.catatan ? ('Catatan: ' + item.catatan) : ''"></p>
                   </div>
                   <span class="font-extrabold text-slate-900" x-text="'Rp ' + formatPrice((item.menu ? item.menu.harga : (item.harga_satuan || 0)) * item.qty)"></span>
                 </div>
@@ -1552,7 +1667,7 @@ document.addEventListener('alpine:init', () => {
               <span>Subtotal:</span>
               <span x-text="'Rp ' + formatPrice((selectedTrxDetail.items || []).reduce((s, i) => s + ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * i.qty), 0))"></span>
             </div>
-            <div class="flex justify-between font-black text-sm text-[#0F2E23] pt-1 border-t border-slate-200">
+            <div class="flex justify-between font-black text-sm text-[#0D3024] pt-1 border-t border-slate-200">
               <span>Total Tagihan:</span>
               <span x-text="'Rp ' + formatPrice((selectedTrxDetail.items || []).reduce((s, i) => s + ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * i.qty), 0))"></span>
             </div>
@@ -1562,14 +1677,82 @@ document.addEventListener('alpine:init', () => {
 
       <div class="pt-4 flex flex-wrap justify-between gap-2 border-t border-gray-100">
         <div class="flex gap-2">
-            <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + selectedTrxDetail.id + '/print-dapur')" class="px-4 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold rounded-3xl text-xs hover:bg-emerald-100 transition-colors">
+            <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + selectedTrxDetail.id + '/print-dapur')" class="px-4 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold rounded-xl text-sm hover:bg-emerald-100 transition-colors">
                 <x-heroicon-o-printer class="w-5 h-5" /> Struk Dapur
             </button>
-            <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + selectedTrxDetail.id + '/print-meja')" class="px-4 py-2.5 bg-blue-50 text-blue-800 border border-blue-200 font-extrabold rounded-3xl text-xs hover:bg-blue-100 transition-colors">
+            <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + selectedTrxDetail.id + '/print-meja')" class="px-4 py-2.5 bg-blue-50 text-blue-800 border border-blue-200 font-extrabold rounded-xl text-sm hover:bg-blue-100 transition-colors">
                 <x-heroicon-o-printer class="w-5 h-5" /> Struk Meja
             </button>
         </div>
-        <button type="button" @click="showTrxDetailModal = false" class="px-5 py-2.5 bg-slate-900 text-white font-extrabold rounded-3xl text-xs hover:bg-slate-800 transition-colors cursor-pointer">
+        <button type="button" @click="showTrxDetailModal = false" class="px-5 py-2.5 bg-slate-900 text-white font-extrabold rounded-xl text-sm hover:bg-slate-800 transition-colors cursor-pointer">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {{-- ── MODAL CHECKER MEJA (PENYAJIAN) ── --}}
+  <div x-show="showCheckerModal" x-cloak x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4" style="display: none;">
+    <div class="bg-white rounded-xl max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden" @click.outside="showCheckerModal = false">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div>
+          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <x-heroicon-o-clipboard-document-check class="w-5 h-5 text-emerald-600" />
+            Checker Meja
+          </h3>
+          <p class="text-xs text-slate-400 font-medium mt-0.5" x-text="checkerBill ? ('#' + (checkerBill.nomor_pesanan || ('DIN-' + checkerBill.id))) : ''"></p>
+        </div>
+        <button type="button" @click="showCheckerModal = false" class="text-gray-400 hover:text-gray-600 font-bold text-lg">&times;</button>
+      </div>
+
+      <div class="px-6 py-4 space-y-3">
+        <template x-if="checkerBill && checkerBill.meja">
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 bg-[#0D3024]/5 text-[#0D3024] font-black text-xs rounded-lg border border-[#0D3024]/20">
+              <x-heroicon-s-users class="w-3.5 h-3.5 inline-block mr-1" />
+              <span x-text="checkerBill.meja.nomor_meja"></span>
+            </span>
+            <span class="text-xs font-semibold text-slate-500" x-text="checkerBill.nama_konsumen || 'Tamu'"></span>
+          </div>
+        </template>
+
+        <template x-if="checkerBill && (!checkerBill.items || checkerBill.items.length === 0)">
+          <div class="text-center py-8 text-xs text-slate-400 font-medium">Pesanan ini belum memiliki item / data belum dimuat. Muat ulang halaman untuk sinkronisasi.</div>
+        </template>
+
+        <div class="space-y-2 max-h-80 overflow-y-auto pr-1">
+          <template x-for="item in (checkerBill ? (checkerBill.items || []) : [])" :key="item.id">
+            <div class="flex items-center justify-between gap-3 p-3 rounded-xl border"
+                 :class="item.status_item === 'disajikan' ? 'bg-emerald-50/60 border-emerald-200' : 'bg-white border-slate-200'">
+              <div class="min-w-0">
+                <p class="text-sm font-extrabold text-slate-800 truncate">
+                  <span class="px-1.5 py-0.5 bg-slate-100 text-slate-800 rounded-lg font-black text-xs mr-1" x-text="item.qty + 'x'"></span>
+                  <span x-text="item.menu ? item.menu.nama : (item.nama_menu || 'Menu')"></span>
+                </p>
+                <template x-if="item.catatan">
+                  <p class="text-xs text-amber-700 font-medium italic mt-0.5">* <span x-text="item.catatan"></span></p>
+                </template>
+                <span x-show="item.status_item === 'disajikan'" class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-black uppercase border border-emerald-200">
+                  <x-heroicon-o-check class="w-3 h-3" /> Disajikan
+                </span>
+              </div>
+              <button type="button" @click="toggleStatusSajian(checkerBill.id, item.id)"
+                      class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-colors"
+                      :class="item.status_item === 'disajikan'
+                          ? 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50'
+                          : 'bg-[#0D3024] hover:bg-[#0a1f17] text-white'">
+                <span x-text="item.status_item === 'disajikan' ? 'Batalkan' : 'Sajikan'"></span>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-2">
+        <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + (checkerBill ? checkerBill.id : '') + '/print-meja')" class="px-4 py-2.5 bg-blue-50 text-blue-800 border border-blue-200 font-extrabold rounded-xl text-sm hover:bg-blue-100 transition-colors">
+          <x-heroicon-o-printer class="w-4 h-4 inline-block mr-1" /> Cetak Struk Meja
+        </button>
+        <button type="button" @click="showCheckerModal = false" class="px-5 py-2.5 bg-slate-900 text-white font-extrabold rounded-xl text-sm hover:bg-slate-800 transition-colors cursor-pointer">
           Tutup
         </button>
       </div>
@@ -1578,7 +1761,7 @@ document.addEventListener('alpine:init', () => {
 
   {{-- ── MODAL VOID / BATAL TRANSAKSI ── --}}
   <div x-show="showVoidModal" x-cloak x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4" style="display: none;">
-    <div class="bg-white rounded-[2.25rem] p-6 max-w-md w-full space-y-4 shadow-2xl border border-gray-100" @click.outside="showVoidModal = false">
+    <div class="bg-white rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-gray-100" @click.outside="showVoidModal = false">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-full bg-red-100 text-red-800 flex items-center justify-center font-bold text-sm">
@@ -1594,7 +1777,7 @@ document.addEventListener('alpine:init', () => {
 
         <div class="space-y-1.5">
           <label class="font-extrabold text-slate-700">Pilih Alasan Void <span class="text-red-500">*</span></label>
-          <select x-model="alasanVoidInput" class="w-full h-11 px-3.5 text-xs font-extrabold rounded-[2.25rem] border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0F2E23] outline-none">
+          <select x-model="alasanVoidInput" class="w-full h-11 px-3.5 text-sm font-extrabold rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0D3024] outline-none">
             <option value="Salah Input Menu">Salah Input Menu</option>
             <option value="Request Pembatalan Pelanggan">Request Pembatalan Pelanggan</option>
             <option value="Lainnya">Lainnya</option>
@@ -1603,14 +1786,14 @@ document.addEventListener('alpine:init', () => {
 
         <div class="space-y-1.5 mt-3">
           <label class="font-extrabold text-slate-700">Catatan Tambahan</label>
-          <input type="text" x-model="catatanVoidInput" class="w-full h-11 px-3.5 text-xs font-extrabold rounded-[2.25rem] border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0F2E23] outline-none" placeholder="Misal: Pesanan ganda...">
+          <input type="text" x-model="catatanVoidInput" class="w-full h-11 px-3.5 text-sm font-extrabold rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0D3024] outline-none" placeholder="Misal: Pesanan ganda...">
         </div>
 
         <div class="mt-6 flex gap-3">
-          <button type="button" @click="showVoidModal = false" class="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-[2.25rem] text-xs transition-colors">
+          <button type="button" @click="showVoidModal = false" class="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-xl text-sm transition-colors">
             Tutup
           </button>
-          <button type="button" @click="submitVoidOrder" :disabled="isSubmitting" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-[2.25rem] text-xs transition-colors shadow-sm disabled:opacity-50">
+          <button type="button" @click="submitVoidOrder" :disabled="isSubmitting" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-colors shadow-sm disabled:opacity-50">
             <span x-show="!isSubmitting">Proses Void</span>
             <span x-show="isSubmitting">Memproses...</span>
           </button>
@@ -1629,12 +1812,12 @@ document.addEventListener('alpine:init', () => {
        x-transition:leave-end="opacity-0 scale-95"
        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
        style="display: none;">
-    <div class="bg-white rounded-[24px] p-6 max-w-sm w-full shadow-2xl relative">
+    <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl relative">
       
       {{-- Modal Header --}}
       <div class="text-center mb-6 relative">
-        <h3 class="text-[17px] font-bold text-[#111827]">Cetak Struk</h3>
-        <p class="text-[13px] font-medium text-gray-500 mt-0.5">Pilih struk yang akan dicetak</p>
+        <h3 class="text-lg font-bold text-[#111827]">Cetak Struk</h3>
+        <p class="text-sm font-medium text-gray-500 mt-0.5">Pilih struk yang akan dicetak</p>
         <button type="button" @click="closePrintModal()" class="absolute right-0 top-0 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100/80 hover:bg-gray-200 text-gray-500 transition-colors">
           <x-heroicon-o-x-mark class="w-4 h-4" />
         </button>
@@ -1644,7 +1827,7 @@ document.addEventListener('alpine:init', () => {
       <div class="space-y-3">
         
         {{-- Option 1: Struk Pelanggan --}}
-        <label class="w-full group bg-white border rounded-[2.25rem] p-4 flex items-center justify-between transition-all cursor-pointer select-none"
+        <label class="w-full group bg-white border rounded-xl p-4 flex items-center justify-between transition-all cursor-pointer select-none"
                :class="selectedPrintOptions.includes('konsumen') ? 'border-emerald-500 bg-emerald-50/30' : 'border-gray-200 hover:border-emerald-200'">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border"
@@ -1659,7 +1842,7 @@ document.addEventListener('alpine:init', () => {
         </label>
 
         {{-- Option 2: Struk Dapur --}}
-        <label class="w-full group bg-white border rounded-[2.25rem] p-4 flex items-center justify-between transition-all cursor-pointer select-none"
+        <label class="w-full group bg-white border rounded-xl p-4 flex items-center justify-between transition-all cursor-pointer select-none"
                :class="selectedPrintOptions.includes('dapur') ? 'border-emerald-500 bg-emerald-50/30' : 'border-gray-200 hover:border-emerald-200'">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border"
@@ -1674,7 +1857,7 @@ document.addEventListener('alpine:init', () => {
         </label>
 
         {{-- Option 3: Struk Checker Pesanan --}}
-        <label class="w-full group bg-white border rounded-[2.25rem] p-4 flex items-center justify-between transition-all cursor-pointer select-none"
+        <label class="w-full group bg-white border rounded-xl p-4 flex items-center justify-between transition-all cursor-pointer select-none"
                :class="selectedPrintOptions.includes('meja') ? 'border-emerald-500 bg-emerald-50/30' : 'border-gray-200 hover:border-emerald-200'">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border"
@@ -1692,12 +1875,12 @@ document.addEventListener('alpine:init', () => {
 
       {{-- Actions --}}
       <div class="mt-6 space-y-2">
-        <button type="button" @click="executePrintSelection()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-[2.25rem] text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
+        <button type="button" @click="executePrintSelection()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
           <x-heroicon-o-printer class="w-5 h-5" />
           Cetak yang Dipilih
         </button>
 
-        <button type="button" @click="closePrintModal()" class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-[2.25rem] text-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+        <button type="button" @click="closePrintModal()" class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
           <span x-text="pendingCheckoutAction ? 'Lewati & Proses Pembayaran' : 'Lewati (Kembali)'"></span>
           <x-heroicon-o-arrow-right class="w-3 h-3" />
         </button>

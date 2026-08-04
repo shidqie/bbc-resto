@@ -31,7 +31,6 @@
         .item-name { font-weight: bold; word-break: break-word; }
         .item-detail { font-size: 10px; padding-left: 6px; }
         .notes { font-size: 10px; font-style: italic; padding-left: 6px; }
-        .qr-placeholder { margin: 8px auto 4px auto; text-align: center; }
         .legal-text { font-size: 9px; text-align: center; margin-top: 6px; line-height: 1.3; }
         @media print {
             body { width: 100%; padding: 0; margin: 0; }
@@ -60,7 +59,7 @@
         Queue No: {{ str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) }}
     </div>
     <div style="margin-bottom: 2px;">
-        {{ $pesanan->nomor_pesanan ?? 'INV-'.str_pad($pesanan->id, 5, '0', STR_PAD_LEFT) }}
+        {{ $pesanan->nomor_pesanan }}
     </div>
     <div style="margin-bottom: 8px;">
         Table : {{ $pesanan->meja->nomor_meja ?? '-' }}
@@ -73,9 +72,9 @@
             <td style="width: 30%; color: #555;">Customer</td>
         </tr>
         <tr>
-            <td class="font-bold">{{ \Carbon\Carbon::parse($pesanan->pembayaran->tanggal_pembayaran ?? $pesanan->diperbarui_pada ?? $pesanan->dibuat_pada ?? now())->format('d/m/y, h:i A') }}</td>
+            <td class="font-bold">{{ \Carbon\Carbon::parse($pesanan->pembayaran->first()->dibayar_pada ?? $pesanan->diperbarui_pada ?? $pesanan->dibuat_pada ?? now())->format('d/m/y, h:i A') }}</td>
             <td class="font-bold">{{ auth()->user()->nama ?? 'Kasir' }}</td>
-            <td class="font-bold">{{ $pesanan->nama_konsumen ?? 'Pelanggan' }}</td>
+            <td class="font-bold">{{ $pesanan->catatan ?? 'Pelanggan' }}</td>
         </tr>
     </table>
     
@@ -88,18 +87,18 @@
         @endphp
         @foreach($pesanan->detail_pesanan as $item)
         @php 
-            $hargaSatuan = $item->menu->harga_jual ?? $item->harga_satuan ?? 0;
-            $sub = $item->kuantitas * $hargaSatuan;
+            $hargaSatuan = $item->harga_satuan ?? $item->menu->harga_jual ?? 0;
+            $sub = $item->jumlah * $hargaSatuan;
             $subtotalTotal += $sub;
         @endphp
         <tr>
             <td colspan="2" class="item-name">
-                {{ $item->menu->nama_menu ?? $item->menu->nama_menu }}
+                {{ $item->menu->nama_menu ?? $item->menu->nama ?? 'Menu' }}
             </td>
         </tr>
         <tr>
             <td class="item-detail">
-                {{ $item->kuantitas }} x {{ number_format($hargaSatuan, 0, ',', '.') }}
+                {{ $item->jumlah }} x {{ number_format($hargaSatuan, 0, ',', '.') }}
                 @if($item->catatan)
                     <div class="notes">* Catatan: {{ $item->catatan }}</div>
                 @endif
@@ -113,11 +112,11 @@
     
     {{-- RINGKASAN PEMBAYARAN RESMI --}}
     @php
-        $pembayaran = $pesanan->pembayaran;
-        $totalTagihan = $pembayaran->total ?? $subtotalTotal;
-        $uangDiterima = $pembayaran->uang_diterima ?? $totalTagihan;
+        $pembayaran = $pesanan->pembayaran->first();
+        $totalTagihan = $pesanan->total_tagihan;
+        $uangDiterima = $pembayaran->jumlah_bayar ?? $totalTagihan;
         $kembalian = max(0, $uangDiterima - $totalTagihan);
-        $metodeBayar = strtoupper($pembayaran->metode_bayar ?? 'TUNAI');
+        $metodeBayar = strtoupper($pembayaran->metode_pembayaran->nama_metode ?? 'TUNAI');
     @endphp
 
     <table>
@@ -130,8 +129,8 @@
             <td class="text-right">Rp 0</td>
         </tr>
         <tr>
-            <td>Tax</td>
-            <td class="text-right">Rp 0</td>
+            <td>Tax (PB1 10%)</td>
+            <td class="text-right">Rp {{ number_format($pesanan->jumlah_pajak ?? 0, 0, ',', '.') }}</td>
         </tr>
         <tr class="font-bold">
             <td style="padding-top: 6px; font-size: 13px;">Total Amount</td>
@@ -162,13 +161,6 @@
     </table>
 
     <div class="divider"></div>
-
-    {{-- QR CODE DIGITAL RECEIPT --}}
-    <div class="qr-placeholder">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ urlencode(route('pos.pesanan.print-nota', $pesanan->id)) }}" 
-             alt="QR Struk Digital" style="width: 75px; height: 75px; margin: 0 auto; display: block;" />
-        <div style="font-size: 9px; margin-top: 3px;">Scan untuk Struk Digital & Review</div>
-    </div>
 
     <div class="legal-text">
         *** TERIMA KASIH ATAS KUNJUNGAN ANDA ***<br>

@@ -3,19 +3,46 @@
 namespace App\Services;
 
 use App\Models\Pesanan;
+use App\Models\StokBahan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
     protected $stockService;
 
-    public function __construct(StockService $stockService)
+    protected $kebutuhanBahanService;
+
+    public function __construct(StockService $stockService, KebutuhanBahanService $kebutuhanBahanService)
     {
         $this->stockService = $stockService;
+        $this->kebutuhanBahanService = $kebutuhanBahanService;
     }
 
     /**
-     * Selesaikan pesanan dan potong stok bahan baku sesuai resep menu.
+     * Tentukan jenis persediaan dari sebuah pesanan.
+     *  - Dine-In dan Nasi Box → harian
+     *  - Catering             → catering
+     *
+     * @param  mixed  $pesanan  Pesanan|PesananDinein
+     */
+    public function jenisPersediaanPesanan($pesanan): string
+    {
+        if (method_exists($pesanan, 'jenis_pesanan') && $pesanan->jenis_pesanan) {
+            $kode = strtoupper((string) $pesanan->jenis_pesanan->kode_jenis);
+            if (in_array($kode, ['CAT', 'CATERING'], true)) {
+                return StokBahan::JENIS_CATERING;
+            }
+        }
+
+        return StokBahan::JENIS_HARIAN;
+    }
+
+    /**
+     * Selesaikan pesanan dan potong stok bahan baku sesuai resep menu (FR-08).
+     *
+     * Idempoten: detail yang sudah pernah dipotong (stock_deducted_at terisi)
+     * dilewati, sehingga pemanggilan berulang tidak memotong stok dua kali.
      *
      * @return void
      *
@@ -28,40 +55,125 @@ class OrderService
         }
 
         DB::transaction(function () use ($pesanan) {
-            $pesanan->load('detail_pesanan.menu.resep_menu.bahan_baku');
-
-            // Potong stok bahan baku untuk tiap detail pesanan
-            foreach ($pesanan->detail_pesanan as $detail) {
-                $menu = $detail->menu;
-                $jumlahDipesan = $detail->jumlah;
-
-                if (! $menu || ! $menu->resep_menu) {
-                    continue;
-                }
-
-                foreach ($menu->resep_menu as $resep) {
-                    $bahanBakuId = $resep->bahan_baku_id;
-                    $kebutuhanPerPorsi = $resep->jumlah_kebutuhan;
-
-                    $totalKebutuhan = $kebutuhanPerPorsi * $jumlahDipesan;
-
-                    $this->stockService->deductStock(
-                        $bahanBakuId,
-                        $totalKebutuhan,
-                        "Pesanan #{$pesanan->nomor_pesanan} (Menu: {$menu->nama_menu})"
-                    );
-                }
-            }
-
+            $this->potongStokPesanan($pesanan);
             $pesanan->status_pesanan_id = 5; // Selesai
             $pesanan->save();
         });
     }
 
     /**
+     * Potong stok bahan untuk pesanan (FR-10).
+     * Titik potong stok berbeda per jenis:
+     *  - Dine-In:      saat pesanan dinyatakan selesai / pembayaran berhasil.
+     *  - Catering/Nasi Box: saat produksi dimulai (status 3 = DIPROSES).
+     *
+     * Idempoten: detail yang sudah dipotong (stock_deducted_at terisi) dilewati.
+     * Stok dipotong pada jenis persediaan sesuai jenis pesanan.
+     * Status pesanan TIDAK diubah di sini.
+     *
+     * @param  \App\Models\Pesanan|\App\Models\PesananDinein  $pesanan
+     * @return void
+     */
+    public function potongStokPesanan($pesanan)
+    {
+        DB::transaction(function () use ($pesanan) {
+            $pesanan->load([
+                'detail_pesanan.menu.resep_menu.bahan_baku',
+                'detail_pesanan.pilihan_pesanan_catering',
+                'jenis_pesanan',
+            ]);
+
+            $jenisPersediaan = $this->jenisPersediaanPesanan($pesanan);
+
+            // Kunci semua detail yang terlibat agar tidak ada mutasi ganda (race).
+            $detailIds = $pesanan->detail_pesanan->pluck('id')->all();
+            $sudahDipotong = \App\Models\DetailPesanan::whereIn('id', $detailIds)
+                ->whereNotNull('stock_deducted_at')
+                ->pluck('id')
+                ->all();
+
+            foreach ($pesanan->detail_pesanan as $detail) {
+                // Guard idempotent: skip detail yang stoknya sudah dipotong.
+                if (in_array($detail->id, $sudahDipotong)) {
+                    continue;
+                }
+
+                $menu = $detail->menu;
+                if (! $menu) {
+                    continue;
+                }
+
+                $kebutuhan = $this->kebutuhanBahanService->kebutuhanBahanDetail($detail);
+                if ($kebutuhan->isEmpty()) {
+                    continue;
+                }
+
+                $userId = Auth::id() ?? $pesanan->dibuat_oleh;
+
+                foreach ($kebutuhan as $item) {
+                    $this->stockService->deductStock(
+                        $item['bahan_baku_id'],
+                        $item['kebutuhan'],
+                        "Pesanan #{$pesanan->nomor_pesanan} (Menu: {$item['menu_nama']})",
+                        2,
+                        $userId,
+                        ['detail_pesanan_id' => $detail->id],
+                        false,
+                        $jenisPersediaan,
+                    );
+                }
+
+                $detail->stock_deducted_at = now();
+                $detail->save();
+            }
+        });
+    }
+
+    /**
+     * Kembalikan stok untuk detail pesanan yang sudah dipotong (Skenario F).
+     * Idempoten: hanya detail dengan stock_deducted_at yang dikembalikan,
+     * dan setelah dikembalikan penandanya dihapus agar tidak ganda.
+     */
+    public function restoreStockPesanan($pesanan): void
+    {
+        DB::transaction(function () use ($pesanan) {
+            $pesanan->load([
+                'detail_pesanan.menu.resep_menu.bahan_baku',
+                'detail_pesanan.pilihan_pesanan_catering',
+                'jenis_pesanan',
+            ]);
+
+            $jenisPersediaan = $this->jenisPersediaanPesanan($pesanan);
+            $userId = Auth::id() ?? $pesanan->dibuat_oleh;
+
+            foreach ($pesanan->detail_pesanan as $detail) {
+                if (! $detail->stock_deducted_at) {
+                    continue;
+                }
+
+                $kebutuhan = $this->kebutuhanBahanService->kebutuhanBahanDetail($detail);
+                foreach ($kebutuhan as $item) {
+                    $this->stockService->addStock(
+                        $item['bahan_baku_id'],
+                        $item['kebutuhan'],
+                        "Pembatalan pesanan #{$pesanan->nomor_pesanan} (Menu: {$item['menu_nama']}) - mutasi pembalik",
+                        1,
+                        $userId,
+                        ['detail_pesanan_id' => $detail->id],
+                        $jenisPersediaan,
+                    );
+                }
+
+                $detail->stock_deducted_at = null;
+                $detail->save();
+            }
+        });
+    }
+
+    /**
      * Batalkan pesanan.
-     * Jika sudah terlanjur memotong stok (misal karena logic sebelumnya), bisa direstore di sini.
-     * Saat ini asumsikan pemotongan stok hanya terjadi saat pesanan Selesai.
+     * Jika stok sudah dikurangi, buat mutasi pembalik dan kembalikan saldo
+     * tanpa menghapus riwayat mutasi lama (Skenario F).
      *
      * @return void
      */
@@ -70,8 +182,19 @@ class OrderService
         if ($pesanan->status_pesanan_id == 5) {
             throw new \Exception('Pesanan yang sudah selesai tidak bisa dibatalkan secara langsung.');
         }
+        if ($pesanan->status_pesanan_id == 6) {
+            throw new \Exception('Pesanan sudah dibatalkan.');
+        }
 
         DB::transaction(function () use ($pesanan) {
+            $sudahDipotong = \App\Models\DetailPesanan::where('pesanan_id', $pesanan->id)
+                ->whereNotNull('stock_deducted_at')
+                ->exists();
+
+            if ($sudahDipotong) {
+                $this->restoreStockPesanan($pesanan);
+            }
+
             $pesanan->status_pesanan_id = 6; // Dibatalkan
             $pesanan->save();
         });

@@ -15,7 +15,7 @@
     {{-- 3. LAYANAN --}}
     <x-landing.section title="Layanan Kami" bgImage="{{ asset('images/saungbabakan.webp') }}">
         <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div class="bg-surface rounded-3xl border border-primary/10 p-6 flex flex-col text-center">
+            <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col text-center">
                 <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <svg class="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -25,7 +25,7 @@
                 <x-typography.h3 class="text-primary mb-2">Dine-in</x-typography.h3>
                 <x-typography.p variant="small">Makan di tempat dengan suasana saung yang nyaman.</x-typography.p>
             </div>
-            <div class="bg-surface rounded-3xl border border-primary/10 p-6 flex flex-col text-center">
+            <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col text-center">
                 <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <svg class="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -35,7 +35,7 @@
                 <x-typography.h3 class="text-primary mb-2">Catering</x-typography.h3>
                 <x-typography.p variant="small">Jamuan lengkap untuk acara spesial Anda.</x-typography.p>
             </div>
-            <div class="bg-surface rounded-3xl border border-primary/10 p-6 flex flex-col text-center">
+            <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col text-center">
                 <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <svg class="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -52,11 +52,11 @@
     <x-landing.section id="menu-dinein" title="Menu" subtitle="Beragam hidangan Sunda siap memanjakan selera Anda.">
         {{-- Filter Tabs --}}
         <div class="flex flex-wrap gap-2 justify-center mb-8" id="menuTabs">
-            <button class="menu-tab active px-3 py-1.5 rounded-full text-xs font-bold bg-primary text-white"
+            <button class="menu-tab active px-3 py-1.5 rounded-full text-sm font-bold bg-primary text-white"
                 onclick="filterMenu('all', this)">Semua</button>
             @foreach ($kategoris as $kat)
                 <button
-                    class="menu-tab px-3 py-1.5 rounded-full text-xs font-bold bg-primary/5 text-primary hover:bg-primary/10"
+                    class="menu-tab px-3 py-1.5 rounded-full text-sm font-bold bg-primary/5 text-primary hover:bg-primary/10"
                     onclick="filterMenu('kat-{{ $kat->id }}', this)">{{ $kat->nama_kategori }}</button>
             @endforeach
         </div>
@@ -85,8 +85,8 @@
     </x-landing.section>
 
     {{-- 6. PAKET NASI BOX --}}
-    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Pemesanan min. H-2. DP 25%." bgBatik="true">
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Minimal 10 box. Pemesanan min. H-2. DP 25%." bgBatik="true">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             @forelse($paketNasiBox as $paket)
                 <x-landing.package-card :paket="$paket" type="nasi_box" />
             @empty
@@ -106,10 +106,10 @@
                     type="text"
                     name="kode_pesanan"
                     placeholder="Contoh: CAT-20240728-XXXX atau 08123456789"
-                    class="flex-1 border border-primary/20 rounded-3xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 focus:border-transparent outline-none shadow-sm bg-white"
+                    class="flex-1 border border-primary/20 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 focus:border-transparent outline-none shadow-sm bg-white"
                     required
                 >
-                <button type="submit" class="bg-primary hover:bg-primary-container text-white font-bold px-6 py-3 rounded-3xl text-sm transition-all shadow-sm flex items-center gap-2 shrink-0">
+                <button type="submit" class="bg-primary hover:bg-primary-container text-white font-bold px-6 py-3 rounded-xl text-sm transition-all shadow-sm flex items-center gap-2 shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>

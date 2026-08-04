@@ -11,4 +11,6 @@ class KetentuanPaket extends BaseModel
     protected $primaryKey = 'menu_id';
 
     public $incrementing = false;
+
+    public $timestamps = false;
 }

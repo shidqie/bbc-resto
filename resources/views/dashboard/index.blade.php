@@ -5,48 +5,60 @@
     <div class="space-y-6">
 
         {{-- ── STAT CARDS ── --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {{-- Stat 1: Pesanan Hari Ini --}}
-            <div class="bg-white rounded-2xl p-5 border border-neutral-200 flex flex-col gap-3">
-                <div class="flex items-center justify-between text-neutral-500">
-                    <p class="text-xs font-medium">Pesanan Hari Ini</p>
-                    <x-heroicon-o-shopping-bag class="w-4 h-4 text-neutral-400" />
+            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-sky-200 hover:shadow-sm">
+                <div class="w-11 h-11 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                    <x-heroicon-o-shopping-bag class="w-5 h-5" />
                 </div>
-                <div>
-                    <p class="text-2xl font-semibold text-neutral-900">{{ $pesananHariIni }}</p>
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-neutral-500">Pesanan Hari Ini</p>
+                    <p class="text-2xl font-bold text-neutral-900">{{ $pesananHariIni }}</p>
                 </div>
             </div>
 
             {{-- Stat 2: Pendapatan Hari Ini --}}
-            <div class="bg-white rounded-2xl p-5 border border-neutral-200 flex flex-col gap-3">
-                <div class="flex items-center justify-between text-neutral-500">
-                    <p class="text-xs font-medium">Pendapatan Hari Ini</p>
-                    <x-heroicon-o-banknotes class="w-4 h-4 text-neutral-400" />
+            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-emerald-200 hover:shadow-sm">
+                <div class="w-11 h-11 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <x-heroicon-o-banknotes class="w-5 h-5" />
                 </div>
-                <div>
-                    <p class="text-2xl font-semibold text-neutral-900">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</p>
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-neutral-500">Pendapatan Hari Ini</p>
+                    <p class="text-2xl font-bold text-emerald-700">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</p>
                 </div>
             </div>
 
             {{-- Stat 3: Pesanan Pending --}}
-            <div class="bg-white rounded-2xl p-5 border border-neutral-200 flex flex-col gap-3">
-                <div class="flex items-center justify-between text-neutral-500">
-                    <p class="text-xs font-medium">Pesanan Pending</p>
-                    <x-heroicon-o-clock class="w-4 h-4 text-neutral-400" />
+            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-amber-200 hover:shadow-sm">
+                <div class="w-11 h-11 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <x-heroicon-o-clock class="w-5 h-5" />
                 </div>
-                <div>
-                    <p class="text-2xl font-semibold text-neutral-900">{{ $pesananPending }}</p>
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-neutral-500">Pesanan Pending</p>
+                    <p class="text-2xl font-bold text-amber-600">{{ $pesananPending }}</p>
                 </div>
             </div>
 
             {{-- Stat 4: Stok Menipis --}}
-            <div class="bg-white rounded-2xl p-5 border border-neutral-200 flex flex-col gap-3">
-                <div class="flex items-center justify-between text-neutral-500">
-                    <p class="text-xs font-medium">Stok Menipis</p>
-                    <x-heroicon-o-cube class="w-4 h-4 text-neutral-400" />
+            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-rose-200 hover:shadow-sm">
+                <div class="w-11 h-11 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                    <x-heroicon-o-cube class="w-5 h-5" />
                 </div>
-                <div>
-                    <p class="text-2xl font-semibold text-neutral-900">{{ $stokMenipis }}</p>
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-neutral-500">Stok Menipis</p>
+                    <p class="text-2xl font-bold text-rose-600">{{ $stokMenipis }}</p>
+                </div>
+            </div>
+
+            {{-- Stat 5: Notifikasi Stok --}}
+            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-violet-200 hover:shadow-sm">
+                <div class="w-11 h-11 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+                    <x-heroicon-o-bell-alert class="w-5 h-5" />
+                </div>
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-neutral-500">Notifikasi Stok</p>
+                    <p class="text-2xl font-bold {{ $unreadNotifikasiStok > 0 ? 'text-violet-600' : 'text-neutral-900' }}">{{ $unreadNotifikasiStok }}</p>
+                    <p class="text-xs {{ $unreadNotifikasiStok > 0 ? 'text-violet-500' : 'text-emerald-500' }} font-medium">{{ $unreadNotifikasiStok > 0 ? $unreadNotifikasiStok.' belum dibaca' : 'Semua dibaca' }}</p>
                 </div>
             </div>
         </div>
@@ -55,7 +67,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {{-- 7-Day Revenue Trend Chart (2 Cols) --}}
-            <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-neutral-200 flex flex-col justify-between">
+            <div class="lg:col-span-2 bg-white rounded-lg p-6 border border-neutral-200 flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-4 pb-3 border-b border-neutral-100">
                     <div>
                         <h2 class="font-semibold text-neutral-900 text-base">Tren Pendapatan (7 Hari Terakhir)</h2>
@@ -76,7 +88,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {{-- Transaksi Terbaru (2 Cols) --}}
-            <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-neutral-200">
+            <div class="lg:col-span-2 bg-white rounded-lg p-6 border border-neutral-200">
                 <div class="flex justify-between items-center mb-4 pb-3 border-b border-neutral-100">
                     <div>
                         <h3 class="font-semibold text-neutral-900 text-base">Transaksi Terbaru</h3>
@@ -90,7 +102,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                            <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
                                 <th class="px-4 py-3 text-left">No. Kode</th>
                                 <th class="px-4 py-3 text-left">Jenis Pesanan</th>
                                 <th class="px-4 py-3 text-left">Waktu</th>
@@ -127,7 +139,7 @@
                                         Rp {{ number_format($p->total, 0, ',', '.') }}
                                     </td>
                                     <td class="px-4 py-3">
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 {{ $badgeBg }}">
+                                        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold border shrink-0 {{ $badgeBg }}">
                                             {{ $badgeText }}
                                         </span>
                                     </td>
@@ -152,7 +164,7 @@
             </div>
 
             {{-- Peringatan Stok (1 Col) --}}
-            <div class="bg-white rounded-2xl p-6 border border-neutral-200 flex flex-col justify-between">
+            <div class="bg-white rounded-lg p-6 border border-neutral-200 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-center mb-4 pb-3 border-b border-neutral-100">
                         <h3 class="font-semibold text-neutral-900 text-base">Peringatan Stok</h3>
@@ -170,7 +182,7 @@
                                     </div>
                                     <div class="min-w-0">
                                         <p class="font-medium text-neutral-900 text-xs truncate">{{ $stok->nama_bahan }}</p>
-                                        <p class="text-[10px] text-neutral-400 font-medium">Min: {{ $stok->stok_minimal }} {{ $stok->satuan->nama_satuan ?? '' }}</p>
+                                        <p class="text-xs text-neutral-400 font-medium">Min: {{ $stok->stok_minimal }} {{ $stok->satuan->nama_satuan ?? '' }}</p>
                                     </div>
                                 </div>
                                 <span class="px-2.5 py-1 bg-neutral-100 text-neutral-700 font-semibold text-xs rounded border border-neutral-200 shrink-0">
@@ -213,11 +225,11 @@
                 datasets: [{
                     label: 'Pendapatan (Rp)',
                     data: data,
-                    borderColor: '#171717',
+                    borderColor: '#0D3024',
                     backgroundColor: gradient,
                     borderWidth: 2,
                     pointBackgroundColor: '#FFFFFF',
-                    pointBorderColor: '#171717',
+                    pointBorderColor: '#0D3024',
                     pointBorderWidth: 2,
                     pointRadius: 4,
                     pointHoverRadius: 6,
@@ -231,7 +243,7 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#171717',
+                        backgroundColor: '#0D3024',
                         padding: 10,
                         titleFont: { size: 12, weight: 'bold' },
                         bodyFont: { size: 13, weight: 'bold' },

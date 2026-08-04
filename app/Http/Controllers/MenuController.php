@@ -6,7 +6,7 @@ use App\Models\BahanBaku;
 use App\Models\JenisMenu;
 use App\Models\KategoriMenu;
 use App\Models\Menu;
-use App\Models\ResepMenu;
+use App\Models\StokBahan;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,9 +43,25 @@ class MenuController extends Controller
         $stats = [
             'total' => Menu::count(),
             'dine_in' => Menu::where('jenis_menu_id', 1)->count(),
-            'catering' => Menu::where('jenis_menu_id', 2)->count(),
-            'nasi_box' => Menu::where('jenis_menu_id', 3)->count(),
+            'catering' => Menu::where('jenis_menu_id', 2)->whereHas('komponen_paket')->count(),
+            'nasi_box' => Menu::where('jenis_menu_id', 3)->whereHas('komponen_paket')->count(),
         ];
+
+        $stokBahan = StokBahan::harian()->pluck('jumlah_stok', 'bahan_baku_id');
+        $menus->getCollection()->transform(function ($menu) use ($stokBahan) {
+            $porsi = null;
+            if ($menu->resep_menu->isNotEmpty()) {
+                foreach ($menu->resep_menu as $resep) {
+                    $stok = (float) ($stokBahan[$resep->bahan_baku_id] ?? 0);
+                    $butuh = (float) $resep->jumlah;
+                    $bisa = $butuh > 0 ? (int) floor($stok / $butuh) : PHP_INT_MAX;
+                    $porsi = $porsi === null ? $bisa : min($porsi, $bisa);
+                }
+            }
+            $menu->setAttribute('porsi_tersedia', $porsi);
+
+            return $menu;
+        });
 
         return view('menu.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'stats'));
     }
@@ -108,27 +124,6 @@ class MenuController extends Controller
             }
 
             $menu = Menu::create($data);
-
-            if ($request->has('bahan_baku_id') && is_array($request->bahan_baku_id)) {
-                $jumlahCol = DB::getSchemaBuilder()->hasColumn('resep_menu', 'jumlah_kebutuhan') ? 'jumlah_kebutuhan' : 'jumlah';
-                $hasSatuanCol = DB::getSchemaBuilder()->hasColumn('resep_menu', 'satuan_id');
-
-                foreach ($request->bahan_baku_id as $idx => $bahanId) {
-                    $qty = $request->jumlah_kebutuhan[$idx] ?? 0;
-                    if ($bahanId && $qty > 0) {
-                        $bahan = BahanBaku::find($bahanId);
-                        $resepData = [
-                            'menu_id' => $menu->id,
-                            'bahan_baku_id' => $bahanId,
-                            $jumlahCol => $qty,
-                        ];
-                        if ($hasSatuanCol) {
-                            $resepData['satuan_id'] = $bahan->satuan_id ?? 1;
-                        }
-                        ResepMenu::create($resepData);
-                    }
-                }
-            }
 
             return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' berhasil disimpan.");
         });
@@ -195,29 +190,6 @@ class MenuController extends Controller
             }
 
             $menu->update($data);
-
-            $menu->resep_menu()->delete();
-
-            if ($request->has('bahan_baku_id') && is_array($request->bahan_baku_id)) {
-                $jumlahCol = DB::getSchemaBuilder()->hasColumn('resep_menu', 'jumlah_kebutuhan') ? 'jumlah_kebutuhan' : 'jumlah';
-                $hasSatuanCol = DB::getSchemaBuilder()->hasColumn('resep_menu', 'satuan_id');
-
-                foreach ($request->bahan_baku_id as $idx => $bahanId) {
-                    $qty = $request->jumlah_kebutuhan[$idx] ?? 0;
-                    if ($bahanId && $qty > 0) {
-                        $bahan = BahanBaku::find($bahanId);
-                        $resepData = [
-                            'menu_id' => $menu->id,
-                            'bahan_baku_id' => $bahanId,
-                            $jumlahCol => $qty,
-                        ];
-                        if ($hasSatuanCol) {
-                            $resepData['satuan_id'] = $bahan->satuan_id ?? 1;
-                        }
-                        ResepMenu::create($resepData);
-                    }
-                }
-            }
 
             return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' berhasil diperbarui.");
         });

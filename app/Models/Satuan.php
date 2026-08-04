@@ -7,4 +7,6 @@ class Satuan extends BaseModel
     protected $table = 'satuan';
 
     protected $guarded = [];
+
+    public $timestamps = false;
 }

@@ -13,7 +13,7 @@
         @method('patch')
 
         <div>
-            <label for="name" class="block text-xs font-medium text-neutral-700 mb-1.5">
+            <label for="name" class="block text-sm font-medium text-neutral-700 mb-1.5">
                 Nama Lengkap
             </label>
             <input id="name" name="name" type="text"
@@ -23,7 +23,7 @@
         </div>
 
         <div>
-            <label for="email" class="block text-xs font-medium text-neutral-700 mb-1.5">
+            <label for="email" class="block text-sm font-medium text-neutral-700 mb-1.5">
                 Alamat Email
             </label>
             <input id="email" name="email" type="email"
@@ -33,7 +33,7 @@
         </div>
 
         <div class="flex items-center gap-4 pt-2">
-            <button type="submit" class="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-700 text-white text-xs font-medium rounded-xl transition-colors flex items-center gap-2">
+            <button type="submit" class="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-700 text-white text-sm font-medium rounded-xl transition-colors flex items-center gap-2">
                 <x-heroicon-o-check class="w-3 h-3" /> Simpan Perubahan
             </button>
 

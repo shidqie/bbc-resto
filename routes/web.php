@@ -6,12 +6,14 @@ use App\Http\Controllers\BuktiPembayaranController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JadwalPengantaranController;
 use App\Http\Controllers\KategoriMenuController;
+use App\Http\Controllers\KetersediaanMenuController;
 use App\Http\Controllers\LacakPesananController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\MutasiStokController;
+use App\Http\Controllers\NotifikasiStokController;
 use App\Http\Controllers\PaketCateringController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PemasokController;
@@ -27,6 +29,7 @@ use App\Http\Controllers\QrMenuController;
 use App\Http\Controllers\ResepController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StokCateringController;
+use App\Http\Controllers\StokMenipisController;
 use App\Http\Controllers\StokOperasionalController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\VerifyCsrfToken;
@@ -48,6 +51,8 @@ Route::get('/qr-scanner', [QrMenuController::class, 'scanner'])->name('qr.scanne
 Route::get('/qr-menu/{token}', [QrMenuController::class, 'index'])->name('qr.menu');
 Route::get('/qr-menu', [QrMenuController::class, 'index'])->name('qr.menu.no-token');
 Route::post('/qr-menu/order', [QrMenuController::class, 'storeOrder'])->name('qr.menu.order');
+Route::get('/qr-menu/{token}/status', [QrMenuController::class, 'statusChecker'])->name('qr.menu.status');
+Route::get('/qr-menu/{token}/status/api', [QrMenuController::class, 'checkOrderStatus'])->name('qr.menu.status.api');
 
 // ─── PUBLIK — Form Nasi Box ───────────────────────────────────────────────────
 Route::get('/pesan/nasi-box', [PesananNasiBoxController::class, 'create'])->name('pesan.nasibox');
@@ -55,8 +60,11 @@ Route::post('/pesan/nasi-box', [PesananNasiBoxController::class, 'store'])->name
 Route::post('/pesan/nasi-box/preview', [PesananNasiBoxController::class, 'preview'])->name('pesan.nasibox.preview');
 
 // ─── PUBLIK — Bayar & Status ─────────────────────────────────────────────────
+Route::get('/pesan/bayar', [BuktiPembayaranController::class, 'cari'])->name('pesanan.bayar.cari');
+Route::get('/pesan/bayar/status/{kodePesanan}', [BuktiPembayaranController::class, 'statusJson'])->name('pesanan.bayar.status');
 Route::get('/pesan/bayar/{kodePesanan}', [BuktiPembayaranController::class, 'show'])->name('pesanan.bayar');
 Route::post('/pesan/bukti', [BuktiPembayaranController::class, 'store'])->name('pesanan.bukti.store');
+Route::post('/pesan/snap-token', [MidtransController::class, 'getSnapToken'])->name('pesanan.snap-token');
 
 Route::get('/lacak-pesanan', [LacakPesananController::class, 'index'])->name('lacak.index');
 Route::get('/pesan/invoice/{kodePesanan}', [BuktiPembayaranController::class, 'invoicePdf'])->name('pesanan.invoice');
@@ -79,9 +87,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)->except(['create', 'edit']);
         Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
-    });
-
-    Route::middleware(['role:Pemilik,Manajer', 'can:kelola-hak-akses'])->group(function () {
         Route::resource('roles', RoleController::class)->except(['create', 'show', 'edit']);
     });
 
@@ -95,6 +100,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/resep', [ResepController::class, 'index'])->name('resep.index');
         Route::get('/menu/{menu}/resep/create', [ResepController::class, 'create'])->name('resep.create');
         Route::post('/menu/{menu}/resep', [ResepController::class, 'store'])->name('resep.store');
+        Route::delete('/menu/{menu}/resep', [ResepController::class, 'destroy'])->name('resep.destroy');
+        Route::post('/menu/{menu}/komposisi', [ResepController::class, 'storeKomposisi'])->name('resep.komposisi.store');
 
         Route::resource('paket-catering', PaketCateringController::class);
         Route::patch('/paket-catering/{paketCatering}/toggle', [PaketCateringController::class, 'toggleActive'])->name('paket-catering.toggle');
@@ -108,6 +115,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/mutasi-stok', [MutasiStokController::class, 'index'])->name('mutasi-stok.index');
         Route::get('/stok-operasional', [StokOperasionalController::class, 'index'])->name('stok-operasional.index');
         Route::get('/stok-catering', [StokCateringController::class, 'index'])->name('stok-catering.index');
+        Route::get('/ketersediaan-menu', [KetersediaanMenuController::class, 'index'])->name('ketersediaan-menu.index');
+        // Notifikasi Stok
+        Route::get('/notifikasi-stok', [NotifikasiStokController::class, 'index'])->name('notifikasi-stok.index');
+        Route::post('/notifikasi-stok/{id}/read', [NotifikasiStokController::class, 'markAsRead'])->name('notifikasi-stok.read');
+        Route::post('/notifikasi-stok/mark-all-read', [NotifikasiStokController::class, 'markAllAsRead'])->name('notifikasi-stok.mark-all-read');
+        Route::post('/notifikasi-stok/check-now', [NotifikasiStokController::class, 'checkNow'])->name('notifikasi-stok.check-now');
+        Route::get('/notifikasi-stok/unread-count', [NotifikasiStokController::class, 'getUnreadCount'])->name('notifikasi-stok.unread-count');
+        // Stok Menipis
+        Route::get('/stok-menipis', [StokMenipisController::class, 'index'])->name('stok-menipis.index');
         // Penyesuaian Stok
         Route::get('/penyesuaian-stok', [PenyesuaianStokController::class, 'index'])->name('penyesuaian-stok.index');
         Route::get('/penyesuaian-stok/create', [PenyesuaianStokController::class, 'create'])->name('penyesuaian-stok.create');
@@ -118,7 +134,14 @@ Route::middleware('auth')->group(function () {
     // ─── PENGADAAN (Pemilik & Manajer) ───
     Route::middleware(['role:Admin,Pemilik,Manajer'])->group(function () {
         // Route spesifik HARUS didaftarkan sebelum resource agar tidak bentrok dengan wildcard {pengadaan}
+        Route::get('/pengadaan/usulan', [PengadaanController::class, 'usulan'])->name('pengadaan.usulan');
         Route::get('/pengadaan/terima-barang', [PengadaanController::class, 'terimaBarang'])->name('pengadaan.terima-barang');
+        Route::get('/pengadaan/harian', [PengadaanController::class, 'harian'])->name('pengadaan.harian');
+        Route::get('/pengadaan/catering', [PengadaanController::class, 'catering'])->name('pengadaan.catering');
+        Route::get('/pengadaan/create-harian', [PengadaanController::class, 'createHarian'])->name('pengadaan.create-harian');
+        Route::get('/pengadaan/create-catering', [PengadaanController::class, 'createCatering'])->name('pengadaan.create-catering');
+        Route::get('/pengadaan/terima-barang-harian', [PengadaanController::class, 'terimaBarangHarian'])->name('pengadaan.terima-barang-harian');
+        Route::get('/pengadaan/terima-barang-catering', [PengadaanController::class, 'terimaBarangCatering'])->name('pengadaan.terima-barang-catering');
         Route::get('/pengadaan/{pengadaan}/pdf', [PengadaanController::class, 'exportPdf'])->name('pengadaan.pdf');
         Route::get('/pengadaan/{pengadaan}/terima', [PengadaanController::class, 'formTerima'])->name('pengadaan.form-terima');
         Route::post('/pengadaan/{pengadaan}/terima', [PengadaanController::class, 'prosesTerima'])->name('pengadaan.proses-terima');
@@ -154,13 +177,15 @@ Route::middleware('auth')->group(function () {
         // Jadwal Pengantaran
         Route::get('/admin/jadwal-pengantaran', [JadwalPengantaranController::class, 'index'])->name('admin.jadwal-pengantaran.index');
         Route::patch('/admin/jadwal-pengantaran/{id}/update-status', [JadwalPengantaranController::class, 'updateStatus'])->name('admin.jadwal-pengantaran.update-status');
+        Route::patch('/admin/jadwal-pengantaran/{id}/pengantaran-status', [JadwalPengantaranController::class, 'updatePengantaranStatus'])->name('admin.jadwal-pengantaran.update-pengantaran-status');
         Route::get('/admin/jadwal-pengantaran/pdf', [JadwalPengantaranController::class, 'exportPdf'])->name('admin.jadwal-pengantaran.pdf');
     });
 
     // ─── JADWAL PENGANTARAN ───
-    Route::middleware(['role:Admin,Tim Pengantaran'])->group(function () {
+    Route::middleware(['role:Admin,Pengantaran'])->group(function () {
         Route::get('/admin/jadwal', [JadwalPengantaranController::class, 'index'])->name('admin.jadwal.index');
         Route::patch('/admin/jadwal/{jenis}/{id}/status', [JadwalPengantaranController::class, 'updateStatus'])->name('admin.jadwal.update-status');
+        Route::patch('/admin/jadwal/{id}/pengantaran-status', [JadwalPengantaranController::class, 'updatePengantaranStatus'])->name('admin.jadwal.update-pengantaran-status');
     });
 
     // ─── LAPORAN ───
@@ -181,9 +206,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/pos/dinein/qr-codes', [DineInController::class, 'printQrMeja'])->name('pos.dinein.print-qr');
     });
 
-    Route::middleware(['role:Admin,Kasir,Pemilik,Manajer'])->group(function () {
-        // Dine-In Table Management
+    Route::middleware(['role:Admin,Kasir,Pelayan,Pemilik,Manajer'])->group(function () {
+        // Dine-In Table Management (view + table status + checker meja & penyajian)
         Route::get('/pos/dinein', [DineInController::class, 'index'])->name('pos.dinein.index');
+        Route::get('/pos/dinein/table-status', [DineInController::class, 'tableStatusApi'])->name('pos.dinein.table-status');
+        Route::get('/pos/dinein/pesanan/{pesananId}/print-meja', [DineInController::class, 'printMeja'])->name('pos.dinein.print-meja');
+        Route::get('/pos/dinein/pesanan/{pesananId}/print-gabungan', [DineInController::class, 'printGabungan'])->name('pos.dinein.print-gabungan');
+        Route::patch('/pos/dinein/item/{itemId}/toggle-sajian', [DineInController::class, 'toggleStatusSajian'])->name('pos.dinein.toggle-sajian');
+    });
+
+    Route::middleware(['role:Admin,Kasir,Pemilik,Manajer'])->group(function () {
+        // Dine-In Table Management (kasir)
         Route::post('/pos/dinein/store', [DineInController::class, 'storePosOrder'])->name('pos.dinein.store-pos');
         Route::patch('/pos/dinein/meja/{meja}/clear', [DineInController::class, 'clearTable'])->name('pos.dinein.clear-table');
 
@@ -194,11 +227,9 @@ Route::middleware('auth')->group(function () {
 
         // Cetak Struk Dine In & Sub Status Update
         Route::get('/pos/dinein/pesanan/{pesananId}/print-dapur', [DineInController::class, 'printDapur'])->name('pos.dinein.print-dapur');
-        Route::get('/pos/dinein/pesanan/{pesananId}/print-meja', [DineInController::class, 'printMeja'])->name('pos.dinein.print-meja');
-        Route::get('/pos/dinein/pesanan/{pesananId}/print-gabungan', [DineInController::class, 'printGabungan'])->name('pos.dinein.print-gabungan');
         Route::get('/pos/dinein/pesanan/{pesananId}/print-nota', [DineInController::class, 'printNota'])->name('pos.dinein.print-nota');
         Route::patch('/pos/dinein/pesanan/{pesananId}/sub-status', [DineInController::class, 'updateSubStatus'])->name('pos.dinein.sub-status');
-        Route::patch('/pos/dinein/item/{itemId}/toggle-sajian', [DineInController::class, 'toggleStatusSajian'])->name('pos.dinein.toggle-sajian');
+        Route::patch('/pos/dinein/kot/{kotId}/status', [DineInController::class, 'updateKotStatus'])->name('pos.dinein.kot-status');
         Route::post('/pos/dinein/pesanan/{pesananId}/void', [DineInController::class, 'voidOrder'])->name('pos.dinein.void');
 
         // Pesanan CRUD (Update Status)

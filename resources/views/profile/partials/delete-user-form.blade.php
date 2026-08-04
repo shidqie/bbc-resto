@@ -11,7 +11,7 @@
     <button type="button"
         x-data=""
         x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-        class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold rounded-3xl shadow-md transition-all flex items-center gap-2"
+        class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2"
     >
         <x-heroicon-o-trash class="w-3 h-3" /> Hapus Akun Saya
     </button>
@@ -36,7 +36,7 @@
                     id="password"
                     name="password"
                     type="password"
-                    class="w-full px-4 py-2.5 rounded-3xl border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-900 focus:bg-white focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all"
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-900 focus:bg-white focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all"
                     placeholder="Masukkan Kata Sandi Anda"
                 />
 
@@ -44,11 +44,11 @@
             </div>
 
             <div class="mt-6 flex justify-end gap-3">
-                <button type="button" x-on:click="$dispatch('close')" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-3xl transition-colors">
+                <button type="button" x-on:click="$dispatch('close')" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold rounded-xl transition-colors">
                     Batal
                 </button>
 
-                <button type="submit" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-3xl shadow-sm transition-colors">
+                <button type="submit" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
                     Hapus Akun Permanen
                 </button>
             </div>

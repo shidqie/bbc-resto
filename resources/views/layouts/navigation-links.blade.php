@@ -9,8 +9,8 @@
 
     // Styling classes based on mobile or desktop
     $baseClass = $isMobile 
-        ? "flex flex-col items-center gap-0.5 text-[10px] px-2 transition-colors " 
-        : "flex items-center gap-3 px-3 py-2.5 rounded-3xl text-sm font-semibold transition-colors ";
+        ? "flex flex-col items-center gap-0.5 text-sm px-2 transition-colors " 
+        : "flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-semibold transition-colors ";
     
     $activeClass = $isMobile 
         ? "text-brand-primary" 
@@ -20,7 +20,7 @@
         ? "text-[#8a8070] hover:text-brand-primary" 
         : "text-brand-text hover:bg-white/50";
 
-    $iconClass = $isMobile ? "text-lg mb-0.5" : "text-lg";
+    $iconClass = $isMobile ? "text-xl mb-0.5" : "text-xl";
 @endphp
 
 <!-- Dashboard (Semua Role) -->

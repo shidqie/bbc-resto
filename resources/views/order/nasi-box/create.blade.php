@@ -101,7 +101,7 @@
             </div>
 
             @if($errors->any())
-                <div class="bg-red-50 border border-red-200 text-red-700 rounded-3xl p-4 mb-6">
+                <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6">
                     <ul class="list-disc list-inside text-sm space-y-1">
                         @foreach($errors->all() as $err)
                             <li>{{ $err }}</li>
@@ -122,14 +122,21 @@
                     <h2 class="text-lg font-bold text-gray-900 mb-5">1. Pilih Varian Nasi Box</h2>
                     <div class="grid md:grid-cols-3 gap-4">
                         @foreach($pakets as $paket)
-                            <label class="paket-card cursor-pointer border-2 rounded-3xl p-5 transition-all duration-200 hover:border-primary border-gray-200"
+                            <label class="paket-card cursor-pointer border-2 rounded-xl p-5 transition-all duration-200 hover:border-primary border-gray-200"
                                    data-paket-id="{{ $paket->id }}" data-harga="{{ $paket->harga_jual }}">
                                 <input type="radio" name="paket_id" value="{{ $paket->id }}" class="sr-only paket-radio" {{ old('paket_id') == $paket->id ? 'checked' : '' }} required>
+                                @if($paket->foto)
+                                    <img src="{{ Storage::url($paket->foto) }}" alt="{{ $paket->nama_menu }}" class="w-full h-40 object-cover rounded-lg mb-4">
+                                @else
+                                    <div class="w-full h-40 rounded-lg bg-neutral-100 flex items-center justify-center mb-4">
+                                        <svg class="w-10 h-10 text-neutral-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    </div>
+                                @endif
                                 <div class="mb-3">
                                     <h3 class="text-lg font-serif text-primary font-semibold">{{ $paket->nama_menu }}</h3>
                                     <span class="text-secondary font-bold text-lg">Rp {{ number_format($paket->harga_jual, 0, ',', '.') }}<span class="text-sm font-normal text-body">/box</span></span>
                                 </div>
-                                <p class="text-body text-xs mb-3">{{ $paket->deskripsi }}</p>
+                                <p class="text-body text-sm mb-3">{{ $paket->deskripsi }}</p>
                                 <div class="mt-3 text-xs font-semibold text-primary opacity-0 selected-indicator transition-opacity">✓ Dipilih</div>
                             </label>
                         @endforeach
@@ -153,19 +160,19 @@
                             <input type="date" name="tanggal_acara" id="tanggalAcara"
                                    min="{{ \Carbon\Carbon::today()->addDays(2)->format('Y-m-d') }}"
                                    value="{{ old('tanggal_acara') }}"
-                                   class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
                             <p id="tanggal-warning" class="text-red-500 text-xs mt-1 hidden">Pesanan nasi box maksimal H-2 sebelum acara.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jumlah Box <span class="text-red-500">*</span></label>
                             <input type="number" name="jumlah_box" id="jumlahBox" min="10" value="{{ old('jumlah_box', 10) }}"
-                                   class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
                              <p id="jumlah-warning" class="text-red-500 text-xs mt-1 hidden">Minimal order 10 box.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Pemesan <span class="text-red-500">*</span></label>
                             <input type="text" name="nama_pemesan" value="{{ old('nama_pemesan', optional(auth('pelanggan')->user())->nama ?? '') }}"
-                                   class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
                         </div>
                         <div>
                             <x-input-wa name="kontak" label="Nomor WhatsApp" :value="optional(auth('pelanggan')->user())->nomor_telepon ?? ''" :required="true" hint="Nomor aktif WhatsApp untuk konfirmasi pesanan." />
@@ -190,17 +197,17 @@
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Venue / Gedung (Opsional)</label>
                                 <input type="text" name="alamat_venue" value="{{ old('alamat_venue') }}" placeholder="Contoh: Gedung Sabuga / Aula Serbaguna"
-                                       class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50 mb-4">
+                                       class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50 mb-4">
                                        
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Alamat Lengkap <span class="text-red-500">*</span></label>
-                                <textarea name="alamat" id="alamatDelivery" rows="2"
-                                        class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">{{ old('alamat', auth()->user()->alamat ?? '') }}</textarea>
+                                <textarea name="lokasi_acara" id="alamatDelivery" rows="2"
+                                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">{{ old('lokasi_acara', auth()->user()->alamat ?? '') }}</textarea>
                             </div>
 
                             {{-- Map Container --}}
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lokasi Pengiriman <span class="text-red-500">*</span></label>
                             <p class="text-xs text-body/60 mb-2">💡 Tip: Cari alamat lewat ikon 🔍 di peta, lalu geser pin ke titik yang tepat.</p>
-                            <div id="map-container" class="rounded-[2.25rem] overflow-hidden border border-gray-200 shadow-md mb-3 z-0" style="height: 340px; position:relative;">
+                            <div id="map-container" class="rounded-xl overflow-hidden border border-gray-200 shadow-md mb-3 z-0" style="height: 340px; position:relative;">
                                 {{-- Address Card Overlay --}}
                                 <div id="map-address-card">
                                     <div class="card-label">📍 Alamat Kamu</div>
@@ -219,21 +226,21 @@
                             {{-- Jarak Info Card Minimalist --}}
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5 mt-4">Jarak Pengiriman (Otomatis)</label>
                             <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                                <div class="flex-1 bg-white p-3 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-3">
+                                <div class="flex-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 flex-shrink-0">
                                         <i class="ph ph-storefront text-lg"></i>
                                     </div>
                                     <div>
-                                        <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Titik Resto</p>
+                                        <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Titik Resto</p>
                                         <p class="text-xs font-bold text-gray-800">Saung Babakan Cinta</p>
                                     </div>
                                 </div>
-                                <div class="flex-1 bg-white p-3 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-3">
+                                <div class="flex-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 flex-shrink-0">
                                         <i class="ph ph-truck text-lg"></i>
                                     </div>
                                     <div>
-                                        <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Jarak Pengiriman</p>
+                                        <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Jarak Pengiriman</p>
                                         <p class="text-xs font-bold text-gray-800" id="textJarak">– km</p>
                                     </div>
                                 </div>
@@ -244,14 +251,14 @@
 
                         <div id="pickupSection" class="md:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Alamat (Optional untuk pickup)</label>
-                            <textarea name="alamat" id="alamatPickup" rows="2"
-                                      class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">-</textarea>
+                            <textarea name="lokasi_acara" id="alamatPickup" rows="2"
+                                      class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">-</textarea>
                         </div>
 
                         <div class="md:col-span-2 mt-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Catatan Tambahan</label>
                             <textarea name="catatan" rows="2"
-                                      class="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">{{ old('catatan') }}</textarea>
+                                      class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">{{ old('catatan') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -260,14 +267,14 @@
                 <div class="py-8">
                     <h2 class="text-lg font-bold text-gray-900 mb-5">3. Pembayaran</h2>
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <label class="flex-1 flex items-center gap-3 border border-primary bg-primary/5 rounded-2xl px-4 py-3.5 cursor-pointer transition">
+                        <label class="flex-1 flex items-center gap-3 border border-primary bg-primary/5 rounded-lg px-4 py-3.5 cursor-pointer transition">
                             <input type="radio" name="opsi_pembayaran" value="dp" checked class="w-4 h-4 accent-primary" onchange="updatePaymentLabel(this.value)">
                             <div>
                                 <p class="text-sm font-semibold text-gray-900">Bayar DP (25%)</p>
                                 <p class="text-xs text-gray-500">Sisa dibayar nanti</p>
                             </div>
                         </label>
-                        <label class="flex-1 flex items-center gap-3 border border-gray-200 bg-white rounded-2xl px-4 py-3.5 cursor-pointer hover:border-primary/30 transition">
+                        <label class="flex-1 flex items-center gap-3 border border-gray-200 bg-white rounded-lg px-4 py-3.5 cursor-pointer hover:border-primary/30 transition">
                             <input type="radio" name="opsi_pembayaran" value="lunas" class="w-4 h-4 accent-primary" onchange="updatePaymentLabel(this.value)">
                             <div>
                                 <p class="text-sm font-semibold text-gray-900">Bayar Lunas (100%)</p>
@@ -281,7 +288,7 @@
                     {{-- RIGHT COLUMN: Ringkasan & Submit (Sticky) --}}
                     <div class="lg:col-span-1 sticky top-28">
                         {{-- SECTION 4: Ringkasan & Submit --}}
-                        <div class="bg-gray-50/50 border border-gray-200 rounded-3xl p-6">
+                        <div class="bg-gray-50/50 border border-gray-200 rounded-xl p-6">
                             <h2 class="text-base font-bold text-gray-900 mb-4 pb-4 border-b border-gray-200">
                                 Ringkasan Pesanan
                             </h2>
@@ -302,13 +309,13 @@
                                     <span class="font-semibold text-gray-900">Total Tagihan</span>
                                     <span id="total-tagihan" class="font-bold text-gray-900">Rp 0</span>
                                 </div>
-                                <div class="flex justify-between text-base bg-amber-50 rounded-2xl p-3 mt-4 border border-amber-100">
+                                <div class="flex justify-between text-base bg-amber-50 rounded-lg p-3 mt-4 border border-amber-100">
                                     <span id="label-payment" class="text-amber-800 font-medium">DP (25%)</span>
                                     <span id="dp-amount" class="font-bold text-amber-600">Rp 0</span>
                                 </div>
                             </div>
                             <button type="submit" id="submitBtn"
-                                    class="w-full bg-primary hover:bg-primary-container text-white font-semibold py-3 rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    class="w-full bg-primary hover:bg-primary-container text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 Lanjut Pembayaran
                             </button>
                         </div>
@@ -444,12 +451,12 @@
                 }, function(error) {
                     console.log("Geolocation error:", error);
                     if (showAlert) {
-                        alert("Gagal mendeteksi lokasi. Pastikan izin lokasi (GPS) diaktifkan di browser.");
+                        window.showToast('error', "Gagal mendeteksi lokasi. Pastikan izin lokasi (GPS) diaktifkan di browser.");
                         document.getElementById('cardAlamat').textContent = "Geser pin ke lokasi kamu...";
                     }
                 }, { enableHighAccuracy: true });
             } else if (showAlert) {
-                alert("Browser Anda tidak mendukung fitur lokasi GPS.");
+                window.showToast('error', "Browser Anda tidak mendukung fitur lokasi GPS.");
             }
         }
 
@@ -505,7 +512,7 @@
                     document.getElementById('alamatDelivery').required = true;
                     document.getElementById('alamatPickup').required = false;
                     document.getElementById('alamatPickup').name = '';
-                    document.getElementById('alamatDelivery').name = 'alamat';
+                    document.getElementById('alamatDelivery').name = 'lokasi_acara';
                     setTimeout(initMap, 200);
                 } else {
                     document.getElementById('deliverySection').classList.add('hidden');
@@ -513,7 +520,7 @@
                     document.getElementById('alamatDelivery').required = false;
                     document.getElementById('alamatPickup').required = true;
                     document.getElementById('alamatDelivery').name = '';
-                    document.getElementById('alamatPickup').name = 'alamat';
+                    document.getElementById('alamatPickup').name = 'lokasi_acara';
                 }
                 hitungTotalPreview();
             });
@@ -551,7 +558,7 @@
             container.innerHTML = '';
             komponens.forEach(komp => {
                 const div = document.createElement('div');
-                div.className = 'border border-gray-100 rounded-3xl p-4 bg-canvas';
+                div.className = 'border border-gray-100 rounded-xl p-4 bg-canvas';
                 
                 if (komp.tipe === 'fixed') {
                     div.innerHTML = `
@@ -645,7 +652,7 @@
                     // Tier gratis ongkir akan otomatis menjadi Rp 0 dari server
                     document.getElementById('submitBtn').disabled = false;
                 } else {
-                    alert(data.error || "Gagal menghitung tagihan.");
+                    window.showToast('error', data.error || "Gagal menghitung tagihan.");
                     document.getElementById('submitBtn').disabled = true;
                 }
             } catch(e) {

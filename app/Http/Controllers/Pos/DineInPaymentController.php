@@ -63,7 +63,7 @@ class DineInPaymentController extends Controller
                 'metode_pembayaran_id' => $metodeId,
                 'jenis_pembayaran_id' => 1, // 1 = Pembayaran Penuh
                 'jumlah_bayar' => $request->jumlah_bayar ?? $pesanan->total_tagihan,
-                'status_pembayaran_id' => 2, // 2 = Lunas
+                'status_pembayaran_id' => 3, // 3 = Lunas
                 'diproses_oleh' => Auth::id(),
                 'dibayar_pada' => now(),
             ]);
