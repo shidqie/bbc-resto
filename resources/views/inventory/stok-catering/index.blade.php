@@ -1,88 +1,56 @@
-{{-- Halaman: Stok Catering --}}
+{{-- Halaman: Stok Katering --}}
 @extends('layouts.pos')
-@section('title', 'Stok Catering')
+@section('title', 'Stok Katering')
 
 @section('content')
 <div class="flex-1 bg-gray-50 text-gray-800">
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Stok Catering</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Monitor kebutuhan & ketersediaan bahan baku per pesanan catering berdasarkan resep menu × jumlah porsi.</p>
-            </div>
-            <a href="{{ route('pengadaan.create') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                <x-heroicon-o-plus class="w-3 h-3" />
-                Buat Pengadaan
-            </a>
-        </div>
+        <x-ui.page-header
+            title="Stok Katering"
+            subtitle="Monitor kebutuhan & ketersediaan bahan baku per pesanan catering berdasarkan resep menu × jumlah porsi."
+            :breadcrumbs="['Persediaan', 'Stok Katering']">
+            <x-slot:actions>
+                <a href="{{ route('pengadaan.catering.create') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+                    <x-heroicon-o-plus class="w-4 h-4" />
+                    Buat Permintaan
+                </a>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         {{-- Stat Cards --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
-                <p class="text-sm font-medium text-gray-500">Total Bahan Catering</p>
-                <p class="text-xl font-bold text-gray-900 mt-1">{{ $stats['total_bahan'] }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-emerald-200 px-4 py-3">
-                <p class="text-sm font-medium text-gray-500">Stok Aman</p>
-                <p class="text-xl font-bold text-emerald-600 mt-1">{{ $stats['total_aman'] }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-amber-200 px-4 py-3">
-                <p class="text-sm font-medium text-gray-500">Stok Menipis</p>
-                <p class="text-xl font-bold text-amber-600 mt-1">{{ $stats['total_menipis'] }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-red-200 px-4 py-3">
-                <p class="text-sm font-medium text-gray-500">Stok Habis</p>
-                <p class="text-xl font-bold text-red-600 mt-1">{{ $stats['total_habis'] }}</p>
-            </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <x-ui.stat-card label="Total Bahan Katering" :value="$stats['total_bahan']" icon="cube" color="blue" />
+            <x-ui.stat-card label="Stok Aman" :value="$stats['total_aman']" icon="check-circle" color="green" />
+            <x-ui.stat-card label="Stok Menipis" :value="$stats['total_menipis']" icon="exclamation-triangle" color="orange" />
+            <x-ui.stat-card label="Stok Habis" :value="$stats['total_habis']" icon="x-circle" color="red" />
         </div>
 
-        {{-- Tabs --}}
-        <x-ui.tab-list>
-            <x-ui.tab href="{{ route('stok-operasional.index') }}" :active="request()->routeIs('stok-operasional.*')">
-                <x-heroicon-o-building-storefront class="w-3 h-3 shrink-0 inline-block mr-1.5" />
-                Dine In & Nasi Box
-            </x-ui.tab>
-            <x-ui.tab href="{{ route('stok-catering.index') }}" :active="request()->routeIs('stok-catering.*')">
-                <x-heroicon-o-truck class="w-3 h-3 shrink-0 inline-block mr-1.5" />
-                Catering
-            </x-ui.tab>
-        </x-ui.tab-list>
+        <x-ui.alert />
 
-        {{-- Filter Bar --}}
-        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
-            <form action="{{ route('stok-catering.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari bahan baku..." />
-                <div class="relative shrink-0">
-                    <select name="kategori" class="w-full appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-9 text-sm text-gray-900 shadow-sm outline-none transition-all focus:border-gray-400 focus:ring-1 focus:ring-gray-400" onchange="this.form.submit()">
-                        <option value="">Semua Kategori</option>
-                        @foreach($kategoris as $kat)
-                            <option value="{{ $kat->id }}" {{ request('kategori') == $kat->id ? 'selected' : '' }}>{{ $kat->nama_kategori }}</option>
-                        @endforeach
-                    </select>
-                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                    </span>
-                </div>
-                <x-select-input name="status" :options="['aman' => 'Aman', 'menipis' => 'Menipis', 'habis' => 'Habis']" :selected="request('status')" placeholder="Semua Status" auto-submit="true" />
-                <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
-                @if(request()->hasAny(['search', 'kategori', 'status']))
-                    <a href="{{ route('stok-catering.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
-                @endif
-            </form>
-        </div>
+        {{-- Table with integrated toolbar --}}
+        <x-ui.data-table :paginator="$bahanBakus">
+            <x-slot:toolbar>
+                <form action="{{ route('stok-catering.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
+                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari bahan baku..." />
+                    <x-select-input name="kategori" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori')" placeholder="Semua Kategori" :auto-submit="true" />
+                    <x-select-input name="status" :options="['aman' => 'Aman', 'menipis' => 'Menipis', 'habis' => 'Habis']" :selected="request('status')" placeholder="Semua Status" :auto-submit="true" />
+                    <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+                    @if(request()->hasAny(['search', 'kategori', 'status']))
+                        <a href="{{ route('stok-catering.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                    @endif
+                </form>
+            </x-slot:toolbar>
 
-        {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No.</th>
-                        <th class="px-4 py-3 text-left">Bahan Baku</th>
-                        <th class="px-4 py-3 text-left">Kategori</th>
+                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        <th class="px-4 py-3 text-left w-12">No</th>
+                        <th class="px-4 py-3 text-left">Nama Bahan</th>
+                        <th class="px-4 py-3 text-left">Satuan</th>
                         <th class="px-4 py-3 text-right">Stok Saat Ini</th>
-                        <th class="px-4 py-3 text-right">Stok Min.</th>
+                        <th class="px-4 py-3 text-right">Stok Minimum</th>
                         <th class="px-4 py-3 text-left">Status</th>
                         <th class="px-4 py-3 text-center">Aksi</th>
                     </tr>
@@ -101,7 +69,7 @@
                             <p class="font-semibold text-gray-900 leading-tight">{{ $bahan->nama_bahan }}</p>
                             <p class="text-xs text-gray-400 mt-0.5">{{ $bahan->kode_bahan }}</p>
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-600 font-medium">{{ $bahan->kategori_bahan_baku->nama_kategori ?? '-' }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600 font-medium">{{ $bahan->satuan->nama_satuan ?? '-' }}</td>
                         <td class="px-4 py-3 text-right">
                             <span class="font-bold text-lg {{ $isHabis ? 'text-red-600' : ($isMenipis ? 'text-amber-600' : 'text-emerald-600') }}">{{ number_format($stok, 2) }}</span>
                             <span class="text-xs text-gray-400"> {{ $bahan->satuan->singkatan ?? '' }}</span>
@@ -111,26 +79,20 @@
                         </td>
                         <td class="px-4 py-3">
                             @if($isHabis)
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-xl bg-red-50 text-red-700">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Habis
-                                </span>
+                                <x-ui.badge color="danger" dot>Habis</x-ui.badge>
                             @elseif($isMenipis)
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-xl bg-amber-50 text-amber-700">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Menipis
-                                </span>
+                                <x-ui.badge color="warning" dot>Menipis</x-ui.badge>
                             @else
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-xl bg-emerald-50 text-emerald-700">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Aman
-                                </span>
+                                <x-ui.badge color="success" dot>Aman</x-ui.badge>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <a href="{{ route('bahan-baku.show', $bahan->id) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                                <button type="button" onclick="openDetailDrawer({{ $bahan->id }})" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
                                     <x-heroicon-o-eye class="w-3 h-3" />
-                                </a>
-                                <a href="{{ route('penyesuaian-stok.create') }}" title="Penyesuaian Stok" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                    <x-heroicon-o-cube class="w-3 h-3" />
+                                </button>
+                                <a href="{{ route('mutasi-stok.index', ['bahan_baku_id' => $bahan->id, 'jenis_persediaan' => 'Catering']) }}" title="Riwayat Stok" class="w-7 h-7 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors">
+                                    <x-heroicon-o-clock class="w-3 h-3" />
                                 </a>
                             </div>
                         </td>
@@ -140,8 +102,7 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
-        <div class="mt-4 shrink-0">{{ $bahanBakus->links() }}</div>
+        </x-ui.data-table>
 
     </div>
 </div>

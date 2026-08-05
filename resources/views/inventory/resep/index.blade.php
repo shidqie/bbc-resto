@@ -5,12 +5,7 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Kelola Komposisi Bahan</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Kelola resep atau Bill of Materials (BOM) untuk setiap menu.</p>
-            </div>
-        </div>
+        <x-ui.page-header title="Kelola Komposisi Bahan" subtitle="Kelola resep atau Bill of Materials (BOM) untuk setiap menu." />
 
         <x-ui.alert />
 

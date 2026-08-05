@@ -1,65 +1,52 @@
-{{-- 
-    Halaman: Daftar Pesanan Dine-In
-    UI: disamakan dengan Kelola Menu
---}}
+{{-- Halaman: Semua Pesanan --}}
 @extends('layouts.pos')
-
-@section('title', 'Daftar Pesanan Dine-In')
+@section('title', 'Semua Pesanan')
 
 @section('content')
 <div class="flex-1 bg-gray-50 text-gray-800">
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Daftar Pesanan Resto</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Kelola transaksi pesanan dine-in, rincian menu, status dapur, dan pembayaran</p>
-            </div>
-            <a href="{{ route('pos.dinein.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Pesanan Baru (POS)
-            </a>
+        <x-ui.page-header
+            title="Semua Pesanan"
+            subtitle="Daftar seluruh pesanan Dine In, Katering, dan Nasi Box."
+            :breadcrumbs="['Pesanan', 'Semua Pesanan']">
+            <x-slot:actions>
+                <a href="{{ route('pos.dinein.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+                    <x-heroicon-o-plus class="w-4 h-4" />
+                    Pesanan Baru (POS)
+                </a>
+            </x-slot:actions>
+        </x-ui.page-header>
+
+        {{-- Stat Cards --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <x-ui.stat-card label="Pesanan Baru" :value="$stats['baru']" icon="inbox" color="blue" />
+            <x-ui.stat-card label="Sedang Diproses" :value="$stats['diproses']" icon="clock" color="orange" />
+            <x-ui.stat-card label="Pesanan Selesai" :value="$stats['selesai']" icon="check-circle" color="green" />
+            <x-ui.stat-card label="Total Transaksi" :value="$pesanans->total()" icon="document-text" color="brand" />
         </div>
 
         <x-ui.alert />
 
-        {{-- Stat Cards --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
-                <p class="text-sm font-medium text-gray-500">Pesanan Baru</p>
-                <p class="text-xl font-bold text-blue-600 mt-1">{{ $stats['baru'] }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
-                <p class="text-sm font-medium text-gray-500">Sedang Diproses</p>
-                <p class="text-xl font-bold text-amber-600 mt-1">{{ $stats['diproses'] }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
-                <p class="text-sm font-medium text-gray-500">Pesanan Selesai</p>
-                <p class="text-xl font-bold text-emerald-600 mt-1">{{ $stats['selesai'] }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
-                <p class="text-sm font-medium text-gray-500">Total Transaksi</p>
-                <p class="text-xl font-bold text-gray-900 mt-1">{{ $pesanans->total() }}</p>
-            </div>
-        </div>
+        {{-- Table with integrated toolbar --}}
+        <x-ui.data-table :paginator="$pesanans">
+            <x-slot:toolbar>
+                <form action="{{ route('pesanan.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
+                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama / Meja…" />
+                    <x-select-input name="jenis" :options="['dine_in' => 'Dine In', 'catering' => 'Katering', 'nasi_box' => 'Nasi Box']" :selected="request('jenis')" placeholder="Semua Jenis" :auto-submit="true" />
+                    <x-select-input name="status" :options="['baru' => 'Baru', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status')" placeholder="Semua Status" :auto-submit="true" />
+                    <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+                    @if(request()->hasAny(['search', 'jenis', 'status']))
+                        <a href="{{ route('pesanan.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                    @endif
+                </form>
+            </x-slot:toolbar>
 
-        {{-- Filter Bar --}}
-        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
-            <form action="{{ route('pesanan.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama / Meja…" />
-                <x-select-input name="jenis" :options="['dine_in' => 'Dine In', 'catering' => 'Catering', 'nasi_box' => 'Nasi Box']" :selected="request('jenis')" placeholder="Semua Jenis" auto-submit="true" />
-                <x-select-input name="status" :options="['baru' => 'Baru', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status')" placeholder="Semua Status" auto-submit="true" />
-                <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
-            </form>
-        </div>
-
-        {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
             <table class="w-full text-sm min-w-[900px]">
                 <thead>
-                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No.</th>
+                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        <th class="px-4 py-3 text-left w-12">No</th>
                         <th class="px-4 py-3 text-left">Info Pesanan</th>
                         <th class="px-4 py-3 text-left">Pelanggan &amp; Lokasi</th>
                         <th class="px-4 py-3 text-left">Rincian Menu</th>
@@ -127,15 +114,15 @@
                         <td class="px-4 py-3">
                             <p class="font-semibold text-gray-900 text-sm">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</p>
                             @if($p->status_pembayaran == 'lunas')
-                                <span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-xl bg-emerald-50 text-emerald-700 mt-1">Lunas</span>
+                                <x-ui.badge color="success" dot>Lunas</x-ui.badge>
                             @elseif($p->status_pembayaran == 'dp')
-                                <span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-xl bg-blue-50 text-blue-700 mt-1">DP</span>
+                                <x-ui.badge color="primary" dot>DP</x-ui.badge>
                             @else
-                                <span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-xl bg-red-50 text-red-700 mt-1">Belum Bayar</span>
+                                <x-ui.badge color="danger" dot>Belum Bayar</x-ui.badge>
                             @endif
                         </td>
 
-                        {{-- Status Pesanan (inline changer) --}}
+                        {{-- Status Pesanan --}}
                         <td class="px-4 py-3">
                             <form action="{{ route('pesanan.update-status', $p->id) }}" method="POST">
                                 @csrf @method('PATCH')
@@ -155,9 +142,9 @@
 
                         {{-- Aksi --}}
                         <td class="px-4 py-3 text-right">
-                            <div class="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                                <a href="{{ route('pesanan.show', $p->id) }}" class="p-1.5 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors" title="Lihat Detail">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <div class="flex items-center justify-end gap-1.5">
+                                <a href="{{ route('pesanan.show', $p->id) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                                    <x-heroicon-o-eye class="w-3 h-3" />
                                 </a>
                             </div>
                         </td>
@@ -167,8 +154,7 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
-        <div class="mt-4 shrink-0">{{ $pesanans->links() }}</div>
+        </x-ui.data-table>
 
     </div>
 </div>

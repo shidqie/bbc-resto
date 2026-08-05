@@ -24,11 +24,7 @@ class UserController extends Controller
             ->orderBy('dibuat_pada', 'desc');
 
         // Data Pelanggan
-        $pelangganQuery = Pengguna::with('peran')
-            ->whereHas('peran', function ($q) {
-                $q->where('nama_peran', 'Pelanggan');
-            })
-            ->orderBy('dibuat_pada', 'desc');
+        $pelangganQuery = \App\Models\Pelanggan::query()->orderBy('dibuat_pada', 'desc');
 
         if ($search !== '') {
             $penggunaQuery->where(function ($q) use ($search) {
@@ -51,7 +47,6 @@ class UserController extends Controller
 
         if ($statusFilter !== '') {
             $penggunaQuery->where('status_aktif', $statusFilter === 'aktif');
-            $pelangganQuery->where('status_aktif', $statusFilter === 'aktif');
         }
 
         $pengguna = $penggunaQuery->paginate(10)->withQueryString();
@@ -116,6 +111,55 @@ class UserController extends Controller
         return view('users.show', compact('user', 'pesananCount', 'pesananDineIn', 'pesananCatering'));
     }
 
+    public function showPelanggan(\App\Models\Pelanggan $pelanggan)
+    {
+        $pesananCount = $pelanggan->pesanan()->count();
+        $pesananDineIn = $pelanggan->pesanan()->whereHas('jenis_pesanan', function($q) {
+            $q->where('kode_jenis', 'dine_in');
+        })->latest()->take(5)->get();
+        $pesananCatering = $pelanggan->pesanan()->whereHas('jenis_pesanan', function($q) {
+            $q->whereIn('kode_jenis', ['catering', 'nasi_box']);
+        })->latest()->take(5)->get();
+
+        return view('users.show-pelanggan', compact('pelanggan', 'pesananCount', 'pesananDineIn', 'pesananCatering'));
+    }
+
+    public function destroyPelanggan(\App\Models\Pelanggan $pelanggan)
+    {
+        // Delete all orders linked to this customer to maintain referential integrity
+        $pelanggan->pesanan()->delete();
+        $pelanggan->delete();
+        return redirect()->route('users.index', ['type' => 'pelanggan'])->with('success', 'Data konsumen berhasil dihapus.');
+    }
+
+    public function storePelanggan(Request $request)
+    {
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255|unique:pelanggan,email',
+            'nomor_telepon' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+        ]);
+
+        \App\Models\Pelanggan::create($validated);
+
+        return redirect()->route('users.index', ['type' => 'pelanggan'])->with('success', 'Data konsumen berhasil ditambahkan.');
+    }
+
+    public function updatePelanggan(Request $request, \App\Models\Pelanggan $pelanggan)
+    {
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255|unique:pelanggan,email,' . $pelanggan->id,
+            'nomor_telepon' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+        ]);
+
+        $pelanggan->update($validated);
+
+        return redirect()->route('users.index', ['type' => 'pelanggan'])->with('success', 'Data konsumen berhasil diperbarui.');
+    }
+
     public function update(Request $request, Pengguna $user)
     {
         // Prevent users from deactivating themselves
@@ -123,9 +167,9 @@ class UserController extends Controller
             return redirect()->back()->withErrors(['status_aktif' => 'Anda tidak bisa menonaktifkan akun Anda sendiri.']);
         }
 
-        // Prevent non-Pemilik from modifying Pemilik or Manajer
+        // Prevent non-Pemilik and non-Admin Sistem from modifying Pemilik or Manajer
         $currentUser = auth()->user();
-        if (!$currentUser->isPemilik() && ($user->isPemilik() || $user->isManajer())) {
+        if (!$currentUser->isPemilik() && !$currentUser->isAdminSistem() && ($user->isPemilik() || $user->isManajer())) {
             abort(403, 'Anda tidak memiliki izin untuk mengubah pengguna dengan peran Pemilik atau Manajer.');
         }
 
@@ -167,8 +211,8 @@ class UserController extends Controller
             ], 403);
         }
 
-        // Prevent non-Pemilik from modifying Pemilik or Manajer
-        if (!$currentUser->isPemilik() && ($user->isPemilik() || $user->isManajer())) {
+        // Prevent non-Pemilik and non-Admin Sistem from modifying Pemilik or Manajer
+        if (!$currentUser->isPemilik() && !$currentUser->isAdminSistem() && ($user->isPemilik() || $user->isManajer())) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda tidak memiliki izin untuk mengubah status pengguna dengan peran Pemilik atau Manajer.'
@@ -202,8 +246,8 @@ class UserController extends Controller
     {
         $currentUser = auth()->user();
 
-        // Prevent non-Pemilik from resetting password for Pemilik or Manajer
-        if (!$currentUser->isPemilik() && ($user->isPemilik() || $user->isManajer())) {
+        // Prevent non-Pemilik and non-Admin Sistem from resetting password for Pemilik or Manajer
+        if (!$currentUser->isPemilik() && !$currentUser->isAdminSistem() && ($user->isPemilik() || $user->isManajer())) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda tidak memiliki izin untuk mengatur ulang kata sandi pengguna dengan peran Pemilik atau Manajer.'
@@ -235,8 +279,8 @@ class UserController extends Controller
             return redirect()->route('users.index')->withErrors(['error' => 'Anda tidak bisa menghapus akun Anda sendiri.']);
         }
 
-        // Prevent non-Pemilik from deleting Pemilik or Manajer
-        if (!$currentUser->isPemilik() && ($user->isPemilik() || $user->isManajer())) {
+        // Prevent non-Pemilik and non-Admin Sistem from deleting Pemilik or Manajer
+        if (!$currentUser->isPemilik() && !$currentUser->isAdminSistem() && ($user->isPemilik() || $user->isManajer())) {
             return redirect()->route('users.index')->withErrors(['error' => 'Anda tidak memiliki izin untuk menghapus pengguna dengan peran Pemilik atau Manajer.']);
         }
 

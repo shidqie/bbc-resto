@@ -7,21 +7,19 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Stok Menipis</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Daftar bahan baku yang stoknya sudah di bawah batas minimum, siap dibuatkan pengadaan.</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('pengadaan.create', ['tipe' => 'harian']) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-amber-500 rounded-lg px-3 py-2 hover:bg-amber-600 transition-colors">
-                    <x-heroicon-o-shopping-cart class="w-3 h-3" />
-                    Buat Pengadaan
-                </a>
-                <a href="{{ route('stok-operasional.index') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
-                    Semua Stok
-                </a>
-            </div>
-        </div>
+        <x-ui.page-header title="Stok Menipis" subtitle="Daftar bahan baku yang stoknya sudah di bawah batas minimum, siap dibuatkan pengadaan.">
+            <x-slot:actions>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('pengadaan.create', ['tipe' => 'harian']) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-amber-500 rounded-lg px-3 py-2 hover:bg-amber-600 transition-colors">
+                        <x-heroicon-o-shopping-cart class="w-3 h-3" />
+                        Buat Pengadaan
+                    </a>
+                    <a href="{{ route('stok-operasional.index') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
+                        Semua Stok
+                    </a>
+                </div>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         {{-- Stat Cards --}}
         <div class="grid grid-cols-2 gap-3">
@@ -39,17 +37,7 @@
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between shrink-0">
             <form action="{{ route('stok-menipis.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                 <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari bahan baku..." />
-                <div class="relative shrink-0">
-                    <select name="kategori" class="w-full appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-9 text-sm text-gray-900 shadow-sm outline-none transition-all focus:border-gray-400 focus:ring-1 focus:ring-gray-400" onchange="this.form.submit()">
-                        <option value="">Semua Kategori</option>
-                        @foreach($kategoris as $kat)
-                            <option value="{{ $kat->id }}" {{ request('kategori') == $kat->id ? 'selected' : '' }}>{{ $kat->nama_kategori }}</option>
-                        @endforeach
-                    </select>
-                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                    </span>
-                </div>
+                <x-select-input name="kategori" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori')" placeholder="Semua Kategori" :auto-submit="true" />
                 <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
                 @if(request()->hasAny(['search', 'kategori']))
                     <a href="{{ route('stok-menipis.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>

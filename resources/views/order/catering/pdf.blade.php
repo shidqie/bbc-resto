@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Rincian Pesanan Catering #{{ $pesanan->kode_pesanan }}</title>
+    <title>Rincian Pesanan Katering #{{ $pesanan->kode_pesanan }}</title>
     <style>
         @page {
             size: A4 portrait;
@@ -99,7 +99,7 @@
     <table class="header-table">
         <tr>
             <td style="vertical-align: top;">
-                <h1 class="header-title">Rincian Pesanan Catering (Internal)</h1>
+                <h1 class="header-title">Rincian Pesanan Katering (Internal)</h1>
                 <p class="header-subtitle">Nomor Pesanan : {{ $pesanan->kode_pesanan }}</p>
             </td>
             <td class="logo">
@@ -217,7 +217,7 @@
 
     {{-- Footer A4 Fixed --}}
     <div class="footer-fixed">
-        Saung Babakan Cinta — Rumah Makan Sunda & Catering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat<br>
+        Saung Babakan Cinta — Rumah Makan Sunda & Katering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat<br>
         Dicetak pada: {{ now()->translatedFormat('d F Y H:i') }} WIB • Dokumen Internal Tim Dapur & Pengantaran
     </div>
 

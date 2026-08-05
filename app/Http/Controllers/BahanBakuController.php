@@ -15,21 +15,7 @@ class BahanBakuController extends Controller
 {
     public function index(Request $request)
     {
-        $query = BahanBaku::with(['kategori_bahan_baku', 'satuan', 'stok_harian', 'stok_catering_balance']);
-
-        $totalBahan = BahanBaku::count();
-        $stokAman = StokBahan::harian()->join('bahan_baku', 'stok_bahan.bahan_baku_id', '=', 'bahan_baku.id')
-            ->whereColumn('stok_bahan.jumlah_stok', '>', 'stok_bahan.stok_minimal')->count();
-        $stokMenipis = StokBahan::harian()->join('bahan_baku', 'stok_bahan.bahan_baku_id', '=', 'bahan_baku.id')
-            ->where('stok_bahan.jumlah_stok', '>', 0)
-            ->whereColumn('stok_bahan.jumlah_stok', '<=', 'stok_bahan.stok_minimal')->count();
-        $stokHabis = StokBahan::harian()->where('jumlah_stok', '<=', 0)->count();
-
-        $statsPenggunaan = [
-            'total' => $totalBahan,
-            'resto_nasibox' => $totalBahan,
-            'catering' => $totalBahan,
-        ];
+        $query = BahanBaku::with(['kategori_bahan_baku', 'satuan']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -44,11 +30,22 @@ class BahanBakuController extends Controller
         }
 
         $bahanBakus = $query->orderBy('bahan_baku.id', 'desc')->paginate(12)->withQueryString();
+        $kategorisPage = KategoriBahanBaku::withCount('bahan_bakus')->orderBy('id', 'desc')->paginate(12)->withQueryString();
+        $satuansPage = Satuan::withCount('bahan_bakus')->orderBy('id', 'desc')->paginate(12)->withQueryString();
+        
         $kategoris = KategoriBahanBaku::all();
+        $satuans = Satuan::all();
+
+        $tab = $request->input('tab', 'semua');
+
+        $totalBahan = BahanBaku::count();
+        $totalKategori = KategoriBahanBaku::count();
+        $totalSatuan = Satuan::count();
+        $bahanAktif = BahanBaku::where('status_aktif', true)->count();
 
         return view('inventory.bahan-baku.index', compact(
-            'bahanBakus', 'kategoris',
-            'totalBahan', 'stokAman', 'stokMenipis', 'stokHabis', 'statsPenggunaan'
+            'bahanBakus', 'kategoris', 'satuans', 'kategorisPage', 'satuansPage', 'tab',
+            'totalBahan', 'totalKategori', 'totalSatuan', 'bahanAktif'
         ));
     }
 
@@ -64,7 +61,7 @@ class BahanBakuController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kode_bahan' => 'required|unique:bahan_baku,kode_bahan',
+            'kode_bahan' => 'nullable|string|unique:bahan_baku,kode_bahan',
             'nama_bahan' => 'required|string|max:255',
             'kategori_bahan_baku_id' => 'required|exists:kategori_bahan_baku,id',
             'satuan_id' => 'required|exists:satuan,id',
@@ -81,8 +78,10 @@ class BahanBakuController extends Controller
 
         DB::beginTransaction();
         try {
+            $kodeBahan = $validated['kode_bahan'] ?: 'BB-'.strtoupper(uniqid());
+            
             $bahanBaku = BahanBaku::create([
-                'kode_bahan' => $validated['kode_bahan'],
+                'kode_bahan' => $kodeBahan,
                 'nama_bahan' => $validated['nama_bahan'],
                 'kategori_bahan_baku_id' => $validated['kategori_bahan_baku_id'],
                 'satuan_id' => $validated['satuan_id'],
@@ -140,6 +139,14 @@ class BahanBakuController extends Controller
         return view('inventory.bahan-baku.show', compact('bahanBaku', 'mutasiStoks'));
     }
 
+    public function drawer($id)
+    {
+        $bahanBaku = BahanBaku::with(['kategori_bahan_baku', 'satuan'])->findOrFail($id);
+        $mutasiStoks = MutasiStok::with(['jenis_mutasi_stok'])->where('bahan_baku_id', $id)->latest('tanggal_mutasi')->take(10)->get();
+
+        return view('inventory.bahan-baku.drawer', compact('bahanBaku', 'mutasiStoks'));
+    }
+
     public function edit($id)
     {
         $bahanBaku = BahanBaku::with('stok_harian', 'stok_catering_balance')->findOrFail($id);
@@ -147,6 +154,79 @@ class BahanBakuController extends Controller
         $satuans = Satuan::all();
 
         return view('inventory.bahan-baku.edit', compact('bahanBaku', 'kategoris', 'satuans'));
+    }
+
+    public function storeSatuanAjax(Request $request)
+    {
+        $request->validate([
+            'nama_satuan' => 'required|string|max:50',
+            'singkatan' => 'nullable|string|max:20',
+        ]);
+
+        $satuan = Satuan::create([
+            'nama_satuan' => $request->nama_satuan,
+            'singkatan' => $request->singkatan,
+        ]);
+
+        return response()->json($satuan);
+    }
+
+    // ─── CRUD Kategori Bahan Baku ───
+    public function storeKategori(Request $request)
+    {
+        $request->validate(['nama_kategori' => 'required|string|max:255|unique:kategori_bahan_baku,nama_kategori']);
+        KategoriBahanBaku::create(['nama_kategori' => $request->nama_kategori]);
+        return back()->with('success', 'Kategori bahan baku berhasil ditambahkan.');
+    }
+
+    public function updateKategori(Request $request, $id)
+    {
+        $kategori = KategoriBahanBaku::findOrFail($id);
+        $request->validate(['nama_kategori' => 'required|string|max:255|unique:kategori_bahan_baku,nama_kategori,'.$kategori->id]);
+        $kategori->update(['nama_kategori' => $request->nama_kategori]);
+        return back()->with('success', 'Kategori bahan baku berhasil diperbarui.');
+    }
+
+    public function destroyKategori($id)
+    {
+        $kategori = KategoriBahanBaku::withCount('bahan_bakus')->findOrFail($id);
+        if ($kategori->bahan_bakus_count > 0) {
+            return back()->with('error', 'Kategori tidak dapat dihapus karena masih digunakan oleh bahan baku.');
+        }
+        $kategori->delete();
+        return back()->with('success', 'Kategori bahan baku berhasil dihapus.');
+    }
+
+    // ─── CRUD Satuan ───
+    public function storeSatuan(Request $request)
+    {
+        $request->validate([
+            'nama_satuan' => 'required|string|max:50|unique:satuan,nama_satuan',
+            'singkatan' => 'nullable|string|max:20'
+        ]);
+        Satuan::create($request->only('nama_satuan', 'singkatan'));
+        return back()->with('success', 'Satuan berhasil ditambahkan.');
+    }
+
+    public function updateSatuan(Request $request, $id)
+    {
+        $satuan = Satuan::findOrFail($id);
+        $request->validate([
+            'nama_satuan' => 'required|string|max:50|unique:satuan,nama_satuan,'.$satuan->id,
+            'singkatan' => 'nullable|string|max:20'
+        ]);
+        $satuan->update($request->only('nama_satuan', 'singkatan'));
+        return back()->with('success', 'Satuan berhasil diperbarui.');
+    }
+
+    public function destroySatuan($id)
+    {
+        $satuan = Satuan::withCount('bahan_bakus')->findOrFail($id);
+        if ($satuan->bahan_bakus_count > 0) {
+            return back()->with('error', 'Satuan tidak dapat dihapus karena masih digunakan oleh bahan baku.');
+        }
+        $satuan->delete();
+        return back()->with('success', 'Satuan berhasil dihapus.');
     }
 
     public function update(Request $request, $id)

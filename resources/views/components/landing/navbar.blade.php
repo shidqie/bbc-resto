@@ -51,7 +51,7 @@
                         </a>
                         <a href="{{ route('home') }}#catering"
                            class="block px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">
-                            Catering
+                            Katering
                         </a>
                         <a href="{{ route('home') }}#nasi-box"
                            class="block px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">
@@ -74,14 +74,12 @@
             {{-- Desktop Actions --}}
             <div class="hidden lg:flex items-center gap-6 shrink-0">
 
-                @auth
+                @if(Auth::check())
                     <a href="{{ route('dashboard') }}"
                        class="text-sm text-neutral-600 hover:text-neutral-900 transition">
                         Dasbor Admin
                     </a>
-                @endauth
-
-                @auth('pelanggan')
+                @elseif(Auth::guard('pelanggan')->check())
                     <div class="relative"
                          @mouseenter="akun = true"
                          @mouseleave="akun = false">
@@ -124,7 +122,7 @@
                        class="text-sm text-neutral-600 hover:text-neutral-900 transition">
                         Masuk
                     </a>
-                @endauth
+                @endif
 
                 <a href="{{ route('home') }}#catering"
                    class="px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-700 transition">
@@ -157,17 +155,15 @@
             <a href="{{ route('home') }}#tentang" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Tentang</a>
             <a href="{{ route('home') }}#menu-dinein" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Menu</a>
             <a href="{{ route('qr.scanner') }}" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Dine in</a>
-            <a href="{{ route('home') }}#catering" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Catering</a>
+            <a href="{{ route('home') }}#catering" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Katering</a>
             <a href="{{ route('home') }}#nasi-box" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Nasi Box</a>
             <a href="{{ route('home') }}#galeri" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Galeri</a>
             <a href="{{ route('home') }}#lacak-pesanan" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Lacak Pesanan</a>
             <a href="{{ route('home') }}#kontak" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Kontak</a>
 
-            @auth
+            @if(Auth::check())
                 <a href="{{ route('dashboard') }}" class="py-3 text-sm text-neutral-900 font-medium border-b border-neutral-100">Dasbor Admin</a>
-            @endauth
-
-            @auth('pelanggan')
+            @elseif(Auth::guard('pelanggan')->check())
                 <a href="{{ route('konsumen.pesanan.index') }}" class="py-3 text-sm text-neutral-900 font-medium border-b border-neutral-100">Pesanan Saya</a>
                 <a href="{{ route('konsumen.profile') }}" class="py-3 text-sm text-neutral-900 font-medium border-b border-neutral-100">Profil</a>
                 <form method="POST" action="{{ route('konsumen.logout') }}" class="pt-4">
@@ -187,7 +183,7 @@
                         Daftar
                     </a>
                 </div>
-            @endauth
+            @endif
 
             <a href="{{ route('home') }}#catering"
                class="mt-3 py-2.5 rounded-xl bg-neutral-900 text-white text-center text-sm font-medium">

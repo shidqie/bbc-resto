@@ -25,6 +25,7 @@ class Pengguna extends Authenticatable
     protected $casts = [
         'status_aktif' => 'boolean',
         'terakhir_masuk' => 'datetime',
+        'dibuat_pada' => 'datetime',
     ];
 
     public function getAuthPassword()

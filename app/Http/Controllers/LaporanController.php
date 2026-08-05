@@ -18,16 +18,45 @@ use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
+    // ==========================================
+    // LAPORAN PENJUALAN
+    // ==========================================
     public function penjualan(Request $request)
     {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        $periode = $request->input('periode', 'bulan_ini');
+        $startDate = null;
+        $endDate = null;
+
+        if ($periode == 'hari_ini') {
+            $startDate = Carbon::today()->format('Y-m-d');
+            $endDate = Carbon::today()->format('Y-m-d');
+        } elseif ($periode == 'minggu_ini') {
+            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+        } elseif ($periode == 'bulan_ini') {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+        } elseif ($periode == 'custom') {
+            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        }
+
         $jenisPenjualan = $request->input('jenis', '');
         $statusPembayaran = $request->input('status_pembayaran', '');
+        $search = $request->input('search', '');
 
         $query = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja', 'pembayaran.status_pembayaran'])
             ->whereBetween('tanggal_pesanan', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->whereNotIn('status_pesanan_id', [6]);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nomor_pesanan', 'like', "%{$search}%")
+                  ->orWhereHas('pelanggan', function($q) use ($search) {
+                      $q->where('nama', 'like', "%{$search}%");
+                  });
+            });
+        }
 
         if ($jenisPenjualan === 'dinein') {
             $query->where('jenis_pesanan_id', 1);
@@ -38,16 +67,26 @@ class LaporanController extends Controller
         }
 
         if ($statusPembayaran) {
-            $query->whereHas('pembayaran.status_pembayaran', fn ($q) => $q->where('kode_status', $statusPembayaran));
+            if ($statusPembayaran === 'belum') {
+                $query->whereDoesntHave('pembayaran')
+                      ->orWhereHas('pembayaran.status_pembayaran', fn ($q) => $q->where('id', 1));
+            } elseif ($statusPembayaran === 'dp') {
+                $query->whereHas('pembayaran.status_pembayaran', fn ($q) => $q->where('id', 2));
+            } elseif ($statusPembayaran === 'lunas') {
+                $query->whereHas('pembayaran.status_pembayaran', fn ($q) => $q->where('id', 3));
+            }
         }
 
         $pesanansAll = $query->orderByDesc('tanggal_pesanan')->get();
+        
+        // Statistik
         $totalTransaksi = $pesanansAll->count();
-        $totalPenjualan = $pesanansAll->sum('total_tagihan');
-        $totalDibayar = $pesanansAll->sum(fn ($p) => $p->pembayaran->sum('jumlah_bayar'));
-        $totalPiutang = max(0, $totalPenjualan - $totalDibayar);
+        $totalPendapatan = $pesanansAll->sum('total_tagihan');
+        $totalDineIn = $pesanansAll->where('jenis_pesanan_id', 1)->count();
+        $totalCatering = $pesanansAll->where('jenis_pesanan_id', 2)->count();
+        $totalNasiBox = $pesanansAll->where('jenis_pesanan_id', 3)->count();
 
-        $perPage = 15;
+        $perPage = 10;
         $page = Paginator::resolveCurrentPage() ?: 1;
         $pesanans = new LengthAwarePaginator(
             $pesanansAll->forPage($page, $perPage),
@@ -55,245 +94,252 @@ class LaporanController extends Controller
             ['path' => Paginator::resolveCurrentPath(), 'query' => $request->query()]
         );
 
-        $stats = compact('totalTransaksi', 'totalPenjualan', 'totalDibayar', 'totalPiutang');
+        $stats = compact('totalTransaksi', 'totalPendapatan', 'totalDineIn', 'totalCatering', 'totalNasiBox');
 
         return view('laporan.penjualan.index', compact(
-            'pesanans', 'stats', 'startDate', 'endDate', 'jenisPenjualan', 'statusPembayaran'
+            'pesanans', 'stats', 'startDate', 'endDate', 'jenisPenjualan', 'statusPembayaran', 'periode'
         ));
     }
 
-    public function cetakPenjualan(Request $request)
+    public function detailPenjualan($id)
     {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        $jenisPenjualan = $request->input('jenis', '');
-        $statusPembayaran = $request->input('status_pembayaran', '');
-
-        $query = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja', 'pembayaran.status_pembayaran', 'detail_pesanan.menu'])
-            ->whereBetween('tanggal_pesanan', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-            ->whereNotIn('status_pesanan_id', [6]);
-
-        if ($jenisPenjualan === 'dinein') {
-            $query->where('jenis_pesanan_id', 1);
-        } elseif ($jenisPenjualan === 'catering') {
-            $query->where('jenis_pesanan_id', 2);
-        } elseif ($jenisPenjualan === 'nasibox') {
-            $query->where('jenis_pesanan_id', 3);
-        }
-
-        $pesanans = $query->orderByDesc('tanggal_pesanan')->get();
-        $totalPenjualan = $pesanans->sum('total_tagihan');
-        $totalDibayar = $pesanans->sum(fn ($p) => $p->pembayaran->sum('jumlah_bayar'));
-        $totalPiutang = max(0, $totalPenjualan - $totalDibayar);
-        $stats = compact('totalPenjualan', 'totalDibayar', 'totalPiutang');
-        $cetakOleh = Auth::user()->nama ?? '-';
-
-        $pdf = Pdf::loadView('laporan.penjualan.pdf', compact(
-            'pesanans', 'stats', 'startDate', 'endDate', 'jenisPenjualan', 'cetakOleh'
-        ))->setPaper('a4', 'landscape');
-
-        return $pdf->stream('laporan-penjualan-'.$startDate.'-sd-'.$endDate.'.pdf');
+        $pesanan = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja', 'detail_pesanan.menu', 'pembayaran.status_pembayaran', 'pembayaran.metode_pembayaran'])->findOrFail($id);
+        return view('laporan.penjualan.detail', compact('pesanan'));
     }
 
-    public function stok(Request $request)
+    public function cetakPenjualanPdf(Request $request)
     {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        $jenisPersediaan = $request->input('jenis_persediaan', '');
+        // Placeholder implementasi Export PDF
+        return back()->with('info', 'Fitur Export PDF Penjualan belum diimplementasi sepenuhnya.');
+    }
+
+    public function cetakPenjualanExcel(Request $request)
+    {
+        // Placeholder implementasi Export Excel
+        return back()->with('info', 'Fitur Export Excel Penjualan belum diimplementasi sepenuhnya.');
+    }
+
+    // ==========================================
+    // LAPORAN PERSEDIAAN
+    // ==========================================
+    public function persediaan(Request $request)
+    {
+        $periode = $request->input('periode', 'bulan_ini');
+        $startDate = null;
+        $endDate = null;
+
+        if ($periode == 'hari_ini') {
+            $startDate = Carbon::today()->format('Y-m-d');
+            $endDate = Carbon::today()->format('Y-m-d');
+        } elseif ($periode == 'minggu_ini') {
+            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+        } elseif ($periode == 'bulan_ini') {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+        } elseif ($periode == 'custom') {
+            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        }
+
+        $jenisPersediaan = $request->input('jenis_stok', '');
         $kategoriId = $request->input('kategori_id', '');
-        $bahanBakuId = $request->input('bahan_baku_id', '');
+        $search = $request->input('search', '');
 
         $kategoris = KategoriBahanBaku::orderBy('nama_kategori')->get();
-        $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
 
-        $queryBahan = BahanBaku::with(['satuan', 'kategori_bahan_baku'])->where('status_aktif', true);
+        $queryBahan = BahanBaku::with(['satuan', 'kategori_bahan_baku', 'stok_bahans'])->where('status_aktif', true);
         if ($kategoriId) {
             $queryBahan->where('kategori_bahan_baku_id', $kategoriId);
         }
-        if ($bahanBakuId) {
-            $queryBahan->where('id', $bahanBakuId);
+        if ($search) {
+            $queryBahan->where('nama_bahan', 'like', "%{$search}%");
         }
 
         $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) use ($startDate, $endDate, $jenisPersediaan) {
-            $mutasiSebelum = MutasiStok::where('bahan_baku_id', $bahan->id)
-                ->where('tanggal_mutasi', '<', $startDate.' 00:00:00')
-                ->with('jenis_mutasi_stok')->get();
-
-            $stokAwal = $mutasiSebelum->sum(function ($m) {
-                return ($m->jenis_mutasi_stok->arah_stok ?? 'MASUK') === 'MASUK' ? (float) $m->jumlah : -(float) $m->jumlah;
-            });
-
-            $qMutasi = MutasiStok::where('bahan_baku_id', $bahan->id)
-                ->whereBetween('tanggal_mutasi', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-                ->with('jenis_mutasi_stok');
-            if ($jenisPersediaan) {
-                $qMutasi->where('jenis_persediaan', strtolower($jenisPersediaan) === 'operasional' ? 'harian' : strtolower($jenisPersediaan));
+            // Karena tabel StokBahan dipisah (Harian / Catering), kita map tiap jenis stok
+            $stokItems = collect();
+            
+            if (!$jenisPersediaan || $jenisPersediaan == 'harian') {
+                $stokHarian = $bahan->stok_bahans->firstWhere('jenis_persediaan', 'harian');
+                if ($stokHarian) {
+                    $stokAkhir = (float)$stokHarian->jumlah_stok;
+                    $stokMin = (float)$bahan->stok_minimal;
+                    $status = $stokAkhir <= 0 ? 'Habis' : ($stokAkhir <= $stokMin ? 'Menipis' : 'Aman');
+                    
+                    $stokItems->push([
+                        'id' => $bahan->id . '_harian',
+                        'bahan_baku_id' => $bahan->id,
+                        'nama_bahan' => $bahan->nama_bahan,
+                        'kategori' => optional($bahan->kategori_bahan_baku)->nama_kategori,
+                        'satuan' => optional($bahan->satuan)->nama_satuan,
+                        'jenis_stok' => 'Dine In & Nasi Box',
+                        'stok_saat_ini' => $stokAkhir,
+                        'status' => $status
+                    ]);
+                }
             }
 
-            $mutasiPeriode = $qMutasi->get();
-            $stokMasuk = $mutasiPeriode->filter(fn ($m) => ($m->jenis_mutasi_stok->arah_stok ?? '') === 'MASUK')->sum('jumlah');
-            $stokKeluar = $mutasiPeriode->filter(fn ($m) => ($m->jenis_mutasi_stok->arah_stok ?? '') === 'KELUAR')->sum('jumlah');
-            $stokAkhir = $stokAwal + $stokMasuk - $stokKeluar;
-            $stokMin = (float) $bahan->stok_minimal;
-            $status = $stokAkhir <= 0 ? 'Habis' : ($stokAkhir <= $stokMin ? 'Minimum' : 'Aman');
+            if (!$jenisPersediaan || $jenisPersediaan == 'catering') {
+                $stokCatering = $bahan->stok_bahans->firstWhere('jenis_persediaan', 'catering');
+                if ($stokCatering) {
+                    $stokAkhir = (float)$stokCatering->jumlah_stok;
+                    $stokMin = (float)$bahan->stok_minimal;
+                    $status = $stokAkhir <= 0 ? 'Habis' : ($stokAkhir <= $stokMin ? 'Menipis' : 'Aman');
+                    
+                    $stokItems->push([
+                        'id' => $bahan->id . '_catering',
+                        'bahan_baku_id' => $bahan->id,
+                        'nama_bahan' => $bahan->nama_bahan,
+                        'kategori' => optional($bahan->kategori_bahan_baku)->nama_kategori,
+                        'satuan' => optional($bahan->satuan)->nama_satuan,
+                        'jenis_stok' => 'Catering',
+                        'stok_saat_ini' => $stokAkhir,
+                        'status' => $status
+                    ]);
+                }
+            }
 
-            return [
-                'bahan' => $bahan,
-                'stok_awal' => $stokAwal,
-                'stok_masuk' => $stokMasuk,
-                'stok_keluar' => $stokKeluar,
-                'penyesuaian' => 0,
-                'stok_akhir' => $stokAkhir,
-                'status' => $status,
-            ];
-        })->filter(fn ($item) => $item['stok_masuk'] > 0 || $item['stok_keluar'] > 0 || $item['stok_awal'] > 0);
+            return $stokItems;
+        })->flatten(1);
 
         $stats = [
-            'total_jenis' => $laporanBahan->count(),
+            'total_bahan' => $laporanBahan->count(),
             'total_aman' => $laporanBahan->where('status', 'Aman')->count(),
-            'total_min' => $laporanBahan->where('status', 'Minimum')->count(),
+            'total_menipis' => $laporanBahan->where('status', 'Menipis')->count(),
             'total_habis' => $laporanBahan->where('status', 'Habis')->count(),
         ];
 
-        return view('laporan.stok.index', compact(
-            'laporanBahan', 'stats', 'startDate', 'endDate',
-            'jenisPersediaan', 'kategoriId', 'bahanBakuId', 'kategoris', 'bahanBakus'
+        // Paginasi manual untuk collection
+        $perPage = 15;
+        $page = Paginator::resolveCurrentPage() ?: 1;
+        $paginatedBahan = new LengthAwarePaginator(
+            $laporanBahan->forPage($page, $perPage),
+            $laporanBahan->count(), $perPage, $page,
+            ['path' => Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
+        return view('laporan.persediaan.index', compact(
+            'paginatedBahan', 'stats', 'startDate', 'endDate',
+            'jenisPersediaan', 'kategoriId', 'kategoris', 'periode'
         ));
     }
 
-    public function cetakStok(Request $request)
+    public function detailPersediaan($id)
     {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        $jenisPersediaan = $request->input('jenis_persediaan', '');
-        $kategoriId = $request->input('kategori_id', '');
-        $bahanBakuId = $request->input('bahan_baku_id', '');
+        // Parse ID (contoh: "1_harian")
+        $parts = explode('_', $id);
+        $bahanBakuId = $parts[0];
+        $jenisStok = $parts[1] ?? 'harian';
 
-        $queryBahan = BahanBaku::with(['satuan', 'kategori_bahan_baku'])->where('status_aktif', true);
-        if ($kategoriId) {
-            $queryBahan->where('kategori_bahan_baku_id', $kategoriId);
-        }
-        if ($bahanBakuId) {
-            $queryBahan->where('id', $bahanBakuId);
-        }
+        $bahan = BahanBaku::with(['satuan', 'kategori_bahan_baku'])->findOrFail($bahanBakuId);
+        $stok = $bahan->stok_bahans()->where('jenis_persediaan', $jenisStok)->first();
+        
+        // Ambil riwayat mutasi
+        $mutasis = MutasiStok::with(['jenis_mutasi_stok', 'pengguna'])
+            ->where('bahan_baku_id', $bahanBakuId)
+            ->where('jenis_persediaan', $jenisStok)
+            ->orderByDesc('tanggal_mutasi')
+            ->limit(20)
+            ->get();
 
-        $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) use ($startDate, $endDate, $jenisPersediaan) {
-            $mutasiSebelum = MutasiStok::where('bahan_baku_id', $bahan->id)
-                ->where('tanggal_mutasi', '<', $startDate.' 00:00:00')
-                ->with('jenis_mutasi_stok')->get();
-            $stokAwal = $mutasiSebelum->sum(function ($m) {
-                return ($m->jenis_mutasi_stok->arah_stok ?? 'MASUK') === 'MASUK' ? (float) $m->jumlah : -(float) $m->jumlah;
-            });
-            $qMutasi = MutasiStok::where('bahan_baku_id', $bahan->id)
-                ->whereBetween('tanggal_mutasi', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-                ->with('jenis_mutasi_stok');
-            if ($jenisPersediaan) {
-                $qMutasi->where('jenis_persediaan', strtolower($jenisPersediaan) === 'operasional' ? 'harian' : strtolower($jenisPersediaan));
-            }
-            $mutasiPeriode = $qMutasi->get();
-            $stokMasuk = $mutasiPeriode->filter(fn ($m) => ($m->jenis_mutasi_stok->arah_stok ?? '') === 'MASUK')->sum('jumlah');
-            $stokKeluar = $mutasiPeriode->filter(fn ($m) => ($m->jenis_mutasi_stok->arah_stok ?? '') === 'KELUAR')->sum('jumlah');
-            $stokAkhir = $stokAwal + $stokMasuk - $stokKeluar;
-            $stokMin = (float) $bahan->stok_minimal;
-            $status = $stokAkhir <= 0 ? 'Habis' : ($stokAkhir <= $stokMin ? 'Minimum' : 'Aman');
-
-            return compact('bahan', 'stokAwal', 'stokMasuk', 'stokKeluar', 'stokAkhir', 'status');
-        })->filter(fn ($item) => $item['stokMasuk'] > 0 || $item['stokKeluar'] > 0 || $item['stokAwal'] > 0);
-
-        $cetakOleh = Auth::user()->nama ?? '-';
-        $pdf = Pdf::loadView('laporan.stok.pdf', compact(
-            'laporanBahan', 'startDate', 'endDate', 'jenisPersediaan', 'cetakOleh'
-        ))->setPaper('a4', 'landscape');
-
-        return $pdf->stream('laporan-persediaan-'.$startDate.'-sd-'.$endDate.'.pdf');
+        return view('laporan.persediaan.detail', compact('bahan', 'stok', 'jenisStok', 'mutasis'));
     }
 
+    public function cetakPersediaanPdf(Request $request)
+    {
+        return back()->with('info', 'Fitur Export PDF Persediaan belum diimplementasi sepenuhnya.');
+    }
+
+    public function cetakPersediaanExcel(Request $request)
+    {
+        return back()->with('info', 'Fitur Export Excel Persediaan belum diimplementasi sepenuhnya.');
+    }
+
+    // ==========================================
+    // LAPORAN PENGADAAN
+    // ==========================================
     public function pengadaan(Request $request)
     {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        $periode = $request->input('periode', 'bulan_ini');
+        $startDate = null;
+        $endDate = null;
 
-        $pengadaans = PengadaanBahan::with(['detail_pengadaan_bahan.bahan_baku.kategori_bahan_baku', 'diajukan_oleh_pengguna'])
-            ->whereBetween('tanggal_pengadaan', [$startDate, $endDate])
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
+        if ($periode == 'hari_ini') {
+            $startDate = Carbon::today()->format('Y-m-d');
+            $endDate = Carbon::today()->format('Y-m-d');
+        } elseif ($periode == 'minggu_ini') {
+            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+        } elseif ($periode == 'bulan_ini') {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+        } elseif ($periode == 'custom') {
+            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        }
 
-        $totalBiaya = PengadaanBahan::whereBetween('tanggal_pengadaan', [$startDate, $endDate])->sum('total_pengadaan');
-        $totalTransaksi = PengadaanBahan::whereBetween('tanggal_pengadaan', [$startDate, $endDate])->count();
+        $jenisPermintaan = $request->input('jenis_permintaan', '');
+        $statusId = $request->input('status', '');
+        $search = $request->input('search', '');
 
-        $topBahan = DetailPengadaanBahan::with('bahan_baku')
-            ->selectRaw('bahan_baku_id, SUM(jumlah_dipesan) as total_jumlah, SUM(subtotal) as total_pengadaan, COUNT(*) as frekuensi')
-            ->whereHas('pengadaan_bahan', function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('tanggal_pengadaan', [$startDate, $endDate]);
-            })
-            ->groupBy('bahan_baku_id')
-            ->orderBy('total_pengadaan', 'desc')
-            ->limit(10)
-            ->get();
+        $query = PengadaanBahan::with(['pemasok', 'status_pengadaan', 'diajukan_oleh_pengguna'])
+            ->whereBetween('tanggal_pengadaan', [$startDate, $endDate]);
 
-        return view('laporan.pengadaan.index', compact('pengadaans', 'totalBiaya', 'totalTransaksi', 'topBahan', 'startDate', 'endDate'));
+        if ($search) {
+            $query->where('nomor_pengadaan', 'like', "%{$search}%");
+        }
+        if ($jenisPermintaan) {
+            $query->where('jenis_pengadaan', $jenisPermintaan);
+        }
+        if ($statusId) {
+            $query->where('status_pengadaan_id', $statusId);
+        }
+
+        $pengadaansAll = $query->orderByDesc('tanggal_pengadaan')->get();
+
+        $totalPermintaan = $pengadaansAll->count();
+        $totalHarian = $pengadaansAll->where('jenis_pengadaan', 'harian')->count();
+        $totalCatering = $pengadaansAll->where('jenis_pengadaan', 'catering')->count();
+        
+        // Hitung total penerimaan dari pengadaan ini (yg statusnya Diterima Sebagian atau Selesai)
+        $totalPenerimaan = $pengadaansAll->whereIn('status_pengadaan_id', [3, 4])->count();
+
+        $perPage = 10;
+        $page = Paginator::resolveCurrentPage() ?: 1;
+        $pengadaans = new LengthAwarePaginator(
+            $pengadaansAll->forPage($page, $perPage),
+            $pengadaansAll->count(), $perPage, $page,
+            ['path' => Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
+        $stats = compact('totalPermintaan', 'totalHarian', 'totalCatering', 'totalPenerimaan');
+
+        return view('laporan.pengadaan.index', compact(
+            'pengadaans', 'stats', 'startDate', 'endDate', 'jenisPermintaan', 'statusId', 'periode'
+        ));
     }
 
-    public function cetakPengadaan(Request $request)
+    public function detailPengadaan($id)
     {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        $pengadaan = PengadaanBahan::with([
+            'pemasok', 
+            'status_pengadaan', 
+            'diajukan_oleh_pengguna',
+            'detail_pengadaan_bahan.bahan_baku.satuan',
+            'penerimaan_bahan.diterima_oleh_pengguna'
+        ])->findOrFail($id);
 
-        $pengadaans = PengadaanBahan::with(['detail_pengadaan_bahan.bahan_baku', 'diajukan_oleh_pengguna'])
-            ->whereBetween('tanggal_pengadaan', [$startDate, $endDate])
-            ->latest()->get();
-
-        $totalBiaya = $pengadaans->sum('total_pengadaan');
-
-        $pdf = Pdf::loadView('laporan.pengadaan.pdf', compact('pengadaans', 'totalBiaya', 'startDate', 'endDate'));
-
-        return $pdf->stream('laporan-pengadaan-'.$startDate.'-sd-'.$endDate.'.pdf');
+        return view('laporan.pengadaan.detail', compact('pengadaan'));
     }
 
-    public function menuTerlaris(Request $request)
+    public function cetakPengadaanPdf(Request $request)
     {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-
-        $menuDineIn = DB::table('detail_pesanan')
-            ->join('menu', 'detail_pesanan.menu_id', '=', 'menu.id')
-            ->join('pesanan', 'detail_pesanan.pesanan_id', '=', 'pesanan.id')
-            ->select('menu.id', 'menu.nama_menu as nama', 'menu.harga_jual as harga', DB::raw('SUM(detail_pesanan.jumlah) as total_qty'), DB::raw('SUM(detail_pesanan.subtotal) as total_pendapatan'))
-            ->where('pesanan.status_pesanan_id', 5)
-            ->whereBetween('pesanan.dibuat_pada', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-            ->groupBy('menu.id', 'menu.nama_menu', 'menu.harga_jual')
-            ->orderBy('total_qty', 'desc')
-            ->get();
-
-        $menuTerlaris = $menuDineIn;
-        $totalTerjual = $menuTerlaris->sum('total_qty');
-        $totalPendapatan = $menuTerlaris->sum('total_pendapatan');
-
-        return view('laporan.menu.index', compact('menuTerlaris', 'totalTerjual', 'totalPendapatan', 'startDate', 'endDate'));
+        return back()->with('info', 'Fitur Export PDF Pengadaan belum diimplementasi sepenuhnya.');
     }
 
-    public function cetakMenuTerlaris(Request $request)
+    public function cetakPengadaanExcel(Request $request)
     {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-
-        $menuDineIn = DB::table('detail_pesanan')
-            ->join('menu', 'detail_pesanan.menu_id', '=', 'menu.id')
-            ->join('pesanan', 'detail_pesanan.pesanan_id', '=', 'pesanan.id')
-            ->select('menu.id', 'menu.nama_menu as nama', 'menu.harga_jual as harga', DB::raw('SUM(detail_pesanan.jumlah) as total_qty'), DB::raw('SUM(detail_pesanan.subtotal) as total_pendapatan'))
-            ->where('pesanan.status_pesanan_id', 5)
-            ->whereBetween('pesanan.dibuat_pada', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-            ->groupBy('menu.id', 'menu.nama_menu', 'menu.harga_jual')
-            ->orderBy('total_qty', 'desc')
-            ->get();
-
-        $menuTerlaris = $menuDineIn;
-        $totalTerjual = $menuTerlaris->sum('total_qty');
-        $totalPendapatan = $menuTerlaris->sum('total_pendapatan');
-
-        $pdf = Pdf::loadView('laporan.menu.pdf', compact('menuTerlaris', 'totalTerjual', 'totalPendapatan', 'startDate', 'endDate'));
-
-        return $pdf->stream('laporan-menu-terlaris-'.$startDate.'-sd-'.$endDate.'.pdf');
+        return back()->with('info', 'Fitur Export Excel Pengadaan belum diimplementasi sepenuhnya.');
     }
 }

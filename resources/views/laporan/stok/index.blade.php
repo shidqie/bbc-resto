@@ -7,18 +7,16 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Laporan Persediaan Bahan Baku</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Aktivitas persediaan bahan baku (Operasional & Catering) berdasarkan periode.</p>
-            </div>
-            <a href="{{ route('laporan.stok.cetak', array_merge(request()->query(), ['start_date' => $startDate, 'end_date' => $endDate])) }}"
-               target="_blank"
-               class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-red-600 rounded-lg px-3 py-2 hover:bg-red-700 transition-colors">
-                <x-heroicon-o-document class="w-4 h-4" />
-                Cetak PDF
-            </a>
-        </div>
+        <x-ui.page-header title="Laporan Persediaan Bahan Baku" subtitle="Aktivitas persediaan bahan baku (Operasional & Katering) berdasarkan periode.">
+            <x-slot:actions>
+                <a href="{{ route('laporan.stok.cetak', array_merge(request()->query(), ['start_date' => $startDate, 'end_date' => $endDate])) }}"
+                   target="_blank"
+                   class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-red-600 rounded-lg px-3 py-2 hover:bg-red-700 transition-colors">
+                    <x-heroicon-o-document class="w-4 h-4" />
+                    Cetak PDF
+                </a>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         {{-- FILTER BAR --}}
         <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
@@ -36,7 +34,7 @@
                     <select name="jenis_persediaan" x-model="jenis" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-blue-300 transition-all">
                         <option value="">Semua</option>
                         <option value="OPERASIONAL" {{ $jenisPersediaan === 'OPERASIONAL' ? 'selected' : '' }}>Operasional</option>
-                        <option value="CATERING"    {{ $jenisPersediaan === 'CATERING' ? 'selected' : '' }}>Catering</option>
+                        <option value="CATERING"    {{ $jenisPersediaan === 'CATERING' ? 'selected' : '' }}>Katering</option>
                     </select>
                 </div>
                 <div class="flex-1 min-w-[130px]">

@@ -11,18 +11,16 @@
     <div class="w-full p-6 space-y-5">
         
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Kategori Menu</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Kelola daftar kategori menu Restoran</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <button onclick="openModal('modalTambah', 'drawerTambahPanel')" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Tambah Kategori
-                </button>
-            </div>
-        </div>
+        <x-ui.page-header title="Kategori Menu" subtitle="Kelola daftar kategori menu Restoran">
+            <x-slot:actions>
+                <div class="flex items-center gap-2">
+                    <button onclick="openModal('modalTambah', 'drawerTambahPanel')" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Tambah Kategori
+                    </button>
+                </div>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         <x-ui.alert />
 
@@ -42,7 +40,7 @@
                         <th class="px-4 py-3 text-left w-12">No.</th>
                         <th class="px-4 py-3 text-left">Nama Kategori</th>
                         <th class="px-4 py-3 text-left">Deskripsi</th>
-                        <th class="px-4 py-3 text-center w-28">Status</th>
+                        <th class="px-4 py-3 text-center w-32">Jumlah Menu</th>
                         <th class="px-4 py-3 text-center w-32">Aksi</th>
                     </tr>
                 </thead>
@@ -59,14 +57,9 @@
                                 {{ $kategori->deskripsi ?? '-' }}
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <form action="{{ route('kategori-menu.toggle', $kategori->id) }}" method="POST" class="inline-block">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" title="{{ $kategori->status_aktif ? 'Nonaktifkan' : 'Aktifkan' }}" class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full transition-colors {{ $kategori->status_aktif ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200' }}">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ $kategori->status_aktif ? 'bg-green-500' : 'bg-gray-400' }}"></span>
-                                        {{ $kategori->status_aktif ? 'Aktif' : 'Nonaktif' }}
-                                    </button>
-                                </form>
+                                <span class="inline-flex items-center justify-center min-w-10 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
+                                    {{ $kategori->menu_count ?? 0 }} menu
+                                </span>
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">

@@ -16,7 +16,7 @@ class MenuController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'jenis_menu']);
+        $query = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'jenis_menu', 'komponen_paket']);
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -26,8 +26,13 @@ class MenuController extends Controller
             });
         }
 
-        // Hanya tampilkan menu Dine In (jenis_menu_id = 1)
-        $query->where('jenis_menu_id', 1);
+        // Filter berdasarkan jenis menu
+        $jenisId = $request->input('jenis_menu_id', 1); // default: Menu Dine In
+        
+        if ($jenisId == 'catering') $jenisId = 2;
+        if ($jenisId == 'nasi_box') $jenisId = 3;
+        
+        $query->where('jenis_menu_id', $jenisId);
 
         if ($request->has('kategori') && $request->kategori != '') {
             $query->where('kategori_menu_id', $request->kategori);
@@ -43,8 +48,8 @@ class MenuController extends Controller
         $stats = [
             'total' => Menu::count(),
             'dine_in' => Menu::where('jenis_menu_id', 1)->count(),
-            'catering' => Menu::where('jenis_menu_id', 2)->whereHas('komponen_paket')->count(),
-            'nasi_box' => Menu::where('jenis_menu_id', 3)->whereHas('komponen_paket')->count(),
+            'catering' => Menu::where('jenis_menu_id', 2)->count(),
+            'nasi_box' => Menu::where('jenis_menu_id', 3)->count(),
         ];
 
         $stokBahan = StokBahan::harian()->pluck('jumlah_stok', 'bahan_baku_id');
@@ -63,7 +68,9 @@ class MenuController extends Controller
             return $menu;
         });
 
-        return view('menu.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'stats'));
+        $satuans = \App\Models\Satuan::all();
+
+        return view('menu.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'satuans', 'stats', 'jenisId'));
     }
 
     public function create()
@@ -124,6 +131,25 @@ class MenuController extends Controller
             }
 
             $menu = Menu::create($data);
+
+            if ($request->has('bahan_baku_id') && is_array($request->bahan_baku_id)) {
+                foreach ($request->bahan_baku_id as $index => $bahanId) {
+                    if (empty($bahanId) || empty($request->jumlah_kebutuhan[$index])) {
+                        continue;
+                    }
+                    $bahan = BahanBaku::find($bahanId);
+                    if ($bahan) {
+                        \App\Models\ResepMenu::create([
+                            'menu_id' => $menu->id,
+                            'bahan_baku_id' => $bahanId,
+                            'jumlah_kebutuhan' => $request->jumlah_kebutuhan[$index],
+                            'satuan_id' => $request->satuan_id[$index] ?? $bahan->satuan_id ?? 1,
+                            'keterangan' => $request->keterangan[$index] ?? null,
+                            'dikonfirmasi' => true,
+                        ]);
+                    }
+                }
+            }
 
             return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' berhasil disimpan.");
         });
@@ -191,13 +217,33 @@ class MenuController extends Controller
 
             $menu->update($data);
 
+            if ($request->has('bahan_baku_id') && is_array($request->bahan_baku_id)) {
+                $menu->resep_menu()->delete(); // Clear existing
+                foreach ($request->bahan_baku_id as $index => $bahanId) {
+                    if (empty($bahanId) || empty($request->jumlah_kebutuhan[$index])) {
+                        continue;
+                    }
+                    $bahan = BahanBaku::find($bahanId);
+                    if ($bahan) {
+                        \App\Models\ResepMenu::create([
+                            'menu_id' => $menu->id,
+                            'bahan_baku_id' => $bahanId,
+                            'jumlah_kebutuhan' => $request->jumlah_kebutuhan[$index],
+                            'satuan_id' => $request->satuan_id[$index] ?? $bahan->satuan_id ?? 1,
+                            'keterangan' => $request->keterangan[$index] ?? null,
+                            'dikonfirmasi' => true,
+                        ]);
+                    }
+                }
+            }
+
             return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' berhasil diperbarui.");
         });
     }
 
     public function show(Menu $menu)
     {
-        $menu->load(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'jenis_menu']);
+        $menu->load(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'jenis_menu']);
 
         return view('menu.menu.show', compact('menu'));
     }

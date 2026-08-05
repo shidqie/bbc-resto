@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             '/api/midtrans/localhost-fallback',
             '/api/payment/notification',
             'api/payment/notification',
+            '/midtrans/webhook',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

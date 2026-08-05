@@ -4,12 +4,7 @@
 <div class="flex-1 bg-gray-50 text-gray-800">
     <div class="w-full p-6 space-y-5">
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Kelola Resep Menu</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Resep (BOM) untuk menu satuan dan komposisi untuk paket — Dine In, Catering, dan Nasi Box.</p>
-            </div>
-        </div>
+        <x-ui.page-header title="Kelola Resep Menu" subtitle="Resep (BOM) untuk menu satuan dan komposisi untuk paket — Dine In, Katering, dan Nasi Box." />
 
         <x-ui.alert />
 
@@ -17,23 +12,9 @@
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
             <form action="{{ route('resep.index') }}" method="GET" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama menu..." />
-                <select name="layanan" onchange="this.form.submit()" class="text-sm bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 shrink-0">
-                    <option value="">Semua Layanan</option>
-                    <option value="1" {{ request('layanan') == '1' ? 'selected' : '' }}>Dine In</option>
-                    <option value="2" {{ request('layanan') == '2' ? 'selected' : '' }}>Catering</option>
-                    <option value="3" {{ request('layanan') == '3' ? 'selected' : '' }}>Nasi Box</option>
-                </select>
-                <select name="kategori" onchange="this.form.submit()" class="text-sm bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 shrink-0">
-                    <option value="">Semua Kategori</option>
-                    @foreach($kategoris as $kat)
-                        <option value="{{ $kat->id }}" {{ request('kategori') == $kat->id ? 'selected' : '' }}>{{ $kat->nama_kategori }}</option>
-                    @endforeach
-                </select>
-                <select name="status_resep" onchange="this.form.submit()" class="text-sm bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 shrink-0">
-                    <option value="">Semua Status Resep</option>
-                    <option value="ada" {{ request('status_resep') == 'ada' ? 'selected' : '' }}>Sudah Ada Resep</option>
-                    <option value="belum" {{ request('status_resep') == 'belum' ? 'selected' : '' }}>Belum Ada Resep</option>
-                </select>
+                <x-select-input name="layanan" :options="['1' => 'Dine In', '2' => 'Katering', '3' => 'Nasi Box']" :selected="request('layanan')" placeholder="Semua Layanan" :auto-submit="true" />
+                <x-select-input name="kategori" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori')" placeholder="Semua Kategori" :auto-submit="true" />
+                <x-select-input name="status_resep" :options="['ada' => 'Sudah Ada Resep', 'belum' => 'Belum Ada Resep']" :selected="request('status_resep')" placeholder="Semua Status Resep" :auto-submit="true" />
                 <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
                 @if(request('search') || request('kategori') || request('layanan') || request('status_resep'))
                     <a href="{{ route('resep.index') }}" class="text-sm font-medium bg-gray-50 border border-gray-200 text-gray-500 rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors shrink-0">Reset</a>
@@ -87,7 +68,7 @@
                             </td>
                             <td class="px-4 py-2.5">
                                 @if($jenisKode == 'catering')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-orange-50 text-orange-700">Catering</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-orange-50 text-orange-700">Katering</span>
                                 @else
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-violet-50 text-violet-700">Nasi Box</span>
                                 @endif
@@ -201,7 +182,7 @@
                             @if($jenisKode == 'dine_in' || $jenisKode == 'reguler')
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700">Dine In</span>
                             @elseif($jenisKode == 'catering')
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-orange-50 text-orange-700">Catering</span>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-orange-50 text-orange-700">Katering</span>
                             @elseif($jenisKode == 'nasi_box')
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-violet-50 text-violet-700">Nasi Box</span>
                             @else

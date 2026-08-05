@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Laporan Pendapatan Catering</title>
+    <title>Laporan Pendapatan Katering</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; color: #333; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -17,7 +17,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Laporan Pendapatan Catering</h1>
+        <h1>Laporan Pendapatan Katering</h1>
         <p>Periode: {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</p>
     </div>
 

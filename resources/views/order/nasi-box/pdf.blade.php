@@ -214,7 +214,7 @@
 
     {{-- Footer A4 Fixed --}}
     <div class="footer-fixed">
-        Saung Babakan Cinta — Rumah Makan Sunda & Catering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat<br>
+        Saung Babakan Cinta — Rumah Makan Sunda & Katering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat<br>
         Dicetak pada: {{ now()->translatedFormat('d F Y H:i') }} WIB • Dokumen Internal Tim Dapur & Pengantaran
     </div>
 

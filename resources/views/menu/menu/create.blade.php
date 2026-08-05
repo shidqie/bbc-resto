@@ -88,6 +88,36 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi / Keterangan Tambahan</label>
                         <textarea name="deskripsi" rows="3" placeholder="Opsional" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none resize-none transition-all">{{ old('deskripsi') }}</textarea>
                     </div>
+
+                    {{-- Komposisi Bahan Baku / Resep --}}
+                    <div class="md:col-span-2 border-t border-gray-100 pt-6 mt-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-sm font-bold text-gray-900">Komposisi Bahan Baku (Resep Takaran)</h3>
+                            <button type="button" onclick="addBahanBakuRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                                <x-heroicon-o-plus class="w-4 h-4 inline-block" /> Tambah Bahan
+                            </button>
+                        </div>
+                        <div class="space-y-3" id="bahanBakuContainer">
+                            <div class="flex gap-3 items-start bahan-baku-row">
+                                <div class="flex-1">
+                                    <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                                        <option value="">Pilih Bahan Baku</option>
+                                        @foreach($bahanBakus as $bb)
+                                            <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="w-32">
+                                    <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                                </div>
+                                <div>
+                                    <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
+                                        <x-heroicon-o-trash class="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-6 border-t border-gray-100">
@@ -120,6 +150,39 @@
             preview.src = "";
             preview.classList.add('hidden');
             placeholder.classList.remove('hidden');
+        }
+    }
+
+    function addBahanBakuRow() {
+        const container = document.getElementById('bahanBakuContainer');
+        const firstRow = container.querySelector('.bahan-baku-row');
+        if (firstRow) {
+            const clone = firstRow.cloneNode(true);
+            clone.querySelector('select').value = '';
+            clone.querySelector('input').value = '';
+            container.appendChild(clone);
+        } else {
+            // Fallback if empty
+            container.insertAdjacentHTML('beforeend', `
+                <div class="flex gap-3 items-start bahan-baku-row">
+                    <div class="flex-1">
+                        <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                            <option value="">Pilih Bahan Baku</option>
+                            @foreach($bahanBakus as $bb)
+                                <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="w-32">
+                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                    </div>
+                    <div>
+                        <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
+                            <x-heroicon-o-trash class="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            `);
         }
     }
 </script>

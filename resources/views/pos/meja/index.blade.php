@@ -5,28 +5,21 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Manajemen Meja</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Kelola data meja restoran, kapasitas, dan pantau statusnya.</p>
-            </div>
-            <div class="flex items-center gap-2">
+        <x-ui.page-header title="Manajemen Meja" subtitle="Kelola data meja restoran, kapasitas, dan pantau statusnya.">
+            <x-slot:actions>
                 <button onclick="openMejaModal()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Meja Baru
                 </button>
-            </div>
-        </div>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         <x-ui.alert />
 
         {{-- Filter / Info Bar --}}
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
             <form action="{{ route('meja.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
-                <div class="relative flex-1 sm:flex-none sm:w-56">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nomor meja…" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
-                </div>
+                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nomor meja…" width="w-full sm:w-56" />
                 <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
             </form>
             

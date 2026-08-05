@@ -12,16 +12,14 @@
 }" class="p-4 md:p-8 w-full h-full flex flex-col bg-[#F3F4F6]">
     
     <!-- Header Area -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Hak Akses Pengguna</h1>
-            <p class="text-gray-500 text-sm mt-1">Kelola peran (hak akses) pengguna di sistem.</p>
-        </div>
-        <button @click="showCreateModal = true" class="bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
-            <x-heroicon-o-plus class="w-4 h-4" />
-            Tambah Hak Akses
-        </button>
-    </div>
+    <x-ui.page-header title="Hak Akses Pengguna" subtitle="Kelola peran (hak akses) pengguna di sistem." class="mb-6">
+        <x-slot:actions>
+            <button @click="showCreateModal = true" class="bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+                <x-heroicon-o-plus class="w-4 h-4" />
+                Tambah Hak Akses
+            </button>
+        </x-slot:actions>
+    </x-ui.page-header>
 
     <!-- Alert Messages -->
     @if (session('success'))

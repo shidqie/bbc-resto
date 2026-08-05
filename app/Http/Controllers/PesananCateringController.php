@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 class PesananCateringController extends Controller
 {
     // GET /pesan/catering
-    public function create()
+    public function create(Request $request)
     {
         // 2 = Catering
         $pakets = Menu::where('jenis_menu_id', 2)
@@ -27,7 +27,9 @@ class PesananCateringController extends Controller
             ->whereHas('komponen_paket')
             ->get();
 
-        return view('order.catering.create', compact('pakets'));
+        $selectedPaketId = $request->paket_id;
+
+        return view('order.catering.create', compact('pakets', 'selectedPaketId'));
     }
 
     // GET /pesan/catering/komponen/{paketId}
@@ -81,7 +83,7 @@ class PesananCateringController extends Controller
     {
         $request->validate([
             'nama_pemesan' => 'required|string|max:255',
-            'kontak' => ['required', 'string', 'regex:/^(\+?62|0|8)\d{8,13}$/'],
+            'kontak' => 'required|string|max:20',
             'tanggal_acara' => 'required|date',
             'lokasi_acara' => 'required|string',
             'metode_pengiriman' => 'required|in:pickup,delivery',

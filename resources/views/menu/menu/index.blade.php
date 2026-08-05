@@ -31,40 +31,41 @@
         /* Fix for select text truncation if any */
         text-overflow: unset;
     }
+    .view-mode label span.text-red-500 {
+        display: none;
+    }
 </style>
 <div class="flex-1 bg-gray-50 text-gray-800">
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Manajemen Menu & Paket</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Kelola menu berdasarkan layanan dan kategorinya.</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <button onclick="openKategoriModal()" id="btnAddKategori" class="hidden inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Kategori Baru
-                </button>
-                <button onclick="openMenuModal()" id="btnAddMenu" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Menu Baru
-                </button>
-            </div>
-        </div>
+        <x-ui.page-header title="Manajemen Menu & Paket" subtitle="Kelola menu berdasarkan layanan dan kategorinya.">
+            <x-slot:actions>
+                <div class="flex items-center gap-2">
+                    <button onclick="openKategoriModal()" id="btnAddKategori" class="hidden inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Kategori Baru
+                    </button>
+                    <button onclick="openMenuModal()" id="btnAddMenu" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Menu Baru
+                    </button>
+                </div>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         <x-ui.alert />
 
         {{-- TABS --}}
         <x-ui.tab-list>
-            <x-ui.tab href="{{ route('menu.index') }}" :active="true">
+            <x-ui.tab href="{{ route('menu.index', ['jenis_menu_id' => 1]) }}" :active="$jenisId == 1">
                 Menu Dine In
             </x-ui.tab>
-            <x-ui.tab href="{{ route('paket-catering.index', ['jenis' => 'nasi_box']) }}">
-                Menu Nasi Box
+            <x-ui.tab href="{{ route('menu.index', ['jenis_menu_id' => 3]) }}" :active="$jenisId == 3">
+                Paket Nasi Box
             </x-ui.tab>
-            <x-ui.tab href="{{ route('paket-catering.index', ['jenis' => 'catering']) }}">
-                Menu Katering
+            <x-ui.tab href="{{ route('menu.index', ['jenis_menu_id' => 2]) }}" :active="$jenisId == 2">
+                Paket Katering
             </x-ui.tab>
         </x-ui.tab-list>
 
@@ -78,11 +79,8 @@
         {{-- Filter bar --}}
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
             <form action="{{ route('menu.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
-                <div class="relative flex-1 sm:flex-none sm:w-56">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode…" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
-                    <input type="hidden" name="jenis_menu_id" value="{{ request('jenis_menu_id') }}">
-                </div>
+                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode…" width="w-full sm:w-56" />
+                <input type="hidden" name="jenis_menu_id" value="{{ request('jenis_menu_id') }}">
                 <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
             </form>
         </div>
@@ -96,7 +94,7 @@
                             <th class="px-4 py-3 text-left">Nama Menu</th>
                             <th class="px-4 py-3 text-left">Kategori</th>
                             <th class="px-4 py-3 text-left">Harga</th>
-                            <th class="px-4 py-3 text-left">Porsi Tersedia</th>
+                            <th class="px-4 py-3 text-left">{{ $jenisId == 1 ? 'Porsi Tersedia' : 'Komponen' }}</th>
                             <th class="px-4 py-3 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -128,11 +126,20 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-700">
-                                @if($menu->porsi_tersedia === null)
-                                    <span class="text-gray-400">—</span>
+                                @if($jenisId == 1)
+                                    @if($menu->porsi_tersedia === null)
+                                        <span class="text-gray-400">—</span>
+                                    @else
+                                        <span class="font-semibold text-gray-900">{{ $menu->porsi_tersedia }}</span>
+                                        <span class="text-gray-500">porsi</span>
+                                    @endif
                                 @else
-                                    <span class="font-semibold text-gray-900">{{ $menu->porsi_tersedia }}</span>
-                                    <span class="text-gray-500">porsi</span>
+                                    @if($menu->komponen_paket && $menu->komponen_paket->count() > 0)
+                                        <span class="font-semibold text-gray-900">{{ $menu->komponen_paket->count() }}</span>
+                                        <span class="text-gray-500">komponen</span>
+                                    @else
+                                        <span class="text-gray-400">Belum ada</span>
+                                    @endif
                                 @endif
                             </td>
                             </td>
@@ -171,11 +178,11 @@
 {{-- MODAL: TAMBAH/EDIT MENU (SLIDE-IN RIGHT) --}}
 {{-- ══════════════════════════════════════════ --}}
 <div id="drawerMenu" class="fixed inset-x-0 bottom-0 top-16 z-40 hidden">
-    <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px]" onclick="closeMenuModal()"></div>
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm opacity-0 transition-opacity duration-300" id="drawerMenuOverlay" onclick="closeMenuModal()"></div>
     <div class="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300" id="drawerMenuPanel">
         
         {{-- Header --}}
-        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div class="flex items-center justify-between px-5 pt-4 pb-2 border-b border-gray-100 shrink-0">
             <div>
                 <h2 class="font-semibold text-gray-900" id="menuModalTitle">Tambah Menu Baru</h2>
                 <p class="text-xs text-gray-400 mt-0.5" id="menuModalSubtitle">Isi informasi menu dan komposisi bahan baku</p>
@@ -185,16 +192,23 @@
             </button>
         </div>
 
+        {{-- Tabs Header --}}
+        <div class="flex px-5 border-b border-gray-100 shrink-0">
+            <button type="button" onclick="switchMenuTab('informasi')" id="tabBtnInformasi" class="py-2.5 px-3 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none border-gray-900 text-gray-900">Informasi Menu</button>
+            <button type="button" onclick="switchMenuTab('resep')" id="tabBtnResep" class="py-2.5 px-3 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 ml-4">Resep Bahan Baku</button>
+        </div>
+
         {{-- Form Body --}}
         <form id="formMenu" action="{{ route('menu.store') }}" method="POST" enctype="multipart/form-data" class="flex-1 overflow-y-auto">
             @csrf
             <div id="formMenuMethod"></div>
-            <div class="px-5 py-5 space-y-4">
-
+            
+            {{-- Tab: Informasi --}}
+            <div id="tabContentInformasi" class="px-5 py-5 space-y-4">
                 {{-- Nama --}}
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Menu <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama" id="mnNama" required placeholder="Contoh: Ayam Bakar Madu" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all">
+                    <textarea name="nama" id="mnNama" rows="2" required placeholder="Contoh: Ayam Bakar Madu" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all resize-none"></textarea>
                 </div>
 
                 {{-- Layanan + Kategori --}}
@@ -203,7 +217,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Layanan <span class="text-red-500">*</span></label>
                         <select name="jenis_menu_id" id="mnJenis" required onchange="filterKat(this.value)" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all">
                             <option value="1">Dine in</option>
-                            <option value="2">Catering</option>
+                            <option value="2">Katering</option>
                             <option value="3">Nasi Box</option>
                         </select>
                     </div>
@@ -245,7 +259,71 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Foto Menu (Opsional)</label>
                     <input type="file" id="mnFoto" name="foto" accept="image/*" class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer">
                 </div>
-
+            </div>
+            
+            {{-- Tab: Resep --}}
+            <div id="tabContentResep" class="px-5 py-5 space-y-4 hidden">
+                <div id="resepInputArea" class="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-3">
+                    <p class="text-xs text-gray-500">Masukkan bahan baku yang dibutuhkan untuk 1 porsi menu ini.</p>
+                    <div class="flex gap-2 items-start">
+                        <div class="flex-1">
+                            <select id="inputBahanBaku" onchange="document.getElementById('inputSatuan').value = this.options[this.selectedIndex].getAttribute('data-satuan_id') || ''" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded bg-white outline-none">
+                                <option value="" data-satuan_id="" data-nama="">Pilih Bahan</option>
+                                @foreach($bahanBakus ?? [] as $bb)
+                                <option value="{{ $bb->id }}" data-satuan_id="{{ $bb->satuan_id }}" data-nama="{{ $bb->nama_bahan }}">{{ $bb->nama_bahan }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="w-48 flex items-center border border-gray-200 rounded overflow-hidden bg-white">
+                            <input type="number" step="0.01" id="inputJumlah" placeholder="Jumlah" class="w-16 px-2 py-1.5 text-xs outline-none bg-transparent">
+                            <div class="w-px h-5 bg-gray-200"></div>
+                            <select id="inputSatuan" class="flex-1 px-1 py-1.5 text-xs text-gray-500 bg-transparent outline-none cursor-pointer text-center border-0 focus:ring-0">
+                                <option value="">Satuan</option>
+                                @foreach($satuans ?? [] as $st)
+                                <option value="{{ $st->id }}">{{ $st->singkatan ?? $st->nama_satuan }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" onclick="toggleSatuanBaruForm()" class="w-7 h-full min-h-[32px] flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-600 border-l border-gray-200 transition-colors" title="Tambah Satuan Baru">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" onclick="handleAddResep()" class="inline-flex items-center justify-center h-8 px-3 text-xs font-semibold bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors">
+                                Tambah
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {{-- Form Tambah Satuan Baru (Inline) --}}
+                    <div id="satuanBaruForm" class="hidden mt-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <div class="flex gap-2 items-end">
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Nama Satuan</label>
+                                <input type="text" id="inputNamaSatuanBaru" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded outline-none" placeholder="Contoh: Ikat">
+                            </div>
+                            <div class="w-24">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Singkatan</label>
+                                <input type="text" id="inputSingkatanSatuanBaru" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded outline-none" placeholder="Contoh: ikt">
+                            </div>
+                            <button type="button" onclick="simpanSatuanBaru()" class="px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                Simpan Satuan
+                            </button>
+                            <button type="button" onclick="toggleSatuanBaruForm()" class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
+                                Batal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-900 mb-2">Daftar Resep</h4>
+                    <div id="resepContainer" class="flex flex-col border border-gray-100 rounded-lg overflow-hidden bg-white divide-y divide-gray-100">
+                        <!-- Resep rows will be populated here -->
+                    </div>
+                    <div id="resepEmptyState" class="text-center py-6 text-gray-400 text-sm">
+                        Belum ada bahan baku.
+                    </div>
+                </div>
             </div>
 
             {{-- Footer --}}
@@ -350,7 +428,7 @@ function closeDeleteModal() {
 
 // ═══ MENU DRAWER ═══
 let isViewMode = false;
-function openMenuModal(menuId = null, isView = false) {
+function openMenuModal(menuId = null, isView = false, defaultTab = 'informasi') {
     let menu = null;
     if (menuId) {
         menu = menusData.find(m => m.id == menuId);
@@ -359,6 +437,7 @@ function openMenuModal(menuId = null, isView = false) {
     isViewMode = isView;
     const drawer = document.getElementById('drawerMenu');
     const panel = document.getElementById('drawerMenuPanel');
+    const overlay = document.getElementById('drawerMenuOverlay');
     
     document.getElementById('formMenu').action = '{{ route("menu.store") }}';
     document.getElementById('formMenuMethod').innerHTML = '';
@@ -368,7 +447,9 @@ function openMenuModal(menuId = null, isView = false) {
     } else {
         document.getElementById('menuModalTitle').textContent = menu ? 'Edit Menu' : 'Tambah Menu Baru';
     }
-    document.getElementById('menuModalSubtitle').textContent = menu ? (menu.kode_menu ?? '') : 'Isi informasi menu';
+    const menuKode = menu?.kode_menu ?? '';
+    const menuNama = menu?.nama_menu ?? menu?.nama ?? '';
+    document.getElementById('menuModalSubtitle').textContent = menu ? (menuKode + (menuNama ? ' - ' + menuNama : '')) : 'Isi informasi menu';
 
     const jenisVal = menu ? (menu.jenis_menu_id ?? 1) : 1;
     document.getElementById('mnNama').value = menu ? (menu.nama_menu ?? menu.nama ?? '') : '';
@@ -404,21 +485,191 @@ function openMenuModal(menuId = null, isView = false) {
         document.getElementById('formMenuMethod').innerHTML = '<input type="hidden" name="_method" value="PUT">';
     }
 
+    // Populate resep
+    const resepContainer = document.getElementById('resepContainer');
+    resepContainer.innerHTML = '';
+    
+    if (menu && menu.resep_menu && menu.resep_menu.length > 0) {
+        menu.resep_menu.forEach(r => {
+            const satStr = r.satuan ? (r.satuan.singkatan || r.satuan.nama_satuan) : '';
+            addResepRow(r.bahan_baku_id, r.jumlah_kebutuhan || r.jumlah, r.satuan_id, satStr, isView);
+        });
+    }
+    
+    checkResepEmptyState();
+    if (isView) {
+        document.getElementById('resepInputArea').classList.add('hidden');
+    } else {
+        document.getElementById('resepInputArea').classList.remove('hidden');
+    }
+
     drawer.classList.remove('hidden');
     drawer.style.display = 'flex';
+    overlay.classList.remove('hidden');
+    // Reset tab to defaultTab
+    switchMenuTab(defaultTab);
     requestAnimationFrame(() => {
+        overlay.classList.remove('opacity-0');
         panel.classList.remove('translate-x-full');
     });
+}
+
+function switchMenuTab(tabId) {
+    const btnInfo = document.getElementById('tabBtnInformasi');
+    const btnResep = document.getElementById('tabBtnResep');
+    const contentInfo = document.getElementById('tabContentInformasi');
+    const contentResep = document.getElementById('tabContentResep');
+
+    if (tabId === 'informasi') {
+        btnInfo.className = 'py-2.5 px-3 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none border-gray-900 text-gray-900';
+        btnResep.className = 'py-2.5 px-3 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 ml-4';
+        contentInfo.classList.remove('hidden');
+        contentResep.classList.add('hidden');
+    } else {
+        btnInfo.className = 'py-2.5 px-3 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+        btnResep.className = 'py-2.5 px-3 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none border-gray-900 text-gray-900 ml-4';
+        contentInfo.classList.add('hidden');
+        contentResep.classList.remove('hidden');
+    }
+}
+
+const bahanBakusData = @json($bahanBakus ?? []);
+function checkResepEmptyState() {
+    const container = document.getElementById('resepContainer');
+    const emptyState = document.getElementById('resepEmptyState');
+    if (container.children.length === 0) {
+        emptyState.classList.remove('hidden');
+    } else {
+        emptyState.classList.add('hidden');
+    }
+}
+
+function handleAddResep() {
+    const sel = document.getElementById('inputBahanBaku');
+    const jml = document.getElementById('inputJumlah');
+    const sat = document.getElementById('inputSatuan');
+    const bahanId = sel.value;
+    const jumlah = jml.value;
+    const satuanId = sat.value;
+    
+    if (!bahanId || !jumlah || !satuanId) return;
+    
+    const satuanText = sat.options[sat.selectedIndex].text;
+    
+    addResepRow(bahanId, jumlah, satuanId, satuanText, false);
+    
+    sel.value = '';
+    jml.value = '';
+    sat.value = '';
+}
+
+function editResepRow(btn, bahanId, jumlah, satuanId) {
+    // Populate form
+    const sel = document.getElementById('inputBahanBaku');
+    sel.value = bahanId;
+    
+    document.getElementById('inputJumlah').value = jumlah;
+    document.getElementById('inputSatuan').value = satuanId;
+    
+    // Remove row
+    btn.closest('.resep-row').remove();
+    checkResepEmptyState();
+}
+
+function addResepRow(bahanId, jumlah, satuanId = null, satuanText = null, isView = false) {
+    const container = document.getElementById('resepContainer');
+    const div = document.createElement('div');
+    div.className = 'flex items-center justify-between p-3 resep-row hover:bg-gray-50 transition-colors text-sm';
+    
+    const bb = bahanBakusData.find(b => b.id == bahanId);
+    if (!bb) return;
+    const namaBahan = bb.nama_bahan;
+    
+    div.innerHTML = `
+        <div class="flex-1 font-medium text-gray-900">${namaBahan}</div>
+        <div class="w-32 flex items-center justify-end gap-1.5 text-gray-600">
+            <span class="font-semibold text-gray-900">${jumlah}</span>
+            <span class="text-xs">${satuanText || ''}</span>
+        </div>
+        ${!isView ? `
+        <div class="w-24 flex justify-end items-center gap-3 border-l border-gray-200 ml-4 pl-4">
+            <input type="hidden" name="bahan_baku_id[]" value="${bahanId}">
+            <input type="hidden" name="jumlah_kebutuhan[]" value="${jumlah}">
+            <input type="hidden" name="satuan_id[]" value="${satuanId}">
+            <button type="button" onclick="editResepRow(this, '${bahanId}', '${jumlah}', '${satuanId}')" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">Edit</button>
+            <button type="button" onclick="this.closest('.resep-row').remove(); checkResepEmptyState();" class="text-red-600 hover:text-red-800 text-xs font-semibold">Hapus</button>
+        </div>
+        ` : ''}
+    `;
+    
+    container.appendChild(div);
+    checkResepEmptyState();
+}
+
+function toggleSatuanBaruForm() {
+    const form = document.getElementById('satuanBaruForm');
+    if (form.classList.contains('hidden')) {
+        form.classList.remove('hidden');
+        document.getElementById('inputNamaSatuanBaru').focus();
+    } else {
+        form.classList.add('hidden');
+        document.getElementById('inputNamaSatuanBaru').value = '';
+        document.getElementById('inputSingkatanSatuanBaru').value = '';
+    }
+}
+
+async function simpanSatuanBaru() {
+    const namaInput = document.getElementById('inputNamaSatuanBaru');
+    const singkatanInput = document.getElementById('inputSingkatanSatuanBaru');
+    const nama = namaInput.value.trim();
+    const singkatan = singkatanInput.value.trim();
+    
+    if (!nama) {
+        alert('Nama satuan tidak boleh kosong!');
+        namaInput.focus();
+        return;
+    }
+    
+    try {
+        const res = await fetch('{{ route("satuan.ajax.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ nama_satuan: nama, singkatan: singkatan })
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            const sel = document.getElementById('inputSatuan');
+            const opt = document.createElement('option');
+            opt.value = data.id;
+            opt.textContent = data.singkatan || data.nama_satuan;
+            sel.appendChild(opt);
+            sel.value = data.id;
+            
+            // Tutup dan bersihkan form
+            toggleSatuanBaruForm();
+        } else {
+            alert('Gagal menambahkan satuan. Pastikan tidak ada data yang duplikat.');
+        }
+    } catch (e) {
+        alert('Terjadi kesalahan jaringan.');
+    }
 }
 
 function closeMenuModal() {
     const drawer = document.getElementById('drawerMenu');
     const panel = document.getElementById('drawerMenuPanel');
+    const overlay = document.getElementById('drawerMenuOverlay');
     
     // Animate out
     panel.classList.add('translate-x-full');
+    overlay.classList.add('opacity-0');
     setTimeout(() => {
         drawer.classList.add('hidden');
+        overlay.classList.add('hidden');
         drawer.style.display = '';
     }, 300);
 }

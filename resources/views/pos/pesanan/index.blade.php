@@ -963,12 +963,16 @@ document.addEventListener('alpine:init', () => {
         <table class="w-full text-left border-collapse min-w-[700px]">
           <thead>
             <tr class="bg-gray-50/50 border-b border-gray-100">
-              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-center w-12">No</th>
-              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Hari & Tanggal</th>
-              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Order ID / Pelanggan</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-center w-12">No.</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Tanggal & Waktu</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">ID Pesanan</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Pelanggan</th>
               <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Meja</th>
-              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Total Tagihan</th>
-              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-center">Status Pesanan / KOT</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-center">Jumlah Item</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Total</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-center">Status Pesanan</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-center">Status KOT</th>
+              <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-center">Pembayaran</th>
               <th class="py-4 px-4 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
             </tr>
           </thead>
@@ -987,12 +991,14 @@ document.addEventListener('alpine:init', () => {
                   </div>
                 </td>
 
-                {{-- Order ID & Customer --}}
+                {{-- Order ID --}}
                 <td class="py-4 px-4">
-                  <div class="flex flex-col">
-                    <span class="font-black text-sm text-slate-900 leading-snug" x-text="bill.nama_konsumen"></span>
-                    <span class="text-xs font-mono text-gray-400 font-bold mt-0.5" x-text="'#' + (bill.nomor_pesanan || ('DIN-' + bill.id))"></span>
-                  </div>
+                  <span class="text-sm font-mono text-slate-900 font-bold" x-text="'#' + (bill.nomor_pesanan || ('DIN-' + bill.id))"></span>
+                </td>
+
+                {{-- Customer --}}
+                <td class="py-4 px-4">
+                  <span class="font-black text-sm text-slate-900 leading-snug" x-text="bill.nama_konsumen"></span>
                 </td>
                 
                 {{-- Meja --}}
@@ -1002,6 +1008,11 @@ document.addEventListener('alpine:init', () => {
                     <span x-text="bill.meja ? (bill.meja.nomor_meja.startsWith('Meja') ? bill.meja.nomor_meja : 'Meja ' + bill.meja.nomor_meja) : 'Meja -'"></span>
                   </span>
                 </td>
+
+                {{-- Jumlah Item --}}
+                <td class="py-4 px-4 text-center">
+                  <span class="text-sm font-medium text-gray-700" x-text="bill.detail_pesanan_count || (bill.items ? bill.items.length : 0)"></span>
+                </td>
                 
                 {{-- Total Tagihan --}}
                 <td class="py-4 px-4">
@@ -1009,26 +1020,36 @@ document.addEventListener('alpine:init', () => {
                         x-text="'Rp ' + formatPrice(bill.total_tagihan || (bill.items || []).reduce((s, i) => s + (i.subtotal || ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * (i.qty || 0))), 0))"></span>
                 </td>
                 
-                {{-- Status Pesanan / KOT --}}
+                {{-- Status Pesanan --}}
                 <td class="py-4 px-4 text-center">
-                  <div class="flex flex-col items-center gap-1">
-                    <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg font-extrabold text-xs whitespace-nowrap inline-block">
-                      Menunggu Bayar
+                  <span class="px-2.5 py-1 text-xs font-extrabold uppercase rounded-lg border whitespace-nowrap inline-block"
+                        :class="bill.status === 'selesai' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (bill.status === 'dibatalkan' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200')"
+                        x-text="bill.status ? bill.status : 'Diproses'">
+                  </span>
+                </td>
+                
+                {{-- Status KOT --}}
+                <td class="py-4 px-4 text-center">
+                  <template x-if="mejaStatusMap[bill.id] && mejaStatusMap[bill.id].kot">
+                    <span class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider border rounded-xl inline-block whitespace-nowrap"
+                          :class="getKotStatusClass(mejaStatusMap[bill.id].kot.status_tiket_dapur_id)">
+                      <x-heroicon-o-fire class="w-2.5 h-2.5 inline-block mr-0.5" />
+                      <span x-text="getKotStatusLabel(mejaStatusMap[bill.id].kot.status_tiket_dapur_id)"></span>
                     </span>
-                    <template x-if="mejaStatusMap[bill.id] && mejaStatusMap[bill.id].kot">
-                      <span class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider border rounded-xl inline-block whitespace-nowrap"
-                            :class="getKotStatusClass(mejaStatusMap[bill.id].kot.status_tiket_dapur_id)">
-                        <x-heroicon-o-fire class="w-2.5 h-2.5 inline-block mr-0.5" />
-                        <span x-text="getKotStatusLabel(mejaStatusMap[bill.id].kot.status_tiket_dapur_id)"></span>
-                      </span>
-                    </template>
-                    <template x-if="mejaStatusMap[bill.id] && !mejaStatusMap[bill.id].kot">
-                      <span class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider border rounded-xl inline-block whitespace-nowrap bg-blue-50 text-blue-800 border-blue-200">
-                        <x-heroicon-o-clock class="w-2.5 h-2.5 inline-block mr-0.5" />
-                        KOT Menunggu
-                      </span>
-                    </template>
-                  </div>
+                  </template>
+                  <template x-if="mejaStatusMap[bill.id] && !mejaStatusMap[bill.id].kot">
+                    <span class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider border rounded-xl inline-block whitespace-nowrap bg-blue-50 text-blue-800 border-blue-200">
+                      <x-heroicon-o-clock class="w-2.5 h-2.5 inline-block mr-0.5" />
+                      Menunggu KOT
+                    </span>
+                  </template>
+                </td>
+
+                {{-- Pembayaran --}}
+                <td class="py-4 px-4 text-center">
+                  <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg font-extrabold text-xs whitespace-nowrap inline-block">
+                    Menunggu Bayar
+                  </span>
                 </td>
                 
                 {{-- Action Buttons --}}

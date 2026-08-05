@@ -1,17 +1,20 @@
 @extends('layouts.pos')
 
-@section('title', 'Detail Pesanan Catering #' . $pesanan->nomor_pesanan)
+@section('title', 'Detail Pesanan Katering #' . $pesanan->nomor_pesanan)
 
 @section('content')
 <div class="w-full p-6 max-w-[1200px] mx-auto">
     <div class="w-full p-6 flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Detail Pesanan Catering #{{ $pesanan->nomor_pesanan }}</h1>
-        <div class="flex gap-2">
-            <a href="{{ route('admin.pesanan.catering.pdf', $pesanan->id) }}" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">
-                <x-heroicon-o-document class="mr-1 w-5 h-5" /> Cetak Rincian (PDF)
-            </a>
-            <a href="{{ route('admin.pesanan.catering.index') }}" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold transition-colors">&larr; Kembali</a>
-        </div>
+        <x-ui.page-header title="Detail Pesanan Katering #{{ $pesanan->nomor_pesanan }}">
+            <x-slot:actions>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.pesanan.catering.pdf', $pesanan->id) }}" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">
+                        <x-heroicon-o-document class="mr-1 w-5 h-5" /> Cetak Rincian (PDF)
+                    </a>
+                    <a href="{{ route('admin.pesanan.catering.index') }}" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold transition-colors">&larr; Kembali</a>
+                </div>
+            </x-slot:actions>
+        </x-ui.page-header>
     </div>
 
     @php
@@ -126,14 +129,14 @@
                         <div>
                             <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <x-heroicon-o-cube class="w-5 h-5 text-emerald-700" />
-                                Rincian & Analisis Stok Bahan Baku Catering Ini
+                                Rincian & Analisis Stok Bahan Baku Katering Ini
                             </h3>
                             <p class="text-sm text-gray-500 font-medium mt-1">Kebutuhan resep untuk {{ $detailPesanan->jumlah ?? 0 }} porsi pesanan catering ini</p>
                         </div>
                         @if(!in_array($pesanan->status_pesanan_id, [1, 6]))
                         <a href="{{ route('pengadaan.create', ['pesanan_id' => $pesanan->id]) }}" class="inline-flex items-center gap-2 bg-[#0D3024] hover:bg-[#0a1f17] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">
                             <x-heroicon-o-plus class="w-4 h-4" />
-                            Buat Pengadaan Catering
+                            Buat Pengadaan Katering
                         </a>
                         @endif
                     </div>

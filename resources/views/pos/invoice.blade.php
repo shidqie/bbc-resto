@@ -212,7 +212,7 @@
 
     {{-- Footer Fixed --}}
     <div class="footer-fixed">
-        Saung Babakan Cinta — Rumah Makan Sunda &amp; Catering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat | WA: +62 813-9461-6635<br>
+        Saung Babakan Cinta — Rumah Makan Sunda &amp; Katering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat | WA: +62 813-9461-6635<br>
         E-Receipt diterbitkan otomatis pada {{ date('d-m-Y H:i') }} WIB
     </div>
 

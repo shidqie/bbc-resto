@@ -9,4 +9,9 @@ class Satuan extends BaseModel
     protected $guarded = [];
 
     public $timestamps = false;
+
+    public function bahan_bakus()
+    {
+        return $this->hasMany(BahanBaku::class, 'satuan_id');
+    }
 }

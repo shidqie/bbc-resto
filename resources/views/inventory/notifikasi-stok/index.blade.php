@@ -7,22 +7,20 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Notifikasi Stok</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Peringatan stok menipis, habis, dan mutasi stok.</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('pengadaan.create', ['tipe' => 'harian']) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-amber-500 rounded-lg px-3 py-2 hover:bg-amber-600 transition-colors">
-                    <x-heroicon-o-shopping-cart class="w-3 h-3" />
-                    Buat Pengadaan
-                </a>
-                <button type="button" id="btnCheckNow" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    Cek Sekarang
-                </button>
-            </div>
-        </div>
+        <x-ui.page-header title="Notifikasi Stok" subtitle="Peringatan stok menipis, habis, dan mutasi stok.">
+            <x-slot:actions>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('pengadaan.create', ['tipe' => 'harian']) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-amber-500 rounded-lg px-3 py-2 hover:bg-amber-600 transition-colors">
+                        <x-heroicon-o-shopping-cart class="w-3 h-3" />
+                        Buat Pengadaan
+                    </a>
+                    <button type="button" id="btnCheckNow" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Cek Sekarang
+                    </button>
+                </div>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         {{-- Stat Cards --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -47,18 +45,8 @@
         {{-- Filter Bar --}}
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between shrink-0">
             <form method="GET" action="{{ route('notifikasi-stok.index') }}" class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-                <select name="jenis" class="appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-9 text-sm text-gray-900 shadow-sm outline-none transition-all focus:border-gray-400 focus:ring-1 focus:ring-gray-400" onchange="this.form.submit()">
-                    <option value="">Semua Jenis</option>
-                    <option value="menipis" {{ request('jenis') == 'menipis' ? 'selected' : '' }}>Menipis</option>
-                    <option value="habis" {{ request('jenis') == 'habis' ? 'selected' : '' }}>Habis</option>
-                    <option value="penerimaan" {{ request('jenis') == 'penerimaan' ? 'selected' : '' }}>Penerimaan</option>
-                    <option value="penyesuaian" {{ request('jenis') == 'penyesuaian' ? 'selected' : '' }}>Penyesuaian</option>
-                </select>
-                <select name="dibaca" class="appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-9 text-sm text-gray-900 shadow-sm outline-none transition-all focus:border-gray-400 focus:ring-1 focus:ring-gray-400" onchange="this.form.submit()">
-                    <option value="">Semua Status</option>
-                    <option value="false" {{ request('dibaca') == 'false' ? 'selected' : '' }}>Belum Dibaca</option>
-                    <option value="true" {{ request('dibaca') == 'true' ? 'selected' : '' }}>Sudah Dibaca</option>
-                </select>
+                <x-select-input name="jenis" :options="['menipis' => 'Menipis', 'habis' => 'Habis', 'penerimaan' => 'Penerimaan', 'penyesuaian' => 'Penyesuaian']" :selected="request('jenis')" placeholder="Semua Jenis" :auto-submit="true" />
+                <x-select-input name="dibaca" :options="['false' => 'Belum Dibaca', 'true' => 'Sudah Dibaca']" :selected="request('dibaca')" placeholder="Semua Status" :auto-submit="true" />
                 @if(request()->hasAny(['jenis', 'dibaca']))
                     <a href="{{ route('notifikasi-stok.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
                 @endif

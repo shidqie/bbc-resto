@@ -25,76 +25,143 @@
                 @csrf
                 @method('PUT')
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {{-- Foto Menu --}}
-                    <div class="md:col-span-2 flex items-start gap-6">
-                        <div class="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400 overflow-hidden relative group">
-                            <img id="previewFoto" src="{{ $menu->foto ? Storage::url($menu->foto) : '' }}" class="w-full h-full object-cover {{ $menu->foto ? '' : 'hidden' }}">
-                            <div id="placeholderFoto" class="flex flex-col items-center justify-center {{ $menu->foto ? 'hidden' : '' }}">
-                                <x-heroicon-o-camera class="text-3xl mb-2 w-[1em] h-[1em] inline-block shrink-0" />
-                                <span class="text-xs font-medium">Upload</span>
+                <div x-data="{ activeTab: 'informasi' }">
+                    {{-- Tab Headers --}}
+                    <div class="flex border-b border-gray-100 mb-6">
+                        <button type="button" @click="activeTab = 'informasi'" 
+                                :class="activeTab === 'informasi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="px-6 py-4 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none">
+                            Informasi Menu
+                        </button>
+                        <button type="button" @click="activeTab = 'resep'" 
+                                :class="activeTab === 'resep' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="px-6 py-4 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none">
+                            Resep Bahan Baku
+                        </button>
+                    </div>
+
+                    {{-- Tab 1: Informasi Menu --}}
+                    <div x-show="activeTab === 'informasi'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- Foto Menu --}}
+                        <div class="md:col-span-2 flex items-start gap-6">
+                            <div class="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400 overflow-hidden relative group">
+                                <img id="previewFoto" src="{{ $menu->foto ? Storage::url($menu->foto) : '' }}" class="w-full h-full object-cover {{ $menu->foto ? '' : 'hidden' }}">
+                                <div id="placeholderFoto" class="flex flex-col items-center justify-center {{ $menu->foto ? 'hidden' : '' }}">
+                                    <x-heroicon-o-camera class="text-3xl mb-2 w-[1em] h-[1em] inline-block shrink-0" />
+                                    <span class="text-xs font-medium">Upload</span>
+                                </div>
+                                <input type="file" name="foto" id="foto" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewImage(this)">
                             </div>
-                            <input type="file" name="foto" id="foto" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewImage(this)">
+                            <div class="flex-1 mt-2">
+                                <h3 class="text-sm font-bold text-gray-900 mb-1">Foto Menu</h3>
+                                <p class="text-xs text-gray-500 mb-3">Biarkan kosong jika tidak ingin mengubah foto. Format JPG, PNG, atau WEBP. Maks 2MB.</p>
+                                <button type="button" onclick="document.getElementById('foto').click()" class="text-sm font-medium bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors">
+                                    Ganti File
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex-1 mt-2">
-                            <h3 class="text-sm font-bold text-gray-900 mb-1">Foto Menu</h3>
-                            <p class="text-xs text-gray-500 mb-3">Biarkan kosong jika tidak ingin mengubah foto. Format JPG, PNG, atau WEBP. Maks 2MB.</p>
-                            <button type="button" onclick="document.getElementById('foto').click()" class="text-sm font-medium bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors">
-                                Ganti File
+
+                        {{-- Nama Menu --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Menu <span class="text-red-500">*</span></label>
+                            <input type="text" name="nama_menu" value="{{ old('nama_menu', $menu->nama_menu) }}" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                        </div>
+
+                        {{-- Kategori --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Menu <span class="text-red-500">*</span></label>
+                            <select name="kategori_menu_id" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                                <option value="">Pilih Kategori</option>
+                                @foreach($kategoris as $kategori)
+                                    <option value="{{ $kategori->id }}" {{ old('kategori_menu_id', $menu->kategori_menu_id) == $kategori->id ? 'selected' : '' }}>{{ $kategori->nama_kategori_kategori ?? $kategori->nama_kategori }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Jenis Menu --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Menu <span class="text-red-500">*</span></label>
+                            <select name="jenis_menu_id" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                                @foreach($jenis_menu as $jenis)
+                                    <option value="{{ $jenis->id }}" {{ old('jenis_menu_id', $menu->jenis_menu_id) == $jenis->id ? 'selected' : '' }}>{{ $jenis->nama_jenis }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Harga --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp) <span class="text-red-500">*</span></label>
+                            <input type="number" name="harga_jual" value="{{ old('harga_jual', $menu->harga_jual) }}" required min="0" step="1" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                        </div>
+
+                        {{-- Status --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status Ketersediaan <span class="text-red-500">*</span></label>
+                            <select name="status_aktif" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                                <option value="tersedia" {{ old('status_aktif', $menu->status_aktif ? 'tersedia' : 'habis') === 'tersedia' ? 'selected' : '' }}>Tersedia</option>
+                                <option value="habis" {{ old('status_aktif', $menu->status_aktif ? 'tersedia' : 'habis') === 'habis' ? 'selected' : '' }}>Habis</option>
+                            </select>
+                        </div>
+
+                        {{-- Deskripsi --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi / Keterangan Tambahan</label>
+                            <textarea name="deskripsi" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none resize-none transition-all">{{ old('deskripsi', $menu->deskripsi) }}</textarea>
+                        </div>
+                    </div>
+
+                    {{-- Tab 2: Komposisi Bahan Baku / Resep --}}
+                    <div x-show="activeTab === 'resep'" style="display: none;">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-base font-bold text-gray-900">Komposisi Bahan Baku (Resep Takaran)</h3>
+                                <p class="text-sm text-gray-500 mt-1">Masukkan bahan baku yang dibutuhkan untuk 1 porsi menu ini.</p>
+                            </div>
+                            <button type="button" onclick="addBahanBakuRow()" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors">
+                                <x-heroicon-o-plus class="w-5 h-5 inline-block" /> Tambah Bahan
                             </button>
                         </div>
-                    </div>
-
-                    <div class="md:col-span-2 border-t border-gray-100 pt-6">
-                        <h3 class="text-sm font-bold text-gray-900 mb-4">Informasi Dasar</h3>
-                    </div>
-
-                    {{-- Nama Menu --}}
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Menu <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama_menu" value="{{ old('nama_menu', $menu->nama_menu) }}" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
-                    </div>
-
-                    {{-- Kategori --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Menu <span class="text-red-500">*</span></label>
-                        <select name="kategori_menu_id" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
-                            <option value="">Pilih Kategori</option>
-                            @foreach($kategoris as $kategori)
-                                <option value="{{ $kategori->id }}" {{ old('kategori_menu_id', $menu->kategori_menu_id) == $kategori->id ? 'selected' : '' }}>{{ $kategori->nama_kategori_kategori ?? $kategori->nama_kategori }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Jenis Menu --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Menu <span class="text-red-500">*</span></label>
-                        <select name="jenis_menu_id" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
-                            @foreach($jenis_menu as $jenis)
-                                <option value="{{ $jenis->id }}" {{ old('jenis_menu_id', $menu->jenis_menu_id) == $jenis->id ? 'selected' : '' }}>{{ $jenis->nama_jenis }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Harga --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp) <span class="text-red-500">*</span></label>
-                        <input type="number" name="harga_jual" value="{{ old('harga_jual', $menu->harga_jual) }}" required min="0" step="1" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
-                    </div>
-
-                    {{-- Status --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status Ketersediaan <span class="text-red-500">*</span></label>
-                        <select name="status_aktif" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
-                            <option value="tersedia" {{ old('status_aktif', $menu->status_aktif ? 'tersedia' : 'habis') === 'tersedia' ? 'selected' : '' }}>Tersedia</option>
-                            <option value="habis" {{ old('status_aktif', $menu->status_aktif ? 'tersedia' : 'habis') === 'habis' ? 'selected' : '' }}>Habis</option>
-                        </select>
-                    </div>
-
-                    {{-- Deskripsi --}}
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi / Keterangan Tambahan</label>
-                        <textarea name="deskripsi" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none resize-none transition-all">{{ old('deskripsi', $menu->deskripsi) }}</textarea>
+                        <div class="space-y-3" id="bahanBakuContainer">
+                            @forelse($menu->resep_menu as $resep)
+                                <div class="flex gap-3 items-start bahan-baku-row">
+                                    <div class="flex-1">
+                                        <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                                            <option value="">Pilih Bahan Baku</option>
+                                            @foreach($bahanBakus as $bb)
+                                                <option value="{{ $bb->id }}" {{ $resep->bahan_baku_id == $bb->id ? 'selected' : '' }}>{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="w-32">
+                                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" value="{{ $resep->jumlah_kebutuhan ?? $resep->jumlah }}" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                                    </div>
+                                    <div>
+                                        <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
+                                            <x-heroicon-o-trash class="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="flex gap-3 items-start bahan-baku-row">
+                                    <div class="flex-1">
+                                        <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                                            <option value="">Pilih Bahan Baku</option>
+                                            @foreach($bahanBakus as $bb)
+                                                <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="w-32">
+                                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                                    </div>
+                                    <div>
+                                        <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
+                                            <x-heroicon-o-trash class="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
 
@@ -133,6 +200,38 @@
                 preview.classList.add('hidden');
                 placeholder.classList.remove('hidden');
             @endif
+        }
+    }
+
+    function addBahanBakuRow() {
+        const container = document.getElementById('bahanBakuContainer');
+        const firstRow = container.querySelector('.bahan-baku-row');
+        if (firstRow) {
+            const clone = firstRow.cloneNode(true);
+            clone.querySelector('select').value = '';
+            clone.querySelector('input').value = '';
+            container.appendChild(clone);
+        } else {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="flex gap-3 items-start bahan-baku-row">
+                    <div class="flex-1">
+                        <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                            <option value="">Pilih Bahan Baku</option>
+                            @foreach($bahanBakus as $bb)
+                                <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="w-32">
+                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                    </div>
+                    <div>
+                        <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
+                            <x-heroicon-o-trash class="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            `);
         }
     }
 </script>

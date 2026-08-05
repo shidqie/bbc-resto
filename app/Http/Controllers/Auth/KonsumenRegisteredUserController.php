@@ -24,7 +24,7 @@ class KonsumenRegisteredUserController extends Controller
         $request->validate([
             'nama' => ['required', 'string', 'max:100'],
             'email' => ['nullable', 'string', 'lowercase', 'email', 'max:150'],
-            'nomor_telepon' => ['required', 'string', 'regex:/^(\+?62|0|8)\d{8,13}$/'],
+            'nomor_telepon' => ['required', 'string', 'max:20'],
             'kata_sandi' => ['required', 'string', 'confirmed', Rules\Password::min(8)],
         ]);
 

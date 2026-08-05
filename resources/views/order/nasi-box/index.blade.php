@@ -5,12 +5,7 @@
     <div class="w-full p-6 space-y-5">
         
         {{-- Header --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Daftar Pesanan Nasi Box</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Kelola transaksi pesanan nasi box, tanggal kirim, rincian box & status pembayaran.</p>
-            </div>
-        </div>
+        <x-ui.page-header title="Daftar Pesanan Nasi Box" subtitle="Kelola transaksi pesanan nasi box, tanggal kirim, rincian box & status pembayaran." />
 
         {{-- Alert --}}
         <x-ui.alert />
@@ -18,11 +13,8 @@
         {{-- Filter Bar --}}
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
             <form action="{{ route('admin.pesanan.nasibox.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
-                <div class="relative flex-1 sm:flex-none sm:w-56">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Kode / Pemesan / HP…" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
-                    <input type="hidden" name="status" value="{{ request('status', 'all') }}">
-                </div>
+                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari Kode / Pemesan / HP…" width="w-full sm:w-56" />
+                <input type="hidden" name="status" value="{{ request('status', 'all') }}">
                 <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
             </form>
             
@@ -42,11 +34,14 @@
                 <thead>
                     <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
                         <th class="px-4 py-3 text-left w-12">No.</th>
-                        <th class="px-4 py-3 text-left">Kode & Tanggal Acara</th>
-                        <th class="px-4 py-3 text-left">Pelanggan & Kontak</th>
-                        <th class="px-4 py-3 text-left">Menu & Jumlah Box</th>
-                        <th class="px-4 py-3 text-left">Tagihan & DP</th>
-                        <th class="px-4 py-3 text-left">Status</th>
+                        <th class="px-4 py-3 text-left">Tanggal Pesan</th>
+                        <th class="px-4 py-3 text-left">ID Pesanan</th>
+                        <th class="px-4 py-3 text-left">Pelanggan</th>
+                        <th class="px-4 py-3 text-left">Tanggal Dibutuhkan</th>
+                        <th class="px-4 py-3 text-left">Jumlah Box</th>
+                        <th class="px-4 py-3 text-left">Total</th>
+                        <th class="px-4 py-3 text-left">Status Pesanan</th>
+                        <th class="px-4 py-3 text-left">Pembayaran</th>
                         <th class="px-4 py-3 text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -56,30 +51,43 @@
                             <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
                                 {{ $loop->iteration + ($pesanans->currentPage() - 1) * $pesanans->perPage() }}
                             </td>
-                            <td class="px-4 py-3">
-                                <p class="font-semibold text-gray-900 font-mono text-xs">{{ $p->nomor_pesanan }}</p>
-                                <p class="text-xs text-gray-600 font-medium mt-0.5">Acara: {{ optional($p->jadwal_pesanan)->tanggal_acara ? \Carbon\Carbon::parse(optional($p->jadwal_pesanan)->tanggal_acara)->format('d M Y') : '-' }}</p>
-                                <p class="text-xs text-gray-400 mt-0.5">Dibuat: {{ $p->dibuat_pada ? $p->dibuat_pada->format('d M H:i') : '-' }}</p>
+                            <td class="px-4 py-3 align-middle whitespace-nowrap">
+                                <p class="text-xs text-gray-700 font-medium">{{ $p->dibuat_pada ? \Carbon\Carbon::parse($p->dibuat_pada)->format('d M Y') : '-' }}</p>
+                                <p class="text-xs text-gray-400">{{ $p->dibuat_pada ? \Carbon\Carbon::parse($p->dibuat_pada)->format('H:i') : '' }}</p>
                             </td>
-                            <td class="px-4 py-3">
-                                <p class="font-semibold text-gray-900">{{ $p->jadwal_pesanan->nama_penerima ?? 'Nasi Box' }}</p>
-                                @if($p->jadwal_pesanan->nomor_telepon_penerima)
-                                    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $p->jadwal_pesanan->nomor_telepon_penerima) }}" target="_blank" class="text-xs text-emerald-600 font-medium hover:underline inline-flex items-center gap-1 mt-0.5">
+                            <td class="px-4 py-3 align-middle">
+                                <p class="font-semibold text-gray-900 font-mono text-xs whitespace-nowrap">{{ $p->nomor_pesanan }}</p>
+                            </td>
+                            <td class="px-4 py-3 align-middle">
+                                <p class="font-semibold text-gray-900 text-xs whitespace-nowrap">{{ optional($p->pelanggan)->nama ?? $p->jadwal_pesanan->nama_penerima ?? 'Nasi Box' }}</p>
+                                @if(optional($p->pelanggan)->nomor_telepon ?? $p->jadwal_pesanan->nomor_telepon_penerima)
+                                    @php $phone = optional($p->pelanggan)->nomor_telepon ?? $p->jadwal_pesanan->nomor_telepon_penerima; @endphp
+                                    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $phone) }}" target="_blank" class="text-xs text-emerald-600 font-medium hover:underline inline-flex items-center gap-1 mt-0.5">
                                         <i class="ph-bold ph-whatsapp-logo"></i>
-                                        <span>{{ $p->jadwal_pesanan->nomor_telepon_penerima }}</span>
+                                        <span class="whitespace-nowrap">{{ $phone }}</span>
                                     </a>
                                 @endif
                             </td>
-                            <td class="px-4 py-3">
-                                <p class="font-semibold text-gray-900 text-xs">{{ $p->detail_pesanan->first()->menu->nama_menu ?? 'Paket Nasi Box' }}</p>
-                                <span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-xl bg-purple-50 text-purple-700 mt-1">
-                                    {{ $p->detail_pesanan->first()->jumlah ?? 0 }} Box
+                            <td class="px-4 py-3 align-middle whitespace-nowrap">
+                                @if($p->jadwal_pesanan?->tanggal_acara)
+                                    <p class="text-xs text-gray-700 font-medium">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->tanggal_acara)->format('d M Y') }}</p>
+                                    <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->tanggal_acara)->format('H:i') }}</p>
+                                @else
+                                    <span class="text-xs text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 align-middle">
+                                @php $paket = $p->detail_pesanan->first(); @endphp
+                                <span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-xl bg-purple-50 text-purple-700 whitespace-nowrap">
+                                    {{ $paket->jumlah ?? 0 }} Box
                                 </span>
+                                <p class="text-xs text-gray-500 mt-1 truncate max-w-[120px]">{{ $paket->menu->nama_menu ?? 'Paket Nasi Box' }}</p>
                             </td>
-                            <td class="px-4 py-3 font-semibold text-gray-900 tabular-nums">
+                            <td class="px-4 py-3 font-semibold text-gray-900 tabular-nums whitespace-nowrap">
                                 Rp {{ number_format($p->total_tagihan, 0, ',', '.') }}
+                                @php $totalP = (float) $p->total_tagihan; @endphp
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 align-middle">
                                 @php
                                     $sColors = [
                                         1 => 'bg-amber-50 text-amber-700',
@@ -91,14 +99,22 @@
                                     ];
                                     $sColor = $sColors[$p->status_pesanan_id] ?? 'bg-gray-100 text-gray-700';
                                 @endphp
-                                <span class="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-xl {{ $sColor }}">
+                                <span class="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-xl {{ $sColor }} whitespace-nowrap">
                                     {{ $p->status_pesanan->nama_status ?? '-' }}
                                 </span>
-                                <div class="mt-1">
-                                    <span class="text-xs font-bold uppercase tracking-wider {{ (optional($p->pembayaran->last())->status_pembayaran_id ?? 0) == 2 ? 'text-emerald-600' : 'text-amber-600' }}">
-                                        {{ (optional($p->pembayaran->last())->status_pembayaran_id ?? 0) == 2 ? "Lunas" : "Belum Lunas" }}
-                                    </span>
-                                </div>
+                            </td>
+                            <td class="px-4 py-3 align-middle">
+                                @php
+                                    $dpP = (float) $p->pembayaran->whereIn('status_pembayaran_id', [2, 3])->sum('jumlah_bayar');
+                                    $lunasP = (float) $p->pembayaran->where('status_pembayaran_id', 3)->sum('jumlah_bayar');
+                                    $bayarP = $lunasP >= $totalP ? 'lunas' : ($dpP > 0 ? 'dp' : 'belum');
+                                @endphp
+                                <span class="text-xs font-bold uppercase tracking-wider whitespace-nowrap {{ $bayarP === 'lunas' ? 'text-emerald-600' : ($bayarP === 'dp' ? 'text-blue-600' : 'text-amber-600') }}">
+                                    {{ $bayarP === 'lunas' ? 'Lunas' : ($bayarP === 'dp' ? 'DP Terbayar' : 'Belum Bayar') }}
+                                </span>
+                                @if($dpP > 0)
+                                    <p class="text-xs text-gray-400 mt-0.5">Rp {{ number_format($dpP, 0, ',', '.') }}</p>
+                                @endif
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">

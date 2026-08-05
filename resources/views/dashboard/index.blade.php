@@ -6,61 +6,11 @@
 
         {{-- ── STAT CARDS ── --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {{-- Stat 1: Pesanan Hari Ini --}}
-            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-sky-200 hover:shadow-sm">
-                <div class="w-11 h-11 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
-                    <x-heroicon-o-shopping-bag class="w-5 h-5" />
-                </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-neutral-500">Pesanan Hari Ini</p>
-                    <p class="text-2xl font-bold text-neutral-900">{{ $pesananHariIni }}</p>
-                </div>
-            </div>
-
-            {{-- Stat 2: Pendapatan Hari Ini --}}
-            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-emerald-200 hover:shadow-sm">
-                <div class="w-11 h-11 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <x-heroicon-o-banknotes class="w-5 h-5" />
-                </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-neutral-500">Pendapatan Hari Ini</p>
-                    <p class="text-2xl font-bold text-emerald-700">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</p>
-                </div>
-            </div>
-
-            {{-- Stat 3: Pesanan Pending --}}
-            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-amber-200 hover:shadow-sm">
-                <div class="w-11 h-11 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                    <x-heroicon-o-clock class="w-5 h-5" />
-                </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-neutral-500">Pesanan Pending</p>
-                    <p class="text-2xl font-bold text-amber-600">{{ $pesananPending }}</p>
-                </div>
-            </div>
-
-            {{-- Stat 4: Stok Menipis --}}
-            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-rose-200 hover:shadow-sm">
-                <div class="w-11 h-11 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                    <x-heroicon-o-cube class="w-5 h-5" />
-                </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-neutral-500">Stok Menipis</p>
-                    <p class="text-2xl font-bold text-rose-600">{{ $stokMenipis }}</p>
-                </div>
-            </div>
-
-            {{-- Stat 5: Notifikasi Stok --}}
-            <div class="bg-white rounded-xl p-5 border border-neutral-200 flex items-center gap-4 transition-all hover:border-violet-200 hover:shadow-sm">
-                <div class="w-11 h-11 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
-                    <x-heroicon-o-bell-alert class="w-5 h-5" />
-                </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-neutral-500">Notifikasi Stok</p>
-                    <p class="text-2xl font-bold {{ $unreadNotifikasiStok > 0 ? 'text-violet-600' : 'text-neutral-900' }}">{{ $unreadNotifikasiStok }}</p>
-                    <p class="text-xs {{ $unreadNotifikasiStok > 0 ? 'text-violet-500' : 'text-emerald-500' }} font-medium">{{ $unreadNotifikasiStok > 0 ? $unreadNotifikasiStok.' belum dibaca' : 'Semua dibaca' }}</p>
-                </div>
-            </div>
+            <x-ui.stat-card label="Pesanan Hari Ini" :value="$pesananHariIni" icon="shopping-bag" color="brand" />
+            <x-ui.stat-card label="Pendapatan Hari Ini" value="Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}" icon="banknotes" color="green" />
+            <x-ui.stat-card label="Pesanan Pending" :value="$pesananPending" icon="clock" color="orange" />
+            <x-ui.stat-card label="Stok Menipis" :value="$stokMenipis" icon="cube" color="red" />
+            <x-ui.stat-card label="Notifikasi Stok" :value="$unreadNotifikasiStok" icon="bell-alert" color="emerald" :hint="$unreadNotifikasiStok > 0 ? $unreadNotifikasiStok.' belum dibaca' : 'Semua dibaca'" />
         </div>
 
         {{-- ── CHART --}}

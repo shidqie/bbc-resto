@@ -1,5 +1,5 @@
 {{-- 
-    Halaman: Detail Paket Catering / Nasi Box (Minimalist Edition)
+    Halaman: Detail Paket Katering / Nasi Box (Minimalist Edition)
 --}}
 @extends('layouts.pos')
 
@@ -32,7 +32,7 @@
                         @if($paketCatering->jenis_menu_id == 3)
                             <span class="bg-purple-100 text-purple-900 border border-purple-200 px-3 py-1 rounded-full text-xs font-extrabold">Nasi Box</span>
                         @else
-                            <span class="bg-blue-100 text-blue-900 border border-blue-200 px-3 py-1 rounded-full text-xs font-extrabold">Catering</span>
+                            <span class="bg-blue-100 text-blue-900 border border-blue-200 px-3 py-1 rounded-full text-xs font-extrabold">Katering</span>
                         @endif
                     </div>
 

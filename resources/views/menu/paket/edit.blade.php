@@ -1,5 +1,5 @@
 {{-- 
-    Halaman: Edit Paket Catering / Nasi Box (Minimalist Edition - Exact Mockup Style)
+    Halaman: Edit Paket Katering / Nasi Box (Minimalist Edition - Exact Mockup Style)
 --}}
 @extends('layouts.pos')
 
@@ -41,7 +41,7 @@
                         <div>
                             <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Jenis Paket <span class="text-red-500">*</span></label>
                             <select name="jenis_paket" required class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0D3024]/10 focus:border-[#0D3024] outline-none text-sm font-bold text-gray-900">
-                                <option value="catering" {{ old('jenis_paket', $jenis) == 'catering' ? 'selected' : '' }}>Catering</option>
+                                <option value="catering" {{ old('jenis_paket', $jenis) == 'catering' ? 'selected' : '' }}>Katering</option>
                                 <option value="nasi_box" {{ old('jenis_paket', $jenis) == 'nasi_box' ? 'selected' : '' }}>Nasi Box</option>
                             </select>
                         </div>

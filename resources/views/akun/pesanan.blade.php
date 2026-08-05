@@ -66,7 +66,7 @@
                     <div class="flex flex-wrap items-center gap-3 px-6 py-4 border-b border-primary/5 bg-primary/[0.03]">
                         <span class="font-mono text-sm font-bold text-primary">{{ $o->nomor_pesanan }}</span>
                         <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $o->jenis_pesanan_id === 2 ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700' }}">
-                            {{ $o->jenis_pesanan_id === 2 ? 'Catering' : 'Nasi Box' }}
+                            {{ $o->jenis_pesanan_id === 2 ? 'Katering' : 'Nasi Box' }}
                         </span>
                         <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $st[1] }}">{{ $st[0] }}</span>
                         <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $bayarColor }}">{{ $bayarLabel }}</span>

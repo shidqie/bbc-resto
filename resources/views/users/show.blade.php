@@ -1,149 +1,292 @@
 @extends('layouts.pos')
 
-@section('title', 'Detail Pengguna')
+@section('title', 'Detail ' . ($user->peran ? 'Karyawan' : 'Konsumen'))
 
 @section('content')
-<div class="flex flex-col h-full bg-white">
-    {{-- Header --}}
-    <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0 bg-white sticky top-0 z-10 shadow-sm">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('users.index') }}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors border border-slate-200">
-                <x-heroicon-o-arrow-left class="w-5 h-5" />
-            </a>
-            <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-base shrink-0">
-                    {{ strtoupper(substr($user->nama, 0, 1)) }}
-                </div>
-                <div>
-                    <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">
-                        {{ $user->nama }}
-                        @if($user->status_aktif)
-                            <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Aktif
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 border border-gray-200 px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider">
-                                <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Nonaktif
-                            </span>
-                        @endif
-                    </h3>
-                    <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                        <span class="font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-xl">{{ $user->peran->nama_peran ?? '-' }}</span>
-                        &bull; {{ $user->email }}
-                    </p>
-                </div>
+<div class="p-4 md:p-8 w-full h-full flex flex-col bg-[#F3F4F6]">
+    <!-- Header Area -->
+    <x-ui.page-header title="Detail {{ $user->peran ? 'Karyawan' : 'Konsumen' }}" subtitle="Informasi lengkap {{ strtolower($user->peran ? 'karyawan' : 'konsumen') }} dan riwayat aktivitas." class="mb-6">
+        <x-slot:actions>
+            <div class="flex gap-2">
+                <button onclick="window.history.back()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+                    <x-heroicon-o-arrow-left class="w-4 h-4" />
+                    Kembali
+                </button>
+                @if($user->peran)
+                <a href="{{ route('users.edit', $user) }}" class="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                    Ubah Data
+                </a>
+                @elseif(isset($editUrl))
+                <a href="{{ $editUrl }}" class="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                    Ubah Data
+                </a>
+                @endif
             </div>
-        </div>
-        <a href="{{ route('users.index', ['type' => $user->isPelanggan() ? 'pelanggan' : 'pegawai']) }}" class="hidden md:inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-4 py-2 transition-colors">
-            <x-heroicon-o-arrow-left class="w-4 h-4" />
-            Kembali
-        </a>
-    </div>
+        </x-slot:actions>
+    </x-ui.page-header>
 
-    {{-- Body --}}
-    <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/50">
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Profile Card -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <!-- Profile Header -->
+                <div class="bg-gradient-to-br from-primary to-primary/80 p-6 text-white">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center font-bold text-xl">
+                            {{ strtoupper(substr($user->nama, 0, 1)) }}
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold">{{ $user->nama }}</h2>
+                            <p class="text-white/90 text-sm">
+                                @if($user->peran)
+                                    {{ $user->peran->nama_peran }}
+                                @else
+                                    Konsumen
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-        {{-- Info Panel --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-            <div>
-                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-user class="mr-1 w-5 h-5" /> Nama Lengkap</label>
-                <p class="text-sm font-bold text-gray-900">{{ $user->nama }}</p>
-            </div>
-            <div>
-                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-phone class="mr-1 w-5 h-5" /> Nomor HP</label>
-                <div class="flex items-center gap-2">
-                    <p class="text-sm font-bold text-gray-900">{{ $user->nomor_telepon ?? '-' }}</p>
-                    @if($user->nomor_telepon)
-                        <a href="https://wa.me/{{ $user->nomor_telepon }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg px-2.5 py-1.5 transition-colors" title="Hubungi via WhatsApp">
-                            <x-heroicon-o-chat-bubble-left-ellipsis class="w-3.5 h-3.5" />
-                            WA
-                        </a>
+                <!-- Profile Details -->
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Nama</label>
+                        <div class="text-gray-900 font-medium">{{ $user->nama }}</div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Email</label>
+                        <div class="text-gray-900">{{ $user->email ?? '-' }}</div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Nomor WhatsApp</label>
+                        <div class="text-gray-900">
+                            @if($user->nomor_telepon)
+                                <a href="https://wa.me/{{ str_replace(['+', '-', ' '], '', $user->nomor_telepon) }}" target="_blank" class="text-green-600 hover:text-green-800 flex items-center gap-1">
+                                    {{ $user->nomor_telepon }}
+                                    <x-heroicon-o-arrow-top-right-on-square class="w-3 h-3" />
+                                </a>
+                            @else
+                                -
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Alamat Default</label>
+                        <div class="text-gray-900">
+                            @php
+                                $alamat = null;
+                                if ($user->pelanggan && $user->pelanggan->alamat) {
+                                    $alamat = $user->pelanggan->alamat;
+                                } elseif (isset($user->alamat) && $user->alamat) {
+                                    $alamat = $user->alamat;
+                                }
+                            @endphp
+                            {{ $alamat ?? 'Belum diisi' }}
+                        </div>
+                    </div>
+
+                    @if($user->peran)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Status Akun</label>
+                        <div>
+                            @if($user->status_aktif)
+                                <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 py-1 px-3 rounded-full text-sm font-medium">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>Aktif
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 border border-gray-200 py-1 px-3 rounded-full text-sm font-medium">
+                                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>Nonaktif
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Bergabung</label>
+                        <div class="text-gray-900">
+                            @if($user->dibuat_pada)
+                                {{ is_string($user->dibuat_pada) ? \Carbon\Carbon::parse($user->dibuat_pada)->format('d M Y') : $user->dibuat_pada->format('d M Y') }}
+                            @else
+                                -
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Terakhir Masuk</label>
+                        <div class="text-gray-900">
+                            @if($user->terakhir_masuk)
+                                {{ is_string($user->terakhir_masuk) ? \Carbon\Carbon::parse($user->terakhir_masuk)->format('d M Y H:i') : $user->terakhir_masuk->format('d M Y H:i') }}
+                            @else
+                                Belum pernah masuk
+                            @endif
+                        </div>
+                    </div>
+                    @else
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Daftar</label>
+                        <div class="text-gray-900">
+                            @if($user->dibuat_pada)
+                                {{ is_string($user->dibuat_pada) ? \Carbon\Carbon::parse($user->dibuat_pada)->format('d M Y') : $user->dibuat_pada->format('d M Y') }}
+                            @else
+                                -
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Status Akun</label>
+                        <div>
+                            @if($user->status_aktif)
+                                <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 py-1 px-3 rounded-full text-sm font-medium">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>Aktif
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 border border-gray-200 py-1 px-3 rounded-full text-sm font-medium">
+                                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>Nonaktif
+                                </span>
+                            @endif
+                        </div>
+                    </div>
                     @endif
                 </div>
             </div>
-            <div class="md:col-span-2">
-                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-envelope class="mr-1 w-5 h-5" /> Email</label>
-                <p class="text-sm font-bold text-gray-900 truncate">{{ $user->email }}</p>
-            </div>
-            <div class="md:col-span-2">
-                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-map-pin class="mr-1 w-5 h-5" /> Alamat</label>
-                <p class="text-sm font-bold text-gray-900">{{ $alamat }}</p>
-            </div>
-            <div>
-                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-shield-check class="mr-1 w-5 h-5" /> Role / Hak Akses</label>
-                <p class="text-sm font-bold text-gray-900">{{ $user->peran->nama_peran ?? '-' }}</p>
-            </div>
-            <div>
-                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-clock class="mr-1 w-5 h-5" /> Terakhir Masuk</label>
-                <p class="text-sm font-bold text-gray-900">{{ $user->terakhir_masuk ? $user->terakhir_masuk->format('d M Y H:i') : '-' }}</p>
-            </div>
-            <div>
-                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-calendar class="mr-1 w-5 h-5" /> Bergabung Sejak</label>
-                <p class="text-sm font-bold text-gray-900">{{ $user->dibuat_pada->format('d M Y') }}</p>
-            </div>
-            <div>
-                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-receipt-percent class="mr-1 w-5 h-5" /> Total Pesanan</label>
-                <p class="text-sm font-bold text-gray-900">{{ number_format($pesananCount, 0, ',', '.') }} pesanan</p>
-            </div>
-            <div>
-                <label class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 block"><x-heroicon-o-identification class="mr-1 w-5 h-5" /> ID Akun</label>
-                <p class="text-sm font-bold text-gray-900">#{{ $user->id }}</p>
-            </div>
         </div>
 
-        {{-- Riwayat Pesanan --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100 bg-slate-50/50 flex justify-between items-center">
-                <h4 class="text-sm font-bold text-gray-900"><x-heroicon-o-receipt-percent class="mr-1.5 text-gray-400 w-5 h-5" /> Riwayat Pesanan Terbaru</h4>
-                <span class="text-xs font-bold bg-white border border-gray-200 px-2.5 py-1 rounded-xl text-gray-600">{{ $pesananDineIn->count() + $pesananCatering->count() }} ditampilkan</span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                            <th class="px-5 py-3 text-left">Nomor Pesanan</th>
-                            <th class="px-5 py-3 text-left">Tanggal</th>
-                            <th class="px-5 py-3 text-left">Jenis</th>
-                            <th class="px-5 py-3 text-left">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        @forelse($pesananDineIn->merge($pesananCatering) as $pesanan)
-                        <tr class="hover:bg-gray-50/60 transition-colors">
-                            <td class="px-5 py-3 font-medium text-gray-900">{{ $pesanan->nomor_pesanan }}</td>
-                            <td class="px-5 py-3 text-gray-600">{{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('d M Y H:i') }}</td>
-                            <td class="px-5 py-3">
-                                <span class="font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-xl text-xs">{{ optional($pesanan->jenis_pesanan)->nama_jenis ?? '-' }}</span>
-                            </td>
-                            <td class="px-5 py-3">
-                                <span class="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-extrabold uppercase tracking-wider">
-                                    {{ optional($pesanan->status_pesanan)->nama_status ?? 'Unknown' }}
-                                </span>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="4" class="px-5 py-10 text-center text-gray-400">Belum ada riwayat pesanan.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <!-- Activity & Orders -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Riwayat Pesanan -->
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Riwayat Pesanan</h3>
+                    <p class="text-sm text-gray-500 mt-1">Daftar pesanan yang pernah dibuat</p>
+                </div>
 
-        {{-- Aksi --}}
-        @if(!$user->isPelanggan())
-        <div class="flex flex-wrap gap-3">
-            <a href="{{ route('users.index') }}?edit={{ $user->id }}" class="inline-flex items-center gap-2 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg px-4 py-2.5 transition-colors">
-                <x-heroicon-o-pencil-square class="w-4 h-4" />
-                Ubah Data
-            </a>
-            <a href="{{ route('users.index') }}?reset={{ $user->id }}" class="inline-flex items-center gap-2 text-sm font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 rounded-lg px-4 py-2.5 transition-colors">
-                <x-heroicon-o-key class="w-4 h-4" />
-                Atur Ulang Kata Sandi
-            </a>
+                @php
+                    $pesananList = collect();
+                    
+                    // Cek apakah user punya data pelanggan dan pesanan
+                    if ($user->pelanggan) {
+                        $pesananList = $user->pelanggan->pesanan()->latest()->take(10)->get();
+                    }
+                    
+                    // Fallback: cek pesanan langsung dari user_id di tabel pesanan
+                    if ($pesananList->isEmpty()) {
+                        $pesananList = collect();
+                        // Bisa tambahkan query lain jika diperlukan
+                    }
+                @endphp
+
+                @if($pesananList->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                                <th class="px-4 py-3 text-left">Pesanan</th>
+                                <th class="px-4 py-3 text-left">Tanggal</th>
+                                <th class="px-4 py-3 text-left">Status</th>
+                                <th class="px-4 py-3 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            @foreach($pesananList as $pesanan)
+                            <tr class="hover:bg-gray-50/60 transition-colors">
+                                <td class="px-4 py-3">
+                                    <div class="font-medium text-gray-900">#{{ $pesanan->kode_pesanan ?? 'PES-' . $pesanan->id }}</div>
+                                    <div class="text-xs text-gray-500">{{ $pesanan->jenis_pesanan ?? 'Pesanan' }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="text-gray-900">
+                                        @if($pesanan->tanggal_pesanan)
+                                            {{ is_string($pesanan->tanggal_pesanan) ? \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->format('d M Y') : $pesanan->tanggal_pesanan->format('d M Y') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        @if($pesanan->tanggal_pesanan)
+                                            {{ is_string($pesanan->tanggal_pesanan) ? \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->format('H:i') : $pesanan->tanggal_pesanan->format('H:i') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $statusColors = [
+                                            'pending' => 'bg-yellow-50 text-yellow-700 border-yellow-100',
+                                            'diproses' => 'bg-blue-50 text-blue-700 border-blue-100',
+                                            'selesai' => 'bg-green-50 text-green-700 border-green-100',
+                                            'dibatalkan' => 'bg-red-50 text-red-700 border-red-100',
+                                        ];
+                                        $statusColor = $statusColors[$pesanan->status_pesanan ?? 'pending'] ?? 'bg-gray-50 text-gray-700 border-gray-100';
+                                    @endphp
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border {{ $statusColor }}">
+                                        {{ ucfirst($pesanan->status_pesanan ?? 'Pending') }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="font-medium text-gray-900">Rp {{ number_format($pesanan->total_harga ?? 0, 0, ',', '.') }}</div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="p-6 text-center text-gray-500">
+                    <x-heroicon-o-shopping-bag class="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                    <p>Belum ada riwayat pesanan</p>
+                </div>
+                @endif
+            </div>
+
+            <!-- Summary Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Total Pesanan</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ $pesananList->count() }}</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                            <x-heroicon-o-shopping-bag class="w-5 h-5 text-blue-600" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Pesanan Selesai</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ $pesananList->where('status_pesanan', 'selesai')->count() }}</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
+                            <x-heroicon-o-check-circle class="w-5 h-5 text-green-600" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Total Nilai</p>
+                            <p class="text-2xl font-bold text-gray-900">Rp {{ number_format($pesananList->sum('total_harga') ?? 0, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
+                            <x-heroicon-o-banknotes class="w-5 h-5 text-emerald-600" />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        @endif
     </div>
 </div>
 @endsection

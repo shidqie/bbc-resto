@@ -15,19 +15,21 @@ class PenyesuaianStokController extends Controller
 {
     public function index(Request $request)
     {
-        $query = PenyesuaianStok::with(['dibuat_oleh_pengguna', 'detail_penyesuaian_stok.bahan_baku'])
-            ->orderBy('id', 'desc');
+        $query = DetailPenyesuaianStok::with(['penyesuaian_stok.dibuat_oleh_pengguna', 'bahan_baku.satuan'])
+            ->join('penyesuaian_stok', 'detail_penyesuaian_stok.penyesuaian_stok_id', '=', 'penyesuaian_stok.id')
+            ->select('detail_penyesuaian_stok.*')
+            ->orderBy('penyesuaian_stok.tanggal_penyesuaian', 'desc')
+            ->orderBy('detail_penyesuaian_stok.id', 'desc');
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where('nomor_penyesuaian', 'like', "%{$search}%")
-                ->orWhere('alasan', 'like', "%{$search}%");
+            $query->whereHas('bahan_baku', function($q) use ($search) {
+                $q->where('nama_bahan', 'like', "%{$search}%");
+            });
         }
 
         if ($request->has('jenis_persediaan') && $request->jenis_persediaan != '') {
-            $query->whereHas('detail_penyesuaian_stok', function ($q) use ($request) {
-                $q->where('jenis_persediaan', $request->jenis_persediaan);
-            });
+            $query->where('detail_penyesuaian_stok.jenis_persediaan', $request->jenis_persediaan);
         }
 
         $penyesuaians = $query->paginate(15)->withQueryString();

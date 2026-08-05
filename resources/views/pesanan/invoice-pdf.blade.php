@@ -86,7 +86,7 @@
     <table class="header-table">
         <tr>
             <td style="vertical-align: top;">
-                <h1 class="header-title">Bukti Pesanan {{ $type === 'catering' ? 'Catering' : ($type === 'nasi_box' ? 'Nasi Box' : 'Dine In') }}</h1>
+                <h1 class="header-title">Bukti Pesanan {{ $type === 'catering' ? 'Katering' : ($type === 'nasi_box' ? 'Nasi Box' : 'Dine In') }}</h1>
                 <p class="header-subtitle">Nomor Pesanan : {{ $pesanan->nomor_pesanan }}</p>
             </td>
             <td class="logo">
@@ -253,7 +253,7 @@
 
     {{-- Footer A4 Fixed --}}
     <div class="footer-fixed">
-        Saung Babakan Cinta — Rumah Makan Sunda &amp; Catering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat<br>
+        Saung Babakan Cinta — Rumah Makan Sunda &amp; Katering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat<br>
         Dicetak pada: {{ now()->translatedFormat('d F Y H:i') }} WIB &bull; Dokumen Bukti Pesanan Pelanggan
     </div>
 

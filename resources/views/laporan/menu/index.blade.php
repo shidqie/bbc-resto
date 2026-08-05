@@ -7,17 +7,15 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Laporan Menu Terlaris</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Analisis menu dengan penjualan tertinggi pada periode yang dipilih</p>
-            </div>
-            <a href="{{ route('laporan.menu-terlaris.cetak', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank"
-               class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-red-600 rounded-lg px-3 py-2 hover:bg-red-700 transition-colors">
-                <x-heroicon-o-document class="w-5 h-5" />
-                Cetak PDF
-            </a>
-        </div>
+        <x-ui.page-header title="Laporan Menu Terlaris" subtitle="Analisis menu dengan penjualan tertinggi pada periode yang dipilih">
+            <x-slot:actions>
+                <a href="{{ route('laporan.menu-terlaris.cetak', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank"
+                   class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-red-600 rounded-lg px-3 py-2 hover:bg-red-700 transition-colors">
+                    <x-heroicon-o-document class="w-5 h-5" />
+                    Cetak PDF
+                </a>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         {{-- Stat Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

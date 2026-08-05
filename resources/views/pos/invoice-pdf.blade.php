@@ -103,7 +103,7 @@
     <table class="header-table">
         <tr>
             <td style="vertical-align: top;">
-                <h1 class="header-title">Rincian Pesanan {{ $type == 'catering' ? 'Catering' : 'Nasi Box' }}</h1>
+                <h1 class="header-title">Rincian Pesanan {{ $type == 'catering' ? 'Katering' : 'Nasi Box' }}</h1>
                 <p class="header-subtitle">Nomor Tagihan : {{ $kodePesanan }}</p>
             </td>
             <td class="logo">
@@ -132,7 +132,7 @@
         <tr>
             <td class="info-label">Tipe Layanan</td>
             <td class="info-colon">:</td>
-            <td class="info-val">Layanan {{ $type == 'catering' ? 'Catering' : 'Nasi Box' }}</td>
+            <td class="info-val">Layanan {{ $type == 'catering' ? 'Katering' : 'Nasi Box' }}</td>
         </tr>
         <tr>
             <td class="info-label">Jumlah {{ $type == 'catering' ? 'Porsi' : 'Box' }}</td>
@@ -237,7 +237,7 @@
         <tbody>
             @php
                 $namaItem = $type == 'catering' 
-                    ? ($pesanan->paket->nama_paket ?? 'Paket Catering') 
+                    ? ($pesanan->paket->nama_paket ?? 'Paket Katering') 
                     : ($pesanan->paket->nama_paket ?? 'Menu Nasi Box');
                 $qty = $pesanan->jumlah_porsi ?? $pesanan->jumlah_box ?? 1;
                 $ongkir = $pesanan->ongkos_kirim ?? 0;
@@ -310,7 +310,7 @@
 
     {{-- Footer A4 Fixed --}}
     <div class="footer-fixed">
-        Saung Babakan Cinta — Rumah Makan Sunda & Catering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat | WA: +62 813-9461-6635<br>
+        Saung Babakan Cinta — Rumah Makan Sunda & Katering | Jl. Ciloa No.km 6, Pasirhalang, Kec. Cisarua, KBB, Jawa Barat | WA: +62 813-9461-6635<br>
         Dokumen ini diterbitkan secara otomatis pada {{ date('d-m-Y H:i') }} WIB • Bukti Pemesanan Resmi
     </div>
 

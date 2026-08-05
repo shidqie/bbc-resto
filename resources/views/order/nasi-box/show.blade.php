@@ -5,13 +5,16 @@
 @section('content')
 <div class="w-full p-6 max-w-[1200px] mx-auto">
     <div class="w-full p-6 flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Detail Pesanan Nasi Box #{{ $pesanan->nomor_pesanan }}</h1>
-        <div class="flex gap-2">
-            <a href="{{ route('admin.pesanan.nasibox.pdf', $pesanan->id) }}" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">
-                <x-heroicon-o-document class="mr-1 w-5 h-5" /> Cetak Rincian (PDF)
-            </a>
-            <a href="{{ route('admin.pesanan.nasibox.index') }}" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold transition-colors">&larr; Kembali</a>
-        </div>
+        <x-ui.page-header title="Detail Pesanan Nasi Box #{{ $pesanan->nomor_pesanan }}">
+            <x-slot:actions>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.pesanan.nasibox.pdf', $pesanan->id) }}" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">
+                        <x-heroicon-o-document class="mr-1 w-5 h-5" /> Cetak Rincian (PDF)
+                    </a>
+                    <a href="{{ route('admin.pesanan.nasibox.index') }}" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold transition-colors">&larr; Kembali</a>
+                </div>
+            </x-slot:actions>
+        </x-ui.page-header>
     </div>
 
     <div class="py-12">

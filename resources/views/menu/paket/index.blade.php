@@ -1,26 +1,24 @@
 {{-- 
-    Halaman: Daftar Paket Catering / Nasi Box
+    Halaman: Daftar Paket Katering / Nasi Box
     UI: disamakan dengan Kelola Menu (slide-in drawer view, custom delete modal)
 --}}
 @extends('layouts.pos')
 
-@section('title') {{ $jenis == 'nasi_box' ? 'Menu Nasi Box' : ($jenis == 'catering' ? 'Menu Catering' : 'Paket Menu') }} @endsection
+@section('title') {{ $jenis == 'nasi_box' ? 'Menu Nasi Box' : ($jenis == 'catering' ? 'Menu Katering' : 'Paket Menu') }} @endsection
 
 @section('content')
 <div class="flex-1 bg-gray-50 text-gray-800">
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Manajemen Menu & Paket</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Kelola menu berdasarkan layanan dan kategorinya.</p>
-            </div>
-            <button onclick="openPaketForm()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Tambah Paket Baru
-            </button>
-        </div>
+        <x-ui.page-header title="Manajemen Menu & Paket" subtitle="Kelola menu berdasarkan layanan dan kategorinya.">
+            <x-slot:actions>
+                <button onclick="openPaketForm()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah Paket Baru
+                </button>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         <x-ui.alert />
 
@@ -30,21 +28,18 @@
                 Menu Dine In
             </a>
             <a href="{{ route('paket-catering.index', ['jenis' => 'nasi_box']) }}" class="py-3 text-sm border-b-2 transition-colors {{ $jenis === 'nasi_box' ? 'font-bold border-gray-900 text-gray-900' : 'font-medium border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                Menu Nasi Box
+                Paket Menu Nasi Box
             </a>
             <a href="{{ route('paket-catering.index', ['jenis' => 'catering']) }}" class="py-3 text-sm border-b-2 transition-colors {{ $jenis === 'catering' ? 'font-bold border-gray-900 text-gray-900' : 'font-medium border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                Menu Katering
+                Paket Menu Katering
             </a>
         </div>
 
         {{-- Filter Bar --}}
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
             <form action="{{ route('paket-catering.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
-                <div class="relative flex-1 sm:flex-none sm:w-56">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama paket…" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
-                    <input type="hidden" name="jenis" value="{{ $jenis }}">
-                </div>
+                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama paket…" width="w-full sm:w-56" />
+                <input type="hidden" name="jenis" value="{{ $jenis }}">
                 <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
             </form>
         </div>
@@ -227,7 +222,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jenis Paket <span class="text-red-500">*</span></label>
                         <select name="jenis_paket" id="fpJenis" required class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all">
-                            <option value="catering">Catering</option>
+                            <option value="catering">Katering</option>
                             <option value="nasi_box">Nasi Box</option>
                         </select>
                     </div>
@@ -316,7 +311,7 @@ function openPaketDrawer(paket, isView = true) {
     document.getElementById('paketDrawerSubtitle').textContent = paket.nama_menu ?? '';
 
     document.getElementById('vNamaPaket').textContent = paket.nama_menu ?? '-';
-    document.getElementById('vJenisPaket').textContent = Number(paket.jenis_menu_id) === 3 ? 'Nasi Box' : 'Catering';
+    document.getElementById('vJenisPaket').textContent = Number(paket.jenis_menu_id) === 3 ? 'Nasi Box' : 'Katering';
     document.getElementById('vHargaPaket').textContent = 'Rp ' + Number(paket.harga_jual ?? 0).toLocaleString('id-ID');
 
     const deskEl = document.getElementById('vDeskripsiPaket');

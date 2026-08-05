@@ -61,43 +61,12 @@
                      return;
                  }
 
-                 // Nontunai Digital
-                 @if($pesanan->snap_token)
-                     if (typeof window.snap !== 'undefined') {
-                         window.snap.pay('{{ $pesanan->snap_token }}', {
-                             onSuccess: function(result) {
-                                 Swal.fire({
-                                     icon: 'success',
-                                     title: 'Pembayaran Berhasil!',
-                                     text: 'Pembayaran digital sukses diverifikasi.',
-                                     timer: 1500,
-                                     showConfirmButton: false
-                                 }).then(() => {
-                                     form.submit();
-                                 });
-                             },
-                             onPending: function(result) {
-                                 Swal.fire({
-                                     icon: 'info',
-                                     title: 'Menunggu Pembayaran',
-                                     text: 'Silakan selesaikan pembayaran sesuai instruksi.',
-                                     confirmButtonColor: '#0D3024'
-                                 }).then(() => {
-                                     form.submit();
-                                 });
-                             },
-                             onError: function(result) {
-                                 Swal.fire({
-                                     icon: 'error',
-                                     title: 'Pembayaran Gagal',
-                                     text: 'Transaksi digital gagal.',
-                                     confirmButtonColor: '#0D3024'
-                                 });
-                             }
-                         });
-                         return;
-                     }
-                 @endif
+                 // QRIS Midtrans
+                 if (this.metodeBayar === 'nontunai') {
+                     form.action = '{{ route('pos.dinein.charge_qris', $pesanan->id) }}';
+                     form.submit();
+                     return;
+                 }
 
                  // Fallback untuk Nontunai / QRIS manual
                  form.submit();
@@ -267,7 +236,7 @@
                                     :class="metodeBayar === 'nontunai' ? 'bg-[#0D3024] text-white border-[#0D3024]' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'"
                                     class="border rounded-xl py-3 flex flex-col items-center justify-center gap-1.5 transition-all">
                                 <i class="ph ph-qr-code text-2xl"></i>
-                                <span class="text-xs font-bold">MIDTRANS SNAP</span>
+                                <span class="text-xs font-bold">QRIS (MIDTRANS)</span>
                             </button>
                         </div>
 
@@ -355,13 +324,13 @@
                             </div>
                         </div>
 
-                        {{-- ── 4. MIDTRANS SNAP SECTION ── --}}
+                        {{-- ── 4. MIDTRANS QRIS SECTION ── --}}
                         <div x-show="metodeBayar === 'nontunai'" class="space-y-3 text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
                             <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i class="ph ph-credit-card text-3xl"></i>
+                                <i class="ph ph-qr-code text-3xl"></i>
                             </div>
-                            <h4 class="text-sm font-bold text-gray-800">Midtrans Snap</h4>
-                            <p class="text-xs text-gray-500 px-4">Pembayaran (QRIS, Transfer Bank, E-Wallet) akan diproses melalui Payment Gateway Midtrans. Silakan klik tombol "Proses Pembayaran" di bawah.</p>
+                            <h4 class="text-sm font-bold text-gray-800">Pembayaran QRIS</h4>
+                            <p class="text-xs text-gray-500 px-4">Sistem akan membuatkan kode QR (QRIS) otomatis. Silakan klik tombol "Proses Pembayaran" di bawah untuk memunculkan QR Code.</p>
                         </div>
                     </div>
 

@@ -1,5 +1,5 @@
 <x-layouts.landing>
-    <x-slot:title>Pesan Catering — Saung Babakan Cinta</x-slot:title>
+    <x-slot:title>Pesan Katering — Saung Babakan Cinta</x-slot:title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
@@ -95,9 +95,15 @@
         <div class="max-w-7xl mx-auto px-4">
 
             {{-- Header --}}
-            <div class="mb-10">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Pemesanan Catering</h1>
-                <p class="text-gray-500 text-sm">Harap melakukan pemesanan minimal H-14 sebelum acara (DP 50%)</p>
+            <div class="flex items-center justify-between mb-10">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Form Pemesanan Katering</h1>
+                    <p class="text-gray-500 text-sm">Harap melakukan pemesanan minimal H-14 sebelum acara (DP 50%)</p>
+                </div>
+                <a href="{{ url('/') }}" class="text-gray-500 hover:text-gray-700 text-sm font-medium flex items-center gap-1">
+                    <x-heroicon-o-x-mark class="w-4 h-4" />
+                    Batalkan Pesan
+                </a>
             </div>
 
             @if($errors->any())
@@ -131,8 +137,9 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jumlah Porsi <span class="text-red-500">*</span></label>
-                            <input type="number" name="jumlah_porsi" id="jumlahPorsi" min="1" value="{{ old('jumlah_porsi', 50) }}"
+                            <input type="number" name="jumlah_porsi" id="jumlahPorsi" min="50" value="{{ old('jumlah_porsi', 50) }}"
                                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                            <p id="jumlah-warning" class="text-red-500 text-xs mt-1 hidden">Minimal order 50 porsi.</p>
                         </div>
                     </div>
                 </div>
@@ -144,7 +151,7 @@
                         @foreach($pakets as $paket)
                             <label class="paket-card cursor-pointer border-2 rounded-xl p-5 transition-all duration-200 hover:border-primary border-gray-200"
                                    data-paket-id="{{ $paket->id }}" data-harga="{{ $paket->harga_jual }}">
-                                <input type="radio" name="paket_id" value="{{ $paket->id }}" class="hidden paket-radio" {{ old('paket_id') == $paket->id ? 'checked' : '' }}>
+                                <input type="radio" name="paket_id" value="{{ $paket->id }}" class="sr-only paket-radio" {{ old('paket_id') == $paket->id ? 'checked' : '' }} required>
                                 @if($paket->foto)
                                     <img src="{{ Storage::url($paket->foto) }}" alt="{{ $paket->nama_menu }}" class="w-full h-40 object-cover rounded-lg mb-4">
                                 @else
@@ -192,9 +199,21 @@
                             <x-input-wa name="kontak" label="Nomor WhatsApp" :value="optional(auth('pelanggan')->user())->nomor_telepon ?? ''" :required="true" hint="Nomor aktif WhatsApp untuk konfirmasi pesanan." />
                         </div>
 
-                        <input type="hidden" name="metode_pengiriman" value="delivery">
+                        <div class="md:col-span-2 mt-4 border-t border-gray-100 pt-4">
+                            <label class="block text-sm font-semibold text-gray-700 mb-3">Metode Pengiriman <span class="text-red-500">*</span></label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="metode_pengiriman" value="pickup" class="metode-radio w-4 h-4 accent-primary" checked>
+                                    <span class="text-sm font-medium text-gray-900">Pickup Sendiri</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="metode_pengiriman" value="delivery" class="metode-radio w-4 h-4 accent-primary">
+                                    <span class="text-sm font-medium text-gray-900">Delivery (Kirim ke alamat)</span>
+                                </label>
+                            </div>
+                        </div>
 
-                        <div id="deliverySection" class="md:col-span-2 mb-4">
+                        <div id="deliverySection" class="md:col-span-2 hidden mb-4">
                             
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Venue / Gedung (Opsional)</label>
@@ -249,6 +268,12 @@
                             </div>
 
                             <p id="jarakWarning" class="text-red-500 text-xs mb-3 hidden"></p>
+                        </div>
+
+                        <div id="pickupSection" class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Alamat (Optional untuk pickup)</label>
+                            <textarea name="lokasi_acara" id="alamatPickup" rows="2"
+                                      class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50">-</textarea>
                         </div>
 
                         <div class="md:col-span-2 mt-2">
@@ -325,7 +350,7 @@
         const minDate = "{{ \Carbon\Carbon::today()->addDays(14)->format('Y-m-d') }}";
         let hargaPaket = 0;
         let selectedPaketId = null;
-        let metodePengiriman = 'delivery';
+        let metodePengiriman = 'pickup';
         let jarakKm = 0;
 
         // Peta & Jarak
@@ -496,6 +521,29 @@
             }
         }
 
+        document.querySelectorAll('.metode-radio').forEach(r => {
+            r.addEventListener('change', (e) => {
+                metodePengiriman = e.target.value;
+                if(metodePengiriman === 'delivery') {
+                    document.getElementById('deliverySection').classList.remove('hidden');
+                    document.getElementById('pickupSection').classList.add('hidden');
+                    document.getElementById('alamatDelivery').required = true;
+                    document.getElementById('alamatPickup').required = false;
+                    document.getElementById('alamatPickup').name = '';
+                    document.getElementById('alamatDelivery').name = 'lokasi_acara';
+                    setTimeout(initMap, 200);
+                } else {
+                    document.getElementById('deliverySection').classList.add('hidden');
+                    document.getElementById('pickupSection').classList.remove('hidden');
+                    document.getElementById('alamatDelivery').required = false;
+                    document.getElementById('alamatPickup').required = true;
+                    document.getElementById('alamatDelivery').name = '';
+                    document.getElementById('alamatPickup').name = 'lokasi_acara';
+                }
+                hitungTotalPreview();
+            });
+        });
+
         // Pilih Paket
         document.querySelectorAll('.paket-card').forEach(card => {
             card.addEventListener('click', () => {
@@ -630,7 +678,21 @@
             }
         }
 
-        document.getElementById('jumlahPorsi').addEventListener('input', hitungTotalPreview);
+        document.getElementById('jumlahPorsi').addEventListener('input', function() {
+            const warn = document.getElementById('jumlah-warning');
+            const jumlah = parseInt(this.value);
+            if (jumlah < 50) {
+                warn.classList.remove('hidden');
+                warn.textContent = "Minimal order 50 porsi.";
+            } else if (metodePengiriman === 'delivery' && jumlah < 50) {
+                // Not applicable since min is 50, but we can leave it as logic
+                warn.classList.remove('hidden');
+                warn.textContent = "Minimal order 50 porsi untuk Delivery. Ubah ke Pickup.";
+            } else {
+                warn.classList.add('hidden');
+            }
+            hitungTotalPreview();
+        });
 
         // Validasi tanggal
         document.getElementById('tanggalAcara').addEventListener('change', function() {
@@ -642,14 +704,16 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize map immediately because delivery is the only option
-            setTimeout(() => {
-                initMap();
-                map.invalidateSize();
-            }, 200);
-
-            hitungTotalPreview();
+        // Auto-select paket dari URL parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const paketId = urlParams.get('paket_id');
+            if (paketId) {
+                const paketCard = document.querySelector(`.paket-card[data-paket-id="${paketId}"]`);
+                if (paketCard) {
+                    paketCard.click();
+                }
+            }
         });
     </script>
     @endpush

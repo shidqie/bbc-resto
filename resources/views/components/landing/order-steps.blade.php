@@ -1,9 +1,9 @@
 <x-landing.section title="Cara Pemesanan" bgBatik="true">
     <div class="grid sm:grid-cols-4 gap-6 max-w-3xl mx-auto">
         @foreach([
-            ['1', 'Pilih Layanan', 'Pilih Catering atau Nasi Box.'],
+            ['1', 'Pilih Layanan', 'Pilih Katering atau Nasi Box.'],
             ['2', 'Isi Formulir', 'Lengkapi data pesanan Anda.'],
-            ['3', 'Bayar DP', 'Catering 50%, Nasi Box 25%.'],
+            ['3', 'Bayar DP', 'Katering 50%, Nasi Box 25%.'],
             ['4', 'Diproses', 'Tim kami menghubungi Anda.']
         ] as [$num, $title, $desc])
             <div class="text-center">

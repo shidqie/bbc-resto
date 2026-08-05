@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 class PesananNasiBoxController extends Controller
 {
     // GET /pesan/nasibox
-    public function create()
+    public function create(Request $request)
     {
         // 3 = Nasi Box
         $pakets = Menu::where('jenis_menu_id', 3)
@@ -27,7 +27,9 @@ class PesananNasiBoxController extends Controller
             ->whereHas('komponen_paket')
             ->get();
 
-        return view('order.nasi-box.create', compact('pakets'));
+        $selectedPaketId = $request->paket_id;
+
+        return view('order.nasi-box.create', compact('pakets', 'selectedPaketId'));
     }
 
     // POST /pesan/nasibox/preview
@@ -60,7 +62,7 @@ class PesananNasiBoxController extends Controller
     {
         $request->validate([
             'nama_pemesan' => 'required|string|max:255',
-            'kontak' => ['required', 'string', 'regex:/^(\+?62|0|8)\d{8,13}$/'],
+            'kontak' => 'required|string|max:20',
             'tanggal_acara' => 'required|date',
             'lokasi_acara' => 'required|string',
             'metode_pengiriman' => 'required|in:pickup,delivery',

@@ -2,62 +2,65 @@
 |--------------------------------------------------------------------------
 | Stat Card Component (Ultra-Minimalist Style)
 |--------------------------------------------------------------------------
-| Kartu statistik KPI bersih, minimalis, dan elegan.
---}}
+| Kartu statistik KPI bersih, minimalis, dan elegan bertema emas-hijau.
+| Flat tanpa shadow, ikon seragam, value monokrom dengan aksen brand.
+|--}}
 
 @props([
     'label' => 'Label',
     'value' => 0,
     'icon'  => 'shopping-bag',
-    'color' => 'blue',
+    'color' => 'brand',
+    'hint'  => '',
 ])
 
 @php
     $colorMap = [
         'blue' => [
-            'valueText' => 'text-[#2563EB]',
-            'iconBg'    => 'bg-blue-50 text-[#2563EB]',
+            'iconBg'    => 'bg-[#F5F1E6] text-[#0D3024]',
         ],
         'green' => [
-            'valueText' => 'text-[#059669]',
-            'iconBg'    => 'bg-emerald-50 text-[#059669]',
+            'iconBg'    => 'bg-[#E8F0EC] text-[#0D3024]',
         ],
         'orange' => [
-            'valueText' => 'text-[#D97706]',
-            'iconBg'    => 'bg-amber-50 text-[#D97706]',
+            'iconBg'    => 'bg-[#F5F1E6] text-[#0D3024]',
         ],
         'red' => [
-            'valueText' => 'text-[#DC2626]',
-            'iconBg'    => 'bg-red-50 text-[#DC2626]',
+            'iconBg'    => 'bg-[#FBF0EC] text-[#A43E2A]',
         ],
         'brand' => [
-            'valueText' => 'text-[#0D3024]',
-            'iconBg'    => 'bg-emerald-50 text-[#0D3024]',
+            'iconBg'    => 'bg-[#0D3024] text-[#D4A843]',
         ],
         'violet' => [
-            'valueText' => 'text-[#7C3AED]',
-            'iconBg'    => 'bg-violet-50 text-[#7C3AED]',
+            'iconBg'    => 'bg-[#F5F1E6] text-[#0D3024]',
         ],
         'sky' => [
-            'valueText' => 'text-[#0284C7]',
-            'iconBg'    => 'bg-sky-50 text-[#0284C7]',
+            'iconBg'    => 'bg-[#E8F0EC] text-[#0D3024]',
         ],
         'rose' => [
-            'valueText' => 'text-[#E11D48]',
-            'iconBg'    => 'bg-rose-50 text-[#E11D48]',
+            'iconBg'    => 'bg-[#FBF0EC] text-[#A43E2A]',
+        ],
+        'emerald' => [
+            'iconBg'    => 'bg-[#E8F0EC] text-[#0D3024]',
+        ],
+        'purple' => [
+            'iconBg'    => 'bg-[#F5F1E6] text-[#0D3024]',
         ],
     ];
 
-    $c = $colorMap[$color] ?? $colorMap['blue'];
+    $c = $colorMap[$color] ?? $colorMap['brand'];
 @endphp
 
-<div class="bg-white rounded-xl p-5 border border-neutral-200/80 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 flex items-center justify-between">
-    <div>
-        <p class="text-sm font-semibold text-gray-400 mb-1.5 tracking-wide">{{ $label }}</p>
-        <p class="text-3xl font-extrabold {{ $c['valueText'] }} tracking-tight">{{ $value }}</p>
+<div class="bg-white rounded-xl p-5 border border-neutral-200/80 flex items-center justify-between">
+    <div class="min-w-0">
+        <p class="text-xs font-medium text-gray-400 mb-1.5 tracking-wide uppercase">{{ $label }}</p>
+        <p class="text-2xl font-bold text-gray-900 tracking-tight truncate">{{ $value }}</p>
+        @if($hint)
+            <p class="text-xs text-gray-400 font-medium mt-1">{{ $hint }}</p>
+        @endif
     </div>
 
-    <div class="w-11 h-11 rounded-lg {{ $c['iconBg'] }} flex items-center justify-center text-lg shrink-0">
-        <x-heroicon-o-sparkles class="{{ $icon }} w-5 h-5" />
+    <div class="w-10 h-10 rounded-lg {{ $c['iconBg'] }} flex items-center justify-center shrink-0">
+        <x-dynamic-component :component="'heroicon-o-' . $icon" class="w-5 h-5" />
     </div>
 </div>

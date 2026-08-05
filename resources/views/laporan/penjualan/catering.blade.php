@@ -23,7 +23,7 @@
         </form>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <x-ui.stat-card label="Total Pendapatan (Catering)" value="Rp {{ number_format($totalPendapatan, 0, ',', '.') }}" icon="wallet" color="green" />
+            <x-ui.stat-card label="Total Pendapatan (Katering)" value="Rp {{ number_format($totalPendapatan, 0, ',', '.') }}" icon="wallet" color="green" />
             <x-ui.stat-card label="Total Transaksi Selesai" :value="$totalTransaksi" icon="chart-bar" color="blue" />
         </div>
 
@@ -45,7 +45,7 @@
                             <td class="px-6 py-4 text-gray-500">{{ $p->kode_pesanan }}</td>
                             <td class="px-6 py-4 text-gray-900 font-medium">{{ $p->nama_pemesan }}</td>
                             <td class="px-6 py-4">
-                                <span class="text-[#3B82F6]">{{ $p->paket->nama_paket ?? 'Paket Catering' }}</span> ({{ $p->jumlah_porsi }} Porsi)
+                                <span class="text-[#3B82F6]">{{ $p->paket->nama_paket ?? 'Paket Katering' }}</span> ({{ $p->jumlah_porsi }} Porsi)
                             </td>
                             <td class="px-6 py-4 text-right font-bold text-gray-900">Rp {{ number_format($p->total_tagihan, 0, ',', '.') }}</td>
                         </tr>

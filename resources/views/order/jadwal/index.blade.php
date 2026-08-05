@@ -11,16 +11,14 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Jadwal Pengantaran</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Kelola jadwal pengiriman pesanan Catering &amp; Nasi Box</p>
-            </div>
-            <a href="{{ route('admin.jadwal.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Hari Ini
-            </a>
-        </div>
+        <x-ui.page-header title="Jadwal Pengantaran" subtitle="Kelola jadwal pengiriman pesanan Katering &amp; Nasi Box">
+            <x-slot:actions>
+                <a href="{{ route('admin.jadwal.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Hari Ini
+                </a>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         <x-ui.alert />
 
@@ -84,7 +82,7 @@
                             </div>
                             <p class="font-semibold text-gray-600 font-mono text-xs">{{ $order->nomor_pesanan }}</p>
                             @if($order->jenis_pesanan_id == 2)
-                                <span class="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-xl bg-blue-50 text-blue-700">Catering</span>
+                                <span class="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-xl bg-blue-50 text-blue-700">Katering</span>
                             @else
                                 <span class="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-xl bg-purple-50 text-purple-700">Nasi Box</span>
                             @endif

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\PaymentSession;
+
 class Pesanan extends BaseModel
 {
     protected $table = 'pesanan';
@@ -71,6 +73,11 @@ class Pesanan extends BaseModel
     public function stok_catering()
     {
         return $this->hasMany(StokCatering::class, 'pesanan_id');
+    }
+
+    public function payment_sessions()
+    {
+        return $this->hasMany(PaymentSession::class, 'pesanan_id');
     }
 
     /**

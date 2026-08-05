@@ -108,4 +108,101 @@ class DineInPaymentController extends Controller
 
         return view('pos.dinein.receipts', compact('pesanan'));
     }
+
+    public function chargeQris(Request $request, $pesananId)
+    {
+        $pesanan = Pesanan::findOrFail($pesananId);
+
+        if ($pesanan->status_pesanan_id !== 1) { // Menunggu Pembayaran
+            return redirect()->route('pos.dinein.index')->with('error', 'Pesanan tidak valid untuk pembayaran.');
+        }
+
+        \Midtrans\Config::$serverKey = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+        \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
+        \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
+
+        $orderId = 'QRIS-' . $pesanan->id . '-' . time();
+        $grossAmount = (int) $pesanan->total_tagihan;
+
+        $params = [
+            'payment_type' => 'gopay',
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $grossAmount,
+            ],
+            'gopay' => [
+                'enable_callback' => true,
+                'callback_url' => route('pos.dinein.index')
+            ]
+        ];
+
+        try {
+            DB::beginTransaction();
+
+            $response = \Midtrans\CoreApi::charge($params);
+
+            if (!isset($response->actions) || empty($response->actions)) {
+                throw new \Exception('Gagal mendapatkan QR Code dari Midtrans.');
+            }
+
+            // Find QR Code URL
+            $qrCodeUrl = '';
+            foreach ($response->actions as $action) {
+                if ($action->name === 'generate-qr-code') {
+                    $qrCodeUrl = $action->url;
+                    break;
+                }
+            }
+
+            if (empty($qrCodeUrl)) {
+                throw new \Exception('QR Code URL tidak tersedia dalam response Midtrans.');
+            }
+
+            // Save to pembayaran table (status 1 = Menunggu Pembayaran)
+            $pembayaran = Pembayaran::create([
+                'nomor_pembayaran' => $orderId,
+                'pesanan_id' => $pesanan->id,
+                'metode_pembayaran_id' => 2, // QRIS
+                'jenis_pembayaran_id' => 1,
+                'jumlah_bayar' => $grossAmount,
+                'status_pembayaran_id' => 1, // Menunggu Pembayaran
+                'diproses_oleh' => Auth::id(),
+                'midtrans_order_id' => $orderId,
+                'midtrans_transaction_id' => $response->transaction_id ?? null,
+                'qr_code_url' => $qrCodeUrl,
+                'expired_at' => now()->addMinutes(15),
+                'response_midtrans' => (array) $response
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('pos.dinein.show_qris', $pembayaran->id);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memproses QRIS: ' . $e->getMessage());
+        }
+    }
+
+    public function showQris($pembayaranId)
+    {
+        $pembayaran = Pembayaran::with('pesanan.meja')->findOrFail($pembayaranId);
+        
+        if ($pembayaran->status_pembayaran_id == 3) {
+            return redirect()->route('pos.dinein.success', $pembayaran->pesanan_id);
+        }
+
+        return view('pos.pembayaran.qris', compact('pembayaran'));
+    }
+
+    public function checkStatus($pembayaranId)
+    {
+        $pembayaran = Pembayaran::findOrFail($pembayaranId);
+        
+        return response()->json([
+            'status' => $pembayaran->status_pembayaran_id == 3 ? 'success' : 'pending',
+            'pesanan_id' => $pembayaran->pesanan_id
+        ]);
+    }
 }

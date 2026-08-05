@@ -95,9 +95,15 @@
         <div class="max-w-7xl mx-auto px-4">
 
             {{-- Header --}}
-            <div class="mb-10">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Pemesanan Nasi Box</h1>
-                <p class="text-gray-500 text-sm">Minimal 10 Box · Pesan maksimal H-2 sebelum acara (DP 25%)</p>
+            <div class="flex items-center justify-between mb-10">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Form Pemesanan Nasi Box</h1>
+                    <p class="text-gray-500 text-sm">Minimal 10 Box · Pesan maksimal H-2 sebelum acara (DP 25%)</p>
+                </div>
+                <a href="{{ url('/') }}" class="text-gray-500 hover:text-gray-700 text-sm font-medium flex items-center gap-1">
+                    <x-heroicon-o-x-mark class="w-4 h-4" />
+                    Batalkan Pesan
+                </a>
             </div>
 
             @if($errors->any())
@@ -117,14 +123,35 @@
                     {{-- LEFT COLUMN: Form Input --}}
                     <div class="lg:col-span-2 divide-y divide-gray-100">
                         
-                        {{-- SECTION 1: Pilih Varian --}}
+                        {{-- SECTION 1: Detail Acara --}}
                         <div class="pb-8">
-                    <h2 class="text-lg font-bold text-gray-900 mb-5">1. Pilih Varian Nasi Box</h2>
+                            <h2 class="text-lg font-bold text-gray-900 mb-5">1. Detail Acara</h2>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Acara <span class="text-red-500">*</span></label>
+                                    <input type="date" name="tanggal_acara" id="tanggalAcara"
+                                           min="{{ \Carbon\Carbon::today()->addDays(2)->format('Y-m-d') }}"
+                                           value="{{ old('tanggal_acara') }}"
+                                           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                                    <p id="tanggal-warning" class="text-red-500 text-xs mt-1 hidden">Pesanan nasi box maksimal H-2 sebelum acara.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jumlah Box <span class="text-red-500">*</span></label>
+                                    <input type="number" name="jumlah_box" id="jumlahBox" min="10" value="{{ old('jumlah_box', 10) }}"
+                                           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                                     <p id="jumlah-warning" class="text-red-500 text-xs mt-1 hidden">Minimal order 10 box.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {{-- SECTION 2: Pilih Varian --}}
+                        <div class="py-8 border-t border-gray-100">
+                    <h2 class="text-lg font-bold text-gray-900 mb-5">2. Pilih Varian Nasi Box</h2>
                     <div class="grid md:grid-cols-3 gap-4">
                         @foreach($pakets as $paket)
                             <label class="paket-card cursor-pointer border-2 rounded-xl p-5 transition-all duration-200 hover:border-primary border-gray-200"
                                    data-paket-id="{{ $paket->id }}" data-harga="{{ $paket->harga_jual }}">
-                                <input type="radio" name="paket_id" value="{{ $paket->id }}" class="sr-only paket-radio" {{ old('paket_id') == $paket->id ? 'checked' : '' }} required>
+                                <input type="radio" name="paket_id" value="{{ $paket->id }}" class="sr-only paket-radio" {{ (old('paket_id') == $paket->id || (isset($selectedPaketId) && $selectedPaketId == $paket->id)) ? 'checked' : '' }} required>
                                 @if($paket->foto)
                                     <img src="{{ Storage::url($paket->foto) }}" alt="{{ $paket->nama_menu }}" class="w-full h-40 object-cover rounded-lg mb-4">
                                 @else
@@ -143,32 +170,18 @@
                     </div>
                 </div>
 
-                {{-- SECTION 1.5: Pilih Komponen Lauk --}}
-                <div id="sec-komponen" class="py-8 hidden">
-                    <h2 class="text-lg font-bold text-gray-900 mb-5">Pilih Menu Lauk</h2>
+                {{-- SECTION 3: Pilih Komponen Lauk --}}
+                <div id="sec-komponen" class="py-8 hidden border-t border-gray-100">
+                    <h2 class="text-lg font-bold text-gray-900 mb-5">3. Pilih Item Menu</h2>
                     <div id="komponen-container" class="space-y-4">
                         <!-- Komponen radio buttons will be loaded here via JS -->
                     </div>
                 </div>
 
-                {{-- SECTION 2: Detail Pesanan --}}
-                <div class="py-8">
-                    <h2 class="text-lg font-bold text-gray-900 mb-5">2. Data Pemesan & Pengiriman</h2>
+                {{-- SECTION 4: Detail Pesanan --}}
+                <div class="py-8 border-t border-gray-100">
+                    <h2 class="text-lg font-bold text-gray-900 mb-5">4. Data Pemesan & Pengiriman</h2>
                     <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Acara <span class="text-red-500">*</span></label>
-                            <input type="date" name="tanggal_acara" id="tanggalAcara"
-                                   min="{{ \Carbon\Carbon::today()->addDays(2)->format('Y-m-d') }}"
-                                   value="{{ old('tanggal_acara') }}"
-                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
-                            <p id="tanggal-warning" class="text-red-500 text-xs mt-1 hidden">Pesanan nasi box maksimal H-2 sebelum acara.</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jumlah Box <span class="text-red-500">*</span></label>
-                            <input type="number" name="jumlah_box" id="jumlahBox" min="10" value="{{ old('jumlah_box', 10) }}"
-                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
-                             <p id="jumlah-warning" class="text-red-500 text-xs mt-1 hidden">Minimal order 10 box.</p>
-                        </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Pemesan <span class="text-red-500">*</span></label>
                             <input type="text" name="nama_pemesan" value="{{ old('nama_pemesan', optional(auth('pelanggan')->user())->nama ?? '') }}"
@@ -682,6 +695,18 @@
                 warn.classList.remove('hidden');
             } else {
                 warn.classList.add('hidden');
+            }
+        });
+
+        // Auto-select paket dari URL parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const paketId = urlParams.get('paket_id');
+            if (paketId) {
+                const paketCard = document.querySelector(`.paket-card[data-paket-id="${paketId}"]`);
+                if (paketCard) {
+                    paketCard.click();
+                }
             }
         });
     </script>

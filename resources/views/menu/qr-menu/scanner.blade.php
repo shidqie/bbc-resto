@@ -189,7 +189,7 @@
 
     <!-- Footer -->
     <footer class="p-4 text-center border-t border-white/10 bg-black/20 text-xs text-emerald-200/60 font-medium">
-        &copy; {{ date('Y') }} Saung Babakan Cinta &bull; Resto & Catering POS System
+        &copy; {{ date('Y') }} Saung Babakan Cinta &bull; Resto & Katering POS System
     </footer>
 
     <!-- Alpine & Camera JS Handler -->

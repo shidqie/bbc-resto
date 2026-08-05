@@ -52,9 +52,9 @@
             </ul>
         @endif
 
-        <a href="{{ $type === 'catering' ? route('pesan.catering') : route('pesan.nasibox') }}"
+        <a href="{{ $type === 'catering' ? route('pesan.catering', ['paket_id' => $paket->id]) : route('pesan.nasibox', ['paket_id' => $paket->id]) }}"
            class="mt-auto inline-flex items-center justify-center gap-2 bg-neutral-900 hover:bg-neutral-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
-            <span>Pesan {{ $type === 'catering' ? 'Catering' : 'Nasi Box' }}</span>
+            <span>Pesan {{ $type === 'catering' ? 'Katering' : 'Nasi Box' }}</span>
             <x-heroicon-o-arrow-right class="w-3.5 h-3.5" />
         </a>
     </div>

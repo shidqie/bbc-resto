@@ -48,95 +48,83 @@
 
         {{-- Divider --}}
         <div class="py-1.5" x-show="sidebarOpen"><div class="h-px w-full bg-neutral-100"></div></div>
-
+        
         {{-- Penjualan --}}
         @php
-            $penjualanItems = [];
-            if ($hasRole('Kasir', 'Pemilik')) {
-                $penjualanItems[] = ['label' => 'Semua Pesanan', 'url' => route('admin.pesanan.index'), 'active' => request()->routeIs('admin.pesanan.*')];
-            }
-            if ($hasRole('Kasir', 'Pelayan', 'Pemilik')) {
+        $penjualanItems = [];
+        if ($hasRole('Kasir', 'Pemilik', 'Admin Sistem')) {
+            $penjualanItems[] = ['label' => 'Semua Pesanan', 'url' => route('admin.pesanan.index'), 'active' => request()->routeIs('admin.pesanan.*')];
+        }
+        if ($hasRole('Kasir', 'Pelayan', 'Pemilik', 'Admin Sistem')) {
                 $penjualanItems[] = ['label' => 'Dine In', 'url' => route('pos.dinein.index'), 'active' => request()->routeIs('pos.dinein.*')];
             }
-            if ($hasRole('Pemilik')) {
-                $penjualanItems[] = ['label' => 'Catering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
+            if ($hasRole('Pemilik', 'Admin Sistem')) {
+                $penjualanItems[] = ['label' => 'Katering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
                 $penjualanItems[] = ['label' => 'Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
-                $penjualanItems[] = ['label' => 'Pengantaran', 'url' => route('admin.jadwal.index'), 'active' => request()->routeIs('admin.jadwal.*')];
+                $penjualanItems[] = ['label' => 'Pembayaran', 'url' => route('admin.pembayaran.index'), 'active' => request()->routeIs('admin.pembayaran.*')];
             }
-      
-        @endphp
-        @if(count($penjualanItems))
-        @include('partials.sidebar-submenu', [
-            'icon' => 'ionicon-cart-sharp',
-            'label' => 'Penjualan',
-            'isOpen' => request()->routeIs('pos.dinein.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.jadwal.*'),
-            'items' => $penjualanItems,
-        ])
-        @endif
+            
+            @endphp
+            @if(count($penjualanItems))
+            @include('partials.sidebar-submenu', [
+                'icon' => 'ionicon-cart-sharp',
+                'label' => 'Penjualan',
+                'isOpen' => request()->routeIs('pos.dinein.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.pembayaran.*'),
+                'items' => $penjualanItems,
+                ])
+                @endif
+                
+                {{-- Menu & Paket --}}
+                @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem'))
+                @include('partials.sidebar-submenu', [
+                    'icon' => 'gmdi-menu-book-r',
+                    'label' => 'Menu & Paket',
+                    'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('paket-catering.*'),
+                    'items' => [
+                        ['label' => 'Data Menu', 'url' => route('menu.index'), 'active' => request()->routeIs('menu.*')],
+                        ['label' => 'Kategori Menu', 'url' => route('kategori-menu.index'), 'active' => request()->routeIs('kategori-menu.*')],
+                        ],
+                        ])
+                        @endif
+                        
+                        {{-- Meja --}}
+                        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem'))
+                            @include('partials.sidebar-submenu', [
+                                'icon' => 'gmdi-table-bar',
+                                'label' => 'Meja',
+                                'isOpen' => request()->routeIs('meja.*'),
+                                'items' => [
+                                    ['label' => 'Data Meja', 'url' => route('meja.index'), 'active' => request()->routeIs('meja.*')],
+                                ],
+                            ])
+                        @endif
+                        {{-- Pengadaan --}}
+                        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem', 'Dapur'))
+                            @include('partials.sidebar-submenu', [
+                                'icon' => 'heroicon-s-shopping-bag',
+                                'label' => 'Pengadaan',
+                                'isOpen' => request()->routeIs('pengadaan.*'),
+                                'items' => [
+                                    ['label' => 'Semua Permintaan', 'url' => route('pengadaan.permintaan.index'), 'active' => request()->routeIs('pengadaan.permintaan.*')],
+                                    ['label' => 'Form Permintaan Harian', 'url' => route('pengadaan.harian.create'), 'active' => request()->routeIs('pengadaan.harian.*')],
+                                    ['label' => 'Form Permintaan Catering', 'url' => route('pengadaan.catering.create'), 'active' => request()->routeIs('pengadaan.catering.*')],
+                                    ['label' => 'Penerimaan Bahan', 'url' => route('pengadaan.penerimaan.index'), 'active' => request()->routeIs('pengadaan.penerimaan.*')],
+                                ],
+                            ])
+                        @endif
 
-        {{-- Menu & Paket --}}
-        @if($hasRole('Admin', 'Manajer', 'Pemilik'))
+                        {{-- Persediaan --}}
+                        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem', 'Dapur'))
         @include('partials.sidebar-submenu', [
-            'icon' => 'gmdi-menu-book-r',
-            'label' => 'Menu & Paket',
-            'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('resep.*') || request()->routeIs('paket-catering.*'),
-            'items' => [
-                ['label' => 'Data Menu', 'url' => route('menu.index'), 'active' => request()->routeIs('menu.*')],
-                ['label' => 'Kategori Menu', 'url' => route('kategori-menu.index'), 'active' => request()->routeIs('kategori-menu.*')],
-                ['label' => 'Resep & Takaran', 'url' => route('resep.index'), 'active' => request()->routeIs('resep.*')],
-                ['label' => 'Paket Catering', 'url' => route('paket-catering.index', ['jenis' => 'catering']), 'active' => request()->routeIs('paket-catering.*') && request('jenis', 'catering') === 'catering'],
-                ['label' => 'Paket Nasi Box', 'url' => route('paket-catering.index', ['jenis' => 'nasi_box']), 'active' => request()->routeIs('paket-catering.*') && request('jenis') === 'nasi_box'],
-            ],
-        ])
-        @endif
-
-        {{-- Meja --}}
-        @if($hasRole('Admin', 'Manajer', 'Pemilik'))
-        @include('partials.sidebar-submenu', [
-            'icon' => 'gmdi-table-bar',
-            'label' => 'Meja',
-            'isOpen' => request()->routeIs('meja.*'),
-            'items' => [
-                ['label' => 'Data Meja', 'url' => route('meja.index'), 'active' => request()->routeIs('meja.*')],
-            ],
-        ])
-        @endif
-
-        {{-- Persediaan --}}
-        @if($hasRole('Admin', 'Manajer', 'Pemilik'))
-        @include('partials.sidebar-submenu', [
-            'icon' => 'fluentui-box-16',
+            'icon' => 'heroicon-s-archive-box',
             'label' => 'Persediaan',
-            'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('stok-operasional.*') || request()->routeIs('stok-catering.*') || request()->routeIs('ketersediaan-menu.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('penyesuaian-stok.*') || request()->routeIs('notifikasi-stok.*') || request()->routeIs('stok-menipis.*') || request()->routeIs('pemasok.*'),
+            'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*') || request()->routeIs('stok-operasional.*') || request()->routeIs('stok-catering.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('penyesuaian-stok.*'),
             'items' => [
-                ['label' => 'Data Bahan Baku', 'url' => route('bahan-baku.index'), 'active' => request()->routeIs('bahan-baku.*')],
-                ['label' => 'Stok Bahan Baku Harian', 'url' => route('stok-operasional.index'), 'active' => request()->routeIs('stok-operasional.*')],
-                ['label' => 'Stok Bahan Baku Catering', 'url' => route('stok-catering.index'), 'active' => request()->routeIs('stok-catering.*')],
-                ['label' => 'Ketersediaan Menu', 'url' => route('ketersediaan-menu.index'), 'active' => request()->routeIs('ketersediaan-menu.*')],
+                ['label' => 'Data Bahan Baku', 'url' => route('bahan-baku.index'), 'active' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*')],
+                ['label' => 'Stok Dine In & Nasi Box', 'url' => route('stok-operasional.index'), 'active' => request()->routeIs('stok-operasional.*')],
+                ['label' => 'Stok Catering', 'url' => route('stok-catering.index'), 'active' => request()->routeIs('stok-catering.*')],
                 ['label' => 'Riwayat Stok', 'url' => route('mutasi-stok.index'), 'active' => request()->routeIs('mutasi-stok.*')],
-                ['label' => 'Stok Menipis', 'url' => route('stok-menipis.index'), 'active' => request()->routeIs('stok-menipis.*')],
                 ['label' => 'Penyesuaian Stok', 'url' => route('penyesuaian-stok.index'), 'active' => request()->routeIs('penyesuaian-stok.*')],
-                ['label' => 'Notifikasi Stok', 'url' => route('notifikasi-stok.index'), 'active' => request()->routeIs('notifikasi-stok.*')],
-                ['label' => 'Pemasok', 'url' => route('pemasok.index'), 'active' => request()->routeIs('pemasok.*')],
-            ],
-        ])
-        @endif
-
-        {{-- Pengadaan --}}
-        @if($hasRole('Admin', 'Manajer', 'Pemilik'))
-        @include('partials.sidebar-submenu', [
-            'icon' => 'polaris-order-draft-filled-icon',
-            'label' => 'Pengadaan',
-            'isOpen' => request()->routeIs('pengadaan.*') || request()->routeIs('laporan.pengadaan'),
-            'items' => [
-                ['label' => 'Semua Pengadaan', 'url' => route('pengadaan.index'), 'active' => (request()->routeIs('pengadaan.index') || request()->routeIs('pengadaan.show') || request()->routeIs('pengadaan.proses-terima')) && !request()->has('jenis')],
-                ['label' => 'Pengadaan Harian', 'url' => route('pengadaan.harian'), 'active' => request()->routeIs('pengadaan.harian')],
-                ['label' => 'Pengadaan Catering', 'url' => route('pengadaan.catering'), 'active' => request()->routeIs('pengadaan.catering')],
-                ['label' => 'Buat Pengadaan Harian', 'url' => route('pengadaan.create-harian'), 'active' => request()->routeIs('pengadaan.create') && request('jenis', 'harian') === 'harian'],
-                ['label' => 'Buat Pengadaan Catering', 'url' => route('pengadaan.create-catering'), 'active' => request()->routeIs('pengadaan.create') && request('jenis') === 'catering'],
-                ['label' => 'Penerimaan Bahan Harian', 'url' => route('pengadaan.terima-barang-harian'), 'active' => request()->routeIs('pengadaan.terima-barang') && request('jenis', 'harian') === 'harian'],
-                ['label' => 'Penerimaan Bahan Catering', 'url' => route('pengadaan.terima-barang-catering'), 'active' => request()->routeIs('pengadaan.terima-barang') && request('jenis') === 'catering'],
-                ['label' => 'Riwayat Pengadaan', 'url' => route('laporan.pengadaan'), 'active' => request()->routeIs('laporan.pengadaan')],
             ],
         ])
         @endif
@@ -148,24 +136,22 @@
             'label' => 'Laporan',
             'isOpen' => request()->routeIs('laporan.*'),
             'items' => [
-                ['label' => 'Penjualan', 'url' => route('laporan.penjualan'), 'active' => request()->routeIs('laporan.penjualan')],
-                ['label' => 'Persediaan Bahan Baku', 'url' => route('laporan.stok'), 'active' => request()->routeIs('laporan.stok')],
-                ['label' => 'Riwayat Pengadaan', 'url' => route('laporan.pengadaan'), 'active' => request()->routeIs('laporan.pengadaan')],
-                ['label' => 'Menu Terlaris', 'url' => route('laporan.menu-terlaris'), 'active' => request()->routeIs('laporan.menu-terlaris')],
+                ['label' => 'Penjualan', 'url' => route('laporan.penjualan'), 'active' => request()->routeIs('laporan.penjualan*')],
+                ['label' => 'Persediaan', 'url' => route('laporan.persediaan'), 'active' => request()->routeIs('laporan.persediaan*')],
+                ['label' => 'Pengadaan', 'url' => route('laporan.pengadaan'), 'active' => request()->routeIs('laporan.pengadaan*')],
             ],
         ])
         @endif
 
         {{-- Manajemen Pengguna --}}
-        @if($hasRole('Pemilik', 'Manajer'))
+        @if($hasRole('Pemilik', 'Manajer', 'Admin Sistem'))
         @include('partials.sidebar-submenu', [
             'icon' => 'fluentui-people-28',
             'label' => 'Manajemen Pengguna',
             'isOpen' => request()->routeIs('users.*') || request()->routeIs('roles.*'),
             'items' => [
-                ['label' => 'Data Pengguna', 'url' => route('users.index'), 'active' => request()->routeIs('users.*') && request('type') !== 'pelanggan'],
-                ['label' => 'Data Pelanggan', 'url' => route('users.index', ['type' => 'pelanggan']), 'active' => request()->routeIs('users.*') && request('type') === 'pelanggan'],
-                ['label' => 'Hak Akses', 'url' => route('roles.index'), 'active' => request()->routeIs('roles.*')],
+                ['label' => 'Data Karyawan', 'url' => route('users.index'), 'active' => request()->routeIs('users.*') && request('type') !== 'pelanggan'],
+                ['label' => 'Data Konsumen', 'url' => route('users.index', ['type' => 'pelanggan']), 'active' => request()->routeIs('users.*') && request('type') === 'pelanggan'],
             ],
         ])
         @endif
