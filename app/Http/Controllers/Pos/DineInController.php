@@ -29,7 +29,7 @@ class DineInController extends Controller
         $mejas = $this->sortMejasByNumber(Meja::with('status_meja')->get());
 
         // Jenis Menu Dine In (misal id 1)
-        $menus = Menu::with(['kategori_menu', 'resep_menu.bahan_baku'])
+        $menus = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.stok_relasi'])
             ->where(function ($query) {
                 $query->where('jenis_menu_id', 1)
                     ->orWhereNull('jenis_menu_id');
@@ -37,15 +37,36 @@ class DineInController extends Controller
             ->where('status_aktif', true)
             ->get();
 
+        // Hitung menu yang habis berdasarkan stok bahan baku
+        $menuHabisIds = $menus->filter(function ($menu) {
+            // Jika tidak ada resep, anggap tersedia
+            if ($menu->resep_menu->isEmpty()) {
+                return false;
+            }
+            // Cek setiap bahan baku dalam resep
+            foreach ($menu->resep_menu as $resep) {
+                $bahan = $resep->bahan_baku;
+                if (!$bahan) continue;
+                $stok = (float) ($bahan->stok_relasi->jumlah_stok ?? 0);
+                $kebutuhan = (float) ($resep->jumlah ?? 0);
+                // Jika stok bahan baku kurang dari kebutuhan 1 porsi, menu habis
+                if ($kebutuhan > 0 && $stok < $kebutuhan) {
+                    return true;
+                }
+            }
+            return false;
+        })->pluck('id')->toArray();
+
         $kategoriIds = $menus->pluck('kategori_menu_id')->filter()->unique();
         $kategoris = KategoriMenu::whereIn('id', $kategoriIds)->orderBy('id', 'asc')->get();
 
-        // Open Bills: Pesanan (Dine In) Menunggu Pembayaran
-        // 1 = Dine In. status_pesanan_id 1 = Menunggu (Konfirmasi/Bayar)
-        $openBillsRaw = Pesanan::with(['meja', 'detail_pesanan.menu'])
+        // Open Bills & Riwayat (Pesanan Dine In yang belum selesai)
+        // 1 = Dine In
+        $openBillsRaw = Pesanan::with(['meja', 'pelanggan', 'detail_pesanan.menu', 'pembayaran.diverifikasi_oleh_pengguna', 'kasir', 'status_pesanan'])
             ->where('jenis_pesanan_id', 1)
-            ->where('status_pesanan_id', 1)
+            ->where('status_pesanan_id', '!=', 5) // Exclude Selesai
             ->orderBy('dibuat_pada', 'desc')
+            ->take(300)
             ->get();
 
         // Map ke format yang dipakai frontend (bill.items, bill.nama_konsumen, dll)
@@ -54,26 +75,42 @@ class DineInController extends Controller
             // Ekstrak nama_konsumen dari catatan atau fallback
             $namaKonsumen = null;
             if (! empty($p->catatan)) {
-                // Format: "Pemesan: Nama" (QR Self-Order terbaru)
                 if (preg_match('/^Pemesan:\s*(.+)$/m', $p->catatan, $m)) {
                     $namaKonsumen = trim($m[1]);
-                }
-                // Format: "Self-Order QR (Nama) | Order_ID_Dinein:X"
-                elseif (preg_match('/Self-Order QR \(([^)]+)\)/', $p->catatan, $m)) {
+                } elseif (preg_match('/Self-Order QR \(([^)]+)\)/', $p->catatan, $m)) {
                     $namaKonsumen = trim($m[1]);
-                }
-                // Format POS: "Nama (N tamu)"
-                elseif (preg_match('/^(.+?)\s*\(\d+\s*tamu\)/', $p->catatan, $m)) {
+                } elseif (preg_match('/^(.+?)\s*\(\d+\s*tamu\)/', $p->catatan, $m)) {
                     $namaKonsumen = trim($m[1]);
-                }
-                // Fallback: ambil baris pertama catatan saja
-                else {
+                } else {
                     $namaKonsumen = trim(explode('|', $p->catatan)[0]);
                     $namaKonsumen = strlen($namaKonsumen) > 40 ? substr($namaKonsumen, 0, 40).'…' : $namaKonsumen;
                 }
             }
             $arr['nama_konsumen'] = $namaKonsumen ?: 'Tamu';
-            // Map detail_pesanan → items (format yang dipakai view)
+            
+            // Ekstrak no telepon
+            $noTelepon = $p->pelanggan->nomor_telepon ?? '-';
+            if ($noTelepon === '-' && !empty($p->catatan) && str_contains($p->catatan, ' | ')) {
+                $parts = explode(' | ', $p->catatan);
+                if (isset($parts[1]) && is_numeric(str_replace(['+', '-', ' '], '', $parts[1]))) {
+                    $noTelepon = trim($parts[1]);
+                }
+            }
+            $arr['no_telepon'] = $noTelepon;
+
+            // Status untuk UI
+            if ($p->status_pesanan_id == 5) {
+                $arr['status'] = 'Selesai';
+                $arr['status_raw'] = 'selesai';
+            } elseif ($p->status_pesanan_id == 6) {
+                $arr['status'] = 'Dibatalkan';
+                $arr['status_raw'] = 'dibatalkan';
+            } else {
+                $arr['status'] = $p->status_pesanan->nama_status ?? 'Aktif';
+                $arr['status_raw'] = 'aktif';
+            }
+
+            // Map detail_pesanan → items
             $arr['items'] = collect($p->detail_pesanan)->map(function ($d) {
                 return [
                     'id' => $d->id,
@@ -89,24 +126,49 @@ class DineInController extends Controller
                     ] : null,
                 ];
             })->values()->all();
-            // Hitung ulang total_tagihan dari items jika 0
+            
             if (empty($arr['total_tagihan']) || $arr['total_tagihan'] == 0) {
                 $arr['total_tagihan'] = collect($arr['items'])->sum(fn ($i) => $i['subtotal']);
             }
+            
+            $pembayaran = collect($p->pembayaran)->first();
+            $arr['metode_bayar'] = $pembayaran->metode_pembayaran ?? 'Cash';
+            $arr['kasir'] = $pembayaran->diverifikasi_oleh_pengguna->nama ?? $p->kasir->nama ?? 'Sistem';
+            
+            $arr['is_new_order'] = \Carbon\Carbon::parse($p->dibuat_pada)->diffInMinutes(now()) < 15;
 
             return $arr;
         });
 
-        // Riwayat Transaksi: Selesai atau Dibatalkan
-        // status_pesanan_id 5 = Selesai, 6 = Dibatalkan
-        $riwayatTransaksiRaw = Pesanan::with(['meja', 'detail_pesanan.menu', 'pembayaran.diproses_oleh_pengguna', 'kasir'])
-            ->where('jenis_pesanan_id', 1)
-            ->whereIn('status_pesanan_id', [5, 6])
-            ->orderBy('diperbarui_pada', 'desc')
-            ->take(200)
-            ->get();
+        $cashiers = Pengguna::whereIn('peran_id', [1, 2, 3])->orderBy('nama')->get(['id', 'nama']);
 
-        $riwayatTransaksi = $riwayatTransaksiRaw->map(function ($p) {
+        // Compute active table status based on open bills
+        $activeMejaIds = collect($openBills)->where('status_raw', 'aktif')->pluck('meja_id')->filter()->unique()->toArray();
+        $mejas->each(function ($m) use ($activeMejaIds) {
+            $m->status = in_array($m->id, $activeMejaIds) ? 'terisi' : 'kosong';
+        });
+
+        return view('pos.pesanan.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'cashiers', 'menuHabisIds'));
+    }
+
+    public function tableStatusApi()
+    {
+        $mejas = $this->sortMejasByNumber(Meja::with('status_meja')->get());
+
+        $openBillsRaw = Pesanan::with(['meja', 'detail_pesanan.menu', 'pembayaran.diverifikasi_oleh_pengguna', 'kasir', 'tiket_dapur', 'status_pesanan'])
+            ->where('jenis_pesanan_id', 1)
+            ->where('status_pesanan_id', 1)
+            ->orderBy('dibuat_pada', 'desc')
+            ->get();
+            
+        $allOpenBillsRaw = Pesanan::with(['meja', 'detail_pesanan.menu', 'pembayaran.diverifikasi_oleh_pengguna', 'kasir', 'status_pesanan'])
+            ->where('jenis_pesanan_id', 1)
+            ->where('status_pesanan_id', '!=', 5) // Exclude Selesai
+            ->orderBy('dibuat_pada', 'desc')
+            ->take(300)
+            ->get();
+            
+        $openBills = $allOpenBillsRaw->map(function ($p) {
             $arr = $p->toArray();
             $namaKonsumen = null;
             if (! empty($p->catatan)) {
@@ -122,7 +184,16 @@ class DineInController extends Controller
                 }
             }
             $arr['nama_konsumen'] = $namaKonsumen ?: 'Tamu';
-            $arr['status'] = $p->status_pesanan_id == 5 ? 'selesai' : 'dibatalkan';
+            if ($p->status_pesanan_id == 5) {
+                $arr['status'] = 'Selesai';
+                $arr['status_raw'] = 'selesai';
+            } elseif ($p->status_pesanan_id == 6) {
+                $arr['status'] = 'Dibatalkan';
+                $arr['status_raw'] = 'dibatalkan';
+            } else {
+                $arr['status'] = $p->status_pesanan->nama_status ?? 'Aktif';
+                $arr['status_raw'] = 'aktif';
+            }
             $arr['items'] = collect($p->detail_pesanan)->map(function ($d) {
                 return [
                     'id' => $d->id,
@@ -138,36 +209,19 @@ class DineInController extends Controller
                     ] : null,
                 ];
             })->values()->all();
+            
             if (empty($arr['total_tagihan']) || $arr['total_tagihan'] == 0) {
                 $arr['total_tagihan'] = collect($arr['items'])->sum(fn ($i) => $i['subtotal']);
             }
-            $pembayaran = $p->pembayaran->first();
+            
+            $pembayaran = collect($p->pembayaran)->first();
             $arr['metode_bayar'] = $pembayaran->metode_pembayaran ?? 'Cash';
-            $arr['kasir_name'] = $pembayaran && $pembayaran->diproses_oleh_pengguna ? $pembayaran->diproses_oleh_pengguna->name : ($p->kasir->name ?? 'Kasir');
-
+            $arr['kasir_name'] = $pembayaran && $pembayaran->diverifikasi_oleh_pengguna ? $pembayaran->diverifikasi_oleh_pengguna->nama : ($p->kasir->nama ?? 'Kasir');
+            
+            $arr['is_new_order'] = \Carbon\Carbon::parse($p->dibuat_pada)->diffInMinutes(now()) < 15;
+            
             return $arr;
         });
-
-        $cashiers = Pengguna::whereIn('peran_id', [1, 2, 3])->orderBy('nama')->get(['id', 'nama']);
-
-        // Compute active table status based on open bills
-        $activeMejaIds = $openBillsRaw->pluck('meja_id')->filter()->unique()->toArray();
-        $mejas->each(function ($m) use ($activeMejaIds) {
-            $m->status = in_array($m->id, $activeMejaIds) ? 'terisi' : 'kosong';
-        });
-
-        return view('pos.pesanan.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'riwayatTransaksi', 'cashiers'));
-    }
-
-    public function tableStatusApi()
-    {
-        $mejas = $this->sortMejasByNumber(Meja::with('status_meja')->get());
-
-        $openBillsRaw = Pesanan::with(['meja', 'detail_pesanan.menu', 'tiket_dapur'])
-            ->where('jenis_pesanan_id', 1)
-            ->where('status_pesanan_id', 1)
-            ->orderBy('dibuat_pada', 'desc')
-            ->get();
 
         $activeMejaIds = $openBillsRaw->pluck('meja_id')->filter()->unique();
 
@@ -203,6 +257,7 @@ class DineInController extends Controller
                     'meja_id' => $order->meja_id,
                     'nomor_pesanan' => $order->nomor_pesanan,
                     'nama_konsumen' => $namaKonsumen,
+                    'meja' => $order->meja ? $order->meja->toArray() : null,
                     'dibuat_pada' => $order->dibuat_pada ? $order->dibuat_pada->toDateTimeString() : null,
                     'total_tagihan' => (float) ($order->total_tagihan ?: collect($order->detail_pesanan)->sum(fn ($d) => $d->subtotal)),
                     'items' => $order->detail_pesanan->map(function ($d) {
@@ -238,6 +293,7 @@ class DineInController extends Controller
         return response()->json([
             'success' => true,
             'mejas' => $mejas->values()->all(),
+            'open_bills' => $openBills,
         ]);
     }
 
@@ -274,17 +330,19 @@ class DineInController extends Controller
             $pajak = $subtotal * 0.10; // 10% PB1 tax
             $totalTagihan = $subtotal + $pajak;
 
-            $pesanan = Pesanan::create([
+            $pesananData = [
                 'nomor_pesanan' => 'DIN-'.time().'-'.rand(100, 999), 'tanggal_pesanan' => now(),
                 'jenis_pesanan_id' => 1, // Dine In
                 'meja_id' => $request->meja_id,
-                'pelayan_id' => Auth::id(),
+                'pelayan_id' => \Illuminate\Support\Facades\Auth::id(),
                 'status_pesanan_id' => 1, // Menunggu Konfirmasi/Pembayaran
                 'jumlah_sebelum_potongan' => $subtotal,
                 'jumlah_pajak' => $pajak,
                 'total_tagihan' => $totalTagihan,
                 'catatan' => $request->nama_konsumen.' ('.($request->jumlah_tamu ?? 1).' tamu)',
-            ]);
+            ];
+            
+            $pesanan = Pesanan::create($pesananData);
 
             foreach ($request->items as $item) {
                 $menu = Menu::find($item['menu_id']);
@@ -296,6 +354,19 @@ class DineInController extends Controller
                     'subtotal' => $menu->harga_jual * $item['qty'],
                     'catatan' => $item['catatan'] ?? null,
                 ]);
+            }
+
+            // Deduct stok bahan baku
+            $kebutuhanService = app(\App\Services\KebutuhanBahanService::class);
+            $pesanan->load('detail_pesanan.menu');
+            $stokCukup = $kebutuhanService->deductBahanPesanan($pesanan, 'harian');
+
+            if (!$stokCukup) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pesanan gagal diproses karena stok bahan baku harian tidak mencukupi.'
+                ], 400);
             }
 
             // Update status meja menjadi terisi
@@ -408,6 +479,21 @@ class DineInController extends Controller
             'success' => true,
             'message' => 'Sub-status progress pesanan berhasil diperbarui.',
             'sub_status' => $request->sub_status,
+        ]);
+    }
+
+    public function konfirmasi($pesananId)
+    {
+        $pesanan = Pesanan::findOrFail($pesananId);
+        
+        if ($pesanan->status_pesanan_id === 1) { // 1 = Menunggu Konfirmasi
+            $pesanan->update(['status_pesanan_id' => 2]); // 2 = Dikonfirmasi
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pesanan berhasil dikonfirmasi.',
+            'pesanan' => $pesanan
         ]);
     }
 

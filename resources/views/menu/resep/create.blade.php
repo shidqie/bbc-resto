@@ -4,15 +4,16 @@
 <div class="flex-1 bg-gray-50 text-gray-800">
     <div class="w-full max-w-4xl mx-auto p-6 space-y-5">
         {{-- PAGE HEADER --}}
-        <div class="flex items-center gap-3">
-            <a href="{{ route('resep.index') }}" class="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            </a>
-            <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Atur Resep (BOM)</h1>
-                <p class="text-sm text-gray-500 font-medium mt-1">Menu: <span class="text-gray-900 font-bold">{{ $menu->nama_menu }}</span> ({{ $menu->kode_menu }})</p>
-            </div>
-        </div>
+        <x-ui.page-header
+            title="Atur Resep (BOM)"
+            subtitle="Menu: {{ $menu->nama_menu }} ({{ $menu->kode_menu }})"
+            :breadcrumbs="['Manajemen Menu', 'Data Menu', 'Resep']">
+            <x-slot:actions>
+                <a href="{{ route('resep.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 transition">
+                    &larr; Kembali
+                </a>
+            </x-slot:actions>
+        </x-ui.page-header>
 
         <x-ui.alert />
 
@@ -77,7 +78,7 @@
                             </div>
                             <div class="w-32">
                                 <label class="block text-sm font-semibold text-gray-500 mb-1">Jml. Kebutuhan</label>
-                                <input type="number" step="0.01" name="jumlah_kebutuhan[]" value="{{ $resep->jumlah_kebutuhan }}" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-qty" required placeholder="0.00" oninput="calculateHPP()">
+                                <x-ui.input-decimal name="jumlah_kebutuhan[]" value="{{ $resep->jumlah_kebutuhan }}" class="hpp-qty" required="true" oninput="calculateHPP()" />
                             </div>
                             <div class="pt-6">
                                 <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
@@ -98,7 +99,7 @@
                             </div>
                             <div class="w-32">
                                 <label class="block text-sm font-semibold text-gray-500 mb-1">Jml. Kebutuhan</label>
-                                <input type="number" step="0.01" name="jumlah_kebutuhan[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-qty" required placeholder="0.00" oninput="calculateHPP()">
+                                <x-ui.input-decimal name="jumlah_kebutuhan[]" class="hpp-qty" required="true" oninput="calculateHPP()" />
                             </div>
                             <div class="pt-6">
                                 <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
@@ -129,7 +130,7 @@
             </select>
         </div>
         <div class="w-32">
-            <input type="number" step="0.01" name="jumlah_kebutuhan[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-qty" required placeholder="0.00" oninput="calculateHPP()">
+            <x-ui.input-decimal name="jumlah_kebutuhan[]" class="hpp-qty" required="true" oninput="calculateHPP()" />
         </div>
         <div class="pt-2">
             <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
@@ -160,7 +161,8 @@
             if (select && qtyInput && select.selectedIndex > -1) {
                 const option = select.options[select.selectedIndex];
                 const harga = parseFloat(option.getAttribute('data-harga')) || 0;
-                const qty = parseFloat(qtyInput.value) || 0;
+                const qtyVal = String(qtyInput.value).replace(/[^0-9,]/g, '').replace(',', '.');
+                const qty = parseFloat(qtyVal) || 0;
                 totalHpp += (harga * qty);
             }
         });

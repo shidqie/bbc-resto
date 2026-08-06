@@ -100,7 +100,7 @@
             </div>
         </div>
 
-        <a href="{{ route('qr.menu') }}" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition flex items-center gap-2">
+        <a href="{{ route('qr.menu.no-token') }}" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition flex items-center gap-2">
             <x-heroicon-o-sparkles class="text-amber-400 w-5 h-5" /> Menu
         </a>
     </header>
@@ -177,7 +177,7 @@
             <div class="grid grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-1">
                 @foreach($mejas as $m)
                 @php $cleanNomor = trim(preg_replace('/^meja\s*/i', '', $m->nomor_meja)); @endphp
-                <a href="{{ route('qr.menu', ['meja' => $m->id]) }}" 
+                <a href="{{ $m->qr_token ? route('qr.menu', $m->qr_token) : route('qr.menu.no-token') }}" 
                    class="bg-emerald-50/60 hover:bg-[#0D3024] hover:text-white border border-emerald-200/80 rounded-xl p-3 text-center transition-all group">
                     <span class="block text-xs uppercase font-bold text-gray-400 group-hover:text-emerald-300">Meja</span>
                     <span class="block text-base font-black text-[#0D3024] group-hover:text-white mt-0.5">{{ $cleanNomor }}</span>
@@ -249,7 +249,7 @@
                 if (decodedText.includes('qr-menu') || decodedText.includes('meja') || decodedText.startsWith('http')) {
                     window.location.href = decodedText;
                 } else {
-                    window.location.href = "{{ route('qr.menu') }}?meja=" + encodeURIComponent(decodedText);
+                    window.location.href = "{{ route('qr.menu.no-token') }}?meja=" + encodeURIComponent(decodedText);
                 }
             },
 

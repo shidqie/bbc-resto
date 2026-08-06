@@ -3,28 +3,19 @@
 
 @section('content')
 <div class="px-6 py-8 md:px-10 md:py-10">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                <a href="{{ route('penyesuaian-stok.index') }}" class="hover:text-[#3B82F6] transition">Penyesuaian Stok</a>
-                <span>/</span>
-                <span>Buat Baru</span>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Buat Penyesuaian Stok</h1>
-            <p class="text-sm text-gray-500 mt-1">Masukkan jumlah fisik aktual setiap bahan baku setelah opname</p>
-        </div>
-        <a href="{{ route('penyesuaian-stok.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-3xl hover:bg-gray-200 transition">
-            &larr; Kembali
-        </a>
-    </div>
+    {{-- PAGE HEADER --}}
+    <x-ui.page-header
+        title="Buat Penyesuaian Stok"
+        subtitle="Masukkan jumlah fisik aktual setiap bahan baku setelah opname"
+        :breadcrumbs="['Persediaan', 'Penyesuaian Stok', 'Buat Baru']"
+        class="mb-8">
+        <x-slot:actions>
+            <a href="{{ route('penyesuaian-stok.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-3xl hover:bg-gray-200 transition">
+                &larr; Kembali
+            </a>
+        </x-slot:actions>
+    </x-ui.page-header>
 
-    <x-ui.alert />
-
-    <div class="bg-amber-50 border border-amber-200 rounded-[2.25rem] p-4 mb-6 flex items-start gap-3">
-        <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-        <p class="text-sm text-amber-700">Isi <strong>Jumlah Fisik</strong> sesuai stok nyata yang Anda hitung. Kolom yang tidak diubah tidak akan mempengaruhi stok. Sistem akan otomatis menghitung selisih dan memperbarui stok.</p>
-    </div>
 
     <form action="{{ route('penyesuaian-stok.store') }}" method="POST" id="form-penyesuaian">
         @csrf
@@ -36,20 +27,13 @@
                     <h2 class="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-3">Info Penyesuaian</h2>
                     <div>
                         <label class="text-xs font-semibold text-gray-600 mb-1.5 block">Alasan / Keterangan *</label>
-                        <textarea name="alasan" rows="4" required class="w-full border border-gray-200 rounded-3xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] bg-gray-50 resize-none" placeholder="Contoh: Opname fisik gudang, Barang rusak karena banjir...">{{ old('alasan') }}</textarea>
+                        <textarea name="alasan" rows="4" required class="w-full border border-gray-200 rounded-3xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] bg-gray-50 resize-none" placeholder="Masukkan alasan penyesuaian stok...">{{ old('alasan') }}</textarea>
                     </div>
                     <button type="submit" class="w-full py-2.5 bg-[#3B82F6] text-white text-sm font-semibold rounded-3xl hover:bg-blue-700 transition">
                         Simpan & Perbarui Stok
                     </button>
                 </div>
-                <div class="bg-blue-50 border border-blue-200 rounded-[2.25rem] p-4">
-                    <p class="text-xs font-semibold text-blue-800 mb-1">ℹ️ Cara Penggunaan</p>
-                    <ul class="text-xs text-blue-700 space-y-1 list-disc list-inside">
-                        <li>Isi kolom <strong>Jumlah Fisik</strong> sesuai hitungan nyata</li>
-                        <li>Biarkan kosong jika bahan tidak perlu disesuaikan</li>
-                        <li>Setelah simpan, stok sistem akan langsung diperbarui</li>
-                    </ul>
-                </div>
+                
             </div>
 
             <!-- Right: Tabel Bahan Baku -->
@@ -83,11 +67,13 @@
                                         <span class="text-xs text-gray-500 ml-1">{{ $bahan->satuan->nama_satuan ?? '' }}</span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <input type="number" name="jumlah_fisik[]" step="0.001" min="0"
-                                            placeholder="{{ number_format($stokSistem, 3) }}"
-                                            class="w-28 border border-gray-200 rounded-2xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] bg-gray-50"
-                                            onchange="hitungSelisih(this, {{ $stokSistem }})">
-                                        <span class="selisih-label ml-1 text-xs font-bold hidden"></span>
+                                        <div class="flex items-center">
+                                            <div x-data="{ val: '', format(v) { let c = String(v).replace(/[^0-9,]/g, ''); let p = c.split(','); if(p.length > 2) c = p[0] + ',' + p.slice(1).join(''); this.val = c; $refs.hidden.value = c.replace(',', '.'); } }" x-init="format(val)">
+                                                <input type="text" x-model="val" @input="format($event.target.value); hitungSelisih($refs.hidden, {{ $stokSistem }})" placeholder="{{ number_format($stokSistem, 2, ',', '.') }}" class="w-28 border border-gray-200 rounded-2xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] bg-gray-50 text-right">
+                                                <input type="hidden" x-ref="hidden" name="jumlah_fisik[]">
+                                            </div>
+                                            <span class="selisih-label ml-2 text-xs font-bold hidden"></span>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3">
                                         <input type="text" name="catatan_item[]" placeholder="Opsional..."

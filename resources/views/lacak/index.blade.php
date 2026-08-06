@@ -63,8 +63,8 @@
                 $statusKey = $statusInfo['key'];
 
                 $total = (float) $pesanan->total_tagihan;
-                $lunas = (float) $pesanan->pembayaran->where('status_pembayaran_id', 3)->sum('jumlah_bayar');
-                $dpTerbayar = (float) $pesanan->pembayaran->whereIn('status_pembayaran_id', [2, 3])->sum('jumlah_bayar');
+                $lunas = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+                $dpTerbayar = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
                 $statusBayarKey = $lunas >= $total ? 'lunas' : ($dpTerbayar > 0 ? 'dp_terbayar' : 'belum_bayar');
                 $statusBayarInfo = [
                     'belum_bayar' => ['label' => 'Belum Bayar', 'color' => 'bg-amber-50 text-amber-700 border-amber-200/60'],
@@ -149,7 +149,7 @@
                                 <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
                                     <span class="text-gray-400 font-light">Metode Pembayaran</span>
                                     <span class="font-medium text-gray-800">
-                                        {{ $pesanan->pembayaran->first()->metode_pembayaran->nama_metode ?? '-' }}
+                                        {{ $pesanan->pembayaran->first()->metode_pembayaran ?? '-' }}
                                     </span>
                                 </div>
                                 @endif

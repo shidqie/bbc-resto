@@ -11,7 +11,7 @@
         {{-- Header --}}
         <x-ui.page-header 
             title="Edit Menu: {{ $menu->nama_menu }}" 
-            :breadcrumbs="['Menu', 'Daftar Menu', 'Edit']">
+            :breadcrumbs="['Manajemen Menu', 'Data Menu', 'Edit']">
             <x-slot:actions>
                 <x-ui.button href="{{ route('menu.index') }}" variant="outline" icon="arrow-left">Kembali</x-ui.button>
             </x-slot:actions>
@@ -90,8 +90,7 @@
 
                         {{-- Harga --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp) <span class="text-red-500">*</span></label>
-                            <input type="number" name="harga_jual" value="{{ old('harga_jual', $menu->harga_jual) }}" required min="0" step="1" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                            <x-ui.input-currency label="Harga (Rp)" name="harga_jual" value="{{ old('harga_jual', $menu->harga_jual) }}" required="true" />
                         </div>
 
                         {{-- Status --}}
@@ -133,7 +132,7 @@
                                         </select>
                                     </div>
                                     <div class="w-32">
-                                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" value="{{ $resep->jumlah_kebutuhan ?? $resep->jumlah }}" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                                        <x-ui.input-decimal name="jumlah_kebutuhan[]" value="{{ $resep->jumlah_kebutuhan ?? $resep->jumlah }}" placeholder="Takaran" />
                                     </div>
                                     <div>
                                         <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
@@ -152,7 +151,7 @@
                                         </select>
                                     </div>
                                     <div class="w-32">
-                                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                                        <x-ui.input-decimal name="jumlah_kebutuhan[]" placeholder="Takaran" />
                                     </div>
                                     <div>
                                         <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
@@ -223,7 +222,7 @@
                         </select>
                     </div>
                     <div class="w-32">
-                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                        <x-ui.input-decimal name="jumlah_kebutuhan[]" placeholder="Takaran" />
                     </div>
                     <div>
                         <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">

@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- QRCode.js — Local, works fully offline on LAN -->
+    <script src="{{ asset('js/qrcode.min.js') }}"></script>
     <!-- HTML2PDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -18,8 +20,6 @@
         }
 
         #pdf-content {
-            /* This content must be visible in the normal DOM flow for html2canvas to render it perfectly! */
-            /* We will hide it behind the loading overlay instead of using display: none or left: -9999px */
             width: 800px;
             margin: 0 auto;
             background-color: white;
@@ -30,7 +30,6 @@
         }
 
         .qr-page-container {
-            /* Ensures it doesn't split a single card in half */
             page-break-inside: avoid;
             break-inside: avoid;
             page-break-after: always;
@@ -38,11 +37,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 80px 0; /* Memberikan ruang atas-bawah yang rapi tanpa memaksakan tinggi mutlak */
+            padding: 80px 0;
         }
 
         .qr-page-container:last-child {
-            /* Menghindari halaman kosong ekstra di akhir dokumen */
             page-break-after: auto;
             break-after: auto;
         }
@@ -50,16 +48,13 @@
         /* Full Screen Loading Overlay */
         #loading-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background-color: #f3f4f6;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 9999; /* Cover everything */
+            z-index: 9999;
         }
         
         .loader {
@@ -75,25 +70,31 @@
             0% { transform: rotate(0deg); } 
             100% { transform: rotate(360deg); } 
         }
+
+        .qr-canvas-holder {
+            width: 176px;
+            height: 176px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qr-canvas-holder canvas,
+        .qr-canvas-holder img {
+            width: 176px !important;
+            height: 176px !important;
+        }
     </style>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     fontSize: {
-                        xs: ['13px', '1.45'],
-                        sm: ['15px', '1.5'],
-                        base: ['16px', '1.55'],
-                        lg: ['18px', '1.5'],
-                        xl: ['20px', '1.4'],
-                        '2xl': ['24px', '1.3'],
-                        '3xl': ['30px', '1.25'],
-                        '4xl': ['36px', '1.2'],
-                        '5xl': ['48px', '1.15'],
-                        '6xl': ['60px', '1.1'],
+                        xs: ['13px', '1.45'], sm: ['15px', '1.5'],
+                        base: ['16px', '1.55'], lg: ['18px', '1.5'],
+                        xl: ['20px', '1.4'], '2xl': ['24px', '1.3'],
+                        '3xl': ['30px', '1.25'], '4xl': ['36px', '1.2'],
+                        '5xl': ['48px', '1.15'], '6xl': ['60px', '1.1'],
                     },
                 }
             }
@@ -102,11 +103,11 @@
 </head>
 <body>
     
-    <!-- Loading Screen (This is what the user sees while processing) -->
+    <!-- Loading Screen -->
     <div id="loading-screen">
         <div class="loader mb-4"></div>
         <h2 class="text-2xl font-bold text-gray-800">Menyiapkan File PDF...</h2>
-        <p class="text-gray-500 mt-2 text-sm">Mohon tunggu sebentar, file sedang di-render resolusi tinggi.</p>
+        <p class="text-gray-500 mt-2 text-sm">Mohon tunggu sebentar, QR Code sedang digenerate.</p>
         <p class="text-gray-400 mt-1 text-xs" id="status-text">Otomatis terunduh saat selesai...</p>
     </div>
 
@@ -119,23 +120,13 @@
         
         @forelse($mejas as $m)
             @php
-                $qrTargetUrl = !empty(trim($m->qr_token)) ? route('qr.menu', ['token' => trim($m->qr_token)]) : url('/qr-menu?invalid');
-                $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=350x350&margin=0&data=" . urlencode($qrTargetUrl);
-                
-                // Ambil gambar dari API dan ubah ke Base64 agar html2canvas tidak terblokir CORS!
-                try {
-                    $qrImageContext = stream_context_create(['http' => ['timeout' => 5]]);
-                    $qrImageData = file_get_contents($qrApiUrl, false, $qrImageContext);
-                    $qrSrc = $qrImageData ? 'data:image/png;base64,'.base64_encode($qrImageData) : '';
-                } catch (\Exception $e) {
-                    $qrSrc = '';
-                }
-
+                $qrTargetUrl = !empty(trim($m->qr_token)) 
+                    ? env('APP_URL') . '/qr-menu/' . trim($m->qr_token) 
+                    : env('APP_URL') . '/qr-menu?invalid';
                 $cleanNomorMeja = trim(preg_replace('/^meja\s*/i', '', $m->nomor_meja));
             @endphp
             
             <div class="qr-page-container w-full flex justify-center">
-                <!-- Kartu QR EXACTLY AS USER PROVIDED -->
                 <div class="w-[300px] aspect-[1/1.55] rounded-xl overflow-hidden shadow-xl border-4 border-emerald-500/30 flex flex-col justify-between p-5 relative text-white" style="background: linear-gradient(145deg, #0D3024 0%, #164032 50%, #0A2219 100%); width: 300px; height: 465px;">
                     <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none"></div>
                     <div class="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/60 rounded-tl-3xl"></div>
@@ -147,18 +138,15 @@
                         <h2 class="text-2xl font-black uppercase tracking-wider text-amber-400 drop-shadow-md leading-none">SCAN MENU</h2>
                         <div class="pt-2">
                             <span class="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-white border border-amber-400/40 text-xs font-extrabold shadow-sm">
-                                <x-heroicon-o-users class="w-3 h-3 text-amber-400" /> <span>Meja {{ $cleanNomorMeja }}</span>
+                                <span>Meja {{ $cleanNomorMeja }}</span>
                             </span>
                         </div>
                     </div>
 
                     <div class="relative z-10 my-auto py-1 flex flex-col items-center">
                         <div class="bg-white rounded-xl p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center">
-                            @if($qrSrc)
-                            <img src="{{ $qrSrc }}" alt="QR Code" class="w-44 h-44 object-contain rounded-xl">
-                            @else
-                            <div class="w-44 h-44 bg-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-xs text-center p-2">Gagal memuat QR</div>
-                            @endif
+                            <!-- QR canvas generated locally by qrcode.js -->
+                            <div class="qr-canvas-holder" data-qr-url="{{ $qrTargetUrl }}"></div>
                             @if($logoSrc)
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div class="w-11 h-11 rounded-full bg-white p-1 shadow-xl border-2 border-emerald-800 flex items-center justify-center overflow-hidden">
@@ -195,12 +183,33 @@
     </div>
 
     <script>
+        // Step 1: Generate all QR codes locally using qrcode.js (no internet needed)
+        function generateAllQrCodes() {
+            const holders = document.querySelectorAll('.qr-canvas-holder');
+            holders.forEach(function(holder) {
+                const url = holder.getAttribute('data-qr-url');
+                if (url) {
+                    new QRCode(holder, {
+                        text: url,
+                        width: 176,
+                        height: 176,
+                        colorDark: '#0D3024',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                }
+            });
+        }
+
+        // Step 2: After QR codes are rendered, export to PDF
         window.onload = function() {
+            generateAllQrCodes();
+
             setTimeout(function() {
                 document.getElementById('status-text').innerText = "Memproses halaman (ini mungkin butuh beberapa detik)...";
                 
                 var elements = document.querySelectorAll('.qr-page-container');
-                if(elements.length === 0) {
+                if (elements.length === 0) {
                     window.close();
                     return;
                 }
@@ -210,14 +219,15 @@
                     filename:     'QR_Code_Meja.pdf',
                     image:        { type: 'jpeg', quality: 1.0 },
                     html2canvas:  { 
-                        scale: 2, // Scale 2 cukup tajam dan hemat memori
+                        scale: 2,
                         useCORS: true,
-                        logging: false
+                        logging: false,
+                        allowTaint: true
                     },
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
 
-                // Membangun PDF per halaman untuk menghindari batas memori Canvas (Blank Putih)
+                // Build PDF page by page to avoid canvas memory limits
                 var worker = html2pdf().set(opt).from(elements[0]).toPdf();
                 
                 for (let i = 1; i < elements.length; i++) {
@@ -233,7 +243,7 @@
                         window.close();
                     }, 500);
                 });
-            }, 1000); 
+            }, 1500); // beri waktu QR render sebelum capture
         }
     </script>
 </body>

@@ -7,11 +7,10 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <x-ui.page-header title="Laporan Menu Terlaris" subtitle="Analisis menu dengan penjualan tertinggi pada periode yang dipilih">
+        <x-ui.page-header title="Laporan Menu Terlaris" subtitle="Analisis menu dengan penjualan tertinggi pada periode yang dipilih" :breadcrumbs="['Laporan', 'Menu Terlaris']">
             <x-slot:actions>
-                <a href="{{ route('laporan.menu-terlaris.cetak', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank"
-                   class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-red-600 rounded-lg px-3 py-2 hover:bg-red-700 transition-colors">
-                    <x-heroicon-o-document class="w-5 h-5" />
+                <a href="{{ route('laporan.menu-terlaris.cetak', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shadow-sm">
+                    <x-heroicon-o-document-text class="w-4 h-4 text-rose-500" />
                     Cetak PDF
                 </a>
             </x-slot:actions>
@@ -66,38 +65,36 @@
         {{-- Table --}}
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">Rank</th>
-                        <th class="px-4 py-3 text-left">Nama Menu</th>
-                        <th class="px-4 py-3 text-right">Harga Satuan</th>
-                        <th class="px-4 py-3 text-right">Total Terjual</th>
-                        <th class="px-4 py-3 text-right">Total Pendapatan</th>
-                        <th class="px-4 py-3 text-right">% dari Total</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">Rank</th>
+                    <th class="px-4 py-3.5 text-left">Nama Menu</th>
+                    <th class="px-4 py-3.5 text-right">Harga Satuan</th>
+                    <th class="px-4 py-3.5 text-right">Total Terjual</th>
+                    <th class="px-4 py-3.5 text-right">Total Pendapatan</th>
+                    <th class="px-4 py-3.5 text-right">% dari Total</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($menuTerlaris as $i => $menu)
-                    <tr class="hover:bg-gray-50/60 transition-colors {{ $i < 3 ? 'bg-yellow-50/20' : '' }}">
-                        <td class="px-4 py-3">
+                    <x-ui.table.row {{ $i < 3 ? 'class="bg-yellow-50/20"' : '' }}>
+                        <td class="px-4 py-4">
                             <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold {{ $i === 0 ? 'bg-yellow-100 text-yellow-700' : ($i === 1 ? 'bg-gray-100 text-gray-600' : ($i === 2 ? 'bg-amber-100 text-amber-700' : 'bg-white border border-gray-200 text-gray-500')) }}">
                                 {{ $i + 1 }}
                             </span>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4">
                             <p class="font-semibold text-gray-900">{{ $menu->nama }}</p>
                         </td>
-                        <td class="px-4 py-3 text-right text-gray-600">Rp {{ number_format($menu->harga, 0, ',', '.') }}</td>
-                        <td class="px-4 py-3 text-right font-bold text-gray-900">{{ number_format($menu->total_qty, 0, ',', '.') }} porsi</td>
-                        <td class="px-4 py-3 text-right font-bold text-emerald-600">Rp {{ number_format($menu->total_pendapatan, 0, ',', '.') }}</td>
-                        <td class="px-4 py-3 text-right text-sm text-gray-500">
+                        <td class="px-4 py-4 text-right text-gray-600">Rp {{ number_format($menu->harga, 0, ',', '.') }}</td>
+                        <td class="px-4 py-4 text-right font-bold text-gray-900">{{ number_format($menu->total_qty, 0, ',', '.') }} porsi</td>
+                        <td class="px-4 py-4 text-right font-bold text-emerald-600">Rp {{ number_format($menu->total_pendapatan, 0, ',', '.') }}</td>
+                        <td class="px-4 py-4 text-right text-sm text-gray-500">
                             @if($totalTerjual > 0)
                                 {{ number_format(($menu->total_qty / $totalTerjual) * 100, 1) }}%
                             @else
                                 0%
                             @endif
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
                     <x-empty-state icon="document-text" title="Belum ada data penjualan menu" message="Belum ada data penjualan menu pada periode ini." :colspan="6" />
                     @endforelse

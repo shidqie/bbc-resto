@@ -15,30 +15,7 @@ class PesananController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pesanan::with(['user', 'details.menu', 'pembayarans'])->latest();
-
-        if ($request->has('search') && $request->search != '') {
-            $query->where('no_pesanan', 'like', "%{$request->search}%")
-                ->orWhere('nama_pelanggan', 'like', "%{$request->search}%");
-        }
-
-        if ($request->has('jenis') && $request->jenis != '') {
-            $query->where('jenis_pesanan', $request->jenis);
-        }
-
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status_pesanan', $request->status);
-        }
-
-        $pesanans = $query->paginate(15)->withQueryString();
-
-        $stats = [
-            'baru' => Pesanan::where('status_pesanan', 'baru')->count(),
-            'diproses' => Pesanan::where('status_pesanan', 'diproses')->count(),
-            'selesai' => Pesanan::where('status_pesanan', 'selesai')->count(),
-        ];
-
-        return view('order.index', compact('pesanans', 'stats'));
+        return redirect()->route('admin.pesanan.index');
     }
 
     public function create()

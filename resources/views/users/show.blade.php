@@ -5,7 +5,7 @@
 @section('content')
 <div class="p-4 md:p-8 w-full h-full flex flex-col bg-[#F3F4F6]">
     <!-- Header Area -->
-    <x-ui.page-header title="Detail {{ $user->peran ? 'Karyawan' : 'Konsumen' }}" subtitle="Informasi lengkap {{ strtolower($user->peran ? 'karyawan' : 'konsumen') }} dan riwayat aktivitas." class="mb-6">
+    <x-ui.page-header title="Detail {{ $user->peran ? 'Karyawan' : 'Konsumen' }}" subtitle="Informasi lengkap {{ strtolower($user->peran ? 'karyawan' : 'konsumen') }} dan riwayat aktivitas." class="mb-6" :breadcrumbs="['Manajemen Pengguna', $user->peran ? 'Data Karyawan' : 'Data Konsumen', 'Detail']">
         <x-slot:actions>
             <div class="flex gap-2">
                 <button onclick="window.history.back()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
@@ -13,7 +13,7 @@
                     Kembali
                 </button>
                 @if($user->peran)
-                <a href="{{ route('users.edit', $user) }}" class="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+                <a href="{{ route('users.index') }}" class="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
                     <x-heroicon-o-pencil-square class="w-4 h-4" />
                     Ubah Data
                 </a>

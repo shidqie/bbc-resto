@@ -136,10 +136,8 @@
                                     <p id="tanggal-warning" class="text-red-500 text-xs mt-1 hidden">Pesanan nasi box maksimal H-2 sebelum acara.</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jumlah Box <span class="text-red-500">*</span></label>
-                                    <input type="number" name="jumlah_box" id="jumlahBox" min="10" value="{{ old('jumlah_box', 10) }}"
-                                           class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
-                                     <p id="jumlah-warning" class="text-red-500 text-xs mt-1 hidden">Minimal order 10 box.</p>
+                                    <x-ui.input-qty id="jumlahBox" name="jumlah_box" label="Jumlah Box" :value="old('jumlah_box', 10)" :required="true" min="10" />
+                                    <p id="jumlah-warning" class="text-red-500 text-xs mt-1 hidden">Minimal order 10 box.</p>
                                 </div>
                             </div>
                         </div>

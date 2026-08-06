@@ -120,7 +120,7 @@ class Pengguna extends Authenticatable
 
     public function pelanggan()
     {
-        return $this->hasOne(Pelanggan::class, 'user_id');
+        return $this->hasOne(Pelanggan::class, 'email', 'email');
     }
 
     public function isAdminSistem(): bool

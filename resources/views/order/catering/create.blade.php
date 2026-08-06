@@ -136,9 +136,7 @@
                             <p id="tanggal-warning" class="text-red-500 text-xs mt-1 hidden">Pemesanan catering minimal H-14 sebelum acara.</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jumlah Porsi <span class="text-red-500">*</span></label>
-                            <input type="number" name="jumlah_porsi" id="jumlahPorsi" min="50" value="{{ old('jumlah_porsi', 50) }}"
-                                   class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition bg-gray-50/50" required>
+                            <x-ui.input-qty id="jumlahPorsi" name="jumlah_porsi" label="Jumlah Porsi" :value="old('jumlah_porsi', 50)" :required="true" min="50" />
                             <p id="jumlah-warning" class="text-red-500 text-xs mt-1 hidden">Minimal order 50 porsi.</p>
                         </div>
                     </div>

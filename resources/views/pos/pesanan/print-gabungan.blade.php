@@ -14,17 +14,15 @@
             font-size: 11px; 
             color: #000;
             line-height: 1.25;
+            letter-spacing: -0.2px;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .font-bold { font-weight: bold; }
-        .header-title { font-size: 13px; font-weight: bold; margin-bottom: 6px; text-align: center; }
         .divider { border-bottom: 1px dashed #000; margin: 6px 0; }
-        .section-spacer { margin-top: 24px; border-top: 1px dashed #000; padding-top: 12px; }
+        .section-spacer { margin-top: 24px; padding-top: 12px; }
         table { width: 100%; border-collapse: collapse; }
         td { padding: 1px 0; vertical-align: top; font-size: 11px; }
         .item-name { word-break: break-word; }
-        .notes { font-size: 10px; font-style: italic; padding-left: 8px; }
         @media print {
             body { width: 100%; padding: 0; margin: 0; }
             .no-print { display: none !important; }
@@ -34,25 +32,35 @@
 <body>
 
     {{-- ═════════════════ BAGIAN 1: CHECKER MEJA ═════════════════ --}}
-    <div class="text-center" style="font-weight: bold; font-size: 13px; margin-bottom: 8px;">
+    <div class="text-center" style="margin-bottom: 8px;">
         ** CHECKER MEJA **
     </div>
     
-    <div style="font-size: 13px; font-weight: bold; margin-bottom: 2px;">
-        Queue No: {{ str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) }}
-    </div>
-    <div style="margin-bottom: 8px;">
-        Table : {{ $pesanan->meja->nomor_meja ?? '-' }}
-    </div>
-
     <table style="margin-bottom: 8px;">
         <tr>
-            <td style="width: 50%; color: #555;">Date & Time</td>
-            <td style="width: 50%; color: #555;">Staff</td>
+            <td style="width: 25%;">No</td>
+            <td style="width: 5%;">:</td>
+            <td style="width: 70%; text-align: right;">{{ $pesanan->id }}</td>
         </tr>
         <tr>
-            <td class="font-bold">{{ \Carbon\Carbon::parse($pesanan->dibuat_pada ?? now())->format('d/m/y, h:i A') }}</td>
-            <td class="font-bold">{{ auth()->user()->nama ?? 'Kasir' }}</td>
+            <td>Invoice</td>
+            <td>:</td>
+            <td style="text-align: right;">{{ $pesanan->nomor_pesanan ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Tanggal</td>
+            <td>:</td>
+            <td style="text-align: right;">{{ \Carbon\Carbon::parse($pesanan->dibuat_pada ?? now())->format('j/n/Y G:i:s') }}</td>
+        </tr>
+        <tr>
+            <td>Kasir</td>
+            <td>:</td>
+            <td style="text-align: right;">{{ auth()->user()->nama ?? 'Kasir' }}</td>
+        </tr>
+        <tr>
+            <td>Meja</td>
+            <td>:</td>
+            <td style="text-align: right;">{{ preg_replace('/[^0-9]/', '', $pesanan->meja->nomor_meja ?? '-') }}</td>
         </tr>
     </table>
 
@@ -60,7 +68,7 @@
 
     {{-- TABLE HEADER ITEM NAME & QTY --}}
     <table>
-        <tr class="font-bold">
+        <tr>
             <td>Item Name</td>
             <td class="text-right" style="width: 40px;">Qty</td>
         </tr>
@@ -72,13 +80,13 @@
     <table>
         @foreach($pesanan->detail_pesanan as $item)
         <tr>
-            <td class="item-name font-bold">
+            <td class="item-name">
                 {{ $item->menu->nama_menu ?? $item->menu->nama ?? 'Menu' }}
                 @if($item->catatan)
-                    <div class="notes">* {{ $item->catatan }}</div>
+                    <br><span style="font-style: italic;">* {{ $item->catatan }}</span>
                 @endif
             </td>
-            <td class="text-right font-bold" style="width: 40px;">
+            <td class="text-right" style="width: 40px;">
                 {{ $item->jumlah }}
             </td>
         </tr>
@@ -91,25 +99,35 @@
     {{-- ═════════════════ BAGIAN 2: CHECKER DAPUR ═════════════════ --}}
     <div class="section-spacer"></div>
 
-    <div class="text-center" style="font-weight: bold; font-size: 13px; margin-bottom: 8px;">
+    <div class="text-center" style="margin-bottom: 8px;">
         ** CHECKER DAPUR **
     </div>
     
-    <div style="font-size: 13px; font-weight: bold; margin-bottom: 2px;">
-        Queue No: {{ str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) }}
-    </div>
-    <div style="margin-bottom: 8px;">
-        Table : {{ $pesanan->meja->nomor_meja ?? '-' }}
-    </div>
-
     <table style="margin-bottom: 8px;">
         <tr>
-            <td style="width: 50%; color: #555;">Date & Time</td>
-            <td style="width: 50%; color: #555;">Staff</td>
+            <td style="width: 25%;">No</td>
+            <td style="width: 5%;">:</td>
+            <td style="width: 70%; text-align: right;">{{ $pesanan->id }}</td>
         </tr>
         <tr>
-            <td class="font-bold">{{ \Carbon\Carbon::parse($pesanan->dibuat_pada ?? now())->format('d/m/y, h:i A') }}</td>
-            <td class="font-bold">{{ auth()->user()->nama ?? 'Kasir' }}</td>
+            <td>Invoice</td>
+            <td>:</td>
+            <td style="text-align: right;">{{ $pesanan->nomor_pesanan ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Tanggal</td>
+            <td>:</td>
+            <td style="text-align: right;">{{ \Carbon\Carbon::parse($pesanan->dibuat_pada ?? now())->format('j/n/Y G:i:s') }}</td>
+        </tr>
+        <tr>
+            <td>Kasir</td>
+            <td>:</td>
+            <td style="text-align: right;">{{ auth()->user()->nama ?? 'Kasir' }}</td>
+        </tr>
+        <tr>
+            <td>Meja</td>
+            <td>:</td>
+            <td style="text-align: right;">{{ preg_replace('/[^0-9]/', '', $pesanan->meja->nomor_meja ?? '-') }}</td>
         </tr>
     </table>
 
@@ -117,7 +135,7 @@
 
     {{-- TABLE HEADER ITEM NAME & QTY --}}
     <table>
-        <tr class="font-bold">
+        <tr>
             <td>Item Name</td>
             <td class="text-right" style="width: 40px;">Qty</td>
         </tr>
@@ -129,18 +147,20 @@
     <table>
         @foreach($pesanan->detail_pesanan as $item)
         <tr>
-            <td class="item-name font-bold">
+            <td class="item-name">
                 {{ $item->menu->nama_menu ?? $item->menu->nama ?? 'Menu' }}
                 @if($item->catatan)
-                    <div class="notes">* {{ $item->catatan }}</div>
+                    <br><span style="font-style: italic;">* {{ $item->catatan }}</span>
                 @endif
             </td>
-            <td class="text-right font-bold" style="width: 40px;">
+            <td class="text-right" style="width: 40px;">
                 {{ $item->jumlah }}
             </td>
         </tr>
         @endforeach
     </table>
+    
+    <div class="divider"></div>
 
     <script>
         window.onload = function() {

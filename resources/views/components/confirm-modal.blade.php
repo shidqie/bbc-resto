@@ -33,6 +33,7 @@
 ])
 
 <div
+    id="confirm-modal-root"
     x-data="{
         open: false,
         mtitle: 'Konfirmasi Hapus',
@@ -94,7 +95,7 @@
                 const val = (self.mpromptValue || '').trim();
                 if (!val) {
                     self.open = true;
-                    if (self.$refs.promptInput) setTimeout(() => self.$refs.promptInput.focus(), 80);
+                    if (self.$refs && self.$refs.promptInput) setTimeout(() => self.$refs.promptInput.focus(), 80);
                     return;
                 }
                 if (field) field.value = val;
@@ -103,36 +104,6 @@
             form.submit();
         },
     }"
-    x-init="$nextTick(() => {
-        const self = this;
-        window.confirmDialog = function (options) {
-            options = options || {};
-            self.mtitle      = options.title || 'Konfirmasi Hapus';
-            self.mname       = options.name || '';
-            self.mmessage    = options.message || 'Anda yakin ingin menghapus data ini? Data yang dihapus tidak dapat dikembalikan.';
-            self.mconfirm    = options.confirmText || 'Hapus';
-            self.mcancel     = options.cancelText || 'Batal';
-            self.iconType    = options.type || 'danger';
-            self.mform       = options.form || null;
-            self.mformId     = options.formId || null;
-            self.mformAction = options.formAction || null;
-            self.monConfirm  = options.onConfirm || null;
-            self.promptEnabled = options.prompt || false;
-            self.promptFieldName = options.promptFieldName || 'alasan_batal';
-            self.promptPlaceholder = options.promptPlaceholder || 'Tulis alasan…';
-            self.mpromptValue = '';
-            self.open = true;
-            if (self.$refs.confirmBtn) setTimeout(() => self.$refs.confirmBtn.focus(), 80);
-        };
-        window.confirmPrompt = function (options) {
-            options = options || {};
-            options.prompt = true;
-            window.confirmDialog(options);
-        };
-        window.closeConfirmDialog = function () {
-            self.open = false;
-        };
-    })"
 >
     {{ $slot ?? '' }}
 
@@ -172,3 +143,55 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var assign = function () {
+        if (typeof window.Alpine === 'undefined') return false;
+
+        window.confirmDialog = function (options) {
+            options = options || {};
+            var root = document.getElementById('confirm-modal-root');
+            if (!root || typeof window.Alpine === 'undefined') return;
+            var d = window.Alpine.$data(root);
+            d.mtitle      = options.title || 'Konfirmasi Hapus';
+            d.mname       = options.name || '';
+            d.mmessage    = options.message || 'Anda yakin ingin menghapus data ini? Data yang dihapus tidak dapat dikembalikan.';
+            d.mconfirm    = options.confirmText || 'Hapus';
+            d.mcancel     = options.cancelText || 'Batal';
+            d.iconType    = options.type || 'danger';
+            d.mform       = options.form || null;
+            d.mformId     = options.formId || null;
+            d.mformAction = options.formAction || null;
+            d.monConfirm  = options.onConfirm || null;
+            d.promptEnabled = options.prompt || false;
+            d.promptFieldName = options.promptFieldName || 'alasan_batal';
+            d.promptPlaceholder = options.promptPlaceholder || 'Tulis alasan…';
+            d.mpromptValue = '';
+            d.open = true;
+            var btn = root.querySelector('[x-ref="confirmBtn"]');
+            if (btn) setTimeout(function () { btn.focus(); }, 80);
+        };
+
+        window.confirmPrompt = function (options) {
+            options = options || {};
+            options.prompt = true;
+            window.confirmDialog(options);
+        };
+
+        window.closeConfirmDialog = function () {
+            var root = document.getElementById('confirm-modal-root');
+            if (root && typeof window.Alpine !== 'undefined') {
+                window.Alpine.$data(root).open = false;
+            }
+        };
+
+        return true;
+    };
+
+    if (!assign()) {
+        document.addEventListener('alpine:init', assign);
+        document.addEventListener('DOMContentLoaded', assign);
+    }
+})();
+</script>

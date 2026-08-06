@@ -55,11 +55,9 @@
     <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
         {{-- Brand --}}
         <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-full bg-neutral-900 flex items-center justify-center">
-                <x-heroicon-o-shopping-bag class="w-4 h-4 text-neutral-400" />
-            </div>
+            <img src="{{ asset('images/logo-saung.png') }}" alt="BBC" class="w-9 h-9 rounded-full object-contain bg-white border border-neutral-200 p-0.5 shadow-sm shrink-0">
             <div>
-                <p class="text-sm font-semibold text-neutral-900 leading-none">BBC Resto</p>
+                <p class="text-sm font-semibold text-neutral-900 leading-none">Self Order</p>
                 <p class="text-xs text-neutral-400 mt-0.5 leading-none">Saung Babakan Cinta</p>
             </div>
         </div>
@@ -196,67 +194,16 @@
             <div class="w-9 h-9 rounded-full bg-neutral-900 text-white flex items-center justify-center text-sm font-semibold" x-text="totalQty"></div>
             <div>
                 <span class="text-xs text-neutral-400 block uppercase font-semibold tracking-wider">Total Pesanan</span>
-                <span class="text-sm font-semibold text-neutral-900" x-text="rp(totalPrice)"></span>
+                <span class="text-sm font-semibold text-neutral-900" x-text="rp(subTotal)"></span>
             </div>
         </div>
         <div class="flex items-center gap-2 bg-neutral-900 text-white px-3.5 py-2 rounded-xl text-xs font-medium">
-            Lihat Keranjang <x-heroicon-o-arrow-right class="w-3 h-3" />
+            Pesan Sekarang <x-heroicon-o-arrow-right class="w-3 h-3" />
         </div>
     </div>
 </div>
 
-{{-- ═══════════════════════════════════════════
-     MODAL: WELCOME — Input Nama & No HP
-═══════════════════════════════════════════ --}}
-<div x-show="modal==='welcome'"
-     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60"
-     x-transition.opacity>
-    <div class="relative bg-white w-full max-w-sm rounded-lg border border-neutral-200 overflow-hidden">
-        {{-- Top --}}
-        <div class="bg-neutral-900 px-6 pt-8 pb-6 text-white text-center">
-            <div class="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-3">
-                <x-heroicon-o-shopping-bag class="w-7 h-7 text-neutral-300" />
-            </div>
-            <h2 class="text-lg font-semibold leading-snug">Selamat Datang!</h2>
-            <p class="text-sm text-neutral-400 mt-1">
-                @if($selectedMeja)
-                    {{ Str::startsWith($selectedMeja->nomor_meja,'Meja') ? $selectedMeja->nomor_meja : 'Meja '.$selectedMeja->nomor_meja }}
-                    &bull; BBC Resto
-                @else
-                    BBC Resto &bull; Saung Babakan Cinta
-                @endif
-            </p>
-        </div>
 
-        {{-- Form --}}
-        <div class="p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-semibold text-neutral-500 mb-1.5 uppercase tracking-wider">
-                    Nama Pemesan <span class="text-red-400">*</span>
-                </label>
-                <input x-model="namaInput" type="text" placeholder="Masukkan nama Anda..."
-                       maxlength="60" autofocus
-                       class="w-full h-11 px-4 bg-white border border-neutral-200 rounded-xl text-sm font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-neutral-500 mb-1.5 uppercase tracking-wider">
-                    No. HP <span class="text-neutral-400 normal-case font-normal">(opsional)</span>
-                </label>
-                <input x-model="nomorHpInput" type="tel" placeholder="Contoh: 0812xxxxxxxx"
-                       maxlength="16"
-                       class="w-full h-11 px-4 bg-white border border-neutral-200 rounded-xl text-sm font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
-            </div>
-
-            <button @click="konfirmasiPemesan()"
-                    :disabled="!namaInput.trim()"
-                    :class="!namaInput.trim() ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed' : 'bg-neutral-900 text-white hover:bg-neutral-700 active:scale-[.99]'"
-                    class="w-full h-12 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mt-2">
-                <x-heroicon-o-arrow-right class="w-3 h-3" />
-                Mulai Pesan
-            </button>
-        </div>
-    </div>
-</div>
 
 {{-- ═══════════════════════════════════════════
      MODAL: DETAIL MENU
@@ -347,36 +294,32 @@
             </button>
         </div>
 
-        {{-- Metode Pembayaran --}}
+        {{-- Data Pemesan --}}
         <div class="px-5 py-3.5 bg-neutral-50/70 border-b border-neutral-100 shrink-0">
-            <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Metode Pembayaran</p>
-            <div class="grid grid-cols-2 gap-2">
-                <label @click="metodePembayaran='kasir'"
-                       :class="metodePembayaran==='kasir'
-                           ? 'border-neutral-900 bg-neutral-50'
-                           : 'border-neutral-200 bg-white hover:bg-neutral-50'"
-                       class="cursor-pointer border rounded-xl p-3 flex items-center gap-2.5 transition-all">
+            <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Data Pemesan</p>
+            <div class="space-y-3">
+                <div>
+                    <input x-model="namaInput" type="text" placeholder="Nama Anda (Wajib)"
+                           maxlength="60"
+                           class="w-full h-10 px-3 bg-white border border-neutral-200 rounded-lg text-sm font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
+                </div>
+                <div>
+                    <input x-model="nomorHpInput" type="tel" placeholder="No. HP (Opsional)"
+                           maxlength="16"
+                           class="w-full h-10 px-3 bg-white border border-neutral-200 rounded-lg text-sm font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
+                </div>
+            </div>
+            
+            <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wider mt-4 mb-2">Metode Pembayaran</p>
+            <div class="grid grid-cols-1 gap-2">
+                <label class="cursor-default border-neutral-900 bg-neutral-50 border rounded-lg p-2.5 flex items-center gap-2.5 transition-all">
                     <input type="radio" value="kasir" x-model="metodePembayaran" class="hidden">
-                    <div class="w-8 h-8 rounded-full bg-neutral-100 text-neutral-900 flex items-center justify-center text-sm shrink-0">
+                    <div class="w-7 h-7 rounded-full bg-neutral-100 text-neutral-900 flex items-center justify-center text-sm shrink-0">
                         <x-heroicon-o-currency-dollar class="w-4 h-4" />
                     </div>
                     <div>
                         <span class="block text-xs font-semibold text-neutral-900 leading-tight">Bayar di Kasir</span>
-                        <span class="block text-xs text-neutral-400 mt-0.5">Tunai / Transfer</span>
-                    </div>
-                </label>
-                <label @click="metodePembayaran='qris'"
-                       :class="metodePembayaran==='qris'
-                           ? 'border-neutral-900 bg-neutral-50'
-                           : 'border-neutral-200 bg-white hover:bg-neutral-50'"
-                       class="cursor-pointer border rounded-xl p-3 flex items-center gap-2.5 transition-all">
-                    <input type="radio" value="qris" x-model="metodePembayaran" class="hidden">
-                    <div class="w-8 h-8 rounded-full bg-neutral-100 text-neutral-900 flex items-center justify-center text-sm shrink-0">
-                        <x-heroicon-o-qr-code class="w-4 h-4" />
-                    </div>
-                    <div>
-                        <span class="block text-xs font-semibold text-neutral-900 leading-tight">Bayar QRIS</span>
-                        <span class="block text-xs text-neutral-400 mt-0.5">Scan langsung</span>
+                        <span class="block text-[10px] text-neutral-400 mt-0.5">Selesaikan pembayaran di Kasir</span>
                     </div>
                 </label>
             </div>
@@ -419,8 +362,8 @@
                     <span x-text="rp(subTotal)"></span>
                 </div>
                 <div class="flex justify-between items-center text-xs text-neutral-500 font-medium pb-2 border-b border-neutral-100">
-                    <span>PB1 (10%)</span>
-                    <span x-text="rp(totalTax)"></span>
+                    <span>Biaya Layanan (5%)</span>
+                    <span x-text="rp(totalServiceFee)"></span>
                 </div>
                 <div class="flex justify-between items-end pt-1">
                     <div>
@@ -431,8 +374,8 @@
                 </div>
             </div>
             <button @click="submit()"
-                    :disabled="sending||cart.length===0"
-                    :class="sending||cart.length===0 ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed' : 'bg-neutral-900 text-white hover:bg-neutral-700 active:scale-[.99]'"
+                    :disabled="sending||cart.length===0||!namaInput.trim()"
+                    :class="sending||cart.length===0||!namaInput.trim() ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed' : 'bg-neutral-900 text-white hover:bg-neutral-700 active:scale-[.99]'"
                     class="w-full h-12 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2">
                 <template x-if="sending">
                     <x-heroicon-o-arrow-path class="w-5 h-5 animate-spin" />
@@ -502,35 +445,48 @@
 <div x-show="modal==='success'"
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/70"
      x-transition.opacity>
-    <div class="relative bg-white w-full max-w-xs rounded-lg p-7 border border-neutral-200 text-center">
-        <div class="w-16 h-16 bg-neutral-900 text-white rounded-full flex items-center justify-center mx-auto mb-4">
-            <x-heroicon-o-check class="w-7 h-7" />
+    <div class="relative bg-white w-full max-w-sm rounded-none border border-neutral-200 text-center shadow-2xl font-mono overflow-hidden">
+        <div class="p-8">
+            <div class="w-14 h-14 bg-neutral-900 text-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <x-heroicon-o-check class="w-8 h-8" />
+            </div>
+            <h2 class="text-lg font-bold text-neutral-900 mb-1 uppercase tracking-widest">Pesanan Diterima</h2>
+            <p class="text-xs text-neutral-500 mb-6 uppercase tracking-wider">
+                Tunjukkan struk ini dan lakukan pembayaran di kasir
+            </p>
+            
+            <div class="border-y-2 border-dashed border-neutral-300 py-5 mb-6 text-left space-y-3">
+                <div class="flex justify-between text-xs">
+                    <span class="text-neutral-500 uppercase tracking-widest">KODE PESANAN</span>
+                    <span class="font-bold text-neutral-900 text-sm" x-text="lastCode"></span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-neutral-500 uppercase tracking-widest">MEJA</span>
+                    <span class="font-bold text-neutral-900">
+                        @if($selectedMeja){{ Str::startsWith($selectedMeja->nomor_meja,'Meja') ? $selectedMeja->nomor_meja : 'Meja '.$selectedMeja->nomor_meja }}@endif
+                    </span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-neutral-500 uppercase tracking-widest">NAMA</span>
+                    <span class="font-bold text-neutral-900" x-text="namaUser || 'Tamu'"></span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-neutral-500 uppercase tracking-widest">PEMBAYARAN</span>
+                    <span class="font-bold text-neutral-900 uppercase">KASIR</span>
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <button @click="if(lastId) window.open('/pos/dinein/pesanan/' + lastId + '/print-gabungan', '_blank')"
+                        class="flex-1 h-12 bg-white text-neutral-900 border-2 border-neutral-900 font-bold text-xs uppercase tracking-widest hover:bg-neutral-50 transition active:scale-[.99] flex items-center justify-center gap-2">
+                    <x-heroicon-o-arrow-down-tray class="w-4 h-4" /> Unduh
+                </button>
+                <button @click="window.location.reload()"
+                        class="flex-1 h-12 bg-neutral-900 text-white font-bold text-xs uppercase tracking-widest hover:bg-neutral-800 transition active:scale-[.99]">
+                    Tutup
+                </button>
+            </div>
         </div>
-        <h2 class="text-base font-semibold text-neutral-900 mb-1">Pesanan Terkirim!</h2>
-        <p class="text-sm text-neutral-400 mb-5 leading-relaxed">
-            Pesanan Anda sudah diterima. Silakan bersantai — hidangan akan segera disajikan.
-        </p>
-        <div class="bg-neutral-50 border border-neutral-200 rounded-xl p-3.5 mb-5 text-left space-y-2">
-            <div class="flex justify-between text-xs">
-                <span class="text-neutral-400">Kode Pesanan</span>
-                <span class="font-mono font-semibold text-neutral-900" x-text="lastCode"></span>
-            </div>
-            <div class="flex justify-between text-xs">
-                <span class="text-neutral-400">Meja</span>
-                <span class="font-semibold text-neutral-900">
-                    @if($selectedMeja){{ Str::startsWith($selectedMeja->nomor_meja,'Meja') ? $selectedMeja->nomor_meja : 'Meja '.$selectedMeja->nomor_meja }}@endif
-                </span>
-            </div>
-            <div class="flex justify-between text-xs">
-                <span class="text-neutral-400">Pembayaran</span>
-                <span class="font-semibold text-neutral-900"
-                      x-text="metodePembayaran==='qris'?'QRIS (sudah dibayar)':'Bayar di Kasir'"></span>
-            </div>
-        </div>
-        <button @click="modal=null; cart=[];"
-                class="w-full h-11 bg-neutral-900 text-white font-semibold text-sm rounded-xl hover:bg-neutral-700 transition active:scale-[.99]">
-            Tambah Pesanan Lagi
-        </button>
     </div>
 </div>
 
@@ -542,7 +498,7 @@ function qrMenu(){
     const MEJA_NOMOR = '{{ $selectedMeja ? trim(preg_replace("/^meja\s*/i","", $selectedMeja->nomor_meja)) : "" }}';
 
     return {
-        q:'', cat:'all', modal: MEJA_ID ? 'welcome' : null,
+        q:'', cat:'all', modal: null,
         mejaId: MEJA_ID,
         mejaNomor: MEJA_NOMOR,
 
@@ -566,8 +522,8 @@ function qrMenu(){
         },
         get totalQty(){ return this.cart.reduce((s,c)=>s+c.qty,0); },
         get subTotal(){ return this.cart.reduce((s,c)=>s+(c.harga*c.qty),0); },
-        get totalTax(){ return this.subTotal * 0.10; },
-        get totalPrice(){ return this.subTotal + this.totalTax; },
+        get totalServiceFee(){ return this.subTotal * 0.05; },
+        get totalPrice(){ return this.subTotal + this.totalServiceFee; },
 
         // ── Cart actions ──────────────────────────────
         qty(id){ const c=this.cart.find(x=>x.id===id); return c?c.qty:0; },
@@ -599,7 +555,12 @@ function qrMenu(){
 
         // ── Submit order ──────────────────────────────
         async submit(){
-            if(!this.namaUser||!this.mejaId||!this.cart.length) return;
+            this.namaUser = this.namaInput.trim();
+            this.nomorHpUser = this.nomorHpInput.trim();
+            if(!this.namaUser||!this.mejaId||!this.cart.length) {
+                window.showToast('info', 'Nama pemesan wajib diisi.');
+                return;
+            }
             this.sending=true;
             try{
                 const r=await fetch('{{ route("qr.menu.order") }}',{

@@ -1,42 +1,42 @@
 @extends('layouts.pos')
 
 @section('content')
-<div class="flex-1 bg-gray-50 text-gray-800">
+<div class="flex-1 bg-gray-50 text-gray-800 pb-10">
     <div class="w-full p-6 space-y-5">
         {{-- PAGE HEADER --}}
-        <x-ui.page-header title="Kelola Resep Menu" subtitle="Resep (BOM) untuk menu satuan dan komposisi untuk paket — Dine In, Katering, dan Nasi Box." />
+        <x-ui.page-header title="Kelola Resep Menu" subtitle="Resep (BOM) untuk menu satuan dan komposisi untuk paket — Dine In, Katering, dan Nasi Box." :breadcrumbs="['Manajemen Menu', 'Resep Menu']" />
 
         <x-ui.alert />
 
-        {{-- Filter bar --}}
-        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
-            <form action="{{ route('resep.index') }}" method="GET" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama menu..." />
-                <x-select-input name="layanan" :options="['1' => 'Dine In', '2' => 'Katering', '3' => 'Nasi Box']" :selected="request('layanan')" placeholder="Semua Layanan" :auto-submit="true" />
-                <x-select-input name="kategori" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori')" placeholder="Semua Kategori" :auto-submit="true" />
-                <x-select-input name="status_resep" :options="['ada' => 'Sudah Ada Resep', 'belum' => 'Belum Ada Resep']" :selected="request('status_resep')" placeholder="Semua Status Resep" :auto-submit="true" />
-                <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
-                @if(request('search') || request('kategori') || request('layanan') || request('status_resep'))
-                    <a href="{{ route('resep.index') }}" class="text-sm font-medium bg-gray-50 border border-gray-200 text-gray-500 rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors shrink-0">Reset</a>
-                @endif
-            </form>
-        </div>
+        {{-- Table with integrated toolbar --}}
+        <x-ui.data-table :paginator="$menus">
+            <x-slot:toolbar>
+                <form action="{{ route('resep.index') }}" method="GET" class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 w-full">
+                    <div class="w-full xl:max-w-sm shrink-0">
+                        <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama menu..." width="w-full" />
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+                        <x-ui.multi-select name="layanan" :options="['1' => 'Dine In', '2' => 'Katering', '3' => 'Nasi Box']" :selected="request('layanan')" label="Layanan" type="radio" />
+                        <x-ui.multi-select name="kategori" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori')" label="Kategori" type="radio" />
+                        <x-ui.multi-select name="status_resep" :options="['ada' => 'Sudah Ada Resep', 'belum' => 'Belum Ada Resep']" :selected="request('status_resep')" label="Status Resep" type="radio" />
+                        @if(request('search') || request('kategori') || request('layanan') || request('status_resep'))
+                            <a href="{{ route('resep.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                        @endif
+                    </div>
+                </form>
+            </x-slot:toolbar>
 
-        {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No</th>
-                        <th class="px-4 py-3 text-left">Kode</th>
-                        <th class="px-4 py-3 text-left">Nama Menu / Paket</th>
-                        <th class="px-4 py-3 text-left">Layanan</th>
-                        <th class="px-4 py-3 text-left">Kategori</th>
-                        <th class="px-4 py-3 text-left">Status Resep</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+            <x-ui.table class="min-w-[1200px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Kode</th>
+                    <th class="px-4 py-3.5 text-left">Nama Menu / Paket</th>
+                    <th class="px-4 py-3.5 text-left">Layanan</th>
+                    <th class="px-4 py-3.5 text-left">Kategori</th>
+                    <th class="px-4 py-3.5 text-left">Status Resep</th>
+                    <th class="px-4 py-3.5 text-center">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($menus as $menu)
                     @php
                         $jenisKode = strtolower($menu->jenis_menu->kode_jenis ?? '');
@@ -56,35 +56,29 @@
                     @endphp
                     @if($isPaket)
                         {{-- Baris header paket --}}
-                        <tr class="bg-amber-50/70 border-b border-amber-100">
+                        <x-ui.table.row class="bg-amber-50/70 border-b border-amber-100">
                             <td class="px-4 py-2.5 text-gray-500 font-medium">{{ $menus->firstItem() + $loop->index }}</td>
                             <td class="px-4 py-2.5 font-mono text-xs text-gray-400">{{ $menu->kode_menu }}</td>
                             <td class="px-4 py-2.5">
                                 <div class="flex items-center gap-2">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-700">Paket</span>
+                                    <x-ui.badge color="warning" size="xs" class="uppercase">Paket</x-ui.badge>
                                     <span class="font-semibold text-gray-800">{{ $menu->nama_menu }}</span>
                                     <span class="text-xs text-gray-400 font-medium">{{ $paketItems->count() }} item</span>
                                 </div>
                             </td>
                             <td class="px-4 py-2.5">
                                 @if($jenisKode == 'catering')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-orange-50 text-orange-700">Katering</span>
+                                    <x-ui.badge color="warning" size="sm">Katering</x-ui.badge>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-violet-50 text-violet-700">Nasi Box</span>
+                                    <x-ui.badge color="gray" size="sm">Nasi Box</x-ui.badge>
                                 @endif
                             </td>
                             <td class="px-4 py-2.5 text-gray-500">{{ $menu->kategori_menu->nama_kategori ?? '-' }}</td>
                             <td class="px-4 py-2.5">
                                 @if($komposisiLengkap)
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-green-50 text-green-700">
-                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        Komposisi Lengkap
-                                    </span>
+                                    <x-ui.badge color="success" size="sm">Komposisi Lengkap</x-ui.badge>
                                 @else
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-amber-50 text-amber-700">
-                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                        Komposisi Belum Lengkap
-                                    </span>
+                                    <x-ui.badge color="warning" size="sm">Komposisi Belum Lengkap</x-ui.badge>
                                 @endif
                             </td>
                             <td class="px-4 py-2.5 text-center">
@@ -96,12 +90,12 @@
                                     'aksiStatus' => (bool) $menu->status_aktif,
                                 ])
                             </td>
-                        </tr>
+                        </x-ui.table.row>
                         {{-- Baris item komposisi paket --}}
                         @foreach($paketItems as $item)
                             @if($item->tipe_item == 'pilihan')
                                 {{-- Kelompok pilihan --}}
-                                <tr class="bg-white border-b border-dashed border-gray-100">
+                                <x-ui.table.row class="bg-white border-b border-dashed border-gray-100">
                                     <td class="px-4 py-1"></td>
                                     <td class="px-4 py-1"></td>
                                     <td class="px-4 py-1 pl-10">
@@ -115,12 +109,12 @@
                                     <td class="px-4 py-1"></td>
                                     <td class="px-4 py-1 text-gray-300">-</td>
                                     <td class="px-4 py-1"></td>
-                                </tr>
+                                </x-ui.table.row>
                                 @foreach($item->opsi as $opsi)
                                     @php
                                         $linked = $opsi->menu ?? null;
                                     @endphp
-                                    <tr class="hover:bg-gray-50/60 transition-colors">
+                                    <x-ui.table.row>
                                         <td class="px-4 py-1.5"></td>
                                         <td class="px-4 py-1.5"></td>
                                         <td class="px-4 py-1.5 pl-16">
@@ -140,13 +134,13 @@
                                                 'aksiStatus' => $linked ? (bool) $linked->status_aktif : true,
                                             ])
                                         </td>
-                                    </tr>
+                                    </x-ui.table.row>
                                 @endforeach
                             @else
                                 @php
                                     $linked = $item->menu_terkait;
                                 @endphp
-                                <tr class="hover:bg-gray-50/60 transition-colors">
+                                <x-ui.table.row>
                                     <td class="px-4 py-1.5"></td>
                                     <td class="px-4 py-1.5"></td>
                                     <td class="px-4 py-1.5 pl-10">
@@ -170,30 +164,30 @@
                                             'aksiStatus' => $linked ? (bool) $linked->status_aktif : true,
                                         ])
                                     </td>
-                                </tr>
+                                </x-ui.table.row>
                             @endif
                         @endforeach
                     @else
-                    <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-gray-500 font-medium">{{ $menus->firstItem() + $loop->index }}</td>
-                        <td class="px-4 py-3 font-mono text-sm text-gray-500">{{ $menu->kode_menu }}</td>
-                        <td class="px-4 py-3 font-medium text-gray-900">{{ $menu->nama_menu }}</td>
-                        <td class="px-4 py-3">
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 text-gray-500 font-medium align-middle">{{ $menus->firstItem() + $loop->index }}</td>
+                        <td class="px-4 py-4 align-middle font-mono text-sm text-gray-500">{{ $menu->kode_menu }}</td>
+                        <td class="px-4 py-4 align-middle font-medium text-gray-900">{{ $menu->nama_menu }}</td>
+                        <td class="px-4 py-4 align-middle">
                             @if($jenisKode == 'dine_in' || $jenisKode == 'reguler')
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700">Dine In</span>
+                                <x-ui.badge color="primary" size="sm">Dine In</x-ui.badge>
                             @elseif($jenisKode == 'catering')
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-orange-50 text-orange-700">Katering</span>
+                                <x-ui.badge color="warning" size="sm">Katering</x-ui.badge>
                             @elseif($jenisKode == 'nasi_box')
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-violet-50 text-violet-700">Nasi Box</span>
+                                <x-ui.badge color="gray" size="sm">Nasi Box</x-ui.badge>
                             @else
                                 <span class="text-gray-500">{{ $menu->jenis_menu->nama_jenis ?? '-' }}</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-gray-500">{{ $menu->kategori_menu->nama_kategori ?? '-' }}</td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle text-gray-500">{{ $menu->kategori_menu->nama_kategori ?? '-' }}</td>
+                        <td class="px-4 py-4 align-middle">
                             @include('menu.resep._status', ['menu' => $menu])
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-4 align-middle text-center">
                             @include('menu.resep._aksi', [
                                 'aksiMenuId' => $menu->id,
                                 'aksiNamaMenu' => $menu->nama_menu,
@@ -202,18 +196,15 @@
                                 'aksiStatus' => (bool) $menu->status_aktif,
                             ])
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @endif
                     @empty
                     <x-empty-state icon="document-text" title="Belum ada data menu" message="Tambahkan menu terlebih dahulu" :colspan="7" />
                     @endforelse
                 </tbody>
-            </table>
-            
-            <div class="p-4 border-t border-gray-100 bg-white">
-                {{ $menus->links() }}
-            </div>
-        </div>
+            </x-ui.table>
+        </x-ui.data-table>
+
     </div>
 </div>
 
@@ -424,7 +415,10 @@ function addBahanBakuRowResep(selId = '', qty = '', readOnly = false, keterangan
         </div>
         <div>
             <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">Takaran *</label>
-            <input type="number" step="0.01" min="0.01" name="jumlah_kebutuhan[]" value="${qty}" required placeholder="0.00" ${selDisabled} class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white text-center font-medium">
+            <div x-data="{ val: String('${qty}').replace('.', ','), format(v) { let c = String(v).replace(/[^0-9,]/g, ''); let p = c.split(','); if(p.length > 2) c = p[0] + ',' + p.slice(1).join(''); this.val = c; $refs.hidden.value = c.replace(',', '.'); } }" x-init="format(val)">
+                <input type="text" x-model="val" @input="format($event.target.value)" placeholder="0,00" ${selDisabled} ${readOnly ? '' : 'required'} class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white text-center font-medium">
+                <input type="hidden" x-ref="hidden" name="jumlah_kebutuhan[]" value="${qty}" ${selDisabled}>
+            </div>
         </div>
         <div>
             <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">Satuan</label>
@@ -589,7 +583,10 @@ function addTetapRow(data = null) {
         ${menuSatuanHtml(selId, `tetap[${idx}][menu_id]`)}
         <div>
             <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">Jumlah</label>
-            <input type="number" name="tetap[${idx}][jumlah]" value="${jumlah}" min="0.01" step="0.01" required class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 text-center font-medium">
+            <div x-data="{ val: String('${jumlah}').replace('.', ','), format(v) { let c = String(v).replace(/[^0-9,]/g, ''); let p = c.split(','); if(p.length > 2) c = p[0] + ',' + p.slice(1).join(''); this.val = c; $refs.hidden.value = c.replace(',', '.'); } }" x-init="format(val)">
+                <input type="text" x-model="val" @input="format($event.target.value)" placeholder="0,00" required class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 text-center font-medium">
+                <input type="hidden" x-ref="hidden" name="tetap[${idx}][jumlah]" value="${jumlah}">
+            </div>
         </div>
         <div>
             <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">Satuan Sajian</label>
@@ -621,11 +618,15 @@ function addKelompokRow(data = null) {
             </div>
             <div class="w-20">
                 <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">Min</label>
-                <input type="number" name="kelompok[${idx}][minimum_pilihan]" value="${min}" min="0" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none text-center">
+                <div x-data="{ val: '${min}', format(v) { this.val = String(v).replace(/[^0-9]/g, ''); } }">
+                    <input type="text" name="kelompok[${idx}][minimum_pilihan]" x-model="val" @input="format($event.target.value)" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none text-center">
+                </div>
             </div>
             <div class="w-20">
                 <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">Maks</label>
-                <input type="number" name="kelompok[${idx}][maksimum_pilihan]" value="${max}" min="0" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none text-center">
+                <div x-data="{ val: '${max}', format(v) { this.val = String(v).replace(/[^0-9]/g, ''); } }">
+                    <input type="text" name="kelompok[${idx}][maksimum_pilihan]" x-model="val" @input="format($event.target.value)" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none text-center">
+                </div>
             </div>
             <button type="button" onclick="this.closest('.kelompok-row').remove()" class="w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="Hapus kelompok">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -649,7 +650,10 @@ function opsiHtml(kelIdx, o = null) {
         <div class="opsi-row grid grid-cols-[1.6fr_80px_110px_auto] gap-2 items-center bg-white border border-gray-200 rounded-lg p-1.5">
             ${menuSatuanHtml(selId, `kelompok[${kelIdx}][opsi][][menu_id]`)}
             <div>
-                <input type="number" name="kelompok[${kelIdx}][opsi][][jumlah]" value="${jumlah}" min="0.01" step="0.01" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none text-center font-medium">
+                <div x-data="{ val: String('${jumlah}').replace('.', ','), format(v) { let c = String(v).replace(/[^0-9,]/g, ''); let p = c.split(','); if(p.length > 2) c = p[0] + ',' + p.slice(1).join(''); this.val = c; $refs.hidden.value = c.replace(',', '.'); } }" x-init="format(val)">
+                    <input type="text" x-model="val" @input="format($event.target.value)" placeholder="0,00" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none text-center font-medium">
+                    <input type="hidden" x-ref="hidden" name="kelompok[${kelIdx}][opsi][][jumlah]" value="${jumlah}">
+                </div>
             </div>
             <div>
                 <select name="kelompok[${kelIdx}][opsi][][satuan_sajian]" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none bg-white">${satuanSajianHtml(satuan)}</select>

@@ -34,43 +34,40 @@
             <x-slot:toolbar>
                 <form action="{{ route('pesanan.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama / Meja…" />
-                    <x-select-input name="jenis" :options="['dine_in' => 'Dine In', 'catering' => 'Katering', 'nasi_box' => 'Nasi Box']" :selected="request('jenis')" placeholder="Semua Jenis" :auto-submit="true" />
-                    <x-select-input name="status" :options="['baru' => 'Baru', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status')" placeholder="Semua Status" :auto-submit="true" />
-                    <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+                    <x-ui.multi-select name="jenis" :options="['dine_in' => 'Dine In', 'catering' => 'Katering', 'nasi_box' => 'Nasi Box']" :selected="request('jenis')" label="Jenis" type="radio" />
+                    <x-ui.multi-select name="status" :options="['baru' => 'Baru', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status')" label="Status" type="radio" />
                     @if(request()->hasAny(['search', 'jenis', 'status']))
                         <a href="{{ route('pesanan.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
                     @endif
                 </form>
             </x-slot:toolbar>
 
-            <table class="w-full text-sm min-w-[900px]">
-                <thead>
-                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No</th>
-                        <th class="px-4 py-3 text-left">Info Pesanan</th>
-                        <th class="px-4 py-3 text-left">Pelanggan &amp; Lokasi</th>
-                        <th class="px-4 py-3 text-left">Rincian Menu</th>
-                        <th class="px-4 py-3 text-left">Pembayaran</th>
-                        <th class="px-4 py-3 text-left">Status Pesanan</th>
-                        <th class="px-4 py-3 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+            <x-ui.table class="min-w-[900px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Info Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">Pelanggan &amp; Lokasi</th>
+                    <th class="px-4 py-3.5 text-left">Rincian Menu</th>
+                    <th class="px-4 py-3.5 text-left">Pembayaran</th>
+                    <th class="px-4 py-3.5 text-left">Status Pesanan</th>
+                    <th class="px-4 py-3.5 text-right">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($pesanans as $i => $p)
-                    <tr class="hover:bg-gray-50/60 transition-colors group align-top">
-                        <td class="px-4 py-3 text-sm text-gray-500 font-medium">{{ $pesanans->firstItem() + $i }}</td>
+                    <x-ui.table.row class="align-top">
+                        <td class="px-4 py-4 text-sm text-gray-500 font-medium">{{ $pesanans->firstItem() + $i }}</td>
 
                         {{-- Info Pesanan --}}
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4">
                             <p class="font-semibold text-gray-900 font-mono text-xs">{{ $p->no_pesanan }}</p>
                             <p class="text-xs text-gray-400 mt-0.5">{{ $p->tanggal_pesanan ? $p->tanggal_pesanan->format('d M Y, H:i') : '-' }}</p>
-                            <span class="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-xl bg-blue-50 text-blue-700 uppercase">
+                            <x-ui.badge color="primary" size="sm" class="mt-1 uppercase">
                                 {{ str_replace('_', ' ', $p->jenis_pesanan) }}
-                            </span>
+                            </x-ui.badge>
                         </td>
 
                         {{-- Pelanggan & Lokasi --}}
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4">
                             @php
                                 $namaPelanggan = $p->nama_pelanggan ?? 'Pelanggan Umum';
                                 $parts = explode(' - ', $namaPelanggan);
@@ -87,12 +84,12 @@
                                 <p class="text-xs text-emerald-600 font-medium mt-0.5">{{ $phone }}</p>
                             @endif
                             @if($p->no_meja)
-                                <span class="inline-block mt-1 text-xs font-semibold px-1.5 py-0.5 rounded-xl bg-amber-50 text-amber-800">Meja {{ $p->no_meja }}</span>
+                                <x-ui.badge color="warning" size="sm" class="mt-1">Meja {{ $p->no_meja }}</x-ui.badge>
                             @endif
                         </td>
 
                         {{-- Rincian Menu --}}
-                        <td class="px-4 py-3 max-w-[220px]">
+                        <td class="px-4 py-4 max-w-[220px]">
                             @if($p->details && $p->details->count() > 0)
                                 <div class="space-y-0.5">
                                     @foreach($p->details->take(2) as $d)
@@ -111,7 +108,7 @@
                         </td>
 
                         {{-- Pembayaran --}}
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4">
                             <p class="font-semibold text-gray-900 text-sm">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</p>
                             @if($p->status_pembayaran == 'lunas')
                                 <x-ui.badge color="success" dot>Lunas</x-ui.badge>
@@ -123,7 +120,7 @@
                         </td>
 
                         {{-- Status Pesanan --}}
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4">
                             <form action="{{ route('pesanan.update-status', $p->id) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <select name="status_pesanan" onchange="this.form.submit()"
@@ -141,19 +138,19 @@
                         </td>
 
                         {{-- Aksi --}}
-                        <td class="px-4 py-3 text-right">
+                        <td class="px-4 py-4 text-right">
                             <div class="flex items-center justify-end gap-1.5">
-                                <a href="{{ route('pesanan.show', $p->id) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
+                                <a href="{{ route('pesanan.show', $p->id) }}" title="Detail" class="text-gray-500 transition hover:text-gray-900">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
                                 </a>
                             </div>
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
                     <x-empty-state icon="clipboard" title="Belum ada data pesanan" message="Tidak ada data pesanan." :colspan="7" />
                     @endforelse
                 </tbody>
-            </table>
+            </x-ui.table>
         </x-ui.data-table>
 
     </div>

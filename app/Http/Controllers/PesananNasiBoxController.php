@@ -78,7 +78,8 @@ class PesananNasiBoxController extends Controller
         $ongkir = ($request->metode_pengiriman === 'delivery') ? (($request->jarak_km ?? 1) * 5000) : 0;
         $totalTagihan = $subtotal + $ongkir;
 
-        $pesanan = DB::transaction(function () use ($request, $paket, $subtotal, $totalTagihan, $ongkir) {
+        try {
+            $pesanan = DB::transaction(function () use ($request, $paket, $subtotal, $totalTagihan, $ongkir) {
             $pelanggan = Auth::guard('pelanggan')->check()
                 ? Auth::guard('pelanggan')->user()
                 : Pelanggan::firstOrCreate(
@@ -128,8 +129,24 @@ class PesananNasiBoxController extends Controller
                 ]);
             }
 
+            // Deduct stok bahan baku
+            $kebutuhanService = app(\App\Services\KebutuhanBahanService::class);
+            $pesanan->load('detail_pesanan.menu');
+            $stokCukup = $kebutuhanService->deductBahanPesanan($pesanan, 'harian');
+
+            if (!$stokCukup) {
+                throw new \Exception('StokBahanTidakCukup');
+            }
+
             return $pesanan;
         });
+
+        } catch (\Exception $e) {
+            if ($e->getMessage() === 'StokBahanTidakCukup') {
+                return redirect()->back()->with('error', 'Pesanan gagal diproses karena stok bahan baku harian tidak mencukupi.');
+            }
+            throw $e;
+        }
 
         return redirect()->route('pesanan.bayar', $pesanan->nomor_pesanan)
             ->with('success', 'Pesanan Nasi Box berhasil dibuat!');
@@ -233,14 +250,12 @@ class PesananNasiBoxController extends Controller
         $request->validate(['status' => 'required']);
 
         $statusMap = [
-            'ditinjau' => 1,
-            'menunggu' => 1,
-            'terkonfirmasi' => 2,
-            'dikonfirmasi' => 2,
-            'diproses' => 3,
-            'menunggu_pengiriman' => 4,
-            'siap' => 4,
-            'dikirim' => 5,
+            'menunggu_pembayaran' => 7,
+            'terkonfirmasi' => 8,
+            'proses_pengadaan' => 9,
+            'bahan_diterima' => 10,
+            'sedang_produksi' => 11,
+            'produksi_selesai' => 12,
             'selesai' => 5,
             'dibatalkan' => 6,
         ];
@@ -258,14 +273,27 @@ class PesananNasiBoxController extends Controller
             return back()->with('success', 'Pesanan berhasil dibatalkan.');
         }
 
-        if ($status == 3 && $pesanan->status_pesanan_id < 3) {
-            // FR-10: Nasi Box memotong stok saat PRODUKSI DIMULAI.
+        // Jika status berpindah ke Sedang Produksi (ID 11) dan belum pernah dipotong stok
+        if ($status == 11 && $pesanan->status_pesanan_id < 11) {
             app(OrderService::class)->potongStokPesanan($pesanan);
-            $pesanan->update(['status_pesanan_id' => 3]);
-        } elseif ($status == 5) {
-            $pesanan->update(['status_pesanan_id' => 5]);
-        } else {
-            $pesanan->update(['status_pesanan_id' => $status]);
+        }
+        
+        $pesanan->update(['status_pesanan_id' => $status]);
+
+        // Jika metode pengiriman = diantar dan status = Produksi Selesai
+        if ($status == 12 && $pesanan->metode_pengiriman === 'diantar') {
+            // Cek apakah sudah ada di pengantaran
+            if (!$pesanan->pengantaran) {
+                // Buat data pengantaran dengan status Menunggu (ID 1)
+                $pesanan->pengantaran()->create([
+                    'nomor_pengantaran' => 'DO-' . time() . '-' . $pesanan->id,
+                    'status_pengantaran_id' => 1,
+                    'jadwal_pengantaran' => $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->tanggal_acara . ' ' . ($pesanan->jadwal_pesanan->waktu_pengantaran ?? '00:00:00') : now(),
+                    'nama_penerima' => $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->nama_penerima : $pesanan->pelanggan->nama ?? 'Unknown',
+                    'nomor_telepon_penerima' => $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->nomor_telepon_penerima : $pesanan->pelanggan->telepon ?? '000',
+                    'alamat_pengantaran' => $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->alamat_pengantaran : 'Alamat belum diatur',
+                ]);
+            }
         }
 
         return back()->with('success', 'Status pesanan berhasil diperbarui.');

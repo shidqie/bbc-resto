@@ -5,14 +5,13 @@
 @section('content')
 <div class="flex flex-col h-full bg-white">
     {{-- Header --}}
-    <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0 bg-white sticky top-0 z-10 shadow-sm">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('admin.pesanan.index') }}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors border border-slate-200">
-                <x-heroicon-o-arrow-left class="w-5 h-5" />
-            </a>
-            <div>
-                <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">
-                    {{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }}
+    <div class="px-6 py-5 border-b border-gray-100 shrink-0 bg-white sticky top-0 z-10 shadow-sm">
+        <x-ui.page-header
+            title="{{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }}"
+            subtitle="Dibuat {{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('d F Y, H:i') }} &bull; {{ optional($pesanan->jenis_pesanan)->nama_jenis ?? '-' }}"
+            :breadcrumbs="['Penjualan', 'Semua Pesanan', 'Detail']">
+            <x-slot:actions>
+                <div class="flex items-center gap-2">
                     @php
                         $color = 'gray';
                         if($pesanan->status_pesanan_id == 5) $color = 'emerald';
@@ -23,13 +22,13 @@
                     <span class="px-2.5 py-1 bg-{{$color}}-50 text-{{$color}}-700 border border-{{$color}}-200 rounded-lg text-xs font-extrabold uppercase tracking-wider shadow-sm">
                         {{ optional($pesanan->status_pesanan)->nama_status ?? 'Unknown' }}
                     </span>
-                </h3>
-                <p class="text-xs text-gray-500 mt-1">
-                    <x-heroicon-o-clock class="mr-1 w-5 h-5" /> Dibuat: {{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('d F Y, H:i') }} &bull; 
-                    <span class="font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-xl">{{ optional($pesanan->jenis_pesanan)->nama_jenis ?? '-' }}</span>
-                </p>
-            </div>
-        </div>
+                    <a href="{{ route('admin.pesanan.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
+                        <x-heroicon-o-arrow-left class="w-4 h-4" />
+                        Kembali
+                    </a>
+                </div>
+            </x-slot:actions>
+        </x-ui.page-header>
     </div>
 
     {{-- Body --}}
@@ -44,7 +43,7 @@
                 <table class="w-full text-sm text-left">
                     <tbody class="divide-y divide-gray-100">
                         <tr class="hover:bg-slate-50">
-                            <td class="px-5 py-3 font-semibold text-gray-500 w-1/3">ID Pesanan</td>
+                            <td class="px-5 py-3 font-semibold text-gray-500 w-1/3">Kode Pesanan</td>
                             <td class="px-5 py-3 text-gray-900 font-bold">{{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }}</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
@@ -95,7 +94,7 @@
                         </tr>
                         <tr class="hover:bg-slate-50">
                             @php
-                                $totalBayar = $pesanan->pembayaran->sum('jumlah_bayar');
+                                $totalBayar = $pesanan->pembayaran->sum('jumlah_dibayar');
                                 if($totalBayar >= $pesanan->total_tagihan && $pesanan->total_tagihan > 0) {
                                     $payStatus = 'Lunas';
                                 } elseif($totalBayar > 0) {
@@ -259,7 +258,7 @@
                             <tbody>
                                 @php
                                     $dpAmount = $pesanan->total_tagihan * 0.5;
-                                    $totalBayar = $pesanan->pembayaran->sum('jumlah_bayar');
+                                    $totalBayar = $pesanan->pembayaran->sum('jumlah_dibayar');
                                     $dpPaid = $totalBayar >= $dpAmount;
                                     $lunasPaid = $totalBayar >= $pesanan->total_tagihan;
                                     $jtDp = \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('d F Y');
@@ -497,7 +496,7 @@
                         </div>
                         
                         @php
-                            $totalBayar = $pesanan->pembayaran->sum('jumlah_bayar');
+                            $totalBayar = $pesanan->pembayaran->sum('jumlah_dibayar');
                             $sisa = max(0, $pesanan->total_tagihan - $totalBayar);
                         @endphp
                         <div class="flex justify-between items-center text-gray-600 font-medium mt-1">
@@ -516,7 +515,7 @@
                             <p class="text-xs text-gray-500 mb-1">Metode Pembayaran</p>
                             <p class="text-sm font-bold text-gray-900">
                                 @if($pesanan->pembayaran->count() > 0)
-                                    {{ $pesanan->pembayaran->last()->metode_pembayaran->nama_metode ?? 'Tunai' }}
+                                    {{ $pesanan->pembayaran->last()->metode_pembayaran ?? 'Tunai' }}
                                 @else
                                     Belum dipilih
                                 @endif
@@ -553,7 +552,7 @@
             <div class="px-5 py-4 border-b border-gray-100 bg-slate-50/50 flex justify-between items-center">
                 <h4 class="text-sm font-bold text-gray-900"><x-heroicon-o-wallet class="mr-1.5 text-gray-400 w-5 h-5" /> Status & Riwayat Pembayaran</h4>
                 @php
-                    $terbayar = $pesanan->pembayaran->sum('jumlah_bayar');
+                    $terbayar = $pesanan->pembayaran->sum('jumlah_dibayar');
                     $sisa = $pesanan->total_tagihan - $terbayar;
                 @endphp
                 @if($sisa <= 0 && $pesanan->total_tagihan > 0)
@@ -580,7 +579,7 @@
                         <div class="text-right">
                             <span class="block text-sm font-black text-emerald-600">+ Rp{{ number_format($bayar->jumlah_bayar, 0, ',', '.') }}</span>
                             @if($bayar->diproses_oleh)
-                                <span class="block text-xs text-gray-400 mt-1">oleh {{ optional($bayar->diproses_oleh_pengguna)->nama ?? 'Kasir' }}</span>
+                                <span class="block text-xs text-gray-400 mt-1">oleh {{ optional($bayar->diverifikasi_oleh_pengguna)->nama ?? 'Kasir' }}</span>
                             @endif
                         </div>
                     </div>

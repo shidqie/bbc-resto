@@ -7,11 +7,11 @@
 @section('title') {{ $jenis == 'nasi_box' ? 'Menu Nasi Box' : ($jenis == 'catering' ? 'Menu Katering' : 'Paket Menu') }} @endsection
 
 @section('content')
-<div class="flex-1 bg-gray-50 text-gray-800">
+<div class="flex-1 bg-gray-50 text-gray-800 pb-10">
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <x-ui.page-header title="Manajemen Menu & Paket" subtitle="Kelola menu berdasarkan layanan dan kategorinya.">
+        <x-ui.page-header title="Manajemen Menu & Paket" subtitle="Kelola menu berdasarkan layanan dan kategorinya." :breadcrumbs="['Manajemen Menu', 'Paket']">
             <x-slot:actions>
                 <button onclick="openPaketForm()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -35,36 +35,32 @@
             </a>
         </div>
 
-        {{-- Filter Bar --}}
-        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
-            <form action="{{ route('paket-catering.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
-                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama paket…" width="w-full sm:w-56" />
-                <input type="hidden" name="jenis" value="{{ $jenis }}">
-                <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
-            </form>
-        </div>
-
         {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No</th>
-                        <th class="px-4 py-3 text-left">Foto</th>
-                        <th class="px-4 py-3 text-left">Nama Paket</th>
-                        <th class="px-4 py-3 text-left">Harga / Porsi</th>
-                        <th class="px-4 py-3 text-left">Deskripsi</th>
-                        <th class="px-4 py-3 text-left">Item Menu</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+        <x-ui.data-table>
+            <x-slot:toolbar>
+                <form action="{{ route('paket-catering.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
+                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama paket…" width="w-full sm:w-56" />
+                    <input type="hidden" name="jenis" value="{{ $jenis }}">
+                </form>
+            </x-slot:toolbar>
+
+            <x-ui.table class="min-w-[900px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Foto</th>
+                    <th class="px-4 py-3.5 text-left">Nama Paket</th>
+                    <th class="px-4 py-3.5 text-left">Harga / Porsi</th>
+                    <th class="px-4 py-3.5 text-left">Deskripsi</th>
+                    <th class="px-4 py-3.5 text-left">Item Menu</th>
+                    <th class="px-4 py-3.5 text-center">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($pakets as $paket)
-                    <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">
                             {{ $loop->iteration }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             @if($paket->foto)
                                 <img src="{{ Storage::url($paket->foto) }}" alt="{{ $paket->nama_menu }}" class="w-10 h-10 rounded-lg object-cover">
                             @else
@@ -73,52 +69,45 @@
                                 </div>
                             @endif
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             <p class="font-semibold text-gray-900 leading-tight">{{ $paket->nama_menu }}</p>
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-900 font-semibold">
+                        <td class="px-4 py-4 align-middle text-sm text-gray-900 font-semibold">
                             Rp {{ number_format($paket->harga_jual, 0, ',', '.') }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             @if($paket->deskripsi)
                                 <p class="text-sm text-gray-500 max-w-xs truncate" title="{{ $paket->deskripsi }}">{{ $paket->deskripsi }}</p>
                             @else
                                 <span class="text-xs text-gray-400">—</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3">
-                            <span class="inline-block text-xs font-medium text-gray-700 bg-gray-100 rounded-full px-2.5 py-0.5">
-                                {{ $paket->komponen_paket_count }} Item Menu
-                            </span>
+                        <td class="px-4 py-4 align-middle">
+                            <x-ui.badge color="gray" size="sm">{{ $paket->komponen_paket_count }} Item Menu</x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 text-center text-sm font-medium">
-                            <div class="flex items-center justify-center gap-1.5">
+                        <td class="px-4 py-4 align-middle text-center">
+                            <div class="flex items-center justify-center gap-2">
                                 {{-- View (Detail) --}}
-                                <button onclick="openPaketDrawer({{ json_encode($paket->load('komponen_paket.opsi')) }}, true)" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </button>
+                                <x-ui.action-button onclick="openPaketDrawer({{ json_encode($paket->load('komponen_paket.opsi')) }}, true)" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
                                 {{-- Edit (Update) --}}
-                                <button onclick="openPaketForm({{ $paket->id }})" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                    <x-heroicon-o-pencil-square class="w-3 h-3" />
-                                </button>
+                                <x-ui.action-button onclick="openPaketForm({{ $paket->id }})" title="Ubah">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                </x-ui.action-button>
                                 {{-- Delete (Hapus) --}}
-                                <button onclick="openDeleteModal({{ $paket->id }}, '{{ addslashes($paket->nama_menu) }}')" title="Hapus" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                    <x-heroicon-o-trash class="w-3 h-3" />
-                                </button>
+                                <x-ui.action-button onclick="openDeleteModal({{ $paket->id }}, '{{ addslashes($paket->nama_menu) }}')" title="Hapus">
+                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                </x-ui.action-button>
                             </div>
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
-                    <tr>
-                        <td colspan="7" class="py-14 text-center text-gray-400">
-                            <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                            <p class="text-sm font-medium">Belum ada paket terdaftar.</p>
-                        </td>
-                    </tr>
+                    <x-empty-state icon="document-text" title="Belum ada paket terdaftar." message="Tambahkan paket baru menggunakan tombol di atas." :colspan="7" />
                     @endforelse
                 </tbody>
-            </table>
-        </div>
+            </x-ui.table>
+        </x-ui.data-table>
 
     </div>
 </div>
@@ -246,19 +235,7 @@
 
                 {{-- Item Menu --}}
                 <div class="pt-2 border-t border-gray-100">
-                    <div class="flex items-center justify-between mb-3">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-700">Item Menu & Pilihan</p>
-                            <p class="text-xs text-gray-400">Kelompokkan menu dalam pill pilihan (seperti Aneka Sup, Aneka Daging)</p>
-                        </div>
-                        <button type="button" onclick="addKomponenForm()" class="text-sm font-medium text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 transition-colors flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            Tambah
-                        </button>
-                    </div>
-                    <div id="komponenFormContainer" class="space-y-3">
-                        {{-- JS rendered rows --}}
-                    </div>
+                    @include('menu.paket.partials.komponen-builder', ['existingKomponen' => []])
                 </div>
             </div>
 
@@ -303,7 +280,6 @@
 <script>
 const BASE_URL = '{{ url('/') }}';
 const paketsData = @json($pakets->load('komponen_paket.opsi'));
-let kompFormIndex = 0;
 
 // ═══ DRAWER: VIEW DETAIL ═══
 function openPaketDrawer(paket, isView = true) {
@@ -394,14 +370,9 @@ function openPaketForm(id = null) {
     document.getElementById('fpDeskripsi').value = paket?.deskripsi ?? '';
     document.getElementById('fpFoto').value = '';
 
-    // Baris item menu
-    document.getElementById('komponenFormContainer').innerHTML = '';
-    kompFormIndex = 0;
-    if (paket && paket.komponen_paket && paket.komponen_paket.length > 0) {
-        paket.komponen_paket.forEach(k => addKomponenForm(k));
-    } else {
-        addKomponenForm();
-    }
+    // Reset komponen builder (Alpine)
+    window.dispatchEvent(new CustomEvent('set-readonly', { detail: false }));
+    window.dispatchEvent(new CustomEvent('set-komponens', { detail: (paket && paket.komponen_paket) ? paket.komponen_paket : [] }));
 
     if (paket) {
         document.getElementById('formPaket').action = `${BASE_URL}/paket-catering/${paket.id}`;
@@ -423,48 +394,6 @@ function closePaketForm() {
         drawer.classList.add('hidden');
         drawer.style.display = '';
     }, 300);
-}
-
-function addKomponenForm(data = null) {
-    const container = document.getElementById('komponenFormContainer');
-    const idx = kompFormIndex++;
-    const namaVal = data ? data.nama_komponen : '';
-    const tipeVal = data ? data.tipe_komponen : 'choice';
-    const urutanVal = data ? data.urutan : (container.children.length + 1);
-    let pilihanText = '';
-    if (data && data.opsi) {
-        pilihanText = data.opsi.map(o => o.nama_pilihan).join(', ');
-    }
-
-    const html = `
-        <div class="komponen-card bg-gray-50/80 border border-gray-200/90 p-4 rounded-xl relative space-y-3" id="fpkomp_${idx}">
-            <button type="button" onclick="document.getElementById('fpkomp_${idx}').remove()" class="absolute top-3.5 right-3.5 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-xl transition-colors" title="Hapus Item Menu">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pr-10">
-                <div class="md:col-span-3">
-                    <label class="block text-sm font-bold text-gray-600 uppercase tracking-wide mb-1">Nama Item Menu</label>
-                    <input type="text" name="komponen[${idx}][nama_komponen]" required value="${namaVal}" placeholder="Cth: Aneka sup / Sayuran" class="w-full text-sm font-bold px-3.5 py-2 border border-gray-200 bg-white rounded-xl focus:border-[#0D3024] outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-600 uppercase tracking-wide mb-1">Tipe Pilihan</label>
-                    <select name="komponen[${idx}][tipe]" required class="w-full text-sm font-bold px-3.5 py-2 border border-gray-200 bg-white rounded-xl focus:border-[#0D3024] outline-none">
-                        <option value="choice" ${tipeVal === 'pilihan' ? 'selected' : ''}>Pilih 1 (Pilihan Konsumen)</option>
-                        <option value="fixed" ${tipeVal === 'tetap' ? 'selected' : ''}>Pasti Dapat (Semua)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-600 uppercase tracking-wide mb-1">Urutan Tampil</label>
-                    <input type="number" name="komponen[${idx}][urutan]" required value="${urutanVal}" class="w-full text-sm font-bold px-3.5 py-2 border border-gray-200 bg-white rounded-xl focus:border-[#0D3024] outline-none">
-                </div>
-            </div>
-            <div class="flex flex-col mb-2.5">
-                <label class="text-sm font-extrabold text-gray-700 uppercase tracking-wide mb-1">Pilihan Menu (Jika tipe pilihan):</label>
-                <input type="text" name="komponen[${idx}][pilihan]" value="${pilihanText}" placeholder="Cth: Nasi Goreng, Mie Goreng" class="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none w-full focus:border-[#0D3024]">
-            </div>
-        </div>`;
-
-    container.insertAdjacentHTML('beforeend', html);
 }
 
 // ═══ MODAL: KONFIRMASI HAPUS ═══

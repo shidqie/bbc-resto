@@ -8,18 +8,16 @@ use App\Models\Menu;
 use App\Services\DineInService;
 use App\Services\MidtransService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class QrMenuController extends Controller
 {
     protected $dineInService;
 
-    protected $midtransService;
-
-    public function __construct(DineInService $dineInService, MidtransService $midtransService)
+    public function __construct(DineInService $dineInService)
     {
         $this->dineInService = $dineInService;
-        $this->midtransService = $midtransService;
     }
 
     /**
@@ -27,7 +25,9 @@ class QrMenuController extends Controller
      */
     public function scanner()
     {
-        return view('menu.qr-menu.scanner');
+        $mejas = Meja::orderBy('id')->get();
+
+        return view('menu.qr-menu.scanner', compact('mejas'));
     }
 
     /**
@@ -51,23 +51,40 @@ class QrMenuController extends Controller
         // Fetch kategori (urut sesuai id: Paket Nasi Liwet → Minuman Non-Coffee)
         $kategoris = KategoriMenu::orderBy('id', 'asc')->get();
 
-        // Fetch menu Dine-In aktif
-        $rawMenus = Menu::with(['kategori_menu'])
+        // Fetch menu Dine-In aktif, beserta resep & stok bahan baku
+        $rawMenus = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.stok_relasi'])
             ->where(function ($q) {
                 $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
             })
             ->where('status_aktif', true)
             ->get();
 
+        // Hitung menu yang habis berdasarkan stok bahan baku (sama seperti DineInController)
+        $menuHabisIds = $rawMenus->filter(function ($menu) {
+            if ($menu->resep_menu->isEmpty()) {
+                return false; // Jika tidak ada resep, anggap tersedia
+            }
+            foreach ($menu->resep_menu as $resep) {
+                $bahan = $resep->bahan_baku;
+                if (!$bahan) continue;
+                $stok = (float) ($bahan->stok_relasi->jumlah_stok ?? 0);
+                $kebutuhan = (float) ($resep->jumlah ?? 0);
+                if ($kebutuhan > 0 && $stok < $kebutuhan) {
+                    return true; // Stok tidak cukup → menu habis
+                }
+            }
+            return false;
+        })->pluck('id')->toArray();
+
         $menus = $rawMenus->map(fn ($m) => [
-            'id' => $m->id,
-            'nama' => $m->nama_menu ?? $m->nama ?? 'Menu',
-            'harga' => (float) ($m->harga_jual ?? 0),
-            'foto' => $m->foto,
-            'deskripsi' => $m->deskripsi,
-            'kategori_menu_id' => $m->kategori_menu_id,
-            'status' => $m->status_aktif ? 'aktif' : 'habis',
-            'is_habis' => false,
+            'id'              => $m->id,
+            'nama'            => $m->nama_menu ?? $m->nama ?? 'Menu',
+            'harga'           => (float) ($m->harga_jual ?? 0),
+            'foto'            => $m->foto,
+            'deskripsi'       => $m->deskripsi,
+            'kategori_menu_id'=> $m->kategori_menu_id,
+            'status'          => (in_array($m->id, $menuHabisIds)) ? 'habis' : ($m->status_aktif ? 'aktif' : 'habis'),
+            'is_habis'        => in_array($m->id, $menuHabisIds),
         ]);
 
         return view('menu.qr-menu.index', compact('kategoris', 'menus', 'selectedMeja'));
@@ -91,6 +108,8 @@ class QrMenuController extends Controller
         ]);
 
         try {
+            DB::beginTransaction();
+
             $staffId = 1; // Self-order by customer → gunakan default system staff
 
             $pesanan = $this->dineInService->createOrder(
@@ -101,39 +120,19 @@ class QrMenuController extends Controller
                 $staffId
             );
 
-            $kodePesanan = $pesanan->kode_pesanan ?? 'DIN-'.$pesanan->id;
-            $metode = $request->metode_pembayaran ?? 'kasir';
-            $qrisData = null;
-
-            if ($metode === 'qris') {
-                $totalAmount = 0;
-                foreach ($request->items as $item) {
-                    $m = Menu::find($item['menu_id']);
-                    if ($m) {
-                        $totalAmount += (($m->harga_jual ?? 0) * $item['qty']);
-                    }
-                }
-
-                $qrisData = $this->midtransService->createQrisPayment(
-                    (int) $totalAmount,
-                    $kodePesanan,
-                    ['first_name' => $request->nama_konsumen]
-                );
-            }
+            DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => $metode === 'qris'
-                    ? 'Pesanan dibuat! Silakan scan QRIS untuk membayar.'
-                    : 'Pesanan berhasil dikirim ke kasir!',
-                'kode_pesanan' => $kodePesanan,
+                'message' => 'Pesanan berhasil dikirim. Anda dapat melihat detail pesanan atau melakukan pembayaran kasir.',
                 'pesanan_id' => $pesanan->id,
-                'metode_pembayaran' => $metode,
-                'qris' => $qrisData,
+                'kode_pesanan' => $pesanan->kode_pesanan,
+                'status' => 'pending'
             ]);
 
         } catch (\Exception $e) {
-            Log::error('QR Menu storeOrder Error: '.$e->getMessage());
+            DB::rollBack();
+            Log::error('Order submission error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,

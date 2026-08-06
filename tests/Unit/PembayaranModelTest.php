@@ -157,7 +157,7 @@ class PembayaranModelTest extends TestCase
         $this->assertTrue(method_exists($pembayaran, 'metode_pembayaran'));
         $this->assertTrue(method_exists($pembayaran, 'status_pembayaran'));
         $this->assertTrue(method_exists($pembayaran, 'jenis_pembayaran'));
-        $this->assertTrue(method_exists($pembayaran, 'diproses_oleh_pengguna'));
+        $this->assertTrue(method_exists($pembayaran, 'diverifikasi_oleh_pengguna'));
     }
 
     /** @test */

@@ -220,4 +220,42 @@ class KebutuhanBahanService
 
         return $this->kebutuhanPaket($menu, $jumlahPorsi, $detail);
     }
+
+    /**
+     * Kurangi stok bahan baku berdasarkan pesanan (FR-12).
+     * Jika stok tidak cukup, akan me-return false (proses harus dibatalkan).
+     *
+     * @param  Pesanan $pesanan
+     * @param  string  $jenisPersediaan  'harian' | 'catering'
+     * @return bool true jika sukses dipotong, false jika ada yang tidak cukup
+     */
+    public function deductBahanPesanan($pesanan, string $jenisPersediaan): bool
+    {
+        $kebutuhan = $this->kebutuhanBahanPesanan($pesanan);
+
+        // 1. Cek dulu apakah semua stok mencukupi
+        foreach ($kebutuhan as $item) {
+            $stokTersedia = (float) (StokBahan::where('bahan_baku_id', $item['bahan_baku_id'])
+                ->where('jenis_persediaan', $jenisPersediaan)
+                ->value('jumlah_stok') ?? 0);
+            
+            if ($stokTersedia < $item['kebutuhan'] - 0.0001) {
+                return false; // Ada stok yang tidak cukup
+            }
+        }
+
+        // 2. Jika semua cukup, baru lakukan pemotongan
+        foreach ($kebutuhan as $item) {
+            $stokModel = StokBahan::where('bahan_baku_id', $item['bahan_baku_id'])
+                ->where('jenis_persediaan', $jenisPersediaan)
+                ->first();
+                
+            if ($stokModel) {
+                $stokModel->jumlah_stok -= $item['kebutuhan'];
+                $stokModel->save();
+            }
+        }
+
+        return true;
+    }
 }

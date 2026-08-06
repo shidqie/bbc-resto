@@ -63,11 +63,11 @@ class BuktiPembayaranController extends Controller
         }
 
         $dpTerbayar = (float) $pesanan->pembayaran()
-            ->whereIn('status_pembayaran_id', [2, 3]) // Sebagian / Lunas
-            ->sum('jumlah_bayar');
+            ->where('status_verifikasi', 'diterima') // Sebagian / Lunas
+            ->sum('jumlah_dibayar');
         $lunas = (float) $pesanan->pembayaran()
-            ->where('status_pembayaran_id', 3)
-            ->sum('jumlah_bayar');
+            ->where('status_verifikasi', 'diterima')
+            ->sum('jumlah_dibayar');
 
         $transaksi = PaymentTransaction::where('din_number', $kodePesanan)->latest()->first();
 
@@ -92,8 +92,8 @@ class BuktiPembayaranController extends Controller
 
         $total = (float) $pesanan->total_tagihan;
         $dpSudahBayar = (float) $pesanan->pembayaran()
-            ->whereIn('status_pembayaran_id', [2, 3]) // Sebagian / Lunas
-            ->sum('jumlah_bayar');
+            ->where('status_verifikasi', 'diterima') // Sebagian / Lunas
+            ->sum('jumlah_dibayar');
 
         $jenisBayarId = $request->jenis_pembayaran === 'pelunasan' ? 3 : 2; // PELUNASAN / UANG_MUKA
         $jumlahBayar = $request->jenis_pembayaran === 'pelunasan'
@@ -124,7 +124,7 @@ class BuktiPembayaranController extends Controller
     /** GET /pesan/invoice/{kodePesanan} */
     public function invoicePdf($kodePesanan)
     {
-        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran.metode_pembayaran'])
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran'])
             ->where('nomor_pesanan', $kodePesanan)
             ->first();
 
@@ -136,7 +136,15 @@ class BuktiPembayaranController extends Controller
             default => 'dine_in',
         };
 
-        return view('pesanan.invoice-pdf', compact('pesanan', 'type', 'kodePesanan'));
+        $namaPemesan = optional($pesanan->pelanggan)->nama
+            ?? optional($pesanan->jadwal_pesanan)->nama_penerima
+            ?? \App\Models\PesananDinein::find($pesanan->id)?->nama_konsumen
+            ?? '-';
+        $kontak = optional($pesanan->pelanggan)->nomor_telepon
+            ?? optional($pesanan->jadwal_pesanan)->nomor_telepon_penerima
+            ?? '-';
+
+        return view('pesanan.invoice-pdf', compact('pesanan', 'type', 'kodePesanan', 'namaPemesan', 'kontak'));
     }
 
     /** Status bayar: belum_bayar / dp_terbayar / lunas */
@@ -144,11 +152,11 @@ class BuktiPembayaranController extends Controller
     {
         $total = (float) $pesanan->total_tagihan;
         $lunas = (float) $pesanan->pembayaran()
-            ->where('status_pembayaran_id', 3)
-            ->sum('jumlah_bayar');
+            ->where('status_verifikasi', 'diterima')
+            ->sum('jumlah_dibayar');
         $dp = (float) $pesanan->pembayaran()
-            ->whereIn('status_pembayaran_id', [2, 3])
-            ->sum('jumlah_bayar');
+            ->where('status_verifikasi', 'diterima')
+            ->sum('jumlah_dibayar');
 
         if ($lunas >= $total || $dp >= $total) {
             return 'lunas';

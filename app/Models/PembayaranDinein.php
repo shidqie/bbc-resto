@@ -16,8 +16,8 @@ class PembayaranDinein extends BaseModel
             if (empty($model->metode_pembayaran_id)) {
                 $model->metode_pembayaran_id = 1; // 1 = Tunai
             }
-            if (empty($model->status_pembayaran_id)) {
-                $model->status_pembayaran_id = 3; // 3 = Lunas
+            if (empty($model->status_verifikasi)) {
+                $model->status_verifikasi = 'diterima'; // 3 = Lunas
             }
             if (empty($model->waktu_pembayaran)) {
                 $model->waktu_pembayaran = now();
@@ -42,7 +42,7 @@ class PembayaranDinein extends BaseModel
 
     public function setTotalAttribute($value)
     {
-        $this->attributes['jumlah_bayar'] = $value;
+        $this->attributes['jumlah_dibayar'] = $value;
     }
 
     public function setDiprosesOlehAttribute($value)
@@ -57,7 +57,8 @@ class PembayaranDinein extends BaseModel
 
     public function setStatusAttribute($value)
     {
-        $this->attributes['status_pembayaran_id'] = ($value === 'void' || $value == 4) ? 4 : 3;
+        // Map old status to new or just set value
+        $this->attributes['status_verifikasi'] = ($value === 'void' || $value == 4) ? 'ditolak' : 'diterima';
     }
 
     public function pesanan()

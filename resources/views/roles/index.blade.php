@@ -9,95 +9,67 @@
     showDeleteModal: false, 
     editForm: { id: '', nama_peran: '' },
     deleteForm: { id: '', nama_peran: '' }
-}" class="p-4 md:p-8 w-full h-full flex flex-col bg-[#F3F4F6]">
-    
-    <!-- Header Area -->
-    <x-ui.page-header title="Hak Akses Pengguna" subtitle="Kelola peran (hak akses) pengguna di sistem." class="mb-6">
-        <x-slot:actions>
-            <button @click="showCreateModal = true" class="bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
-                <x-heroicon-o-plus class="w-4 h-4" />
-                Tambah Hak Akses
-            </button>
-        </x-slot:actions>
-    </x-ui.page-header>
+}" class="flex-1 bg-gray-50 text-gray-800 pb-10">
+    <div class="w-full p-6 space-y-5">
 
-    <!-- Alert Messages -->
-    @if (session('success'))
-        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg relative flex items-center gap-2 text-sm" role="alert">
-            <x-heroicon-o-check-circle class="w-5 h-5 text-green-500"/>
-            <span class="block sm:inline font-medium">{{ session('success') }}</span>
-        </div>
-    @endif
-    @if ($errors->any())
-        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative text-sm" role="alert">
-            <div class="flex items-center gap-2 font-medium mb-1">
-                <x-heroicon-o-x-circle class="w-5 h-5 text-red-500"/>
-                <span>Gagal menyimpan data:</span>
-            </div>
-            <ul class="list-disc list-inside ml-6">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <!-- Table Container -->
-    <div class="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
-        
-        <!-- Toolbar -->
-        <div class="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-start items-start md:items-center gap-4 bg-white">
-            <form action="{{ route('roles.index') }}" method="GET" class="relative w-full md:w-72">
-                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari hak akses..." />
-                <button type="submit" class="absolute right-3 top-2.5">
-                    <x-heroicon-o-magnifying-glass class="w-5 h-5 text-gray-400 hover:text-primary transition-colors" />
+        <!-- Header Area -->
+        <x-ui.page-header title="Hak Akses Pengguna" subtitle="Kelola peran (hak akses) pengguna di sistem." :breadcrumbs="['Manajemen Pengguna', 'Hak Akses']">
+            <x-slot:actions>
+                <button @click="showCreateModal = true" class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+                    <x-heroicon-o-plus class="w-4 h-4" />
+                    Tambah Hak Akses
                 </button>
-            </form>
-        </div>
+            </x-slot:actions>
+        </x-ui.page-header>
 
-        <table class="w-full text-sm">
-            <thead>
-                <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                    <th class="px-4 py-3 text-left w-12">No</th>
-                    <th class="px-4 py-3 text-left">Nama Hak Akses</th>
-                    <th class="px-4 py-3 text-left">Jumlah Pengguna</th>
-                    <th class="px-4 py-3 text-center">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-                @forelse($roles as $role)
-                <tr class="hover:bg-gray-50/60 transition-colors group">
-                    <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
-                        {{ $roles->firstItem() + $loop->index }}
-                    </td>
-                    <td class="px-4 py-3">
-                        <span class="inline-flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-primary"></span>
-                            <span class="font-medium text-gray-900 text-sm">{{ $role->nama_peran }}</span>
-                        </span>
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-700">{{ $role->pengguna_count }}</td>
-                    <td class="px-4 py-3 text-center">
-                        <div class="flex items-center justify-center gap-1.5">
-                            <button @click="showEditModal = true; editForm = { id: '{{ $role->id }}', nama_peran: '{{ addslashes($role->nama_peran) }}' }" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                <x-heroicon-o-pencil-square class="w-3 h-3" />
-                            </button>
-                            <button @click="showDeleteModal = true; deleteForm = { id: '{{ $role->id }}', nama_peran: '{{ addslashes($role->nama_peran) }}' }" title="Hapus" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                <x-heroicon-o-trash class="w-3 h-3" />
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <x-empty-state icon="users" title="Belum ada data hak akses" message="Tambahkan hak akses baru menggunakan tombol di atas." :colspan="4" />
-                @endforelse
-            </tbody>
-        </table>
-        
-        <!-- Pagination -->
-        <div class="p-4 border-t border-gray-200 bg-white">
-            {{ $roles->links() }}
-        </div>
+        <x-ui.alert />
+
+        <!-- Table -->
+        <x-ui.data-table :paginator="$roles">
+            <x-slot:toolbar>
+                <form action="{{ route('roles.index') }}" method="GET" class="w-full md:w-72">
+                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari hak akses..." width="w-full" />
+                </form>
+            </x-slot:toolbar>
+
+            <x-ui.table class="min-w-[640px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Nama Hak Akses</th>
+                    <th class="px-4 py-3.5 text-left">Jumlah Pengguna</th>
+                    <th class="px-4 py-3.5 text-center">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($roles as $role)
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">
+                            {{ $roles->firstItem() + $loop->index }}
+                        </td>
+                        <td class="px-4 py-4 align-middle">
+                            <span class="inline-flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-gray-900"></span>
+                                <span class="font-medium text-gray-900 text-sm">{{ $role->nama_peran }}</span>
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 align-middle text-sm text-gray-700">{{ $role->pengguna_count }}</td>
+                        <td class="px-4 py-4 align-middle text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <x-ui.action-button @click="showEditModal = true; editForm = { id: '{{ $role->id }}', nama_peran: '{{ addslashes($role->nama_peran) }}' }" title="Ubah">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                </x-ui.action-button>
+                                <x-ui.action-button @click="showDeleteModal = true; deleteForm = { id: '{{ $role->id }}', nama_peran: '{{ addslashes($role->nama_peran) }}' }" title="Hapus">
+                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                </x-ui.action-button>
+                            </div>
+                        </td>
+                    </x-ui.table.row>
+                    @empty
+                    <x-empty-state icon="users" title="Belum ada data hak akses" message="Tambahkan hak akses baru menggunakan tombol di atas." :colspan="4" />
+                    @endforelse
+                </tbody>
+            </x-ui.table>
+        </x-ui.data-table>
+
     </div>
 
     <!-- Modal Tambah -->
@@ -123,7 +95,7 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-[2rem]">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-gray-900 text-base font-medium text-white hover:bg-gray-800 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
                             Simpan Data
                         </button>
                         <button type="button" @click="showCreateModal = false" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
@@ -159,7 +131,7 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-[2rem]">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-gray-900 text-base font-medium text-white hover:bg-gray-800 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
                             Perbarui Data
                         </button>
                         <button type="button" @click="showEditModal = false" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">

@@ -43,12 +43,15 @@ class JadwalPengantaranController extends Controller
 
         $query = Pesanan::with(['jadwal_pesanan', 'detail_pesanan.menu', 'pengantaran'])
             ->whereIn('jenis_pesanan_id', [2, 3])
+            ->whereHas('pengantaran') // Only show orders that are sent to delivery (Jadwal Pengantaran is a worklist)
             ->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {
                 $q->whereDate('tanggal_acara', $selectedDate);
             });
 
         if ($statusFilter !== 'Semua') {
-            $query->where('status_pesanan_id', $statusFilter);
+            $query->whereHas('pengantaran', function ($q) use ($statusFilter) {
+                $q->where('status_pengantaran_id', $statusFilter);
+            });
         }
 
         if ($search) {
@@ -63,16 +66,17 @@ class JadwalPengantaranController extends Controller
         })->values();
 
         $allSummaryOrders = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
+            ->whereHas('pengantaran')
             ->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {
                 $q->whereDate('tanggal_acara', $selectedDate);
             })->get();
 
         $summary = [
             'Semua' => $allSummaryOrders->count(),
-            'baru' => $allSummaryOrders->where('status_pesanan_id', 1)->count(),
-            'diproses' => $allSummaryOrders->whereIn('status_pesanan_id', [2, 3, 4])->count(),
-            'selesai' => $allSummaryOrders->where('status_pesanan_id', 5)->count(),
-            'dibatalkan' => $allSummaryOrders->where('status_pesanan_id', 6)->count(),
+            'baru' => $allSummaryOrders->where('pengantaran.status_pengantaran_id', 1)->count(), // Menunggu Dikirim
+            'diproses' => $allSummaryOrders->whereIn('pengantaran.status_pengantaran_id', [2, 3])->count(), // Dalam Pengiriman
+            'selesai' => $allSummaryOrders->where('pengantaran.status_pengantaran_id', 4)->count(), // Sudah Diterima
+            'dibatalkan' => $allSummaryOrders->where('pengantaran.status_pengantaran_id', 5)->count(),
         ];
 
         return view('order.jadwal.index', compact(
@@ -140,7 +144,14 @@ class JadwalPengantaranController extends Controller
             $update['diterima_pada'] = now();
         }
 
-        $pengantaran->update($update);
+        DB::transaction(function () use ($pengantaran, $update, $request) {
+            $pengantaran->update($update);
+            
+            // Sync back to Pesanan
+            if ($request->status_pengantaran_id == 4) { // Diterima -> Selesai
+                $pengantaran->pesanan->update(['status_pesanan_id' => 5]);
+            }
+        });
 
         return back()->with('success', 'Status pengantaran diperbarui.');
     }

@@ -20,47 +20,59 @@
             <x-slot:toolbar>
                 <form action="{{ route('admin.pesanan.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama Pemesan…" />
-                    <x-select-input name="jenis" :options="$jenis_pesanan->pluck('nama_jenis', 'id')->toArray()" :selected="request('jenis')" placeholder="Semua Jenis" :auto-submit="true" />
-                    <x-select-input name="status" :options="$status_pesanan->pluck('nama_status', 'id')->toArray()" :selected="request('status')" placeholder="Semua Status" :auto-submit="true" />
-                    <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
-                    @if(request()->hasAny(['search', 'jenis', 'status']))
+                    <x-ui.multi-select name="jenis" :options="$jenis_pesanan->pluck('nama_jenis', 'id')->toArray()" :selected="request('jenis')" label="Jenis" type="radio" />
+                    
+                    <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'kustom' => 'Kustom']" :selected="request('periode')" label="Pilih periode" type="radio" />
+                    
+                    <template x-if="new URLSearchParams(window.location.search).get('periode') === 'kustom'">
+                        <div class="flex items-center gap-2">
+                            <input type="date" name="start_date" value="{{ request('start_date') }}" class="text-sm border-gray-300 rounded-lg shadow-sm focus:border-[#0D3024] focus:ring-[#0D3024]">
+                            <span class="text-gray-500 text-sm">s/d</span>
+                            <input type="date" name="end_date" value="{{ request('end_date') }}" class="text-sm border-gray-300 rounded-lg shadow-sm focus:border-[#0D3024] focus:ring-[#0D3024]">
+                            <button type="submit" class="px-3 py-1.5 bg-[#0D3024] text-white text-sm font-medium rounded-lg">Terapkan</button>
+                        </div>
+                    </template>
+
+                    @if(request()->hasAny(['search', 'jenis', 'periode', 'start_date', 'end_date']))
                         <a href="{{ route('admin.pesanan.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
                     @endif
                 </form>
             </x-slot:toolbar>
 
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No</th>
-                        <th class="px-4 py-3 text-left">Tanggal</th>
-                        <th class="px-4 py-3 text-left">ID Pesanan</th>
-                        <th class="px-4 py-3 text-left">Jenis</th>
-                        <th class="px-4 py-3 text-left">Pelanggan</th>
-                        <th class="px-4 py-3 text-left">Meja</th>
-                        <th class="px-4 py-3 text-right">Total</th>
-                        <th class="px-4 py-3 text-center">Status Pesanan</th>
-                        <th class="px-4 py-3 text-center">Pembayaran</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+            <x-ui.table class="min-w-[1000px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
+                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">Jenis</th>
+                    <th class="px-4 py-3.5 text-left">Konsumen</th>
+                    <th class="px-4 py-3.5 text-left">Meja</th>
+                    <th class="px-4 py-3.5 text-right">Total</th>
+                    <th class="px-4 py-3.5 text-center">Status Pesanan</th>
+                    <th class="px-4 py-3.5 text-center">Pembayaran</th>
+                    <th class="px-4 py-3.5 text-center">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($pesanans as $index => $pesanan)
-                    <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-sm text-gray-500 font-medium">
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 text-sm text-gray-500 font-medium">
                             {{ ($pesanans->firstItem() ?? 1) + $index }}
                         </td>
-                        <td class="px-4 py-3">
-                            <p class="font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('d/m/Y') }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('H:i') }}</p>
+                        <td class="px-4 py-4 text-sm text-gray-700">
+                            {{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->translatedFormat('d M Y, H.i') }} WIB
                         </td>
-                        <td class="px-4 py-3">
-                            <span class="font-mono text-xs font-bold text-gray-900">{{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }}</span>
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-xs font-bold text-gray-900">{{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }}</span>
+                                @if(\Carbon\Carbon::parse($pesanan->dibuat_pada)->diffInMinutes(now()) < 15)
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-red-500 text-white animate-pulse">BARU</span>
+                                @endif
+                            </div>
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-600">
+                        <td class="px-4 py-4 text-sm text-gray-600">
                             {{ optional($pesanan->jenis_pesanan)->nama_jenis ?? 'Dine In' }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4">
                             @php
                                 $nama = 'Tamu';
                                 if ($pesanan->pelanggan) {
@@ -76,16 +88,19 @@
                                         $nama = trim(explode('|', $pesanan->catatan)[0]);
                                     }
                                 }
+                                // Remove phone number if it was appended with a dash
+                                $nama = trim(explode('–', $nama)[0]);
+                                $nama = trim(explode('-', $nama)[0]);
                             @endphp
                             <p class="font-medium text-gray-900 text-sm">{{ $nama }}</p>
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-600">
+                        <td class="px-4 py-4 text-sm text-gray-600">
                             {{ optional($pesanan->meja)->nomor_meja ?? '-' }}
                         </td>
-                        <td class="px-4 py-3 text-right font-bold text-gray-900">
+                        <td class="px-4 py-4 text-right font-bold text-gray-900">
                             Rp{{ number_format($pesanan->total_tagihan, 0, ',', '.') }}
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-4 text-center">
                             @php
                                 $statusColor = 'gray';
                                 if($pesanan->status_pesanan_id == 5) $statusColor = 'success';
@@ -97,9 +112,9 @@
                                 {{ optional($pesanan->status_pesanan)->nama_status ?? 'Unknown' }}
                             </x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-4 text-center">
                             @php
-                                $totalBayar = $pesanan->pembayaran->sum('jumlah_bayar');
+                                $totalBayar = $pesanan->pembayaran->sum('jumlah_dibayar');
                                 if($totalBayar >= $pesanan->total_tagihan && $pesanan->total_tagihan > 0) {
                                     $payStatus = 'Lunas';
                                     $payColor = 'success';
@@ -115,22 +130,22 @@
                                 {{ $payStatus }}
                             </x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" onclick="openDetailDrawer({{ $pesanan->id }})" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </button>
-                                <button type="button" onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" title="Cetak Struk" class="w-7 h-7 rounded-full flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
-                                    <x-heroicon-o-printer class="w-3 h-3" />
-                                </button>
+                                <x-ui.action-button onclick="openDetailDrawer({{ $pesanan->id }})" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
+                                <x-ui.action-button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" title="Cetak Struk">
+                                    <x-heroicon-o-printer class="w-4 h-4" />
+                                </x-ui.action-button>
                             </div>
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
                     <x-empty-state icon="document-text" title="Belum ada pesanan" message="Belum ada pesanan yang sesuai kriteria pencarian." :colspan="10" />
                     @endforelse
                 </tbody>
-            </table>
+            </x-ui.table>
         </x-ui.data-table>
 
     </div>

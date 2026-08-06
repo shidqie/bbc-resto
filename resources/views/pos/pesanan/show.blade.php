@@ -9,36 +9,28 @@
     <div class="w-full p-6 max-w-[1000px] mx-auto space-y-6">
         
         {{-- Header Navigation & Title --}}
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center no-print">
-            <div>
-                <nav class="flex text-gray-500 text-xs mb-2" aria-label="Breadcrumb">
-                    <ol class="inline-flex items-center space-x-1 md:space-x-2">
-                        <li class="inline-flex items-center">Pesanan</li>
-                        <li><span class="mx-2">/</span></li>
-                        <li><a href="{{ route('pesanan.index') }}" class="hover:text-[#3B82F6] transition-colors">Daftar Pesanan</a></li>
-                        <li><span class="mx-2">/</span></li>
-                        <li class="text-gray-900 font-medium">Detail Invoice</li>
-                    </ol>
-                </nav>
-                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    Invoice #{{ $pesanan->no_pesanan }}
-                    
-                    @if($pesanan->status_pesanan == 'baru')
-                        <x-ui.badge color="neutral" dot>Baru</x-ui.badge>
-                    @elseif($pesanan->status_pesanan == 'diproses')
-                        <x-ui.badge color="warning" dot>Diproses</x-ui.badge>
-                    @elseif($pesanan->status_pesanan == 'selesai')
-                        <x-ui.badge color="success" dot>Selesai</x-ui.badge>
-                    @else
-                        <x-ui.badge color="danger" dot>{{ ucfirst($pesanan->status_pesanan) }}</x-ui.badge>
-                    @endif
-                </h1>
-            </div>
-            <div class="mt-4 sm:mt-0 flex gap-2">
-                <x-ui.button href="{{ route('pesanan.index') }}" variant="outline" icon="arrow-left">
-                    <x-heroicon-o-arrow-left class="w-4 h-4 mr-1 inline-block" /> Kembali
-                </x-ui.button>
-            </div>
+        <div class="no-print">
+            <x-ui.page-header
+                title="Invoice #{{ $pesanan->no_pesanan }}"
+                subtitle="Rincian lengkap pesanan dine in beserta status dan riwayat pembayaran."
+                :breadcrumbs="['Penjualan', 'Dine In', 'Detail']">
+                <x-slot:actions>
+                    <div class="flex gap-2">
+                        @if($pesanan->status_pesanan == 'baru')
+                            <x-ui.badge color="neutral" dot>Baru</x-ui.badge>
+                        @elseif($pesanan->status_pesanan == 'diproses')
+                            <x-ui.badge color="warning" dot>Diproses</x-ui.badge>
+                        @elseif($pesanan->status_pesanan == 'selesai')
+                            <x-ui.badge color="success" dot>Selesai</x-ui.badge>
+                        @else
+                            <x-ui.badge color="danger" dot>{{ ucfirst($pesanan->status_pesanan) }}</x-ui.badge>
+                        @endif
+                        <x-ui.button href="{{ route('pesanan.index') }}" variant="outline" icon="arrow-left">
+                            <x-heroicon-o-arrow-left class="w-4 h-4 mr-1 inline-block" /> Kembali
+                        </x-ui.button>
+                    </div>
+                </x-slot:actions>
+            </x-ui.page-header>
         </div>
 
         <x-ui.alert />

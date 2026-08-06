@@ -27,16 +27,17 @@
             }).catch(() => alert('Terjadi kesalahan jaringan.')).finally(() => self.busy = false);
         }
     }
-}" class="p-4 md:p-8 w-full h-full flex flex-col bg-[#F3F4F6]">
+}" class="flex-1 bg-gray-50 text-gray-800 pb-10 w-full h-full flex flex-col">
+    <div class="w-full p-6 space-y-5 flex flex-col flex-1 min-h-0">
 
     <!-- Header Area -->
-    <x-ui.page-header title="Manajemen Pengguna" subtitle="Kelola data karyawan dan konsumen yang terdaftar di sistem." class="mb-4">
+    <x-ui.page-header title="Manajemen Pengguna" subtitle="Kelola data karyawan dan konsumen yang terdaftar di sistem." :breadcrumbs="['Manajemen Pengguna', 'Data Karyawan']">
         <x-slot:actions>
-            <button x-show="activeTab === 'karyawan'" @click="showCreateModal = true" class="bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+            <button x-show="activeTab === 'karyawan'" @click="showCreateModal = true" class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
                 <x-heroicon-o-plus class="w-4 h-4" />
                 Tambah Karyawan
             </button>
-            <button x-show="activeTab === 'pelanggan'" @click="showCreatePelangganModal = true; pelangganForm = {id: '', nama: '', email: '', nomor_telepon: '', alamat: ''}" x-cloak class="bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+            <button x-show="activeTab === 'pelanggan'" @click="showCreatePelangganModal = true; pelangganForm = {id: '', nama: '', email: '', nomor_telepon: '', alamat: ''}" x-cloak class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
                 <x-heroicon-o-plus class="w-4 h-4" />
                 Tambah Konsumen
             </button>
@@ -44,25 +45,7 @@
     </x-ui.page-header>
 
     <!-- Alert Messages -->
-    @if (session('success'))
-        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg relative flex items-center gap-2 text-sm" role="alert">
-            <x-heroicon-o-check-circle class="w-5 h-5 text-green-500"/>
-            <span class="block sm:inline font-medium">{{ session('success') }}</span>
-        </div>
-    @endif
-    @if ($errors->any())
-        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative text-sm" role="alert">
-            <div class="flex items-center gap-2 font-medium mb-1">
-                <x-heroicon-o-x-circle class="w-5 h-5 text-red-500"/>
-                <span>Gagal menyimpan data:</span>
-            </div>
-            <ul class="list-disc list-inside ml-6">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    <x-ui.alert />
 
     <!-- ================= TAB: DATA KARYAWAN ================= -->
     <div x-show="activeTab === 'karyawan'" x-cloak class="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col min-h-0">
@@ -83,24 +66,22 @@
 
         <!-- Desktop Table -->
         <div class="hidden md:block overflow-auto flex-1">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No</th>
-                        <th class="px-4 py-3 text-left">Nama Karyawan</th>
-                        <th class="px-4 py-3 text-left">Email</th>
-                        <th class="px-4 py-3 text-left">Nomor WhatsApp</th>
-                        <th class="px-4 py-3 text-left">Peran</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+            <x-ui.table class="min-w-[800px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Nama Karyawan</th>
+                    <th class="px-4 py-3.5 text-left">Email</th>
+                    <th class="px-4 py-3.5 text-left">Nomor WhatsApp</th>
+                    <th class="px-4 py-3.5 text-left">Peran</th>
+                    <th class="px-4 py-3.5 text-center">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($pengguna as $user)
-                    <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 align-middle text-sm text-gray-500 font-medium">
                             {{ $pengguna->firstItem() + $loop->index }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             <div class="min-w-0">
                                 <div class="font-medium text-gray-900 text-sm truncate">{{ $user->nama }}</div>
                                 @if(!$user->status_aktif)
@@ -108,43 +89,38 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             <div class="text-sm text-gray-600">{{ $user->email }}</div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             <div class="text-sm text-gray-600">{{ $user->nomor_telepon ?? '-' }}</div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             @if($user->peran)
-                                <span class="bg-rose-50 text-rose-700 border border-rose-100 py-1 px-3 rounded-full text-xs font-medium">{{ $user->peran->nama_peran }}</span>
+                                <x-ui.badge color="primary" size="sm">{{ $user->peran->nama_peran }}</x-ui.badge>
                             @else
-                                <span class="bg-gray-50 text-gray-500 py-1 px-3 rounded-full text-xs font-medium">-</span>
+                                <x-ui.badge color="gray" size="sm">-</x-ui.badge>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
                                 <a href="{{ route('users.show', $user) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors">
                                     <x-heroicon-o-eye class="w-3 h-3" />
                                 </a>
-                                <button @click="showEditModal = true; editForm = { id: '{{ $user->id }}', nama: '{{ addslashes($user->nama) }}', email: '{{ addslashes($user->email) }}', nomor_telepon: '{{ addslashes($user->nomor_telepon) }}', peran_id: '{{ $user->peran_id }}', status_aktif: {{ $user->status_aktif ? 'true' : 'false' }} }" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                    <x-heroicon-o-pencil-square class="w-3 h-3" />
+                                <button type="button" @click="showEditModal = true; editForm = { id: '{{ $user->id }}', nama: '{{ addslashes($user->nama) }}', email: '{{ addslashes($user->email) }}', nomor_telepon: '{{ addslashes($user->nomor_telepon) }}', peran_id: '{{ $user->peran_id }}', status_aktif: {{ $user->status_aktif ? 'true' : 'false' }} }" title="Ubah" class="text-gray-500 transition hover:text-gray-900">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
                                 </button>
-                                <button @click="toggleStatus('{{ $user->id }}', '{{ addslashes($user->nama) }}', {{ $user->status_aktif ? 'true' : 'false' }})" :disabled="busy" :title="'{{ $user->status_aktif ? 'Nonaktifkan' : 'Aktifkan' }}'"
-                                    class="w-7 h-7 rounded-full flex items-center justify-center transition-colors {{ $user->status_aktif ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' }}">
-                                    <x-heroicon-o-power class="w-3 h-3" />
+                                <button type="button" @click="toggleStatus('{{ $user->id }}', '{{ addslashes($user->nama) }}', {{ $user->status_aktif ? 'true' : 'false' }})" :disabled="busy" :title="'{{ $user->status_aktif ? 'Nonaktifkan' : 'Aktifkan' }}'" class="text-gray-500 transition hover:text-gray-900">
+                                    <x-heroicon-o-power class="w-4 h-4" />
                                 </button>
                             </div>
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
-                    <tr>
-                        <td colspan="6" class="px-4 py-12 text-center text-gray-400">
-                            Belum ada data karyawan.
-                        </td>
-                    </tr>
+                    <x-empty-state icon="users" title="Belum ada data karyawan" message="Data akan muncul setelah karyawan ditambahkan." :colspan="6" />
                     @endforelse
                 </tbody>
-            </table>
+            </x-ui.table>
         </div>
 
         <!-- Pagination -->
@@ -166,66 +142,60 @@
 
         <!-- Desktop Table -->
         <div class="hidden md:block overflow-auto flex-1">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No</th>
-                        <th class="px-4 py-3 text-left">Nama Konsumen</th>
-                        <th class="px-4 py-3 text-left">Email</th>
-                        <th class="px-4 py-3 text-left">Nomor WhatsApp</th>
-                        <th class="px-4 py-3 text-left">Alamat</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+            <x-ui.table class="min-w-[800px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Nama Konsumen</th>
+                    <th class="px-4 py-3.5 text-left">Email</th>
+                    <th class="px-4 py-3.5 text-left">Nomor WhatsApp</th>
+                    <th class="px-4 py-3.5 text-left">Alamat</th>
+                    <th class="px-4 py-3.5 text-center">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($pelanggan as $user)
-                    <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 align-middle text-sm text-gray-500 font-medium">
                             {{ $pelanggan->firstItem() + $loop->index }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             <div class="min-w-0">
                                 <div class="font-medium text-gray-900 text-sm truncate">{{ $user->nama }}</div>
                             </div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             <div class="text-sm text-gray-600 truncate max-w-xs">{{ $user->email ?? '-' }}</div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             <div class="text-sm text-gray-600">{{ $user->nomor_telepon ?? '-' }}</div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4 align-middle">
                             <div class="text-sm text-gray-600 truncate max-w-xs">
                                 {{ $user->alamat ?? '-' }}
                             </div>
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" onclick="openPelangganDrawer({{ $user->id }})" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </button>
-                                <button type="button" @click="showEditPelangganModal = true; pelangganForm = { id: {{ $user->id }}, nama: '{{ addslashes($user->nama) }}', email: '{{ addslashes($user->email ?? '') }}', nomor_telepon: '{{ addslashes($user->nomor_telepon ?? '') }}', alamat: '{{ addslashes($user->alamat ?? '') }}' }" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                    <x-heroicon-o-pencil-square class="w-3 h-3" />
+                                <x-ui.action-button onclick="openPelangganDrawer({{ $user->id }})" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
+                                <button type="button" @click="showEditPelangganModal = true; pelangganForm = { id: {{ $user->id }}, nama: '{{ addslashes($user->nama) }}', email: '{{ addslashes($user->email ?? '') }}', nomor_telepon: '{{ addslashes($user->nomor_telepon ?? '') }}', alamat: '{{ addslashes($user->alamat ?? '') }}' }" title="Ubah" class="text-gray-500 transition hover:text-gray-900">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
                                 </button>
                                 <form action="{{ route('pelanggan.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus data konsumen ini? Semua riwayat pesanan juga akan terhapus.');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" title="Hapus" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                        <x-heroicon-o-trash class="w-3 h-3" />
-                                    </button>
+                                    <x-ui.action-button type="submit" title="Hapus">
+                                        <x-heroicon-o-trash class="w-4 h-4" />
+                                    </x-ui.action-button>
                                 </form>
                             </div>
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
-                    <tr>
-                        <td colspan="6" class="px-4 py-12 text-center text-gray-400">
-                            Belum ada data konsumen.
-                        </td>
-                    </tr>
+                    <x-empty-state icon="users" title="Belum ada data konsumen" message="Data akan muncul setelah konsumen ditambahkan." :colspan="6" />
                     @endforelse
                 </tbody>
-            </table>
+            </x-ui.table>
         </div>
 
         <!-- Pagination -->
@@ -298,7 +268,7 @@
                     <button type="button" @click="showCreateModal = false; showEditModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         Batal
                     </button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90">
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800">
                         Simpan
                     </button>
                 </div>
@@ -348,7 +318,7 @@
                     <button type="button" @click="showCreatePelangganModal = false; showEditPelangganModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         Batal
                     </button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90">
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800">
                         Simpan
                     </button>
                 </div>
@@ -378,6 +348,8 @@
             </div>
             
         </div>
+    </div>
+
     </div>
 
 </div>

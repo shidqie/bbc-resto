@@ -12,7 +12,7 @@
         <x-ui.page-header 
             title="Atur Resep Menu" 
             subtitle="Pemetaan bahan baku untuk: {{ $menu->nama }}"
-            :breadcrumbs="['Menu', 'Daftar Menu', 'Detail', 'Resep']">
+            :breadcrumbs="['Manajemen Menu', 'Resep Menu', 'Detail']">
             <x-slot:actions>
                 <x-ui.button href="{{ route('menu.show', $menu->id) }}" variant="outline" icon="arrow-left">Kembali</x-ui.button>
             </x-slot:actions>

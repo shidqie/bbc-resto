@@ -47,7 +47,7 @@
 
 @if(in_array($role, ['pemilik', 'admin', 'dapur', 'manajer']))
 <!-- Pesanan Dapur -->
-<a href="{{ route('pesanan.index') }}" class="{{ $baseClass }} {{ $isActive('pesanan.*') ? $activeClass : $inactiveClass }}">
+<a href="{{ route('admin.pesanan.index') }}" class="{{ $baseClass }} {{ $isActive('admin.pesanan.*') ? $activeClass : $inactiveClass }}">
     <x-heroicon-o-clipboard-document-list class="{{ $iconClass }} w-5 h-5" />
     <span>Pesanan</span>
 </a>

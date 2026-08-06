@@ -58,18 +58,20 @@
         if ($hasRole('Kasir', 'Pelayan', 'Pemilik', 'Admin Sistem')) {
                 $penjualanItems[] = ['label' => 'Dine In', 'url' => route('pos.dinein.index'), 'active' => request()->routeIs('pos.dinein.*')];
             }
-            if ($hasRole('Pemilik', 'Admin Sistem')) {
-                $penjualanItems[] = ['label' => 'Katering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
-                $penjualanItems[] = ['label' => 'Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
-                $penjualanItems[] = ['label' => 'Pembayaran', 'url' => route('admin.pembayaran.index'), 'active' => request()->routeIs('admin.pembayaran.*')];
-            }
+        if ($hasRole('Kasir', 'Pemilik', 'Admin Sistem')) {
+            $penjualanItems[] = ['label' => 'Pembayaran', 'url' => route('admin.verifikasi_pembayaran.index'), 'active' => request()->routeIs('admin.verifikasi_pembayaran.*')];
+        }
+        if ($hasRole('Pemilik', 'Admin Sistem')) {
+            $penjualanItems[] = ['label' => 'Katering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
+            $penjualanItems[] = ['label' => 'Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
+        }
             
             @endphp
             @if(count($penjualanItems))
             @include('partials.sidebar-submenu', [
                 'icon' => 'ionicon-cart-sharp',
                 'label' => 'Penjualan',
-                'isOpen' => request()->routeIs('pos.dinein.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.pembayaran.*'),
+                'isOpen' => request()->routeIs('pos.dinein.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.pembayaran.*') || request()->routeIs('admin.jadwal.*'),
                 'items' => $penjualanItems,
                 ])
                 @endif
@@ -78,7 +80,7 @@
                 @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem'))
                 @include('partials.sidebar-submenu', [
                     'icon' => 'gmdi-menu-book-r',
-                    'label' => 'Menu & Paket',
+                    'label' => 'Manajemen Menu',
                     'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('paket-catering.*'),
                     'items' => [
                         ['label' => 'Data Menu', 'url' => route('menu.index'), 'active' => request()->routeIs('menu.*')],
@@ -91,14 +93,30 @@
                         @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem'))
                             @include('partials.sidebar-submenu', [
                                 'icon' => 'gmdi-table-bar',
-                                'label' => 'Meja',
+                                'label' => 'Manajemen Meja',
                                 'isOpen' => request()->routeIs('meja.*'),
                                 'items' => [
                                     ['label' => 'Data Meja', 'url' => route('meja.index'), 'active' => request()->routeIs('meja.*')],
                                 ],
                             ])
                         @endif
-                        {{-- Pengadaan --}}
+
+{{-- Persediaan --}}
+        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem', 'Dapur'))
+        @include('partials.sidebar-submenu', [
+            'icon' => 'heroicon-s-archive-box',
+            'label' => 'Persediaan',
+            'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*') || request()->routeIs('stok-operasional.*') || request()->routeIs('stok-catering.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('penyesuaian-stok.*'),
+            'items' => [
+                ['label' => 'Data Bahan Baku', 'url' => route('bahan-baku.index'), 'active' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*')],
+                ['label' => 'Stok Dine In & Nasi Box', 'url' => route('stok-operasional.index'), 'active' => request()->routeIs('stok-operasional.*')],
+                ['label' => 'Stok Catering', 'url' => route('stok-catering.index'), 'active' => request()->routeIs('stok-catering.*')],
+                ['label' => 'Penyesuaian Stok', 'url' => route('penyesuaian-stok.index'), 'active' => request()->routeIs('penyesuaian-stok.*')],
+            ],
+        ])
+        @endif
+
+     {{-- Pengadaan --}}
                         @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem', 'Dapur'))
                             @include('partials.sidebar-submenu', [
                                 'icon' => 'heroicon-s-shopping-bag',
@@ -108,26 +126,10 @@
                                     ['label' => 'Semua Permintaan', 'url' => route('pengadaan.permintaan.index'), 'active' => request()->routeIs('pengadaan.permintaan.*')],
                                     ['label' => 'Form Permintaan Harian', 'url' => route('pengadaan.harian.create'), 'active' => request()->routeIs('pengadaan.harian.*')],
                                     ['label' => 'Form Permintaan Catering', 'url' => route('pengadaan.catering.create'), 'active' => request()->routeIs('pengadaan.catering.*')],
-                                    ['label' => 'Penerimaan Bahan', 'url' => route('pengadaan.penerimaan.index'), 'active' => request()->routeIs('pengadaan.penerimaan.*')],
+                                    ['label' => 'Penerimaan Bahan Baku', 'url' => route('pengadaan.penerimaan.index'), 'active' => request()->routeIs('pengadaan.penerimaan.*')],
                                 ],
                             ])
                         @endif
-
-                        {{-- Persediaan --}}
-                        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem', 'Dapur'))
-        @include('partials.sidebar-submenu', [
-            'icon' => 'heroicon-s-archive-box',
-            'label' => 'Persediaan',
-            'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*') || request()->routeIs('stok-operasional.*') || request()->routeIs('stok-catering.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('penyesuaian-stok.*'),
-            'items' => [
-                ['label' => 'Data Bahan Baku', 'url' => route('bahan-baku.index'), 'active' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*')],
-                ['label' => 'Stok Dine In & Nasi Box', 'url' => route('stok-operasional.index'), 'active' => request()->routeIs('stok-operasional.*')],
-                ['label' => 'Stok Catering', 'url' => route('stok-catering.index'), 'active' => request()->routeIs('stok-catering.*')],
-                ['label' => 'Riwayat Stok', 'url' => route('mutasi-stok.index'), 'active' => request()->routeIs('mutasi-stok.*')],
-                ['label' => 'Penyesuaian Stok', 'url' => route('penyesuaian-stok.index'), 'active' => request()->routeIs('penyesuaian-stok.*')],
-            ],
-        ])
-        @endif
 
         {{-- Laporan --}}
         @if($hasRole('Pemilik', 'Manajer'))

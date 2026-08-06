@@ -73,8 +73,8 @@
                 <span class="text-sm font-bold text-gray-900">Total Pembayaran</span>
                 @php
                     $totalP = (float) $pesanan->total_tagihan;
-                    $dpP = (float) $pesanan->pembayaran->whereIn('status_pembayaran_id', [2, 3])->sum('jumlah_bayar');
-                    $lunasP = (float) $pesanan->pembayaran->where('status_pembayaran_id', 3)->sum('jumlah_bayar');
+                    $dpP = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+                    $lunasP = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
                     $bayarP = $lunasP >= $totalP ? 'lunas' : ($dpP > 0 ? 'dp' : 'belum');
                     $bayarColor = $bayarP === 'lunas' ? 'success' : ($bayarP === 'dp' ? 'primary' : 'warning');
                     $bayarLabel = $bayarP === 'lunas' ? 'Lunas' : ($bayarP === 'dp' ? 'DP Terbayar' : 'Belum Bayar');

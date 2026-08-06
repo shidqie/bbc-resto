@@ -28,8 +28,8 @@ class DashboardController extends Controller
 
         // 3 = LUNAS, asumsi status_pembayaran_id = 3 untuk Lunas
         $pendapatanHariIni = Pembayaran::whereDate('dibuat_pada', $today)
-            ->where('status_pembayaran_id', 3)
-            ->sum('jumlah_bayar');
+            ->where('status_verifikasi', 'diterima')
+            ->sum('jumlah_dibayar');
 
         // Status 1 = Menunggu Konfirmasi, 3 = Sedang Diproses
         $pesananPending = Pesanan::whereIn('status_pesanan_id', [1, 3])->count();
@@ -50,8 +50,8 @@ class DashboardController extends Controller
             $labels[] = $date->format('d M');
 
             $totalPendapatan = Pembayaran::whereDate('dibuat_pada', $date)
-                ->where('status_pembayaran_id', 3)
-                ->sum('jumlah_bayar');
+                ->where('status_verifikasi', 'diterima')
+                ->sum('jumlah_dibayar');
 
             $dataPendapatan[] = $totalPendapatan;
         }

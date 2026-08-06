@@ -6,14 +6,10 @@
     <div class="max-w-4xl mx-auto w-full space-y-6">
 
         {{-- Header --}}
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-neutral-200">
-            <div>
-                <h1 class="text-2xl font-semibold text-neutral-900 tracking-tight flex items-center gap-2">
-                    <x-heroicon-o-cog class="text-neutral-400 w-7 h-7" /> Pengaturan Akun Saya
-                </h1>
-                <p class="text-sm text-neutral-500 font-medium mt-0.5">Kelola data profil pengguna & keamanan kata sandi akun Anda.</p>
-            </div>
-        </div>
+        <x-ui.page-header
+            title="Pengaturan Akun Saya"
+            subtitle="Kelola data profil pengguna & keamanan kata sandi akun Anda."
+            :breadcrumbs="['Pengaturan Akun']" />
 
         {{-- Tabs --}}
         <div class="flex border-b border-neutral-200 gap-2 text-sm font-semibold">

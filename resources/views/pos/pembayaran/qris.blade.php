@@ -1,16 +1,17 @@
 @extends('layouts.pos')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans antialiased text-[#111827]">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+<div class="min-h-screen bg-gray-50 flex flex-col py-12 sm:px-6 lg:px-8 font-sans antialiased text-[#111827]">
+    <div class="w-full max-w-2xl mx-auto px-6">
+        <x-ui.page-header title="Pembayaran QRIS" subtitle="Scan QR Code di bawah menggunakan aplikasi E-Wallet atau M-Banking Anda." :breadcrumbs="['Penjualan', 'Pembayaran', 'QRIS']" />
+    </div>
+
+    <div class="flex-1 flex flex-col justify-center">
         <div class="text-center">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4 shadow-sm">
                 <x-heroicon-o-qr-code class="w-8 h-8 text-[#3B82F6]" />
             </div>
-            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Pembayaran QRIS</h2>
-            <p class="mt-2 text-sm text-gray-500 font-medium">Scan QR Code di bawah menggunakan aplikasi E-Wallet atau M-Banking Anda.</p>
         </div>
-    </div>
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md" 
          x-data="qrisPayment()" 
@@ -26,7 +27,7 @@
                 <div class="text-center pb-6 border-b border-gray-100">
                     <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">Total Tagihan</p>
                     <p class="mt-1 text-4xl font-black text-[#0D3024]">Rp{{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</p>
-                    <p class="mt-2 text-xs font-semibold text-gray-400">ID Pesanan: <span class="text-gray-600 font-mono font-bold">#{{ optional($pembayaran->pesanan)->nomor_pesanan ?? $pembayaran->pesanan_id }}</span></p>
+                    <p class="mt-2 text-xs font-semibold text-gray-400">Kode Pesanan: <span class="text-gray-600 font-mono font-bold">#{{ optional($pembayaran->pesanan)->nomor_pesanan ?? $pembayaran->pesanan_id }}</span></p>
                 </div>
 
                 <!-- QR Code Display -->
@@ -79,6 +80,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </div>
 

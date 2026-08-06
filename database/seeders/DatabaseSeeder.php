@@ -127,19 +127,25 @@ class DatabaseSeeder extends Seeder
         ];
         DB::table('status_pengantaran')->insert($status_antar);
 
-        // 14. Status Pengadaan
-        $status_pengadaan = [
-            ['kode_status' => 'MENUNGGU', 'nama_status' => 'Menunggu Persetujuan'],
-            ['kode_status' => 'DISETUJUI', 'nama_status' => 'Disetujui'],
-            ['kode_status' => 'DITOLAK', 'nama_status' => 'Ditolak'],
-            ['kode_status' => 'SELESAI', 'nama_status' => 'Selesai'],
-        ];
-        DB::table('status_pengadaan')->insert($status_pengadaan);
+        // 14. Status Pengadaan (Draft, Menunggu Pembelian, Dalam Proses, Menunggu Penerimaan, Diterima Sebagian, Selesai, Dibatalkan)
+        $this->call(StatusPengadaanSeeder::class);
 
         // 15. Seeder Normalisasi Minimal (Dummy Data)
         $this->call(NormalisasiMinimalSeeder::class);
 
         // 16. Paket Nasi Box (opsional, idempoten)
-        // $this->call(NasiBoxSeeder::class); // Skip due to pre-existing schema issue
+        $this->call(NasiBoxSeeder::class);
+
+        // 16b. Paket Katering A & B beserta item & pilihan menu (idempoten)
+        $this->call(CateringSeeder::class);
+        
+        // 17. Bahan Baku Real Data
+        $this->call(BahanBakuRealSeeder::class);
+
+        // 17b. Bahan Baku dari Dokumen (docs/Data_Bahan_Baku_Saung_Babakan_Cinta.md)
+        $this->call(BahanBakuDokumenSeeder::class);
+        
+        // 18. Input Resep Menu
+        $this->call(ResepMenuSeeder::class);
     }
 }

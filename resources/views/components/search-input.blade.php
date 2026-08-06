@@ -31,6 +31,9 @@
         name="{{ $name }}"
         value="{{ $value }}"
         placeholder="{{ $placeholder }}"
-        {{ $attributes->merge(['class' => 'w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-all focus:border-gray-400 focus:ring-1 focus:ring-gray-400']) }}
+        {{ $attributes->merge(['class' => 'w-full rounded-xl border border-gray-200 bg-white py-2 pl-10 pr-16 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 hover:border-gray-300']) }}
     >
+    <button type="submit" class="absolute inset-y-1.5 right-1.5 px-3 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-xs font-medium transition-colors">
+        Cari
+    </button>
 </div>

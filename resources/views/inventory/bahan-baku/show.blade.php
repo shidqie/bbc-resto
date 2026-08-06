@@ -19,6 +19,8 @@
             </x-slot:actions>
         </x-ui.page-header>
 
+        @php $stok = (float) ($bahanBaku->stok_harian?->jumlah_stok ?? 0); @endphp
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {{-- Left Column: Info & Status --}}
@@ -26,10 +28,10 @@
                 {{-- Status Card --}}
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 text-center">
                     <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center text-4xl mb-4 
-                        {{ $bahanBaku->stok <= 0 ? 'bg-red-50 text-red-500' : ($bahanBaku->stok <= $bahanBaku->stok_minimal ? 'bg-yellow-50 text-yellow-500' : 'bg-emerald-50 text-emerald-500') }}">
-                        @if($bahanBaku->stok <= 0)
+                        {{ $stok <= 0 ? 'bg-red-50 text-red-500' : ($stok <= $bahanBaku->stok_minimal ? 'bg-yellow-50 text-yellow-500' : 'bg-emerald-50 text-emerald-500') }}">
+                        @if($stok <= 0)
                             <x-heroicon-o-x-circle class="w-5 h-5 inline-block shrink-0" />
-                        @elseif($bahanBaku->stok <= $bahanBaku->stok_minimal)
+                        @elseif($stok <= $bahanBaku->stok_minimal)
                             <x-heroicon-o-exclamation-triangle class="w-5 h-5 inline-block shrink-0" />
                         @else
                             <x-heroicon-o-check-circle class="w-5 h-5 inline-block shrink-0" />
@@ -40,17 +42,17 @@
                     
                     <div class="inline-flex flex-col border border-gray-100 rounded-xl px-6 py-3 bg-gray-50/50 mb-4 w-full">
                         <span class="text-xs text-gray-500 font-medium mb-1">Stok Saat Ini</span>
-                        <span class="text-3xl font-bold {{ $bahanBaku->stok <= 0 ? 'text-red-600' : ($bahanBaku->stok <= $bahanBaku->stok_minimal ? 'text-yellow-600' : 'text-emerald-600') }}">
-                            {{ rtrim(rtrim(number_format($bahanBaku->stok, 2, ',', '.'), '0'), ',') }} <span class="text-base font-normal text-gray-500">{{ $bahanBaku->satuan->singkatan }}</span>
+                        <span class="text-3xl font-bold {{ $stok <= 0 ? 'text-red-600' : ($stok <= $bahanBaku->stok_minimal ? 'text-yellow-600' : 'text-emerald-600') }}">
+                            {{ rtrim(rtrim(number_format($stok, 2, ',', '.'), '0'), ',') }} <span class="text-base font-normal text-gray-500">{{ $bahanBaku->satuan->singkatan }}</span>
                         </span>
                     </div>
 
                     <div>
                         @if(!$bahanBaku->status_aktif)
                             <x-ui.badge color="gray" dot>Status Nonaktif</x-ui.badge>
-                        @elseif($bahanBaku->stok <= 0)
+                        @elseif($stok <= 0)
                             <x-ui.badge color="danger" dot>Stok Habis</x-ui.badge>
-                        @elseif($bahanBaku->stok <= $bahanBaku->stok_minimal)
+                        @elseif($stok <= $bahanBaku->stok_minimal)
                             <x-ui.badge color="warning" dot>Stok Menipis</x-ui.badge>
                         @else
                             <x-ui.badge color="success" dot>Stok Aman</x-ui.badge>
@@ -117,7 +119,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
-                                @php $runningSisa = (float) $bahanBaku->stok; @endphp
+                                @php $runningSisa = (float) $stok; @endphp
                                 @forelse($mutasiStoks as $mutasi)
                                 @php
                                     $arahStok = $mutasi->jenis_mutasi_stok->arah_stok ?? 'KELUAR';

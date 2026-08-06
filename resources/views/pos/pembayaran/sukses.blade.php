@@ -1,6 +1,6 @@
 <x-layouts.landing>
     @php
-        $lunas = (float) $pesanan->pembayaran->where('status_pembayaran_id', 3)->sum('jumlah_bayar');
+        $lunas = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
         $namaPemesan = optional($pesanan->pelanggan)->nama ?? optional($pesanan->jadwal_pesanan)->nama_penerima;
         $paket = $pesanan->detail_pesanan->first();
         $satuan = $type === 'nasi_box' ? 'Box' : 'Porsi';

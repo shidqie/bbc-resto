@@ -16,7 +16,7 @@ class MenuController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'jenis_menu', 'komponen_paket']);
+        $query = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'jenis_menu', 'komponen_paket.opsi']);
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -151,6 +151,35 @@ class MenuController extends Controller
                 }
             }
 
+            if ($request->has('komponen') && is_array($request->komponen)) {
+                foreach ($request->komponen as $komp) {
+                    if (empty($komp['nama_komponen'])) continue;
+                    $tipe = (isset($komp['tipe']) && $komp['tipe'] === 'choice') ? 'pilihan' : 'tetap';
+                    $komponen = \App\Models\ItemPaket::create([
+                        'menu_id' => $menu->id,
+                        'nama_item' => $komp['nama_komponen'],
+                        'tipe_item' => $tipe,
+                        'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                        'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                        'urutan' => $komp['urutan'] ?? 1,
+                    ]);
+
+                    if ($tipe === 'pilihan' && ! empty($komp['pilihan'])) {
+                        $pilihanList = array_map('trim', explode(',', $komp['pilihan']));
+                        $urutanPilihan = 1;
+                        foreach ($pilihanList as $namaPilihan) {
+                            if (! empty($namaPilihan)) {
+                                \App\Models\PilihanItemPaket::create([
+                                    'item_paket_id' => $komponen->id,
+                                    'nama_pilihan' => $namaPilihan,
+                                    'urutan' => $urutanPilihan++,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
             return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' berhasil disimpan.");
         });
     }
@@ -233,6 +262,36 @@ class MenuController extends Controller
                             'keterangan' => $request->keterangan[$index] ?? null,
                             'dikonfirmasi' => true,
                         ]);
+                    }
+                }
+            }
+
+            if ($request->has('komponen') && is_array($request->komponen)) {
+                $menu->komponen_paket()->delete(); // Clear existing
+                foreach ($request->komponen as $komp) {
+                    if (empty($komp['nama_komponen'])) continue;
+                    $tipe = (isset($komp['tipe']) && $komp['tipe'] === 'choice') ? 'pilihan' : 'tetap';
+                    $komponen = \App\Models\ItemPaket::create([
+                        'menu_id' => $menu->id,
+                        'nama_item' => $komp['nama_komponen'],
+                        'tipe_item' => $tipe,
+                        'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                        'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                        'urutan' => $komp['urutan'] ?? 1,
+                    ]);
+
+                    if ($tipe === 'pilihan' && ! empty($komp['pilihan'])) {
+                        $pilihanList = array_map('trim', explode(',', $komp['pilihan']));
+                        $urutanPilihan = 1;
+                        foreach ($pilihanList as $namaPilihan) {
+                            if (! empty($namaPilihan)) {
+                                \App\Models\PilihanItemPaket::create([
+                                    'item_paket_id' => $komponen->id,
+                                    'nama_pilihan' => $namaPilihan,
+                                    'urutan' => $urutanPilihan++,
+                                ]);
+                            }
+                        }
                     }
                 }
             }

@@ -24,22 +24,22 @@
     {{-- Detail --}}
     @if($aksiIsPaket)
         <a href="{{ route('paket-catering.show', $aksiId) }}" title="Lihat Detail Paket" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-            <x-heroicon-o-eye class="w-3 h-3" />
+            <x-heroicon-o-eye class="w-4 h-4" />
         </a>
     @else
         <a href="{{ route('menu.show', $aksiId) }}" title="Lihat Detail Menu" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-            <x-heroicon-o-eye class="w-3 h-3" />
+            <x-heroicon-o-eye class="w-4 h-4" />
         </a>
     @endif
 
     {{-- Edit --}}
     @if($aksiIsPaket)
         <a href="{{ route('paket-catering.edit', $aksiId) }}" title="Edit Paket" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-            <x-heroicon-o-pencil-square class="w-3 h-3" />
+            <x-heroicon-o-pencil-square class="w-4 h-4" />
         </a>
     @else
         <a href="{{ route('menu.edit', $aksiId) }}" title="Edit Menu" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-            <x-heroicon-o-pencil-square class="w-3 h-3" />
+            <x-heroicon-o-pencil-square class="w-4 h-4" />
         </a>
     @endif
 
@@ -47,16 +47,16 @@
     @if($aksiIsPaket)
         <form action="{{ route('paket-catering.toggle', $aksiId) }}" method="POST" class="inline">
             @csrf @method('PATCH')
-            <button type="submit" title="{{ $aksiStatus ? 'Nonaktifkan Paket' : 'Aktifkan Paket' }}" class="w-7 h-7 rounded-full flex items-center justify-center {{ $aksiStatus ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'bg-green-50 text-green-600 hover:bg-green-100' }} transition-colors">
-                <x-heroicon-o-power class="w-3 h-3" />
-            </button>
+            <x-ui.action-button type="submit" title="{{ $aksiStatus ? 'Nonaktifkan Paket' : 'Aktifkan Paket' }}">
+                <x-heroicon-o-power class="w-4 h-4" />
+            </x-ui.action-button>
         </form>
     @else
         <form action="{{ route('menu.toggle', $aksiId) }}" method="POST" class="inline">
             @csrf @method('PATCH')
-            <button type="submit" title="{{ $aksiStatus ? 'Nonaktifkan Menu' : 'Aktifkan Menu' }}" class="w-7 h-7 rounded-full flex items-center justify-center {{ $aksiStatus ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'bg-green-50 text-green-600 hover:bg-green-100' }} transition-colors">
-                <x-heroicon-o-power class="w-3 h-3" />
-            </button>
+            <x-ui.action-button type="submit" title="{{ $aksiStatus ? 'Nonaktifkan Menu' : 'Aktifkan Menu' }}">
+                <x-heroicon-o-power class="w-4 h-4" />
+            </x-ui.action-button>
         </form>
     @endif
 
@@ -64,9 +64,9 @@
     @if(!$aksiUsed)
         <form action="{{ $aksiIsPaket ? route('paket-catering.destroy', $aksiId) : route('menu.destroy', $aksiId) }}" method="POST" onsubmit="return confirmHapusMenu(event, '{{ $aksiNama }}')" class="inline">
             @csrf @method('DELETE')
-            <button type="submit" title="Hapus {{ $aksiIsPaket ? 'Paket' : 'Menu' }}" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                <x-heroicon-o-trash class="w-3 h-3" />
-            </button>
+            <x-ui.action-button type="submit" title="Hapus {{ $aksiIsPaket ? 'Paket' : 'Menu' }}">
+                <x-heroicon-o-trash class="w-4 h-4" />
+            </x-ui.action-button>
         </form>
     @endif
 </div>

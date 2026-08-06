@@ -7,10 +7,10 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <x-ui.page-header title="Notifikasi Stok" subtitle="Peringatan stok menipis, habis, dan mutasi stok.">
+        <x-ui.page-header title="Notifikasi Stok" subtitle="Peringatan stok menipis, habis, dan mutasi stok." :breadcrumbs="['Persediaan', 'Notifikasi Stok']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('pengadaan.create', ['tipe' => 'harian']) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-amber-500 rounded-lg px-3 py-2 hover:bg-amber-600 transition-colors">
+                    <a href="{{ route('pengadaan.harian.create') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
                         <x-heroicon-o-shopping-cart class="w-3 h-3" />
                         Buat Pengadaan
                     </a>
@@ -45,8 +45,8 @@
         {{-- Filter Bar --}}
         <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between shrink-0">
             <form method="GET" action="{{ route('notifikasi-stok.index') }}" class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-                <x-select-input name="jenis" :options="['menipis' => 'Menipis', 'habis' => 'Habis', 'penerimaan' => 'Penerimaan', 'penyesuaian' => 'Penyesuaian']" :selected="request('jenis')" placeholder="Semua Jenis" :auto-submit="true" />
-                <x-select-input name="dibaca" :options="['false' => 'Belum Dibaca', 'true' => 'Sudah Dibaca']" :selected="request('dibaca')" placeholder="Semua Status" :auto-submit="true" />
+                <x-ui.multi-select name="jenis" :options="['menipis' => 'Menipis', 'habis' => 'Habis', 'penerimaan' => 'Penerimaan', 'penyesuaian' => 'Penyesuaian']" :selected="request('jenis', [])" label="Semua Jenis" type="radio" />
+                <x-ui.multi-select name="dibaca" :options="['false' => 'Belum Dibaca', 'true' => 'Sudah Dibaca']" :selected="request('dibaca', [])" label="Semua Status" type="radio" />
                 @if(request()->hasAny(['jenis', 'dibaca']))
                     <a href="{{ route('notifikasi-stok.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
                 @endif
@@ -59,16 +59,14 @@
         {{-- Table --}}
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left">Pesan</th>
-                        <th class="px-4 py-3 text-left">Bahan Baku</th>
-                        <th class="px-4 py-3 text-right">Stok / Min</th>
-                        <th class="px-4 py-3 text-center">Status</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left">Pesan</th>
+                    <th class="px-4 py-3.5 text-left">Bahan Baku</th>
+                    <th class="px-4 py-3.5 text-right">Stok / Min</th>
+                    <th class="px-4 py-3.5 text-center">Status</th>
+                    <th class="px-4 py-3.5 text-center">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($notifications as $n)
                     <tr class="{{ $n->dibaca ? 'opacity-60' : 'bg-amber-50/30' }} transition-colors">
                         <td class="px-4 py-3">
@@ -79,17 +77,15 @@
                         <td class="px-4 py-3 text-right text-gray-600">{{ number_format($n->stok_saat_ini, 3, ',', '.') }} / {{ number_format($n->stok_minimal, 3, ',', '.') }}</td>
                         <td class="px-4 py-3 text-center">
                             @php
-                                $label = match ($n->jenis) {
-                                    'habis' => ['Habis', 'bg-red-50 text-red-700 border-red-200'],
-                                    'menipis' => ['Menipis', 'bg-amber-50 text-amber-700 border-amber-200'],
-                                    'penerimaan' => ['Penerimaan', 'bg-green-50 text-green-700 border-green-200'],
-                                    'penyesuaian' => ['Penyesuaian', 'bg-blue-50 text-blue-700 border-blue-200'],
-                                    default => [ucfirst($n->jenis), 'bg-gray-50 text-gray-600 border-gray-200'],
+                                $statusMeta = match ($n->jenis) {
+                                    'habis' => ['Habis', 'danger'],
+                                    'menipis' => ['Menipis', 'warning'],
+                                    'penerimaan' => ['Penerimaan', 'success'],
+                                    'penyesuaian' => ['Penyesuaian', 'primary'],
+                                    default => [ucfirst($n->jenis), 'gray'],
                                 };
                             @endphp
-                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border {{ $label[1] }}">
-                                {{ $label[0] }}
-                            </span>
+                            <x-ui.badge :color="$statusMeta[1]" size="sm">{{ $statusMeta[0] }}</x-ui.badge>
                         </td>
                         <td class="px-4 py-3 text-center">
                             @if(!$n->dibaca)
@@ -100,9 +96,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="5" class="px-4 py-12 text-center text-gray-400 text-sm">Tidak ada notifikasi stok.</td>
-                    </tr>
+                    <x-empty-state icon="exclamation" title="Tidak ada notifikasi stok" :colspan="5" />
                     @endforelse
                 </tbody>
             </table>

@@ -80,7 +80,7 @@ class PaymentCalculationService
     {
         $confirmedPayments = $this->getConfirmedPayments($order);
         
-        return round($confirmedPayments->sum('jumlah_bayar'), 2);
+        return round($confirmedPayments->sum('jumlah_dibayar'), 2);
     }
     
     /**

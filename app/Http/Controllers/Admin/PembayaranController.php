@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PembayaranController extends Controller
 {
@@ -15,10 +17,9 @@ class PembayaranController extends Controller
             'pesanan.pelanggan', 
             'pesanan.meja', 
             'pesanan.jadwal_pesanan',
-            'metode_pembayaran', 
             'jenis_pembayaran', 
             'status_pembayaran',
-            'diproses_oleh_pengguna'
+            'diverifikasi_oleh_pengguna'
         ])->orderBy('dibuat_pada', 'desc');
 
         if ($request->has('search') && $request->search != '') {
@@ -41,15 +42,61 @@ class PembayaranController extends Controller
         $pembayaran = Pembayaran::with([
             'pesanan.jenis_pesanan',
             'pesanan.pelanggan',
-            'pesanan.pembayaran.metode_pembayaran',
-            'pesanan.pembayaran.status_pembayaran',
-            'pesanan.pembayaran.jenis_pembayaran',
-            'metode_pembayaran',
-            'status_pembayaran',
-            'jenis_pembayaran',
-            'diproses_oleh_pengguna'
+            'diverifikasi_oleh_pengguna'
         ])->findOrFail($id);
 
         return view('admin.pembayaran.show', compact('pembayaran'));
+    }
+
+    public function verify(Request $request, $id)
+    {
+        $pembayaran = Pembayaran::with('pesanan')->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            $pembayaran->update([
+                'status_verifikasi' => 'diterima',
+                'diverifikasi_oleh' => Auth::id(),
+                'tanggal_verifikasi' => now(),
+            ]);
+
+            if ($pembayaran->pesanan && $pembayaran->pesanan->status_pesanan_id != 5) {
+                app(\App\Services\OrderService::class)->potongStokPesanan($pembayaran->pesanan);
+                
+                if ($pembayaran->pesanan->jenis_pesanan_id == 1) {
+                    $pembayaran->pesanan->update(['status_pesanan_id' => 5]);
+                    if ($pembayaran->pesanan->meja) {
+                        $pembayaran->pesanan->meja->update(['status_meja_id' => 1]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return back()->with('success', 'Pembayaran berhasil diverifikasi.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal verifikasi: ' . $e->getMessage());
+        }
+    }
+
+    public function cancel(Request $request, $id)
+    {
+        $pembayaran = Pembayaran::with('pesanan')->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            $pembayaran->update([
+                'status_verifikasi' => 'ditolak',
+                'catatan_verifikasi' => $request->input('alasan', 'Dibatalkan oleh admin.'),
+                'diverifikasi_oleh' => Auth::id(),
+                'tanggal_verifikasi' => now(),
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Pesanan berhasil dibatalkan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal membatalkan: ' . $e->getMessage());
+        }
     }
 }

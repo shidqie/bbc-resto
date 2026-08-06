@@ -7,11 +7,11 @@
 @section('title', 'Kelola Kategori')
 
 @section('content')
-<div class="flex-1 bg-gray-50 text-gray-800">
+<div class="flex-1 bg-gray-50 text-gray-800 pb-10">
     <div class="w-full p-6 space-y-5">
         
         {{-- PAGE HEADER --}}
-        <x-ui.page-header title="Kategori Menu" subtitle="Kelola daftar kategori menu Restoran">
+        <x-ui.page-header title="Kategori Menu" subtitle="Kelola daftar kategori menu Restoran" :breadcrumbs="['Manajemen Menu', 'Kategori Menu']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
                     <button onclick="openModal('modalTambah', 'drawerTambahPanel')" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
@@ -24,77 +24,65 @@
 
         <x-ui.alert />
 
-        {{-- Filter Bar --}}
-        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
-            <form action="{{ route('kategori-menu.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
-                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama kategori…" />
-                <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
-            </form>
-        </div>
+        {{-- Table with integrated toolbar --}}
+        <x-ui.data-table :paginator="$kategoris">
+            <x-slot:toolbar>
+                <form action="{{ route('kategori-menu.index') }}" method="GET" class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 w-full">
+                    <div class="w-full xl:max-w-sm shrink-0">
+                        <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama kategori…" width="w-full" />
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        @if(request()->filled('search'))
+                            <a href="{{ route('kategori-menu.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                        @endif
+                    </div>
+                </form>
+            </x-slot:toolbar>
 
-        {{-- Table --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
-            <table class="w-full text-sm min-w-[700px]">
-                <thead>
-                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No.</th>
-                        <th class="px-4 py-3 text-left">Nama Kategori</th>
-                        <th class="px-4 py-3 text-left">Deskripsi</th>
-                        <th class="px-4 py-3 text-center w-32">Jumlah Menu</th>
-                        <th class="px-4 py-3 text-center w-32">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+            <x-ui.table class="min-w-[700px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No.</th>
+                    <th class="px-4 py-3.5 text-left">Nama Kategori</th>
+                    <th class="px-4 py-3.5 text-left">Deskripsi</th>
+                    <th class="px-4 py-3.5 text-center w-32">Jumlah Menu</th>
+                    <th class="px-4 py-3.5 text-center w-32">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($kategoris as $index => $kategori)
-                        <tr class="hover:bg-gray-50/60 transition-colors group align-middle">
-                            <td class="px-4 py-3 text-sm text-gray-500 font-medium">
+                        <x-ui.table.row class="align-middle">
+                            <td class="px-4 py-4 text-sm text-gray-500 font-medium">
                                 {{ $kategoris->firstItem() + $index }}
                             </td>
-                            <td class="px-4 py-3 font-bold text-gray-900">
+                            <td class="px-4 py-4 font-bold text-gray-900">
                                 {{ $kategori->nama_kategori }}
                             </td>
-                            <td class="px-4 py-3 text-gray-600">
+                            <td class="px-4 py-4 text-gray-600">
                                 {{ $kategori->deskripsi ?? '-' }}
                             </td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="inline-flex items-center justify-center min-w-10 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
-                                    {{ $kategori->menu_count ?? 0 }} menu
-                                </span>
+                            <td class="px-4 py-4 text-center">
+                                <x-ui.badge color="primary" size="sm">{{ $kategori->menu_count ?? 0 }} menu</x-ui.badge>
                             </td>
-                            <td class="px-4 py-3 text-center">
+                            <td class="px-4 py-4 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <button onclick="editKategori({{ $kategori->id }}, '{{ addslashes($kategori->nama_kategori) }}', '{{ addslashes($kategori->deskripsi) }}')" 
-                                            title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                        <x-heroicon-o-pencil-square class="w-3 h-3" />
-                                    </button>
+                                    <x-ui.action-button onclick="editKategori({{ $kategori->id }}, '{{ addslashes($kategori->nama_kategori) }}', '{{ addslashes($kategori->deskripsi) }}')" title="Ubah">
+                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    </x-ui.action-button>
                                     <form id="delete-kategori-{{ $kategori->id }}" action="{{ route('kategori-menu.destroy', $kategori->id) }}" method="POST" class="inline-block">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Kategori', name: '{{ addslashes($kategori->nama_kategori) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-kategori-{{ $kategori->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                            <x-heroicon-o-trash class="w-3 h-3" />
-                                        </button>
+                                        <x-ui.action-button type="button" onclick="window.confirmDialog({ title: 'Hapus Kategori', name: '{{ addslashes($kategori->nama_kategori) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-kategori-{{ $kategori->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" title="Hapus">
+                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                        </x-ui.action-button>
                                     </form>
                                 </div>
                             </td>
-                        </tr>
+                        </x-ui.table.row>
                     @empty
-                        <tr>
-                            <td colspan="5" class="py-12 text-center text-gray-400">
-                                <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-                                <p class="text-sm font-medium text-gray-500">Belum ada data kategori menu.</p>
-                            </td>
-                        </tr>
+                    <x-empty-state icon="archive-box" title="Belum ada data kategori menu" message="Tambahkan kategori menu untuk mulai mengelompokkan menu." :colspan="5" />
                     @endforelse
                 </tbody>
-            </table>
-        </div>
-
-        {{-- Pagination --}}
-        @if($kategoris->hasPages())
-        <div class="mt-4">
-            {{ $kategoris->links() }}
-        </div>
-        @endif
+            </x-ui.table>
+        </x-ui.data-table>
 
     </div>
 </div>

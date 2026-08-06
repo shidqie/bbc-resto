@@ -51,11 +51,7 @@ class BahanBakuController extends Controller
 
     public function create()
     {
-        $kategoris = KategoriBahanBaku::all();
-        $satuans = Satuan::all();
-        $kodeBahan = 'BB-'.strtoupper(uniqid());
-
-        return view('inventory.bahan-baku.create', compact('kategoris', 'satuans', 'kodeBahan'));
+        return redirect()->route('bahan-baku.index');
     }
 
     public function store(Request $request)
@@ -149,11 +145,9 @@ class BahanBakuController extends Controller
 
     public function edit($id)
     {
-        $bahanBaku = BahanBaku::with('stok_harian', 'stok_catering_balance')->findOrFail($id);
-        $kategoris = KategoriBahanBaku::all();
-        $satuans = Satuan::all();
+        BahanBaku::findOrFail($id);
 
-        return view('inventory.bahan-baku.edit', compact('bahanBaku', 'kategoris', 'satuans'));
+        return redirect()->route('bahan-baku.index');
     }
 
     public function storeSatuanAjax(Request $request)

@@ -5,7 +5,7 @@
 @section('content')
 <div class="w-full p-6 max-w-[1200px] mx-auto">
     <div class="w-full p-6 flex justify-between items-center mb-6">
-        <x-ui.page-header title="Detail Pesanan Nasi Box #{{ $pesanan->nomor_pesanan }}">
+        <x-ui.page-header title="Detail Pesanan Nasi Box #{{ $pesanan->nomor_pesanan }}" subtitle="Rincian lengkap pesanan nasi box, item menu, pembayaran & status." :breadcrumbs="['Penjualan', 'Nasi Box', 'Detail']">
             <x-slot:actions>
                 <div class="flex gap-2">
                     <a href="{{ route('admin.pesanan.nasibox.pdf', $pesanan->id) }}" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">
@@ -120,14 +120,14 @@
                     @if($bayar)
                         <div class="border rounded-lg p-4 flex flex-wrap items-center gap-4">
                             <div class="flex-1 min-w-[200px]">
-                                <p class="font-bold uppercase text-sm">{{ $bayar->metode_pembayaran->nama_metode ?? 'Pembayaran' }}</p>
+                                <p class="font-bold uppercase text-sm">{{ $bayar->metode_pembayaran ?? 'Pembayaran' }}</p>
                                 <p class="text-xs text-gray-500 mt-1">
                                     {{ $bayar->nomor_pembayaran }} •
                                     {{ $bayar->dibayar_pada ? \Carbon\Carbon::parse($bayar->dibayar_pada)->format('d M Y H:i') : 'Belum dibayar' }}
                                 </p>
                             </div>
                             <div class="text-right">
-                                <span class="text-xs px-2 py-1 rounded {{ $bayar->status_pembayaran_id == 3 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                <span class="text-xs px-2 py-1 rounded {{ $bayar->status_verifikasi === 'diterima' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                     {{ $bayar->status_pembayaran->nama_status ?? 'Menunggu' }}
                                 </span>
                                 <p class="font-bold mt-1">Rp {{ number_format($bayar->jumlah_bayar, 0, ',', '.') }}</p>
@@ -154,43 +154,72 @@
                         <div class="mt-8 border-t pt-6" x-data="{ showBatalModal: false }">
                             <div class="flex flex-wrap gap-3 justify-center">
 
-                                @if($pesanan->status_pesanan_id == 1)
-                                <form id="form-konfirmasi-nasibox" action="{{ route('admin.pesanan.nasibox.konfirmasi', $pesanan->id) }}" method="POST">
+                                {{-- Konfirmasi (dari Menunggu Pembayaran) --}}
+                                @if($pesanan->status_pesanan_id === 7)
+                                <form id="form-konfirmasi-nasibox" action="{{ route('admin.pesanan.nasibox.update-status', $pesanan->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
+                                    <input type="hidden" name="status" value="8">
                                     <button type="button" onclick="window.confirmDialog({ title: 'Konfirmasi Pesanan', name: '{{ $pesanan->nomor_pesanan }}', message: 'Anda yakin ingin mengonfirmasi pesanan ini?', formId: 'form-konfirmasi-nasibox', confirmText: 'Konfirmasi', cancelText: 'Batal', type: 'warning' })" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-check class="mr-2 w-5 h-5" />Konfirmasi Pesanan
                                     </button>
                                 </form>
                                 @endif
 
-                                @if($pesanan->status_pesanan_id == 2)
-                                <form id="form-proses-nasibox" action="{{ route('admin.pesanan.nasibox.update-status', $pesanan->id) }}" method="POST">
+                                {{-- Mulai Proses Pengadaan (dari Terkonfirmasi) --}}
+                                @if($pesanan->status_pesanan_id === 8)
+                                <form id="form-pengadaan-nasibox" action="{{ route('admin.pesanan.nasibox.update-status', $pesanan->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
-                                    <input type="hidden" name="status" value="diproses">
-                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Proses Dapur', name: '{{ $pesanan->nomor_pesanan }}', message: 'Mulai proses dapur untuk pesanan ini?', formId: 'form-proses-nasibox', confirmText: 'Proses', cancelText: 'Batal', type: 'warning' })" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow">
-                                        <x-heroicon-o-sparkles class="mr-2 w-5 h-5" />Mulai Proses Dapur
+                                    <input type="hidden" name="status" value="9">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Proses Pengadaan', name: '{{ $pesanan->nomor_pesanan }}', message: 'Mulai proses pengadaan bahan untuk pesanan ini?', formId: 'form-pengadaan-nasibox', confirmText: 'Proses', cancelText: 'Batal', type: 'warning' })" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                        <x-heroicon-o-shopping-cart class="mr-2 w-5 h-5" />Mulai Proses Pengadaan
                                     </button>
                                 </form>
                                 @endif
 
-                                @if($pesanan->status_pesanan_id == 3)
-                                <form id="form-siap-nasibox" action="{{ route('admin.pesanan.nasibox.update-status', $pesanan->id) }}" method="POST">
+                                {{-- Bahan Diterima (dari Proses Pengadaan) --}}
+                                @if($pesanan->status_pesanan_id === 9)
+                                <form id="form-bahan-diterima-nasibox" action="{{ route('admin.pesanan.nasibox.update-status', $pesanan->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
-                                    <input type="hidden" name="status" value="menunggu_pengiriman">
-                                    <button type="button" onclick="window.confirmDialog({ title: 'Tandai Siap Dikirim', name: '{{ $pesanan->nomor_pesanan }}', message: 'Tandai pesanan sebagai Siap Dikirim?', formId: 'form-siap-nasibox', confirmText: 'Siap', cancelText: 'Batal', type: 'warning' })" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow">
-                                        <x-heroicon-o-cube class="mr-2 w-5 h-5" />Tandai Siap Dikirim
+                                    <input type="hidden" name="status" value="10">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Bahan Diterima', name: '{{ $pesanan->nomor_pesanan }}', message: 'Tandai bahan baku telah diterima?', formId: 'form-bahan-diterima-nasibox', confirmText: 'Tandai', cancelText: 'Batal', type: 'warning' })" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                        <x-heroicon-o-inbox-arrow-down class="mr-2 w-5 h-5" />Bahan Diterima
                                     </button>
                                 </form>
                                 @endif
 
-                                @if($pesanan->status_pesanan_id == 4)
+                                {{-- Mulai Sedang Produksi (dari Terkonfirmasi atau Bahan Diterima) --}}
+                                @if(in_array($pesanan->status_pesanan_id, [8, 10]))
+                                <form id="form-produksi-nasibox" action="{{ route('admin.pesanan.nasibox.update-status', $pesanan->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="11">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Sedang Produksi', name: '{{ $pesanan->nomor_pesanan }}', message: 'Mulai proses dapur? Stok bahan akan dipotong otomatis jika belum dipotong.', formId: 'form-produksi-nasibox', confirmText: 'Mulai Produksi', cancelText: 'Batal', type: 'warning' })" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                        <x-heroicon-o-sparkles class="mr-2 w-5 h-5" />Mulai Sedang Produksi
+                                    </button>
+                                </form>
+                                @endif
+
+                                {{-- Produksi Selesai (dari Sedang Produksi) --}}
+                                @if($pesanan->status_pesanan_id === 11)
+                                <form id="form-produksi-selesai-nasibox" action="{{ route('admin.pesanan.nasibox.update-status', $pesanan->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="12">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Produksi Selesai', name: '{{ $pesanan->nomor_pesanan }}', message: 'Tandai produksi selesai? Jika metode pengiriman diantar, akan masuk ke Jadwal Pengantaran.', formId: 'form-produksi-selesai-nasibox', confirmText: 'Selesai Produksi', cancelText: 'Batal', type: 'warning' })" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                        <x-heroicon-o-cube class="mr-2 w-5 h-5" />Produksi Selesai
+                                    </button>
+                                </form>
+                                @endif
+
+                                {{-- Tandai Selesai Total (dari Produksi Selesai JIKA AMBIL SENDIRI) --}}
+                                @if($pesanan->status_pesanan_id === 12 && $pesanan->metode_pengiriman === 'ambil_sendiri')
                                 <form id="form-selesai-nasibox" action="{{ route('admin.pesanan.nasibox.update-status', $pesanan->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
-                                    <input type="hidden" name="status" value="selesai">
+                                    <input type="hidden" name="status" value="5">
                                     <button type="button" onclick="window.confirmDialog({ title: 'Tandai Selesai', name: '{{ $pesanan->nomor_pesanan }}', message: 'Tandai pesanan sebagai Selesai?', formId: 'form-selesai-nasibox', confirmText: 'Selesai', cancelText: 'Batal', type: 'warning' })" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-flag class="mr-2 w-5 h-5" />Tandai Selesai
                                     </button>

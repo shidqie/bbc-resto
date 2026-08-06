@@ -13,7 +13,7 @@ class PaketCateringController extends Controller
     public function index(Request $request)
     {
         $jenis = $request->input('jenis', 'catering');
-        $query = Menu::withCount('komponen_paket')->whereHas('komponen_paket');
+        $query = Menu::with(['komponen_paket.opsi'])->withCount('komponen_paket')->whereHas('komponen_paket');
 
         if ($jenis === 'catering') {
             $query->where('jenis_menu_id', 2);

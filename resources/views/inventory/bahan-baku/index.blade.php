@@ -292,18 +292,18 @@
 
                 <div id="bbStokAwalContainer">
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Stok Awal</label>
-                    <input type="number" step="0.01" name="stok" id="bbStok" value="0" min="0" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 transition-all">
+                    <x-ui.input-decimal id="bbStok" name="stok" value="0" />
                     <p class="text-[11px] text-gray-400 mt-1">Hanya diisi saat membuat bahan baku baru.</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Stok Min (Harian) <span class="text-red-500">*</span></label>
-                        <input type="number" step="0.01" name="stok_minimal_harian" id="bbMinHarian" required min="0" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 transition-all">
+                        <x-ui.input-decimal id="bbMinHarian" name="stok_minimal_harian" required="true" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Stok Min (Catering)</label>
-                        <input type="number" step="0.01" name="stok_minimal_catering" id="bbMinCatering" min="0" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 transition-all">
+                        <x-ui.input-decimal id="bbMinCatering" name="stok_minimal_catering" />
                     </div>
                 </div>
 
@@ -439,9 +439,9 @@
             document.getElementById('bbPeruntukan').value = bb.jenis_peruntukan;
             document.getElementById('bbStatus').value = bb.status_aktif ? 1 : 0;
             
-            document.getElementById('bbMinHarian').value = bb.stok_minimal || 0;
+            window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbMinHarian', value: bb.stok_minimal || 0 } }));
             const stokCatering = bb.stok_catering_balance ? bb.stok_catering_balance.stok_minimal : 0;
-            document.getElementById('bbMinCatering').value = stokCatering;
+            window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbMinCatering', value: stokCatering } }));
 
             document.getElementById('bbStokAwalContainer').classList.add('hidden');
         } else {

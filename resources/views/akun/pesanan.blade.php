@@ -46,8 +46,8 @@
                 @php
                     $paket = $o->detail_pesanan->first();
                     $totalO = (float) $o->total_tagihan;
-                    $dpO = (float) $o->pembayaran->whereIn('status_pembayaran_id', [2, 3])->sum('jumlah_bayar');
-                    $lunasO = (float) $o->pembayaran->where('status_pembayaran_id', 3)->sum('jumlah_bayar');
+                    $dpO = (float) $o->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+                    $lunasO = (float) $o->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
                     $bayarLabel = $lunasO >= $totalO ? 'Lunas' : ($dpO > 0 ? 'DP Terbayar' : 'Belum Bayar');
                     $bayarColor = $lunasO >= $totalO ? 'bg-emerald-100 text-emerald-700' : ($dpO > 0 ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700');
 

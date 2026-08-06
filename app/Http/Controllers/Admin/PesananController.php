@@ -12,15 +12,34 @@ class PesananController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pesanan::with(['jenis_pesanan', 'status_pesanan', 'meja', 'kasir', 'pembayaran.metode_pembayaran', 'jadwal_pesanan'])
+        $query = Pesanan::with(['jenis_pesanan', 'status_pesanan', 'meja', 'kasir', 'jadwal_pesanan'])
             ->orderBy('dibuat_pada', 'desc');
 
         if ($request->has('jenis') && $request->jenis != '') {
             $query->where('jenis_pesanan_id', $request->jenis);
         }
 
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status_pesanan_id', $request->status);
+        if ($request->has('periode') && $request->periode != '') {
+            $now = \Carbon\Carbon::now();
+            switch ($request->periode) {
+                case 'hari_ini':
+                    $query->whereDate('dibuat_pada', $now->toDateString());
+                    break;
+                case 'minggu_ini':
+                    $query->whereBetween('dibuat_pada', [$now->startOfWeek()->toDateTimeString(), $now->endOfWeek()->toDateTimeString()]);
+                    break;
+                case 'bulan_ini':
+                    $query->whereMonth('dibuat_pada', $now->month)->whereYear('dibuat_pada', $now->year);
+                    break;
+                case 'kustom':
+                    if ($request->has('start_date') && $request->start_date != '') {
+                        $query->whereDate('dibuat_pada', '>=', $request->start_date);
+                    }
+                    if ($request->has('end_date') && $request->end_date != '') {
+                        $query->whereDate('dibuat_pada', '<=', $request->end_date);
+                    }
+                    break;
+            }
         }
 
         if ($request->has('search') && $request->search != '') {
@@ -42,7 +61,7 @@ class PesananController extends Controller
     {
         $pesanan = Pesanan::with([
             'jenis_pesanan', 'status_pesanan', 'meja', 'kasir', 'pelayan',
-            'detail_pesanan.menu', 'pembayaran.metode_pembayaran', 'pembayaran.jenis_pembayaran',
+            'detail_pesanan.menu',
             'tiket_dapur', 'jadwal_pesanan',
         ])->findOrFail($id);
 

@@ -3,20 +3,18 @@
 
 @section('content')
 <div class="px-6 py-8 md:px-10 md:py-10">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                <a href="{{ route('penyesuaian-stok.index') }}" class="hover:text-[#3B82F6] transition">Penyesuaian Stok</a>
-                <span>/</span>
-                <span>{{ $penyesuaian->nomor_penyesuaian }}</span>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">{{ $penyesuaian->nomor_penyesuaian }}</h1>
-        </div>
-        <a href="{{ route('penyesuaian-stok.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-3xl hover:bg-gray-200 transition">
-            &larr; Kembali
-        </a>
-    </div>
+    {{-- PAGE HEADER --}}
+    <x-ui.page-header
+        title="{{ $penyesuaian->nomor_penyesuaian }}"
+        subtitle="Rincian penyesuaian stok beserta selisih jumlah fisik hasil opname."
+        :breadcrumbs="['Persediaan', 'Penyesuaian Stok', 'Detail']"
+        class="mb-8">
+        <x-slot:actions>
+            <a href="{{ route('penyesuaian-stok.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-3xl hover:bg-gray-200 transition">
+                &larr; Kembali
+            </a>
+        </x-slot:actions>
+    </x-ui.page-header>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Info sidebar -->

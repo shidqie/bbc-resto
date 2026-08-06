@@ -74,7 +74,7 @@
             {{-- Desktop Actions --}}
             <div class="hidden lg:flex items-center gap-6 shrink-0">
 
-                @if(Auth::check())
+                @if(Auth::guard('web')->check())
                     <a href="{{ route('dashboard') }}"
                        class="text-sm text-neutral-600 hover:text-neutral-900 transition">
                         Dasbor Admin
@@ -161,7 +161,7 @@
             <a href="{{ route('home') }}#lacak-pesanan" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Lacak Pesanan</a>
             <a href="{{ route('home') }}#kontak" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Kontak</a>
 
-            @if(Auth::check())
+            @if(Auth::guard('web')->check())
                 <a href="{{ route('dashboard') }}" class="py-3 text-sm text-neutral-900 font-medium border-b border-neutral-100">Dasbor Admin</a>
             @elseif(Auth::guard('pelanggan')->check())
                 <a href="{{ route('konsumen.pesanan.index') }}" class="py-3 text-sm text-neutral-900 font-medium border-b border-neutral-100">Pesanan Saya</a>

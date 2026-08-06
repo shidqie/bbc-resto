@@ -12,13 +12,9 @@
             :breadcrumbs="['Laporan', 'Penjualan']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('laporan.penjualan.cetak-pdf', request()->all()) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
+                    <a href="{{ route('laporan.penjualan.cetak-pdf', request()->all()) }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shadow-sm">
                         <x-heroicon-o-document-text class="w-4 h-4 text-rose-500" />
                         Export PDF
-                    </a>
-                    <a href="{{ route('laporan.penjualan.cetak-excel', request()->all()) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
-                        <x-heroicon-o-table-cells class="w-4 h-4 text-emerald-500" />
-                        Export Excel
                     </a>
                 </div>
             </x-slot:actions>
@@ -53,66 +49,63 @@
         {{-- Table with integrated toolbar --}}
         <x-ui.data-table :paginator="$pesanans">
             <x-slot:toolbar>
-                <form action="{{ route('laporan.penjualan') }}" method="GET" class="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full flex-wrap">
-                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari ID Pesanan, Pelanggan..." />
-                    
-                    <x-select-input name="jenis" :options="['dinein' => 'Dine In', 'catering' => 'Catering', 'nasibox' => 'Nasi Box']" :selected="request('jenis')" placeholder="Semua Jenis" :auto-submit="true" />
-                    
-                    <x-select-input name="status_pembayaran" :options="['belum' => 'Belum Bayar', 'dp' => 'DP', 'lunas' => 'Lunas']" :selected="request('status_pembayaran')" placeholder="Semua Status" :auto-submit="true" />
-                    
-                    <x-select-input name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'custom' => 'Kustom Rentang']" :selected="request('periode', 'bulan_ini')" placeholder="Semua Periode" :auto-submit="true" />
-                    
-                    @if(request('periode') == 'custom')
-                        <div class="flex items-center gap-2">
-                            <input type="date" name="start_date" value="{{ $startDate }}" class="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
-                            <span class="text-gray-400">-</span>
-                            <input type="date" name="end_date" value="{{ $endDate }}" class="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+                <form action="{{ route('laporan.penjualan') }}" method="GET" class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 w-full">
+                    <div class="w-full xl:max-w-sm shrink-0">
+                        <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari Kode Pesanan, Pelanggan..." width="w-full" />
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+                        <x-ui.multi-select name="jenis" :options="['dinein' => 'Dine In', 'catering' => 'Catering', 'nasibox' => 'Nasi Box']" :selected="request('jenis', [])" label="Jenis" />
+                        <x-ui.multi-select name="status_pembayaran" :options="['belum' => 'Belum Bayar', 'dp' => 'DP', 'lunas' => 'Lunas']" :selected="request('status_pembayaran', [])" label="Status" />
+                        <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'custom' => 'Kustom']" :selected="request('periode', 'bulan_ini')" label="Periode" type="radio" />
+                        @if(request('periode') == 'custom' || (is_array(request('periode')) && in_array('custom', request('periode'))))
+                            <div class="flex items-center gap-2 shrink-0">
+                                <input type="date" name="start_date" value="{{ $startDate }}" onchange="this.closest('form').submit()" class="text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 w-36 transition-colors">
+                                <span class="text-gray-400">-</span>
+                                <input type="date" name="end_date" value="{{ $endDate }}" onchange="this.closest('form').submit()" class="text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 w-36 transition-colors">
+                            </div>
+                        @endif
+                        
+                        <div class="flex items-center gap-2 shrink-0">
+                            @if(request()->hasAny(['search', 'jenis', 'status_pembayaran']) || request('periode') != 'bulan_ini')
+                                <a href="{{ route('laporan.penjualan') }}" class="text-sm font-medium text-rose-500 hover:text-rose-700 px-3 py-2 transition-colors">Reset Filter</a>
+                            @endif
                         </div>
-                    @endif
-                    
-                    <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
-                    
-                    @if(request()->hasAny(['search', 'jenis', 'status_pembayaran']) || request('periode') != 'bulan_ini')
-                        <a href="{{ route('laporan.penjualan') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset Filter</a>
-                    @endif
+                    </div>
                 </form>
             </x-slot:toolbar>
 
-            <table class="w-full text-sm min-w-[900px]">
-                <thead>
-                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No</th>
-                        <th class="px-4 py-3 text-left">Tanggal</th>
-                        <th class="px-4 py-3 text-left">ID Pesanan</th>
-                        <th class="px-4 py-3 text-left">Jenis</th>
-                        <th class="px-4 py-3 text-left">Pelanggan</th>
-                        <th class="px-4 py-3 text-right">Total</th>
-                        <th class="px-4 py-3 text-center">Status Pembayaran</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+            <x-ui.table class="min-w-[950px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
+                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">Jenis</th>
+                    <th class="px-4 py-3.5 text-left">Pelanggan</th>
+                    <th class="px-4 py-3.5 text-right">Total</th>
+                    <th class="px-4 py-3.5 text-center">Status Pembayaran</th>
+                    <th class="px-4 py-3.5 text-right">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($pesanans as $i => $p)
-                    <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 align-middle text-sm text-gray-500 font-medium">
                             {{ $pesanans->firstItem() + $i }}
                         </td>
-                        <td class="px-4 py-3 align-middle whitespace-nowrap">
-                            <p class="font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->tanggal_pesanan)->format('d M Y') }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($p->tanggal_pesanan)->format('H:i') }}</p>
+                        <td class="px-4 py-4 align-middle whitespace-nowrap text-sm text-gray-700">
+                            {{ \Carbon\Carbon::parse($p->tanggal_pesanan)->translatedFormat('d M Y, H.i') }} WIB
                         </td>
-                        <td class="px-4 py-3 align-middle">
-                            <span class="font-mono font-bold text-gray-900 text-xs">{{ $p->nomor_pesanan }}</span>
+                        <td class="px-4 py-4 align-middle">
+                            <span class="font-mono font-bold text-gray-900 text-sm">{{ $p->nomor_pesanan }}</span>
                         </td>
-                        <td class="px-4 py-3 align-middle">
+                        <td class="px-4 py-4 align-middle">
                             @php
                                 $jId = $p->jenis_pesanan_id;
                                 $jColor = $jId == 1 ? 'gray' : ($jId == 2 ? 'warning' : 'primary');
                             @endphp
                             <x-ui.badge :color="$jColor" size="sm">{{ optional($p->jenis_pesanan)->nama_jenis ?? 'Unknown' }}</x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 align-middle">
-                            <p class="font-medium text-gray-900 text-sm">
+                        <td class="px-4 py-4 align-middle">
+                            <p class="font-semibold text-gray-900 text-sm whitespace-nowrap">
                                 @if($p->jenis_pesanan_id == 1)
                                     Meja {{ optional($p->meja)->nomor_meja ?? '-' }}
                                 @else
@@ -120,36 +113,36 @@
                                 @endif
                             </p>
                         </td>
-                        <td class="px-4 py-3 align-middle text-right font-bold text-gray-900 tabular-nums whitespace-nowrap">
+                        <td class="px-4 py-4 align-middle text-right font-bold text-gray-900 tabular-nums whitespace-nowrap">
                             Rp {{ number_format($p->total_tagihan, 0, ',', '.') }}
                         </td>
-                        <td class="px-4 py-3 align-middle text-center">
+                        <td class="px-4 py-4 align-middle text-center">
                             @php
                                 $totalP = (float) $p->total_tagihan;
-                                $dpP = (float) $p->pembayaran->whereIn('status_pembayaran_id', [2, 3])->sum('jumlah_bayar');
-                                $lunasP = (float) $p->pembayaran->where('status_pembayaran_id', 3)->sum('jumlah_bayar');
+                                $dpP = (float) $p->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+                                $lunasP = (float) $p->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
                                 $bayarP = $lunasP >= $totalP ? 'lunas' : ($dpP > 0 ? 'dp' : 'belum');
-                                $bayarColor = $bayarP === 'lunas' ? 'success' : ($bayarP === 'dp' ? 'primary' : 'warning');
+                                $bayarColor = $bayarP === 'lunas' ? 'success' : ($bayarP === 'dp' ? 'warning' : 'danger');
                                 $bayarLabel = $bayarP === 'lunas' ? 'Lunas' : ($bayarP === 'dp' ? 'DP Terbayar' : 'Belum Bayar');
                             @endphp
-                            <x-ui.badge :color="$bayarColor" size="sm">{{ $bayarLabel }}</x-ui.badge>
+                            <x-ui.badge :color="$bayarColor" size="sm" dot>{{ $bayarLabel }}</x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 align-middle text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" onclick="openDetailDrawer({{ $p->id }})" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </button>
-                                <button type="button" onclick="window.showToast('info', 'Fitur Cetak belum tersedia sepenuhnya')" title="Cetak" class="w-7 h-7 rounded-full flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
-                                    <x-heroicon-o-printer class="w-3 h-3" />
-                                </button>
+                        <td class="px-4 py-4 align-middle text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <x-ui.action-button onclick="openDetailDrawer({{ $p->id }})" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
+                                <x-ui.action-button onclick="window.showToast('info', 'Fitur Cetak belum tersedia sepenuhnya')" title="Cetak Bukti Transaksi">
+                                    <x-heroicon-o-printer class="w-4 h-4" />
+                                </x-ui.action-button>
                             </div>
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="clipboard-document-list" title="Tidak ada data penjualan" message="Belum ada data penjualan pada periode dan kriteria ini." :colspan="8" />
+                    <x-empty-state icon="document-text" title="Belum ada data" message="Data akan muncul setelah transaksi tersedia." :colspan="8" />
                     @endforelse
                 </tbody>
-            </table>
+            </x-ui.table>
         </x-ui.data-table>
 
     </div>

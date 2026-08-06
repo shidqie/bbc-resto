@@ -12,13 +12,9 @@
             :breadcrumbs="['Laporan', 'Pengadaan']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('laporan.pengadaan.cetak-pdf', request()->all()) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
+                    <a href="{{ route('laporan.pengadaan.cetak-pdf', request()->all()) }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shadow-sm">
                         <x-heroicon-o-document-text class="w-4 h-4 text-rose-500" />
                         Export PDF
-                    </a>
-                    <a href="{{ route('laporan.pengadaan.cetak-excel', request()->all()) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
-                        <x-heroicon-o-table-cells class="w-4 h-4 text-emerald-500" />
-                        Export Excel
                     </a>
                 </div>
             </x-slot:actions>
@@ -49,67 +45,64 @@
         {{-- Table with integrated toolbar --}}
         <x-ui.data-table :paginator="$pengadaans">
             <x-slot:toolbar>
-                <form action="{{ route('laporan.pengadaan') }}" method="GET" class="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full flex-wrap">
-                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari Nomor Permintaan..." />
-                    
-                    <x-select-input name="jenis_permintaan" :options="['harian' => 'Harian', 'catering' => 'Catering']" :selected="request('jenis_permintaan')" placeholder="Semua Jenis" :auto-submit="true" />
-                    
-                    {{-- Kita hardcode status ID untuk simpel, atau bisa lempar dari controller. 
-                         Sesuai seeder: 1=Menunggu, 2=Dipesan, 3=Diterima Sebagian, 4=Selesai, 5=Dibatalkan --}}
-                    <x-select-input name="status" :options="['1' => 'Menunggu Pembelian', '2' => 'Telah Dipesan', '3' => 'Diterima Sebagian', '4' => 'Selesai', '5' => 'Dibatalkan']" :selected="request('status')" placeholder="Semua Status" :auto-submit="true" />
-                    
-                    <x-select-input name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'custom' => 'Kustom Rentang']" :selected="request('periode', 'bulan_ini')" placeholder="Semua Periode" :auto-submit="true" />
-                    
-                    @if(request('periode') == 'custom')
-                        <div class="flex items-center gap-2">
-                            <input type="date" name="start_date" value="{{ $startDate }}" class="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
-                            <span class="text-gray-400">-</span>
-                            <input type="date" name="end_date" value="{{ $endDate }}" class="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+                <form action="{{ route('laporan.pengadaan') }}" method="GET" class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 w-full">
+                    <div class="w-full xl:max-w-sm shrink-0">
+                        <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari Nomor Permintaan..." width="w-full" />
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+                        <x-ui.multi-select name="jenis_permintaan" :options="['harian' => 'Harian', 'catering' => 'Catering']" :selected="request('jenis_permintaan', [])" label="Jenis" />
+                        <x-ui.multi-select name="status" :options="['1' => 'Menunggu Pembelian', '2' => 'Telah Dipesan', '3' => 'Diterima Sebagian', '4' => 'Selesai', '5' => 'Dibatalkan']" :selected="request('status', [])" label="Status" />
+                        <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'custom' => 'Kustom']" :selected="request('periode', 'bulan_ini')" label="Periode" type="radio" />
+                        
+                        @if(request('periode') == 'custom' || (is_array(request('periode')) && in_array('custom', request('periode'))))
+                            <div class="flex items-center gap-2 shrink-0">
+                                <input type="date" name="start_date" value="{{ $startDate }}" onchange="this.closest('form').submit()" class="text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 w-36 transition-colors">
+                                <span class="text-gray-400">-</span>
+                                <input type="date" name="end_date" value="{{ $endDate }}" onchange="this.closest('form').submit()" class="text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 w-36 transition-colors">
+                            </div>
+                        @endif
+                        
+                        <div class="flex items-center gap-2 shrink-0">
+                            @if(request()->hasAny(['search', 'jenis_permintaan', 'status']) || request('periode') != 'bulan_ini')
+                                <a href="{{ route('laporan.pengadaan') }}" class="text-sm font-medium text-rose-500 hover:text-rose-700 px-3 py-2 transition-colors">Reset Filter</a>
+                            @endif
                         </div>
-                    @endif
-                    
-                    <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
-                    
-                    @if(request()->hasAny(['search', 'jenis_permintaan', 'status']) || request('periode') != 'bulan_ini')
-                        <a href="{{ route('laporan.pengadaan') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset Filter</a>
-                    @endif
+                    </div>
                 </form>
             </x-slot:toolbar>
 
-            <table class="w-full text-sm min-w-[900px]">
-                <thead>
-                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No</th>
-                        <th class="px-4 py-3 text-left">Nomor Permintaan</th>
-                        <th class="px-4 py-3 text-left">Tanggal</th>
-                        <th class="px-4 py-3 text-left">Jenis</th>
-                        <th class="px-4 py-3 text-left">Supplier</th>
-                        <th class="px-4 py-3 text-center">Status</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+            <x-ui.table class="min-w-[950px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Nomor Permintaan</th>
+                    <th class="px-4 py-3.5 text-left">Tanggal</th>
+                    <th class="px-4 py-3.5 text-left">Jenis</th>
+                    <th class="px-4 py-3.5 text-left">Supplier</th>
+                    <th class="px-4 py-3.5 text-center">Status</th>
+                    <th class="px-4 py-3.5 text-right">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($pengadaans as $i => $p)
-                    <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 align-middle text-sm text-gray-500 font-medium">
                             {{ $pengadaans->firstItem() + $i }}
                         </td>
-                        <td class="px-4 py-3 align-middle">
+                        <td class="px-4 py-4 align-middle">
                             <span class="font-mono font-bold text-gray-900 text-sm">{{ $p->nomor_pengadaan }}</span>
                         </td>
-                        <td class="px-4 py-3 align-middle whitespace-nowrap">
-                            <p class="font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->tanggal_pengadaan)->format('d M Y') }}</p>
+                        <td class="px-4 py-4 align-middle whitespace-nowrap">
+                            <p class="font-semibold text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->tanggal_pengadaan)->format('d M Y') }}</p>
                         </td>
-                        <td class="px-4 py-3 align-middle">
+                        <td class="px-4 py-4 align-middle">
                             @php
                                 $jColor = $p->jenis_pengadaan == 'harian' ? 'primary' : 'warning';
                             @endphp
                             <x-ui.badge :color="$jColor" size="sm">{{ ucfirst($p->jenis_pengadaan) }}</x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 align-middle">
-                            <p class="font-medium text-gray-900 text-sm">{{ optional($p->pemasok)->nama_pemasok ?? '-' }}</p>
+                        <td class="px-4 py-4 align-middle">
+                            <p class="font-medium text-gray-900 text-sm">{{ optional($p->pemasok)->nama_pemasok ?? '—' }}</p>
                         </td>
-                        <td class="px-4 py-3 align-middle text-center">
+                        <td class="px-4 py-4 align-middle text-center">
                             @php
                                 $sId = $p->status_pengadaan_id;
                                 $sColor = 'gray';
@@ -119,24 +112,24 @@
                                 elseif($sId == 4) $sColor = 'success'; // Selesai
                                 elseif($sId == 5) $sColor = 'danger'; // Dibatalkan
                             @endphp
-                            <x-ui.badge :color="$sColor" size="sm">{{ optional($p->status_pengadaan)->nama_status ?? 'Unknown' }}</x-ui.badge>
+                            <x-ui.badge :color="$sColor" size="sm" dot>{{ optional($p->status_pengadaan)->nama_status ?? 'Unknown' }}</x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 align-middle text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" onclick="openDetailDrawer({{ $p->id }})" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </button>
-                                <button type="button" onclick="window.showToast('info', 'Fitur Cetak belum tersedia sepenuhnya')" title="Cetak" class="w-7 h-7 rounded-full flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
-                                    <x-heroicon-o-printer class="w-3 h-3" />
-                                </button>
+                        <td class="px-4 py-4 align-middle text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <x-ui.action-button onclick="openDetailDrawer({{ $p->id }})" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
+                                <x-ui.action-button onclick="window.showToast('info', 'Fitur Cetak Form Permintaan belum tersedia sepenuhnya')" title="Cetak Form Permintaan">
+                                    <x-heroicon-o-printer class="w-4 h-4" />
+                                </x-ui.action-button>
                             </div>
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="document-text" title="Tidak ada data pengadaan" message="Belum ada data permintaan pengadaan pada kriteria ini." :colspan="7" />
+                    <x-empty-state icon="document-text" title="Belum ada data" message="Data akan muncul setelah transaksi tersedia." :colspan="7" />
                     @endforelse
                 </tbody>
-            </table>
+            </x-ui.table>
         </x-ui.data-table>
 
     </div>

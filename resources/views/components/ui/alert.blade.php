@@ -28,6 +28,14 @@
     </div>
 @endif
 
+{{-- Alert Warning --}}
+@if(session('warning') || session('warning_bom'))
+    <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl flex items-start gap-3">
+        <x-heroicon-o-exclamation-triangle class="shrink-0 w-5 h-5 inline-block shrink-0 mt-0.5" />
+        <p class="text-sm font-medium">{{ session('warning') ?? session('warning_bom') }}</p>
+    </div>
+@endif
+
 {{-- Validation Errors --}}
 @if($errors->any())
     <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex flex-col gap-1">

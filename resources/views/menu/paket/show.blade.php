@@ -13,7 +13,7 @@
         <x-ui.page-header 
             title="Detail Paket: {{ $paketCatering->nama_menu }}" 
             subtitle="Rincian harga, status website, dan struktur komponen menu"
-            :breadcrumbs="['Paket Menu', 'Detail Paket']">
+            :breadcrumbs="['Manajemen Menu', 'Paket', 'Detail']">
             <x-slot:actions>
                 <x-ui.button href="{{ route('paket-catering.index', ['jenis' => $paketCatering->jenis_menu_id == 3 ? 'nasi_box' : 'catering']) }}" variant="outline" icon="arrow-left">Kembali</x-ui.button>
                 <x-ui.button href="{{ route('paket-catering.edit', $paketCatering->id) }}" icon="pencil">Edit Paket</x-ui.button>

@@ -11,7 +11,7 @@ use App\Http\Controllers\LacakPesananController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\MenuController;
-use App\Http\Controllers\MidtransController;
+
 use App\Http\Controllers\MutasiStokController;
 use App\Http\Controllers\NotifikasiStokController;
 use App\Http\Controllers\PaketCateringController;
@@ -23,7 +23,7 @@ use App\Http\Controllers\PesananController;
 use App\Http\Controllers\PesananNasiBoxController;
 use App\Http\Controllers\Pos\DineInController;
 use App\Http\Controllers\Pos\DineInPaymentController;
-use App\Http\Controllers\MidtransWebhookController;
+
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrMenuController;
 use App\Http\Controllers\ResepController;
@@ -64,7 +64,7 @@ Route::get('/pesan/bayar', [BuktiPembayaranController::class, 'cari'])->name('pe
 Route::get('/pesan/bayar/status/{kodePesanan}', [BuktiPembayaranController::class, 'statusJson'])->name('pesanan.bayar.status');
 Route::get('/pesan/bayar/{kodePesanan}', [BuktiPembayaranController::class, 'show'])->name('pesanan.bayar');
 Route::post('/pesan/bukti', [BuktiPembayaranController::class, 'store'])->name('pesanan.bukti.store');
-Route::post('/pesan/snap-token', [MidtransController::class, 'getSnapToken'])->name('pesanan.snap-token');
+
 
 Route::get('/lacak-pesanan', [LacakPesananController::class, 'index'])->name('lacak.index');
 Route::get('/pesan/invoice/{kodePesanan}', [BuktiPembayaranController::class, 'invoicePdf'])->name('pesanan.invoice');
@@ -102,10 +102,18 @@ Route::middleware('auth')->group(function () {
         Route::post('pengadaan/harian', [\App\Http\Controllers\PengadaanController::class, 'storeHarian'])->name('pengadaan.harian.store');
         Route::get('pengadaan/catering/create', [\App\Http\Controllers\PengadaanController::class, 'createCatering'])->name('pengadaan.catering.create');
         Route::post('pengadaan/catering', [\App\Http\Controllers\PengadaanController::class, 'storeCatering'])->name('pengadaan.catering.store');
+        Route::get('pengadaan/permintaan/{pengadaan}/pdf', [\App\Http\Controllers\PengadaanController::class, 'pdf'])->name('pengadaan.permintaan.pdf');
+        Route::get('pengadaan/permintaan/{pengadaan}/edit', [\App\Http\Controllers\PengadaanController::class, 'edit'])->name('pengadaan.permintaan.edit');
+        Route::put('pengadaan/permintaan/{pengadaan}', [\App\Http\Controllers\PengadaanController::class, 'update'])->name('pengadaan.permintaan.update');
+        Route::post('pengadaan/permintaan/{pengadaan}/batal', [\App\Http\Controllers\PengadaanController::class, 'cancel'])->name('pengadaan.permintaan.cancel');
+        Route::get('pengadaan/permintaan/{pengadaan}', [\App\Http\Controllers\PengadaanController::class, 'show'])->name('pengadaan.permintaan.show');
         Route::patch('pengadaan/{id}/status', [\App\Http\Controllers\PengadaanController::class, 'updateStatus'])->name('pengadaan.update-status');
         
         Route::get('pengadaan/penerimaan', [\App\Http\Controllers\PenerimaanBahanController::class, 'index'])->name('pengadaan.penerimaan.index');
+        Route::get('pengadaan/penerimaan/create', [\App\Http\Controllers\PenerimaanBahanController::class, 'create'])->name('pengadaan.penerimaan.create');
+        Route::get('pengadaan/penerimaan/{penerimaan}', [\App\Http\Controllers\PenerimaanBahanController::class, 'show'])->name('pengadaan.penerimaan.show');
         Route::post('pengadaan/penerimaan', [\App\Http\Controllers\PenerimaanBahanController::class, 'store'])->name('pengadaan.penerimaan.store');
+        Route::post('pengadaan/penerimaan/{penerimaan}/verifikasi', [\App\Http\Controllers\PenerimaanBahanController::class, 'verify'])->name('pengadaan.penerimaan.verifikasi');
         Route::get('bahan-baku/{id}/drawer', [BahanBakuController::class, 'drawer'])->name('bahan-baku.drawer');
         Route::resource('bahan-baku', BahanBakuController::class);
         
@@ -165,6 +173,8 @@ Route::middleware('auth')->group(function () {
         // Pembayaran
         Route::get('/admin/pembayaran', [App\Http\Controllers\Admin\PembayaranController::class, 'index'])->name('admin.pembayaran.index');
         Route::get('/admin/pembayaran/detail/{id}', [App\Http\Controllers\Admin\PembayaranController::class, 'show'])->name('admin.pembayaran.show');
+        Route::post('/admin/pembayaran/{id}/verify', [App\Http\Controllers\Admin\PembayaranController::class, 'verify'])->name('admin.pembayaran.verify');
+        Route::post('/admin/pembayaran/{id}/cancel', [App\Http\Controllers\Admin\PembayaranController::class, 'cancel'])->name('admin.pembayaran.cancel');
         Route::get('/admin/pesanan/detail/{id}', [App\Http\Controllers\Admin\PesananController::class, 'show'])->name('admin.pesanan.show');
 
     });
@@ -231,6 +241,7 @@ Route::middleware('auth')->group(function () {
         // Dine-In Table Management (view + table status + checker meja & penyajian)
         Route::get('/pos/dinein', [DineInController::class, 'index'])->name('pos.dinein.index');
         Route::get('/pos/dinein/table-status', [DineInController::class, 'tableStatusApi'])->name('pos.dinein.table-status');
+        Route::post('/pos/dinein/pesanan/{pesanan}/konfirmasi', [DineInController::class, 'konfirmasi'])->name('pos.dinein.konfirmasi');
         Route::get('/pos/dinein/pesanan/{pesananId}/print-meja', [DineInController::class, 'printMeja'])->name('pos.dinein.print-meja');
         Route::get('/pos/dinein/pesanan/{pesananId}/print-gabungan', [DineInController::class, 'printGabungan'])->name('pos.dinein.print-gabungan');
         Route::patch('/pos/dinein/item/{itemId}/toggle-sajian', [DineInController::class, 'toggleStatusSajian'])->name('pos.dinein.toggle-sajian');
@@ -260,6 +271,12 @@ Route::middleware('auth')->group(function () {
         Route::resource('pesanan', PesananController::class)->except(['create', 'edit', 'update', 'destroy']);
         Route::patch('/pesanan/{pesanan}/status', [PesananController::class, 'updateStatus'])->name('pesanan.update-status');
         Route::get('/pesanan/{pesanan}/cetak/{type}', [PesananController::class, 'cetak'])->name('pesanan.cetak');
+        
+        // Verifikasi Pembayaran
+        Route::prefix('verifikasi-pembayaran')->name('admin.verifikasi_pembayaran.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'index'])->name('index');
+            Route::post('/{id}/process', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'process'])->name('process');
+        });
     });
 
     // ─── MIDTRANS PAYMENT API ROUTES ───
@@ -298,52 +315,8 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-// Midtrans Webhook
-Route::post('/api/midtrans/callback', [MidtransController::class, 'notificationCallback']);
-
-// Alternate Flow 6a: Fallback Polling / Manual Check Route
-Route::get('/pesan/check-midtrans-status/{kodePesanan}', [MidtransController::class, 'checkStatusManual'])->name('pesanan.check-midtrans-status');
-
-// Simulasi pembayaran sukses (Dev Mode lokal, pengganti webhook Midtrans)
-Route::post('/api/midtrans/localhost-fallback', function (Request $request) {
-    $pesanan = Pesanan::with('pembayaran')
-        ->where('nomor_pesanan', $request->kode_pesanan)
-        ->first();
-
-    if (! $pesanan) {
-        return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan.']);
-    }
-
-    $total = (float) $pesanan->total_tagihan;
-    $dpTerbayar = (float) $pesanan->pembayaran->whereIn('status_pembayaran_id', [2, 3])->sum('jumlah_bayar');
-    $sisa = max(0, $total - $dpTerbayar);
-
-    if ($sisa <= 0) {
-        return response()->json(['success' => false, 'message' => 'Pesanan ini sudah lunas.']);
-    }
-
-    Pembayaran::create([
-        'nomor_pembayaran' => 'PAY-'.date('YmdHis').'-'.rand(100, 999),
-        'pesanan_id' => $pesanan->id,
-        'metode_pembayaran_id' => 2, // QRIS
-        'status_pembayaran_id' => 3, // LUNAS
-        'jenis_pembayaran_id' => $dpTerbayar > 0 ? 3 : 2, // PELUNASAN / UANG_MUKA
-        'jumlah_bayar' => $sisa,
-        'bukti_pembayaran' => 'midtrans_online',
-        'catatan' => 'Simulasi pembayaran sukses (Dev Mode)',
-    ]);
-
-    if ($pesanan->status_pesanan_id == 1) {
-        $pesanan->update(['status_pesanan_id' => 2]); // DIKONFIRMASI
-    }
-
-    return response()->json(['success' => true]);
-})->withoutMiddleware([VerifyCsrfToken::class]);
-
 // Routes for Pemasok
 Route::middleware(['auth', 'role:Super Admin,Admin Sistem,Manajer,Pemilik'])->group(function () {
     Route::resource('inventory/pemasok', PemasokController::class);
 });
 
-// Midtrans Webhook
-Route::post('/midtrans/webhook', [App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('midtrans.webhook');

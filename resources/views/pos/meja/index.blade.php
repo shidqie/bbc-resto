@@ -1,11 +1,15 @@
 @extends('layouts.pos')
 
+@push('scripts')
+<script src="{{ asset('js/qrcode.min.js') }}"></script>
+@endpush
+
 @section('content')
-<div class="flex-1 overflow-auto bg-gray-50 text-gray-800">
+<div class="flex-1 bg-gray-50 text-gray-800 pb-10">
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <x-ui.page-header title="Manajemen Meja" subtitle="Kelola data meja restoran, kapasitas, dan pantau statusnya.">
+        <x-ui.page-header title="Manajemen Meja" subtitle="Kelola data meja restoran, kapasitas, dan pantau statusnya." :breadcrumbs="['Meja', 'Data Meja']">
             <x-slot:actions>
                 <button onclick="openMejaModal()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -16,103 +20,85 @@
 
         <x-ui.alert />
 
-        {{-- Filter / Info Bar --}}
-        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between mb-3 shrink-0">
-            <form action="{{ route('meja.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
-                <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nomor meja…" width="w-full sm:w-56" />
-                <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
-            </form>
-            
-            <div class="flex items-center gap-2">
-                <a href="{{ url('pos/dinein/qr-codes') }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 hover:bg-emerald-100 transition-colors shadow-sm">
-                    <x-heroicon-o-document class="w-4 h-4" />
-                    Unduh Semua QR
-                </a>
-            </div>
-        </div>
+        {{-- Table --}}
+        <x-ui.data-table :paginator="$mejas">
+            <x-slot:toolbar>
+                <div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 w-full">
+                    <form action="{{ route('meja.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
+                        <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nomor meja…" width="w-full sm:w-56" />
+                    </form>
 
-        {{-- Table Container --}}
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No.</th>
-                        <th class="px-4 py-3 text-left">Nomor Meja</th>
-                        <th class="px-4 py-3 text-left">Area</th>
-                        <th class="px-4 py-3 text-left">Kapasitas</th>
-                        <th class="px-4 py-3 text-left">Status Saat Ini</th>
-                        <th class="px-4 py-3 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+                    <div class="flex items-center gap-2">
+                        <a href="{{ url('pos/dinein/qr-codes') }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 hover:bg-emerald-100 transition-colors shadow-sm">
+                            <x-heroicon-o-document class="w-4 h-4" />
+                            Unduh Semua QR
+                        </a>
+                    </div>
+                </div>
+            </x-slot:toolbar>
+
+            <x-ui.table class="min-w-[800px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No.</th>
+                    <th class="px-4 py-3.5 text-left">Nomor Meja</th>
+                    <th class="px-4 py-3.5 text-left">Area</th>
+                    <th class="px-4 py-3.5 text-left">Kapasitas</th>
+                    <th class="px-4 py-3.5 text-left">Status Saat Ini</th>
+                    <th class="px-4 py-3.5 text-center">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($mejas as $meja)
-                    <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">
                             {{ $mejas->firstItem() + $loop->index }}
                         </td>
-                        <td class="px-4 py-3 font-semibold text-gray-900">
+                        <td class="px-4 py-4 align-middle font-semibold text-gray-900">
                             {{ \Illuminate\Support\Str::startsWith(strtolower($meja->nomor_meja), 'meja') ? $meja->nomor_meja : 'Meja ' . $meja->nomor_meja }}
                         </td>
-                        <td class="px-4 py-3 text-gray-600 font-medium">
+                        <td class="px-4 py-4 align-middle text-gray-600 font-medium">
                             {{ $meja->area ?? '-' }}
                         </td>
-                        <td class="px-4 py-3 text-gray-600 font-medium">
+                        <td class="px-4 py-4 align-middle text-gray-600 font-medium">
                             {{ $meja->kapasitas }} Orang
                         </td>
-                        <td class="px-4 py-3">
-                            @if($meja->status_meja_id == 1)
-                                <span class="inline-block text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-xl px-2.5 py-0.5">
-                                    • Tersedia
-                                </span>
-                            @elseif($meja->status_meja_id == 2)
-                                <span class="inline-block text-xs font-semibold text-rose-700 bg-rose-50 rounded-xl px-2.5 py-0.5">
-                                    • Terisi
-                                </span>
-                            @else
-                                <span class="inline-block text-xs font-semibold text-gray-700 bg-gray-100 rounded-xl px-2.5 py-0.5">
-                                    • Tidak Aktif
-                                </span>
-                            @endif
+                        <td class="px-4 py-4 align-middle">
+                            @php
+                                $sColor = 'gray';
+                                if($meja->status_meja_id == 1) $sColor = 'success'; // Tersedia
+                                elseif($meja->status_meja_id == 2) $sColor = 'danger'; // Terisi
+                            @endphp
+                            <x-ui.badge :color="$sColor" size="sm" dot>
+                                {{ $meja->status_meja_id == 1 ? 'Tersedia' : ($meja->status_meja_id == 2 ? 'Terisi' : 'Tidak Aktif') }}
+                            </x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 text-center">
-                            <div class="flex items-center justify-center gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
+                        <td class="px-4 py-4 align-middle text-center">
+                            <div class="flex items-center justify-center gap-2">
                                 {{-- Detail (QR) --}}
-                                <button onclick="openQrDrawer({{ $meja->id }}, '{{ $meja->nomor_meja }}', '{{ $meja->kode_meja }}', {{ $meja->kapasitas }}, '{{ $meja->qr_token }}', '{{ $meja->area }}')" 
-                                   title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </button>
+                                <x-ui.action-button onclick="openQrDrawer({{ $meja->id }}, '{{ $meja->nomor_meja }}', '{{ $meja->kode_meja }}', {{ $meja->kapasitas }}, '{{ $meja->qr_token }}', '{{ $meja->area }}')" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
 
                                 {{-- Edit (Update) --}}
-                                <button onclick="openMejaModal({{ $meja->id }}, '{{ $meja->nomor_meja }}', {{ $meja->kapasitas }}, {{ $meja->status_meja_id ?? 1 }}, '{{ $meja->area }}')" 
-                                        title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                    <x-heroicon-o-pencil-square class="w-3 h-3" />
-                                </button>
+                                <x-ui.action-button onclick="openMejaModal({{ $meja->id }}, '{{ $meja->nomor_meja }}', {{ $meja->kapasitas }}, {{ $meja->status_meja_id ?? 1 }}, '{{ $meja->area }}')" title="Ubah">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                </x-ui.action-button>
 
                                 {{-- Delete (Hapus) --}}
                                 <form id="delete-meja-{{ $meja->id }}" action="{{ route('meja.destroy', $meja->id) }}" method="POST" class="inline">
                                     @csrf @method('DELETE')
-                                    <button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Meja', name: 'Meja {{ addslashes($meja->nomor_meja) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-meja-{{ $meja->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                        <x-heroicon-o-trash class="w-3 h-3" />
-                                    </button>
+                                    <x-ui.action-button onclick="window.confirmDialog({ title: 'Hapus Meja', name: 'Meja {{ addslashes($meja->nomor_meja) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-meja-{{ $meja->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" title="Hapus">
+                                        <x-heroicon-o-trash class="w-4 h-4" />
+                                    </x-ui.action-button>
                                 </form>
                             </div>
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
-                    <tr>
-                        <td colspan="6" class="py-14 text-center text-gray-400">
-                            <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                            <p class="text-sm font-medium">Belum ada meja terdaftar.</p>
-                        </td>
-                    </tr>
+                    <x-empty-state icon="clipboard" title="Belum ada meja terdaftar." message="Tambahkan meja baru menggunakan tombol di atas." :colspan="6" />
                     @endforelse
                 </tbody>
-            </table>
-            
-            <div class="p-4 border-t border-gray-100 bg-white">
-                {{ $mejas->links() }}
-            </div>
-        </div>
+            </x-ui.table>
+        </x-ui.data-table>
     </div>
 </div>
 
@@ -142,7 +128,7 @@
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-900 mb-1.5">Kapasitas (Orang) <span class="text-red-500">*</span></label>
-                    <input type="number" name="kapasitas" id="inputKapasitas" min="1" value="4" required class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                    <x-ui.input-qty id="inputKapasitas" name="kapasitas" value="4" min="1" :required="true" />
                 </div>
 
                 <div>
@@ -222,7 +208,7 @@
 
                 <div class="relative z-10 my-auto py-1 flex flex-col items-center">
                     <div class="bg-white rounded-xl p-3.5 shadow-2xl border-4 border-amber-400/50 relative flex items-center justify-center">
-                        <img id="drawerQrImage" src="" alt="QR Code" class="w-44 h-44 object-contain rounded-xl">
+                        <div id="drawerQrCanvas" class="w-44 h-44 flex items-center justify-center"></div>
                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div class="w-11 h-11 rounded-full bg-white p-1 shadow-xl border-2 border-emerald-800 flex items-center justify-center overflow-hidden">
                                 <img src="{{ asset('images/logo-saung.png') }}" alt="Logo" class="w-full h-full object-contain">
@@ -259,7 +245,7 @@
             </form>
 
             <div id="btnGroupQrActions" class="flex items-center gap-2 hidden">
-                <button type="button" onclick="downloadQrPng()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors shadow-sm flex items-center gap-1.5 hidden" title="Fitur coming soon">
+                <button type="button" onclick="downloadQrPng()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors shadow-sm flex items-center gap-1.5" title="Unduh QR sebagai gambar PNG">
                     <x-heroicon-o-arrow-down-tray class="w-5 h-5" /> Unduh PNG
                 </button>
                 <a id="btnPrintQr" href="#" target="_blank" class="px-5 py-2.5 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors shadow-sm flex items-center gap-1.5">
@@ -279,6 +265,7 @@ function openMejaModal(id = null, nomor = '', kapasitas = 4, status = 1, area = 
     
     document.getElementById('inputNomorMeja').value = nomor;
     document.getElementById('inputKapasitas').value = kapasitas;
+    document.getElementById('inputKapasitas').dispatchEvent(new Event('input', { bubbles: true }));
     document.getElementById('inputStatus').value = status;
     document.getElementById('inputArea').value = area || 'Indoor';
     
@@ -313,7 +300,7 @@ function closeMejaModal() {
 }
 
 function openQrDrawer(id, nomor_meja, kode_meja, kapasitas, qr_token, area) {
-    const appUrl = '{{ url('/') }}';
+    const appUrl = '{{ env("APP_URL") }}';
     
     // Set Detail Data
     const cleanNomor = nomor_meja.replace(/^meja\s*/i, '');
@@ -331,12 +318,21 @@ function openQrDrawer(id, nomor_meja, kode_meja, kapasitas, qr_token, area) {
     if (qr_token) {
         // QR exists
         const qrUrl = appUrl + '/qr-menu/' + qr_token;
-        const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&margin=0&data=${encodeURIComponent(qrUrl)}`;
         
         document.getElementById('detailQrLink').href = qrUrl;
         document.getElementById('detailQrLink').innerText = qrUrl;
         
-        document.getElementById('drawerQrImage').src = apiUrl;
+        const qrContainer = document.getElementById('drawerQrCanvas');
+        qrContainer.innerHTML = '';
+        new QRCode(qrContainer, {
+            text: qrUrl,
+            width: 176,
+            height: 176,
+            colorDark: '#0D3024',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+        
         document.getElementById('qrMejaName').innerText = 'Meja ' + cleanNomor;
         // Ganti parameter cetak qr menggunakan token atau tetep id
         document.getElementById('btnPrintQr').href = '{{ url("pos/dinein/qr-codes") }}?meja_id=' + id;
@@ -362,6 +358,29 @@ function openQrDrawer(id, nomor_meja, kode_meja, kapasitas, qr_token, area) {
         document.getElementById('drawerQrOverlay').classList.remove('opacity-0');
         document.getElementById('drawerQrContent').classList.remove('translate-x-full');
     }, 10);
+}
+
+function downloadQrPng() {
+    const qrContainer = document.getElementById('drawerQrCanvas');
+    const canvas = qrContainer ? qrContainer.querySelector('canvas') : null;
+    const img = qrContainer ? qrContainer.querySelector('img') : null;
+    
+    const mejaName = document.getElementById('qrMejaName')?.innerText || 'Meja';
+    const filename = 'QR_' + mejaName.replace(/\s+/g, '_') + '.png';
+
+    if (canvas) {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } else if (img && img.src) {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = img.src;
+        link.click();
+    } else {
+        alert('QR Code belum siap. Coba buka drawer meja terlebih dahulu.');
+    }
 }
 
 function closeQrDrawer() {

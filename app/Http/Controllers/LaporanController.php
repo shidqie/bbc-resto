@@ -24,6 +24,7 @@ class LaporanController extends Controller
     public function penjualan(Request $request)
     {
         $periode = $request->input('periode', 'bulan_ini');
+        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
         $startDate = null;
         $endDate = null;
 
@@ -41,11 +42,15 @@ class LaporanController extends Controller
             $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
         }
 
-        $jenisPenjualan = $request->input('jenis', '');
-        $statusPembayaran = $request->input('status_pembayaran', '');
+        $jenisPenjualan = $request->input('jenis', []);
+        $jenisPenjualan = is_array($jenisPenjualan) ? $jenisPenjualan : (array) $jenisPenjualan;
+        
+        $statusPembayaran = $request->input('status_pembayaran', []);
+        $statusPembayaran = is_array($statusPembayaran) ? $statusPembayaran : (array) $statusPembayaran;
+        
         $search = $request->input('search', '');
 
-        $query = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja', 'pembayaran.status_pembayaran'])
+        $query = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja'])
             ->whereBetween('tanggal_pesanan', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->whereNotIn('status_pesanan_id', [6]);
 
@@ -58,23 +63,30 @@ class LaporanController extends Controller
             });
         }
 
-        if ($jenisPenjualan === 'dinein') {
-            $query->where('jenis_pesanan_id', 1);
-        } elseif ($jenisPenjualan === 'catering') {
-            $query->where('jenis_pesanan_id', 2);
-        } elseif ($jenisPenjualan === 'nasibox') {
-            $query->where('jenis_pesanan_id', 3);
+        if (!empty($jenisPenjualan)) {
+            $jenisIds = [];
+            if(in_array('dinein', $jenisPenjualan)) $jenisIds[] = 1;
+            if(in_array('catering', $jenisPenjualan)) $jenisIds[] = 2;
+            if(in_array('nasibox', $jenisPenjualan)) $jenisIds[] = 3;
+            
+            if (!empty($jenisIds)) {
+                $query->whereIn('jenis_pesanan_id', $jenisIds);
+            }
         }
 
-        if ($statusPembayaran) {
-            if ($statusPembayaran === 'belum') {
-                $query->whereDoesntHave('pembayaran')
-                      ->orWhereHas('pembayaran.status_pembayaran', fn ($q) => $q->where('id', 1));
-            } elseif ($statusPembayaran === 'dp') {
-                $query->whereHas('pembayaran.status_pembayaran', fn ($q) => $q->where('id', 2));
-            } elseif ($statusPembayaran === 'lunas') {
-                $query->whereHas('pembayaran.status_pembayaran', fn ($q) => $q->where('id', 3));
-            }
+        if (!empty($statusPembayaran)) {
+            $query->where(function($q) use ($statusPembayaran) {
+                if (in_array('belum', $statusPembayaran)) {
+                    $q->orWhereDoesntHave('pembayaran')
+                      ->orWhereHas(fn ($sq) => $sq->where('id', 1));
+                }
+                if (in_array('dp', $statusPembayaran)) {
+                    $q->orWhereHas(fn ($sq) => $sq->where('id', 2));
+                }
+                if (in_array('lunas', $statusPembayaran)) {
+                    $q->orWhereHas(fn ($sq) => $sq->where('id', 3));
+                }
+            });
         }
 
         $pesanansAll = $query->orderByDesc('tanggal_pesanan')->get();
@@ -103,28 +115,14 @@ class LaporanController extends Controller
 
     public function detailPenjualan($id)
     {
-        $pesanan = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja', 'detail_pesanan.menu', 'pembayaran.status_pembayaran', 'pembayaran.metode_pembayaran'])->findOrFail($id);
+        $pesanan = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja', 'detail_pesanan.menu'])->findOrFail($id);
         return view('laporan.penjualan.detail', compact('pesanan'));
     }
 
     public function cetakPenjualanPdf(Request $request)
     {
-        // Placeholder implementasi Export PDF
-        return back()->with('info', 'Fitur Export PDF Penjualan belum diimplementasi sepenuhnya.');
-    }
-
-    public function cetakPenjualanExcel(Request $request)
-    {
-        // Placeholder implementasi Export Excel
-        return back()->with('info', 'Fitur Export Excel Penjualan belum diimplementasi sepenuhnya.');
-    }
-
-    // ==========================================
-    // LAPORAN PERSEDIAAN
-    // ==========================================
-    public function persediaan(Request $request)
-    {
         $periode = $request->input('periode', 'bulan_ini');
+        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
         $startDate = null;
         $endDate = null;
 
@@ -142,15 +140,110 @@ class LaporanController extends Controller
             $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
         }
 
-        $jenisPersediaan = $request->input('jenis_stok', '');
-        $kategoriId = $request->input('kategori_id', '');
+        $jenisPenjualan = $request->input('jenis', []);
+        $jenisPenjualan = is_array($jenisPenjualan) ? $jenisPenjualan : (array) $jenisPenjualan;
+        
+        $statusPembayaran = $request->input('status_pembayaran', []);
+        $statusPembayaran = is_array($statusPembayaran) ? $statusPembayaran : (array) $statusPembayaran;
+        
+        $search = $request->input('search', '');
+
+        $query = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja'])
+            ->whereBetween('tanggal_pesanan', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->whereNotIn('status_pesanan_id', [6]);
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nomor_pesanan', 'like', "%{$search}%")
+                  ->orWhereHas('pelanggan', function($q) use ($search) {
+                      $q->where('nama', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if (!empty($jenisPenjualan)) {
+            $jenisIds = [];
+            if(in_array('dinein', $jenisPenjualan)) $jenisIds[] = 1;
+            if(in_array('catering', $jenisPenjualan)) $jenisIds[] = 2;
+            if(in_array('nasibox', $jenisPenjualan)) $jenisIds[] = 3;
+            
+            if (!empty($jenisIds)) {
+                $query->whereIn('jenis_pesanan_id', $jenisIds);
+            }
+        }
+
+        if (!empty($statusPembayaran)) {
+            $query->where(function($q) use ($statusPembayaran) {
+                if (in_array('belum', $statusPembayaran)) {
+                    $q->orWhereDoesntHave('pembayaran')
+                      ->orWhereHas(fn ($sq) => $sq->where('id', 1));
+                }
+                if (in_array('dp', $statusPembayaran)) {
+                    $q->orWhereHas(fn ($sq) => $sq->where('id', 2));
+                }
+                if (in_array('lunas', $statusPembayaran)) {
+                    $q->orWhereHas(fn ($sq) => $sq->where('id', 3));
+                }
+            });
+        }
+
+        $pesanans = $query->orderByDesc('tanggal_pesanan')->get();
+        
+        $stats = [
+            'totalTransaksi' => $pesanans->count(),
+            'totalPendapatan' => $pesanans->sum('total_tagihan'),
+            'totalDineIn' => $pesanans->where('jenis_pesanan_id', 1)->count(),
+            'totalCatering' => $pesanans->where('jenis_pesanan_id', 2)->count(),
+            'totalNasiBox' => $pesanans->where('jenis_pesanan_id', 3)->count(),
+        ];
+
+        $pdf = Pdf::loadView('laporan.penjualan.pdf', compact('pesanans', 'stats', 'startDate', 'endDate'));
+        return $pdf->stream('Laporan_Penjualan.pdf');
+    }
+
+    public function cetakPenjualanExcel(Request $request)
+    {
+        // Placeholder implementasi Export Excel
+        return back()->with('info', 'Fitur Export Excel Penjualan belum diimplementasi sepenuhnya.');
+    }
+
+    // ==========================================
+    // LAPORAN PERSEDIAAN
+    // ==========================================
+    public function persediaan(Request $request)
+    {
+        $periode = $request->input('periode', 'bulan_ini');
+        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
+        $startDate = null;
+        $endDate = null;
+
+        if ($periode == 'hari_ini') {
+            $startDate = Carbon::today()->format('Y-m-d');
+            $endDate = Carbon::today()->format('Y-m-d');
+        } elseif ($periode == 'minggu_ini') {
+            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+        } elseif ($periode == 'bulan_ini') {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+        } elseif ($periode == 'custom') {
+            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        }
+
+        $jenisPersediaan = $request->input('jenis_stok', []);
+        $jenisPersediaan = is_array($jenisPersediaan) ? $jenisPersediaan : (array) $jenisPersediaan;
+        
+        $kategoriId = $request->input('kategori_id', []);
+        $kategoriId = is_array($kategoriId) ? $kategoriId : (array) $kategoriId;
+        
         $search = $request->input('search', '');
 
         $kategoris = KategoriBahanBaku::orderBy('nama_kategori')->get();
 
         $queryBahan = BahanBaku::with(['satuan', 'kategori_bahan_baku', 'stok_bahans'])->where('status_aktif', true);
-        if ($kategoriId) {
-            $queryBahan->where('kategori_bahan_baku_id', $kategoriId);
+        if (!empty($kategoriId)) {
+            $queryBahan->whereIn('kategori_bahan_baku_id', $kategoriId);
         }
         if ($search) {
             $queryBahan->where('nama_bahan', 'like', "%{$search}%");
@@ -160,7 +253,7 @@ class LaporanController extends Controller
             // Karena tabel StokBahan dipisah (Harian / Catering), kita map tiap jenis stok
             $stokItems = collect();
             
-            if (!$jenisPersediaan || $jenisPersediaan == 'harian') {
+            if (empty($jenisPersediaan) || in_array('harian', $jenisPersediaan)) {
                 $stokHarian = $bahan->stok_bahans->firstWhere('jenis_persediaan', 'harian');
                 if ($stokHarian) {
                     $stokAkhir = (float)$stokHarian->jumlah_stok;
@@ -180,7 +273,7 @@ class LaporanController extends Controller
                 }
             }
 
-            if (!$jenisPersediaan || $jenisPersediaan == 'catering') {
+            if (empty($jenisPersediaan) || in_array('catering', $jenisPersediaan)) {
                 $stokCatering = $bahan->stok_bahans->firstWhere('jenis_persediaan', 'catering');
                 if ($stokCatering) {
                     $stokAkhir = (float)$stokCatering->jumlah_stok;
@@ -248,7 +341,70 @@ class LaporanController extends Controller
 
     public function cetakPersediaanPdf(Request $request)
     {
-        return back()->with('info', 'Fitur Export PDF Persediaan belum diimplementasi sepenuhnya.');
+        $jenisPersediaan = $request->input('jenis_stok', []);
+        $jenisPersediaan = is_array($jenisPersediaan) ? $jenisPersediaan : (array) $jenisPersediaan;
+        
+        $kategoriId = $request->input('kategori_id', []);
+        $kategoriId = is_array($kategoriId) ? $kategoriId : (array) $kategoriId;
+        
+        $search = $request->input('search', '');
+
+        $queryBahan = BahanBaku::with(['satuan', 'kategori_bahan_baku', 'stok_bahans'])->where('status_aktif', true);
+        if (!empty($kategoriId)) {
+            $queryBahan->whereIn('kategori_bahan_baku_id', $kategoriId);
+        }
+        if ($search) {
+            $queryBahan->where('nama_bahan', 'like', "%{$search}%");
+        }
+
+        $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) use ($jenisPersediaan) {
+            $stokItems = collect();
+            
+            if (empty($jenisPersediaan) || in_array('harian', $jenisPersediaan)) {
+                $stokHarian = $bahan->stok_bahans->firstWhere('jenis_persediaan', 'harian');
+                if ($stokHarian) {
+                    $stokAkhir = (float)$stokHarian->jumlah_stok;
+                    $stokMin = (float)$bahan->stok_minimal;
+                    $status = $stokAkhir <= 0 ? 'Habis' : ($stokAkhir <= $stokMin ? 'Menipis' : 'Aman');
+                    
+                    $stokItems->push([
+                        'id' => $bahan->id . '_harian',
+                        'bahan_baku_id' => $bahan->id,
+                        'nama_bahan' => $bahan->nama_bahan,
+                        'kategori' => optional($bahan->kategori_bahan_baku)->nama_kategori,
+                        'satuan' => optional($bahan->satuan)->nama_satuan,
+                        'jenis_stok' => 'Dine In & Nasi Box',
+                        'stok_saat_ini' => $stokAkhir,
+                        'status' => $status
+                    ]);
+                }
+            }
+
+            if (empty($jenisPersediaan) || in_array('catering', $jenisPersediaan)) {
+                $stokCatering = $bahan->stok_bahans->firstWhere('jenis_persediaan', 'catering');
+                if ($stokCatering) {
+                    $stokAkhir = (float)$stokCatering->jumlah_stok;
+                    $stokMin = (float)$bahan->stok_minimal;
+                    $status = $stokAkhir <= 0 ? 'Habis' : ($stokAkhir <= $stokMin ? 'Menipis' : 'Aman');
+                    
+                    $stokItems->push([
+                        'id' => $bahan->id . '_catering',
+                        'bahan_baku_id' => $bahan->id,
+                        'nama_bahan' => $bahan->nama_bahan,
+                        'kategori' => optional($bahan->kategori_bahan_baku)->nama_kategori,
+                        'satuan' => optional($bahan->satuan)->nama_satuan,
+                        'jenis_stok' => 'Catering',
+                        'stok_saat_ini' => $stokAkhir,
+                        'status' => $status
+                    ]);
+                }
+            }
+
+            return $stokItems;
+        })->flatten(1);
+
+        $pdf = Pdf::loadView('laporan.persediaan.pdf', compact('laporanBahan'));
+        return $pdf->stream('Laporan_Persediaan.pdf');
     }
 
     public function cetakPersediaanExcel(Request $request)
@@ -262,6 +418,7 @@ class LaporanController extends Controller
     public function pengadaan(Request $request)
     {
         $periode = $request->input('periode', 'bulan_ini');
+        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
         $startDate = null;
         $endDate = null;
 
@@ -279,21 +436,25 @@ class LaporanController extends Controller
             $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
         }
 
-        $jenisPermintaan = $request->input('jenis_permintaan', '');
-        $statusId = $request->input('status', '');
+        $jenisPermintaan = $request->input('jenis_permintaan', []);
+        $jenisPermintaan = is_array($jenisPermintaan) ? $jenisPermintaan : (array) $jenisPermintaan;
+        
+        $statusId = $request->input('status', []);
+        $statusId = is_array($statusId) ? $statusId : (array) $statusId;
+        
         $search = $request->input('search', '');
 
         $query = PengadaanBahan::with(['pemasok', 'status_pengadaan', 'diajukan_oleh_pengguna'])
-            ->whereBetween('tanggal_pengadaan', [$startDate, $endDate]);
+            ->whereBetween('tanggal_pengadaan', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
 
         if ($search) {
             $query->where('nomor_pengadaan', 'like', "%{$search}%");
         }
-        if ($jenisPermintaan) {
-            $query->where('jenis_pengadaan', $jenisPermintaan);
+        if (!empty($jenisPermintaan)) {
+            $query->whereIn('jenis_pengadaan', $jenisPermintaan);
         }
-        if ($statusId) {
-            $query->where('status_pengadaan_id', $statusId);
+        if (!empty($statusId)) {
+            $query->whereIn('status_pengadaan_id', $statusId);
         }
 
         $pengadaansAll = $query->orderByDesc('tanggal_pengadaan')->get();
@@ -335,7 +496,50 @@ class LaporanController extends Controller
 
     public function cetakPengadaanPdf(Request $request)
     {
-        return back()->with('info', 'Fitur Export PDF Pengadaan belum diimplementasi sepenuhnya.');
+        $periode = $request->input('periode', 'bulan_ini');
+        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
+        $startDate = null;
+        $endDate = null;
+
+        if ($periode == 'hari_ini') {
+            $startDate = Carbon::today()->format('Y-m-d');
+            $endDate = Carbon::today()->format('Y-m-d');
+        } elseif ($periode == 'minggu_ini') {
+            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+        } elseif ($periode == 'bulan_ini') {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+        } elseif ($periode == 'custom') {
+            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        }
+
+        $jenisPermintaan = $request->input('jenis_permintaan', []);
+        $jenisPermintaan = is_array($jenisPermintaan) ? $jenisPermintaan : (array) $jenisPermintaan;
+        
+        $statusId = $request->input('status', []);
+        $statusId = is_array($statusId) ? $statusId : (array) $statusId;
+        
+        $search = $request->input('search', '');
+
+        $query = PengadaanBahan::with(['pemasok', 'status_pengadaan', 'diajukan_oleh_pengguna'])
+            ->whereBetween('tanggal_pengadaan', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+
+        if ($search) {
+            $query->where('nomor_pengadaan', 'like', "%{$search}%");
+        }
+        if (!empty($jenisPermintaan)) {
+            $query->whereIn('jenis_pengadaan', $jenisPermintaan);
+        }
+        if (!empty($statusId)) {
+            $query->whereIn('status_pengadaan_id', $statusId);
+        }
+
+        $pengadaans = $query->orderByDesc('tanggal_pengadaan')->get();
+
+        $pdf = Pdf::loadView('laporan.pengadaan.pdf', compact('pengadaans', 'startDate', 'endDate'));
+        return $pdf->stream('Laporan_Pengadaan.pdf');
     }
 
     public function cetakPengadaanExcel(Request $request)

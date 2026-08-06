@@ -11,7 +11,7 @@
         {{-- Header --}}
         <x-ui.page-header 
             title="Detail Menu" 
-            :breadcrumbs="['Menu', 'Daftar Menu', 'Detail']">
+            :breadcrumbs="['Manajemen Menu', 'Data Menu', 'Detail']">
             <x-slot:actions>
                 <x-ui.button href="{{ route('menu.index') }}" variant="outline" icon="arrow-left">Kembali</x-ui.button>
                 <x-ui.button href="{{ route('menu.edit', $menu->id) }}" icon="pencil-square">Edit Menu</x-ui.button>

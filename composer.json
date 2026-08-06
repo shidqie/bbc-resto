@@ -18,7 +18,6 @@
         "faisal50x/blade-ionicons": "^1.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "midtrans/midtrans-php": "^2.6",
         "spatie/browsershot": "^5.4"
     },
     "require-dev": {

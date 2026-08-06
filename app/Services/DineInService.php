@@ -111,15 +111,11 @@ class DineInService
             }
 
             // Cek apakah meja sedang terisi atau memiliki pesanan aktif
-            $hasActiveOrder = PesananDinein::where('meja_id', $meja->id)
-                ->where('status_pesanan_id', 1)
-                ->exists();
+            $activeOrder = PesananDinein::where('meja_id', $meja->id)
+                ->whereIn('status_pesanan_id', [1, 2]) // 1=Menunggu, 2=Diproses
+                ->first();
 
-            if ($meja->status_meja_id == 2 || $meja->status === 'terisi' || $hasActiveOrder) {
-                throw new Exception("Meja {$meja->nomor_meja} saat ini sedang terisi (memiliki pesanan aktif). Silakan minta kasir menyelesaikan pesanan sebelum membuat pesanan baru.");
-            }
-
-            // Hitung total tagihan pesanan
+            // Hitung total tagihan pesanan tambahan/baru
             $subtotal = 0;
             foreach ($items as $item) {
                 $menu = Menu::find($item['menu_id']);
@@ -127,24 +123,33 @@ class DineInService
                 $subtotal += ($hargaUnit * $item['qty']);
             }
 
-            $pajak = $subtotal * 0.10;
-            $totalTagihan = $subtotal + $pajak;
+            $biayaLayanan = $subtotal * 0.05;
+            $totalTagihan = $subtotal + $biayaLayanan;
 
-            $lastDinein = PesananDinein::latest()->first();
-            $lastId = $lastDinein ? $lastDinein->id : 0;
-            $kodePesanan = 'DIN-'.date('Ymd').'-'.str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
+            if ($activeOrder) {
+                // UPDATE EXISTING ORDER
+                $pesanan = $activeOrder;
+                $pesanan->update([
+                    'total_tagihan' => $pesanan->total_tagihan + $totalTagihan
+                ]);
+                $kodePesanan = $pesanan->kode_pesanan;
+            } else {
+                // BUAT PESANAN BARU
+                $lastDinein = PesananDinein::latest()->first();
+                $lastId = $lastDinein ? $lastDinein->id : 0;
+                $kodePesanan = 'DIN-'.date('Ymd').'-'.str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
 
-            // Selalu buat pesanan baru khusus transaksi ini
-            $pesanan = PesananDinein::create([
-                'meja_id' => $meja->id,
-                'nama_konsumen' => $namaKonsumen,
-                'jumlah_tamu' => $jumlahTamu,
-                'status' => 'menunggu_pembayaran',
-                'dibuka_oleh' => $staffId,
-                'dibuka_pada' => now(),
-                'kode_pesanan' => $kodePesanan,
-                'total_tagihan' => $totalTagihan,
-            ]);
+                $pesanan = PesananDinein::create([
+                    'meja_id' => $meja->id,
+                    'nama_konsumen' => $namaKonsumen,
+                    'jumlah_tamu' => $jumlahTamu,
+                    'status' => 'menunggu_pembayaran',
+                    'dibuka_oleh' => $staffId,
+                    'dibuka_pada' => now(),
+                    'kode_pesanan' => $kodePesanan,
+                    'total_tagihan' => $totalTagihan,
+                ]);
+            }
 
             $updateData = ['status_meja_id' => 2]; // 2 = TERISI
             if (DB::getSchemaBuilder()->hasColumn('meja', 'status')) {
@@ -191,20 +196,24 @@ class DineInService
                     'total_tagihan' => $totalTagihan,
                     'catatan' => 'Pemesan: '.$namaKonsumen,
                 ]);
+            } else {
+                $pesananNorm->update([
+                    'total_tagihan' => $pesananNorm->total_tagihan + $totalTagihan
+                ]);
+            }
 
-                foreach ($items as $item) {
-                    $menu = Menu::find($item['menu_id']);
-                    if ($menu) {
-                        $harga = $menu->harga_jual ?? $menu->harga ?? 0;
-                        DetailPesanan::create([
-                            'pesanan_id' => $pesananNorm->id,
-                            'menu_id' => $menu->id,
-                            'jumlah' => $item['qty'],
-                            'harga_satuan' => $harga,
-                            'subtotal' => $harga * $item['qty'],
-                            'catatan' => $item['catatan'] ?? null,
-                        ]);
-                    }
+            foreach ($items as $item) {
+                $menu = Menu::find($item['menu_id']);
+                if ($menu) {
+                    $harga = $menu->harga_jual ?? $menu->harga ?? 0;
+                    DetailPesanan::create([
+                        'pesanan_id' => $pesananNorm->id,
+                        'menu_id' => $menu->id,
+                        'jumlah' => $item['qty'],
+                        'harga_satuan' => $harga,
+                        'subtotal' => $harga * $item['qty'],
+                        'catatan' => $item['catatan'] ?? null,
+                    ]);
                 }
             }
 

@@ -167,7 +167,7 @@
             <div class="px-5 py-4 border-b border-gray-100 bg-slate-50/50 flex justify-between items-center">
                 <h4 class="text-sm font-bold text-gray-900"><x-heroicon-o-wallet class="mr-1.5 text-gray-400 w-5 h-5" /> Status & Riwayat Pembayaran</h4>
                 @php
-                    $terbayar = $pesanan->pembayaran->sum('jumlah_bayar');
+                    $terbayar = $pesanan->pembayaran->sum('jumlah_dibayar');
                     $sisa = $pesanan->total_tagihan - $terbayar;
                 @endphp
                 @if($sisa <= 0 && $pesanan->total_tagihan > 0)
@@ -194,7 +194,7 @@
                         <div class="text-right">
                             <span class="block text-sm font-black text-emerald-600">+ Rp{{ number_format($bayar->jumlah_bayar, 0, ',', '.') }}</span>
                             @if($bayar->diproses_oleh)
-                                <span class="block text-xs text-gray-400 mt-1">oleh {{ optional($bayar->diproses_oleh_pengguna)->nama ?? 'Kasir' }}</span>
+                                <span class="block text-xs text-gray-400 mt-1">oleh {{ optional($bayar->diverifikasi_oleh_pengguna)->nama ?? 'Kasir' }}</span>
                             @endif
                         </div>
                     </div>

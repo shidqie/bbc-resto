@@ -7,10 +7,10 @@
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
-        <x-ui.page-header title="Stok Menipis" subtitle="Daftar bahan baku yang stoknya sudah di bawah batas minimum, siap dibuatkan pengadaan.">
+        <x-ui.page-header title="Stok Menipis" subtitle="Daftar bahan baku yang stoknya sudah di bawah batas minimum, siap dibuatkan pengadaan." :breadcrumbs="['Persediaan', 'Stok Menipis']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('pengadaan.create', ['tipe' => 'harian']) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-amber-500 rounded-lg px-3 py-2 hover:bg-amber-600 transition-colors">
+                    <a href="{{ route('pengadaan.harian.create') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-amber-500 rounded-lg px-3 py-2 hover:bg-amber-600 transition-colors">
                         <x-heroicon-o-shopping-cart class="w-3 h-3" />
                         Buat Pengadaan
                     </a>

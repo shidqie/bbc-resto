@@ -19,91 +19,90 @@
         <x-ui.data-table :paginator="$pembayarans">
             <x-slot:toolbar>
                 <form action="{{ route('admin.pembayaran.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
-                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari ID Pembayaran / ID Pesanan…" />
-                    <button type="submit" class="text-sm font-medium bg-white border border-gray-200 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shrink-0">Cari</button>
+                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari ID Pembayaran / Kode Pesanan…" />
                     @if(request()->hasAny(['search']))
                         <a href="{{ route('admin.pembayaran.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
                     @endif
                 </form>
             </x-slot:toolbar>
 
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        <th class="px-4 py-3 text-left w-12">No</th>
-                        <th class="px-4 py-3 text-left">Tanggal</th>
-                        <th class="px-4 py-3 text-left">ID Pesanan</th>
-                        <th class="px-4 py-3 text-left">Pelanggan</th>
-                        <th class="px-4 py-3 text-left">Metode</th>
-                        <th class="px-4 py-3 text-right">Total Tagihan</th>
-                        <th class="px-4 py-3 text-right">Dibayar</th>
-                        <th class="px-4 py-3 text-center">Status</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
+            <x-ui.table class="min-w-[1000px]">
+                <x-ui.table.header>
+                    <th class="px-4 py-3.5 text-left w-12">No</th>
+                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
+                    <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
+                    <th class="px-4 py-3.5 text-right">Total</th>
+                    <th class="px-4 py-3.5 text-center">Bukti Pembayaran</th>
+                    <th class="px-4 py-3.5 text-center">Status</th>
+                    <th class="px-4 py-3.5 text-center">Aksi</th>
+                </x-ui.table.header>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($pembayarans as $index => $bayar)
-                    <tr class="hover:bg-gray-50/60 transition-colors group">
-                        <td class="px-4 py-3 text-sm text-gray-500 font-medium">
+                    <x-ui.table.row>
+                        <td class="px-4 py-4 text-sm text-gray-500 font-medium">
                             {{ ($pembayarans->firstItem() ?? 1) + $index }}
                         </td>
-                        <td class="px-4 py-3">
-                            <p class="font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($bayar->dibuat_pada)->format('d/m/Y') }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($bayar->dibuat_pada)->format('H:i') }}</p>
-                        </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-4">
                             <span class="font-mono text-xs font-bold text-gray-900">{{ optional($bayar->pesanan)->nomor_pesanan ?? 'DIN-'.optional($bayar->pesanan)->id ?? '-' }}</span>
                         </td>
-                        <td class="px-4 py-3">
-                            @php
-                                $namaOrMeja = '-';
-                                if($bayar->pesanan) {
-                                    if(optional($bayar->pesanan->jenis_pesanan)->id == 1) {
-                                        $namaOrMeja = 'Meja ' . (optional($bayar->pesanan->meja)->nomor_meja ?? '-');
-                                    } else {
-                                        $namaOrMeja = optional($bayar->pesanan->pelanggan)->nama ?? optional($bayar->pesanan->jadwal_pesanan)->nama_penerima ?? 'Pelanggan';
-                                    }
-                                }
-                            @endphp
-                            <p class="font-medium text-gray-900 text-sm">{{ $namaOrMeja }}</p>
+                        <td class="px-4 py-4 text-sm text-gray-700">
+                            {{ \Carbon\Carbon::parse($bayar->dibuat_pada)->format('d/m/Y H:i') }}
                         </td>
-                        <td class="px-4 py-3">
-                            <x-ui.badge color="gray" size="sm">{{ optional($bayar->metode_pembayaran)->nama_metode ?? 'Tunai' }}</x-ui.badge>
+                        <td class="px-4 py-4 text-sm text-gray-700">
+                            {{ optional(optional($bayar->pesanan)->jadwal_pesanan)->tanggal_acara ? \Carbon\Carbon::parse(optional(optional($bayar->pesanan)->jadwal_pesanan)->tanggal_acara)->format('d/m/Y H:i') : '-' }}
                         </td>
-                        <td class="px-4 py-3 text-right text-sm text-gray-600">
-                            Rp{{ number_format(optional($bayar->pesanan)->total_tagihan ?? 0, 0, ',', '.') }}
-                        </td>
-                        <td class="px-4 py-3 text-right font-bold text-gray-900">
+                        <td class="px-4 py-4 text-right font-bold text-gray-900">
                             Rp{{ number_format($bayar->jumlah_bayar, 0, ',', '.') }}
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-4 text-center">
+                            @if($bayar->bukti_pembayaran)
+                                <a href="{{ Storage::url($bayar->bukti_pembayaran) }}" target="_blank" class="text-blue-500 hover:underline text-xs font-medium">Lihat Bukti</a>
+                            @else
+                                <span class="text-gray-400 text-xs">-</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-4 text-center">
                             @php
-                                $statusId = optional($bayar->status_pembayaran)->id ?? 1;
+                                $statusVerifikasi = $bayar->status_verifikasi;
                                 $payColor = 'gray';
-                                if($statusId == 3 || $statusId == 2) $payColor = 'success';
-                                elseif($statusId == 1) $payColor = 'warning';
-                                elseif($statusId == 4) $payColor = 'danger';
+                                $statusText = 'Menunggu';
+                                if($statusVerifikasi == 'diterima') { $payColor = 'success'; $statusText = 'Diterima'; }
+                                elseif($statusVerifikasi == 'ditolak') { $payColor = 'danger'; $statusText = 'Ditolak'; }
+                                elseif($statusVerifikasi == 'menunggu_verifikasi') { $payColor = 'warning'; $statusText = 'Menunggu Verifikasi'; }
                             @endphp
                             <x-ui.badge :color="$payColor" size="sm">
-                                {{ optional($bayar->status_pembayaran)->nama_status ?? 'Menunggu' }}
+                                {{ $statusText }}
                             </x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" onclick="openDetailDrawer({{ $bayar->id }})" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </button>
-                                <button type="button" onclick="window.showToast('info', 'Fitur Cetak Resi belum tersedia')" title="Cetak Resi" class="w-7 h-7 rounded-full flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
-                                    <x-heroicon-o-printer class="w-3 h-3" />
-                                </button>
+                        <td class="px-4 py-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                @if($bayar->status_verifikasi == 'menunggu_verifikasi')
+                                    <form action="{{ route('admin.pembayaran.verify', $bayar->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" onclick="return confirm('Verifikasi pembayaran ini?')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1.5 rounded flex items-center gap-1 shadow-sm font-medium">
+                                            <x-heroicon-o-check class="w-3.5 h-3.5" /> Verifikasi
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.pembayaran.cancel', $bayar->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" onclick="return confirm('Batalkan pembayaran ini?')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1.5 rounded flex items-center gap-1 shadow-sm font-medium">
+                                            <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> Batal
+                                        </button>
+                                    </form>
+                                @else
+                                    <x-ui.action-button onclick="openDetailDrawer({{ $bayar->id }})" title="Detail">
+                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    </x-ui.action-button>
+                                @endif
                             </div>
                         </td>
-                    </tr>
+                    </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="banknotes" title="Belum ada pembayaran" message="Belum ada data pembayaran yang sesuai kriteria pencarian." :colspan="9" />
+                    <x-empty-state icon="clipboard" title="Belum ada pembayaran" message="Belum ada data pembayaran yang sesuai kriteria pencarian." :colspan="9" />
                     @endforelse
                 </tbody>
-            </table>
+            </x-ui.table>
         </x-ui.data-table>
 
     </div>
