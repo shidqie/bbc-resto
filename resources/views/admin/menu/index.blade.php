@@ -196,7 +196,7 @@
                 {{-- Komponen Paket Section (Hanya untuk Catering & Nasi Box) --}}
                 @if($jenisId != 1)
                 <div class="border border-gray-100 bg-gray-50/50 p-4 rounded-xl space-y-4">
-                    @include('menu.paket.partials.komponen-builder', ['existingKomponen' => []])
+                    @include('admin.menu.paket.partials.komponen-builder', ['existingKomponen' => []])
                 </div>
                 @endif
 

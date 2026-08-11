@@ -47,6 +47,6 @@ class StokMenipisController extends Controller
                 ->where('jumlah_stok', '<=', 0)->count(),
         ];
 
-        return view('inventory.stok.menipis', compact('bahanBakus', 'kategoris', 'stats', 'jenisPersediaan'));
+        return view('admin.persediaan.stok.menipis', compact('bahanBakus', 'kategoris', 'stats', 'jenisPersediaan'));
     }
 }

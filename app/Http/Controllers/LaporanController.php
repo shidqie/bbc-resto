@@ -98,7 +98,7 @@ class LaporanController extends Controller
 
         $stats = compact('totalTransaksi', 'totalPendapatan', 'totalDineIn', 'totalCatering', 'totalNasiBox');
 
-        return view('laporan.penjualan.index', compact(
+        return view('admin.laporan.penjualan.index', compact(
             'pesanans', 'stats', 'startDate', 'endDate', 'jenisPenjualan', 'periode'
         ));
     }
@@ -106,7 +106,7 @@ class LaporanController extends Controller
     public function detailPenjualan($id)
     {
         $pesanan = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja', 'detail_pesanan.menu'])->findOrFail($id);
-        return view('laporan.penjualan.detail', compact('pesanan'));
+        return view('admin.laporan.penjualan.detail', compact('pesanan'));
     }
 
     public function cetakPenjualanPdf(Request $request)
@@ -290,7 +290,7 @@ class LaporanController extends Controller
             ['path' => Paginator::resolveCurrentPath(), 'query' => $request->query()]
         );
 
-        return view('laporan.persediaan.index', compact(
+        return view('admin.laporan.persediaan.index', compact(
             'paginatedBahan', 'stats', 'startDate', 'endDate',
             'jenisPersediaan', 'kategoriId', 'kategoris', 'periode'
         ));
@@ -314,7 +314,7 @@ class LaporanController extends Controller
             ->limit(20)
             ->get();
 
-        return view('laporan.persediaan.detail', compact('bahan', 'stok', 'jenisStok', 'mutasis'));
+        return view('admin.laporan.persediaan.detail', compact('bahan', 'stok', 'jenisStok', 'mutasis'));
     }
 
     public function cetakPersediaanPdf(Request $request)
@@ -454,7 +454,7 @@ class LaporanController extends Controller
 
         $stats = compact('totalPermintaan', 'totalHarian', 'totalCatering', 'totalPenerimaan');
 
-        return view('laporan.pengadaan.index', compact(
+        return view('admin.laporan.pengadaan.index', compact(
             'pengadaans', 'stats', 'startDate', 'endDate', 'jenisPermintaan', 'statusId', 'periode'
         ));
     }
@@ -469,7 +469,7 @@ class LaporanController extends Controller
             'penerimaan_bahan.diterima_oleh_pengguna'
         ])->findOrFail($id);
 
-        return view('laporan.pengadaan.detail', compact('pengadaan'));
+        return view('admin.laporan.pengadaan.detail', compact('pengadaan'));
     }
 
     public function cetakPengadaanPdf(Request $request)

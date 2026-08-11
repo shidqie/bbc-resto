@@ -55,7 +55,7 @@ class UserController extends Controller
         // Roles for the create/edit modal (exclude Pelanggan for internal users)
         $roles = Peran::where('nama_peran', '!=', 'Pelanggan')->orderBy('id')->get();
 
-        return view('users.index', compact('pengguna', 'pelanggan', 'roles', 'search', 'roleFilter', 'statusFilter'));
+        return view('admin.pengguna.users.index', compact('pengguna', 'pelanggan', 'roles', 'search', 'roleFilter', 'statusFilter'));
     }
 
     public function store(Request $request)
@@ -108,7 +108,7 @@ class UserController extends Controller
             $pesananDineIn = $user->pesananSebagaiPelayan()->latest()->take(5)->get();
         }
 
-        return view('users.show', compact('user', 'pesananCount', 'pesananDineIn', 'pesananCatering'));
+        return view('admin.pengguna.users.show', compact('user', 'pesananCount', 'pesananDineIn', 'pesananCatering'));
     }
 
     public function showPelanggan(\App\Models\Pelanggan $pelanggan)
@@ -121,7 +121,7 @@ class UserController extends Controller
             $q->whereIn('kode_jenis', ['catering', 'nasi_box']);
         })->latest()->take(5)->get();
 
-        return view('users.show-pelanggan', compact('pelanggan', 'pesananCount', 'pesananDineIn', 'pesananCatering'));
+        return view('admin.pengguna.users.show-pelanggan', compact('pelanggan', 'pesananCount', 'pesananDineIn', 'pesananCatering'));
     }
 
     public function destroyPelanggan(\App\Models\Pelanggan $pelanggan)

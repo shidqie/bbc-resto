@@ -40,14 +40,14 @@ class PenyesuaianStokController extends Controller
             'menunggu' => PenyesuaianStok::where('status_penyesuaian', 'MENUNGGU')->count(),
         ];
 
-        return view('inventory.penyesuaian-stok.index', compact('penyesuaians', 'stats'));
+        return view('admin.persediaan.penyesuaian-stok.index', compact('penyesuaians', 'stats'));
     }
 
     public function create()
     {
         $bahanBakus = BahanBaku::with(['satuan', 'stok_harian', 'stok_catering_balance'])->where('status_aktif', true)->get();
 
-        return view('inventory.penyesuaian-stok.create', compact('bahanBakus'));
+        return view('admin.persediaan.penyesuaian-stok.create', compact('bahanBakus'));
     }
 
     public function store(Request $request)
@@ -141,6 +141,6 @@ class PenyesuaianStokController extends Controller
             'detail_penyesuaian_stok.bahan_baku.satuan',
         ])->findOrFail($id);
 
-        return view('inventory.penyesuaian-stok.show', compact('penyesuaian'));
+        return view('admin.persediaan.penyesuaian-stok.show', compact('penyesuaian'));
     }
 }

@@ -54,6 +54,6 @@ class StokOperasionalController extends Controller
             'total_habis' => StokBahan::harian()->where('jumlah_stok', '<=', 0)->count(),
         ];
 
-        return view('inventory.stok-operasional.index', compact('bahanBakus', 'kategoris', 'stats'));
+        return view('admin.persediaan.stok-operasional.index', compact('bahanBakus', 'kategoris', 'stats'));
     }
 }

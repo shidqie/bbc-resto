@@ -82,7 +82,7 @@
                                 @endif
                             </td>
                             <td class="px-4 py-2.5 text-center">
-                                @include('menu.resep._aksi', [
+                                @include('admin.menu.resep._aksi', [
                                     'aksiMenuId' => $menu->id,
                                     'aksiNamaMenu' => $menu->nama_menu,
                                     'aksiIsPaket' => true,
@@ -123,10 +123,10 @@
                                         <td class="px-4 py-1.5"></td>
                                         <td class="px-4 py-1.5"></td>
                                         <td class="px-4 py-1.5">
-                                            @include('menu.resep._status', ['menu' => $linked])
+                                            @include('admin.menu.resep._status', ['menu' => $linked])
                                         </td>
                                         <td class="px-4 py-1.5 text-center">
-                                            @include('menu.resep._aksi', [
+                                            @include('admin.menu.resep._aksi', [
                                                 'aksiMenuId' => $linked?->id,
                                                 'aksiNamaMenu' => $linked?->nama_menu,
                                                 'aksiIsPaket' => false,
@@ -153,10 +153,10 @@
                                     <td class="px-4 py-1.5"></td>
                                     <td class="px-4 py-1.5"></td>
                                     <td class="px-4 py-1.5">
-                                        @include('menu.resep._status', ['menu' => $linked])
+                                        @include('admin.menu.resep._status', ['menu' => $linked])
                                     </td>
                                     <td class="px-4 py-1.5 text-center">
-                                        @include('menu.resep._aksi', [
+                                        @include('admin.menu.resep._aksi', [
                                             'aksiMenuId' => $linked?->id,
                                             'aksiNamaMenu' => $linked?->nama_menu,
                                             'aksiIsPaket' => false,
@@ -185,10 +185,10 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-gray-500">{{ $menu->kategori_menu->nama_kategori ?? '-' }}</td>
                         <td class="px-4 py-4 align-middle">
-                            @include('menu.resep._status', ['menu' => $menu])
+                            @include('admin.menu.resep._status', ['menu' => $menu])
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
-                            @include('menu.resep._aksi', [
+                            @include('admin.menu.resep._aksi', [
                                 'aksiMenuId' => $menu->id,
                                 'aksiNamaMenu' => $menu->nama_menu,
                                 'aksiIsPaket' => false,

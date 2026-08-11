@@ -45,7 +45,7 @@ class NotifikasiStokController extends Controller
             'habis' => NotifikasiStok::where('jenis', 'habis')->where('dibaca', false)->count(),
         ];
 
-        return view('inventory.notifikasi-stok.index', compact('notifications', 'stats'));
+        return view('admin.persediaan.notifikasi-stok.index', compact('notifications', 'stats'));
     }
 
     public function markAsRead(Request $request, $id)

@@ -235,7 +235,7 @@
 
                 {{-- Item Menu --}}
                 <div class="pt-2 border-t border-gray-100">
-                    @include('menu.paket.partials.komponen-builder', ['existingKomponen' => []])
+                    @include('admin.menu.paket.partials.komponen-builder', ['existingKomponen' => []])
                 </div>
             </div>
 

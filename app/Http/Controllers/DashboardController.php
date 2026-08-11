@@ -106,7 +106,7 @@ class DashboardController extends Controller
             ->whereDate('jadwal_pesanan.tanggal_acara', '<=', Carbon::today()->addDays(3))
             ->get();
 
-        return view('dashboard.index', compact(
+        return view('admin.dashboard.index', compact(
             'pesananHariIni',
             'pendapatanHariIni',
             'pesananPending',

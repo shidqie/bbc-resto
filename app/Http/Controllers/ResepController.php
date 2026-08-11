@@ -126,7 +126,7 @@ class ResepController extends Controller
             ];
         }
 
-        return view('menu.resep.index', compact(
+        return view('admin.menu.resep.index', compact(
             'menus', 'search', 'kategoriId', 'layananId', 'statusResep',
             'kategoris', 'bahanBakus', 'menuById', 'menuByName', 'menuUsedIds',
             'jsResepMenus', 'jsPaketKomposisi', 'menuSatuanOptions'
@@ -145,7 +145,7 @@ class ResepController extends Controller
             $totalHpp += $hargaSatuan * $resep->jumlah_kebutuhan;
         }
 
-        return view('menu.resep.create', compact('menu', 'bahanBakus', 'totalHpp'));
+        return view('admin.menu.resep.create', compact('menu', 'bahanBakus', 'totalHpp'));
     }
 
     public function store(Request $request, Menu $menu)

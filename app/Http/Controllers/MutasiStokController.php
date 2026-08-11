@@ -55,6 +55,6 @@ class MutasiStokController extends Controller
             'keluar_hari_ini' => MutasiStok::where('jenis_mutasi_stok_id', 2)->whereDate('tanggal_mutasi', today())->count(),
         ];
 
-        return view('inventory.mutasi-stok.index', compact('mutasiStoks', 'stats'));
+        return view('admin.persediaan.mutasi-stok.index', compact('mutasiStoks', 'stats'));
     }
 }

@@ -32,6 +32,6 @@ class LacakPesananController extends Controller
             }
         }
 
-        return view('lacak.index', compact('pesanan', 'jenisPesanan', 'kodePesanan'));
+        return view('pelanggan.pesanan.lacak', compact('pesanan', 'jenisPesanan', 'kodePesanan'));
     }
 }

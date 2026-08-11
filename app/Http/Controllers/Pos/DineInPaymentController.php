@@ -45,7 +45,7 @@ class DineInPaymentController extends Controller
         // Generate Dynamic QRIS string
         $qrisString = QrisHelper::generateDynamicQris($staticQris, $totalTagihan);
 
-        return view('pos.pesanan.checkout', compact('meja', 'pesanan', 'totalTagihan', 'qrisString'));
+        return view('admin.pos.pesanan.checkout', compact('meja', 'pesanan', 'totalTagihan', 'qrisString'));
     }
 
     public function processPayment(Request $request, $mejaId)
@@ -132,14 +132,14 @@ class DineInPaymentController extends Controller
             return redirect()->route('pos.dinein.index')->with('error', 'Pesanan belum lunas.');
         }
 
-        return view('pos.pesanan.success', compact('pesanan'));
+        return view('admin.pos.pesanan.success', compact('pesanan'));
     }
 
     public function receipts($pesananId)
     {
         $pesanan = Pesanan::with(['detail_pesanan.menu', 'meja', 'pembayaran'])->findOrFail($pesananId);
 
-        return view('pos.dinein.receipts', compact('pesanan'));
+        return view('admin.pos.dinein.receipts', compact('pesanan'));
     }
 
 

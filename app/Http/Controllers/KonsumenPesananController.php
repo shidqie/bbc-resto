@@ -23,7 +23,7 @@ class KonsumenPesananController extends Controller
             ->latest()
             ->get();
 
-        return view('akun.pesanan', compact('pelanggan', 'pesanans'));
+        return view('pelanggan.pesanan.index', compact('pelanggan', 'pesanans'));
     }
 
     public function show($id_pesanan): View
@@ -47,6 +47,6 @@ class KonsumenPesananController extends Controller
             default => 'Dine In',
         };
 
-        return view('akun.pesanan-detail', compact('pelanggan', 'pesanan', 'jenisPesanan'));
+        return view('pelanggan.pesanan.show', compact('pelanggan', 'pesanan', 'jenisPesanan'));
     }
 }

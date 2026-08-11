@@ -57,7 +57,7 @@ class PengadaanController extends Controller
         $pengadaans = $query->paginate(10)->withQueryString();
         $statuses = StatusPengadaan::all();
 
-        return view('pengadaan.permintaan.index', compact('pengadaans', 'statuses'));
+        return view('admin.pengadaan.permintaan.index', compact('pengadaans', 'statuses'));
     }
 
     public function createHarian()
@@ -114,7 +114,7 @@ class PengadaanController extends Controller
 
         $kodePreview = $this->kodePermintaan();
 
-        return view('pengadaan.permintaan.catering-create', compact('pesanan', 'items', 'daftarPesanan', 'kodePreview', 'error'));
+        return view('admin.pengadaan.permintaan.catering-create', compact('pesanan', 'items', 'daftarPesanan', 'kodePreview', 'error'));
     }
 
     protected function formPermintaan(string $jenis)
@@ -150,7 +150,7 @@ class PengadaanController extends Controller
         $formRoute = $jenis === 'harian' ? 'pengadaan.harian.store' : 'pengadaan.catering.store';
         $kodePreview = $this->kodePermintaan();
 
-        return view('pengadaan.permintaan.harian-create', compact('jenis', 'formRoute', 'bahanMenipisCount', 'semuaBahan', 'kodePreview'));
+        return view('admin.pengadaan.permintaan.harian-create', compact('jenis', 'formRoute', 'bahanMenipisCount', 'semuaBahan', 'kodePreview'));
     }
 
     public function storeHarian(Request $request)
@@ -248,7 +248,7 @@ class PengadaanController extends Controller
             'jumlah_po' => $pengadaan->purchase_order->count(),
         ];
 
-        return view('pengadaan.permintaan.show', compact('pengadaan', 'items', 'sisaItems', 'summary'));
+        return view('admin.pengadaan.permintaan.show', compact('pengadaan', 'items', 'sisaItems', 'summary'));
     }
 
     public function cancel(PengadaanBahan $pengadaan)

@@ -16,7 +16,7 @@ class KonsumenProfileController extends Controller
     {
         $pelanggan = Auth::guard('pelanggan')->user();
 
-        return view('akun.profile', compact('pelanggan'));
+        return view('pelanggan.profile.index', compact('pelanggan'));
     }
 
     public function update(Request $request): RedirectResponse

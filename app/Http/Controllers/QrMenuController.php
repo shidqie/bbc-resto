@@ -27,7 +27,7 @@ class QrMenuController extends Controller
     {
         $mejas = Meja::orderBy('id')->get();
 
-        return view('menu.qr-menu.scanner', compact('mejas'));
+        return view('admin.menu.qr.scanner', compact('mejas'));
     }
 
     /**
@@ -45,7 +45,7 @@ class QrMenuController extends Controller
 
         // Jika tidak ada token atau token tidak valid → tampilkan halaman "scan QR dulu"
         if (! $selectedMeja) {
-            return view('menu.qr-menu.scan-required');
+            return view('admin.menu.qr.scan-required');
         }
 
         // Fetch kategori (urut sesuai id: Paket Nasi Liwet → Minuman Non-Coffee)
@@ -87,7 +87,7 @@ class QrMenuController extends Controller
             'is_habis'        => in_array($m->id, $menuHabisIds),
         ]);
 
-        return view('menu.qr-menu.index', compact('kategoris', 'menus', 'selectedMeja'));
+        return view('admin.menu.qr.index', compact('kategoris', 'menus', 'selectedMeja'));
     }
 
     /**

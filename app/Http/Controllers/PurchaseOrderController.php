@@ -53,7 +53,7 @@ class PurchaseOrderController extends Controller
             PurchaseOrder::DIBATALKAN => 'Dibatalkan',
         ];
 
-        return view('pengadaan.purchase-order.index', compact('pos', 'statuses'));
+        return view('admin.pengadaan.purchase-order.index', compact('pos', 'statuses'));
     }
 
     public function create(PengadaanBahan $pengadaan)
@@ -75,7 +75,7 @@ class PurchaseOrderController extends Controller
 
         $kodePo = $this->kodePo();
 
-        return view('pengadaan.purchase-order.create', compact('pengadaan', 'items', 'kodePo'));
+        return view('admin.pengadaan.purchase-order.create', compact('pengadaan', 'items', 'kodePo'));
     }
 
     public function store(Request $request, PengadaanBahan $pengadaan)
@@ -156,7 +156,7 @@ class PurchaseOrderController extends Controller
         $statusService = app(PengadaanStatusService::class);
         $sisaItems = $statusService->sisaDetailPo($po);
 
-        return view('pengadaan.purchase-order.show', compact('po', 'sisaItems'));
+        return view('admin.pengadaan.purchase-order.show', compact('po', 'sisaItems'));
     }
 
     public function print(PurchaseOrder $po)

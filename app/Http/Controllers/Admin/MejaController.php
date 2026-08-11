@@ -23,7 +23,7 @@ class MejaController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('pos.meja.index', compact('mejas'));
+        return view('admin.pos.meja.index', compact('mejas'));
     }
 
     public function store(Request $request)

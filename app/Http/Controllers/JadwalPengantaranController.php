@@ -102,7 +102,7 @@ class JadwalPengantaranController extends Controller
             $kurirs = Pengguna::where('peran_id', 6)->where('status_aktif', 1)->get();
         }
 
-        return view('order.jadwal.index', compact(
+        return view('admin.pesanan.pengantaran.index', compact(
             'selectedDate',
             'selectedMonth',
             'startOfMonth',

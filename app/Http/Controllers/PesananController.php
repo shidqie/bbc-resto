@@ -119,7 +119,7 @@ class PesananController extends Controller
     {
         $pesanan->load(['details.menu', 'pembayarans', 'user']);
 
-        return view('pos.pesanan.show', compact('pesanan'));
+        return view('admin.pos.pesanan.show', compact('pesanan'));
     }
 
     public function updateStatus(Request $request, Pesanan $pesanan, OrderService $orderService)

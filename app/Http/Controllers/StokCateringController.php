@@ -54,6 +54,6 @@ class StokCateringController extends Controller
             'total_habis' => StokBahan::catering()->where('jumlah_stok', '<=', 0)->count(),
         ];
 
-        return view('inventory.stok-catering.index', compact('bahanBakus', 'kategoris', 'stats'));
+        return view('admin.persediaan.stok-catering.index', compact('bahanBakus', 'kategoris', 'stats'));
     }
 }

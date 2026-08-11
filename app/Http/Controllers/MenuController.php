@@ -78,7 +78,7 @@ class MenuController extends Controller
 
         $satuans = \App\Models\Satuan::all();
 
-        return view('menu.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'satuans', 'stats', 'jenisId'));
+        return view('admin.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'satuans', 'stats', 'jenisId'));
     }
 
     public function create()
@@ -87,7 +87,7 @@ class MenuController extends Controller
         $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
         $jenis_menu = JenisMenu::all();
 
-        return view('menu.menu.create', compact('kategoris', 'bahanBakus', 'jenis_menu'));
+        return view('admin.menu.create', compact('kategoris', 'bahanBakus', 'jenis_menu'));
     }
 
     public function store(Request $request)
@@ -199,7 +199,7 @@ class MenuController extends Controller
         $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
         $jenis_menu = JenisMenu::all();
 
-        return view('menu.menu.edit', compact('menu', 'kategoris', 'bahanBakus', 'jenis_menu'));
+        return view('admin.menu.edit', compact('menu', 'kategoris', 'bahanBakus', 'jenis_menu'));
     }
 
     public function update(Request $request, Menu $menu)
@@ -312,7 +312,7 @@ class MenuController extends Controller
     {
         $menu->load(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'jenis_menu']);
 
-        return view('menu.menu.show', compact('menu'));
+        return view('admin.menu.show', compact('menu'));
     }
 
     public function toggleStatus(Menu $menu)

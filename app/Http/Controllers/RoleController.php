@@ -20,7 +20,7 @@ class RoleController extends Controller
 
         $roles = $query->paginate(10)->withQueryString();
 
-        return view('roles.index', compact('roles'));
+        return view('admin.pengguna.roles.index', compact('roles'));
     }
 
     public function store(Request $request)

@@ -29,7 +29,7 @@ class PesananNasiBoxController extends Controller
 
         $selectedPaketId = $request->paket_id;
 
-        return view('order.nasi-box.create', compact('pakets', 'selectedPaketId'));
+        return view('pelanggan.pesanan.nasi-box.create', compact('pakets', 'selectedPaketId'));
     }
 
     // POST /pesan/nasibox/preview
@@ -194,7 +194,7 @@ class PesananNasiBoxController extends Controller
         // Karena index view menggunakan $status, fallback.
         $status = 'all';
 
-        return view('order.nasi-box.index', compact('pesanans', 'stats', 'status'));
+        return view('admin.pesanan.nasi-box.index', compact('pesanans', 'stats', 'status'));
     }
 
     public function show($id)
@@ -210,10 +210,10 @@ class PesananNasiBoxController extends Controller
         $kebutuhanBahan = $this->hitungKebutuhanBahan($pesanan);
 
         if (request()->ajax()) {
-            return view('order.nasi-box._detail', compact('pesanan', 'kebutuhanBahan'));
+            return view('admin.pesanan.nasi-box._detail', compact('pesanan', 'kebutuhanBahan'));
         }
 
-        return view('order.nasi-box.show', compact('pesanan', 'kebutuhanBahan'));
+        return view('admin.pesanan.nasi-box.show', compact('pesanan', 'kebutuhanBahan'));
     }
 
     public function exportPdf($id)

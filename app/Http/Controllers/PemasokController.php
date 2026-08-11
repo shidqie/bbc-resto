@@ -20,12 +20,12 @@ class PemasokController extends Controller
 
         $pemasoks = $query->latest()->paginate(15);
 
-        return view('inventory.pemasok.index', compact('pemasoks', 'search'));
+        return view('admin.persediaan.pemasok.index', compact('pemasoks', 'search'));
     }
 
     public function create()
     {
-        return view('inventory.pemasok.create');
+        return view('admin.persediaan.pemasok.create');
     }
 
     public function store(Request $request)
@@ -55,7 +55,7 @@ class PemasokController extends Controller
 
     public function edit(Pemasok $pemasok)
     {
-        return view('inventory.pemasok.edit', compact('pemasok'));
+        return view('admin.persediaan.pemasok.edit', compact('pemasok'));
     }
 
     public function update(Request $request, Pemasok $pemasok)

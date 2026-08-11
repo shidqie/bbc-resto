@@ -23,7 +23,7 @@ class BuktiPembayaranController extends Controller
             return back()->with('error', 'Pesanan dengan nomor "'.$kodePesanan.'" tidak ditemukan.');
         }
 
-        return view('pos.pembayaran.cari');
+        return view('admin.pos.pembayaran.cari');
     }
 
     /** GET /pesan/bayar/{kodePesanan} */
@@ -43,10 +43,10 @@ class BuktiPembayaranController extends Controller
 
         $statusBayar = $this->statusBayar($pesanan);
         if ($statusBayar === 'lunas') {
-            return view('pos.pembayaran.sukses', compact('pesanan', 'type', 'kodePesanan'));
+            return view('admin.pos.pembayaran.sukses', compact('pesanan', 'type', 'kodePesanan'));
         }
 
-        return view('pos.pembayaran.index', compact('pesanan', 'type', 'kodePesanan'));
+        return view('admin.pos.pembayaran.index', compact('pesanan', 'type', 'kodePesanan'));
     }
 
     /** GET /pesan/bayar/status/{kodePesanan} — polling JSON status pembayaran */
@@ -155,7 +155,7 @@ class BuktiPembayaranController extends Controller
             ?? optional($pesanan->jadwal_pesanan)->nomor_telepon_penerima
             ?? '-';
 
-        return view('pesanan.invoice-pdf', compact('pesanan', 'type', 'kodePesanan', 'namaPemesan', 'kontak'));
+        return view('pelanggan.pembayaran.invoice-pdf', compact('pesanan', 'type', 'kodePesanan', 'namaPemesan', 'kontak'));
     }
 
     /** Status bayar: belum_bayar / dp_terbayar / lunas */

@@ -43,7 +43,7 @@ class BahanBakuController extends Controller
         $totalSatuan = Satuan::count();
         $bahanAktif = BahanBaku::where('status_aktif', true)->count();
 
-        return view('inventory.bahan-baku.index', compact(
+        return view('admin.persediaan.bahan-baku.index', compact(
             'bahanBakus', 'kategoris', 'satuans', 'kategorisPage', 'satuansPage', 'tab',
             'totalBahan', 'totalKategori', 'totalSatuan', 'bahanAktif'
         ));
@@ -132,7 +132,7 @@ class BahanBakuController extends Controller
 
         $mutasiStoks = MutasiStok::with(['dibuat_oleh_pengguna', 'jenis_mutasi_stok'])->where('bahan_baku_id', $id)->latest('dibuat_pada')->take(5)->get();
 
-        return view('inventory.bahan-baku.show', compact('bahanBaku', 'mutasiStoks'));
+        return view('admin.persediaan.bahan-baku.show', compact('bahanBaku', 'mutasiStoks'));
     }
 
     public function drawer($id)
@@ -140,7 +140,7 @@ class BahanBakuController extends Controller
         $bahanBaku = BahanBaku::with(['kategori_bahan_baku', 'satuan', 'stok_harian', 'stok_catering_balance'])->findOrFail($id);
         $mutasiStoks = MutasiStok::with(['jenis_mutasi_stok'])->where('bahan_baku_id', $id)->latest('tanggal_mutasi')->take(10)->get();
 
-        return view('inventory.bahan-baku.drawer', compact('bahanBaku', 'mutasiStoks'));
+        return view('admin.persediaan.bahan-baku.drawer', compact('bahanBaku', 'mutasiStoks'));
     }
 
     public function edit($id)

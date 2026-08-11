@@ -29,7 +29,7 @@ class PesananCateringController extends Controller
 
         $selectedPaketId = $request->paket_id;
 
-        return view('order.catering.create', compact('pakets', 'selectedPaketId'));
+        return view('pelanggan.pesanan.catering.create', compact('pakets', 'selectedPaketId'));
     }
 
     // GET /pesan/catering/komponen/{paketId}
@@ -251,7 +251,7 @@ class PesananCateringController extends Controller
             'selesai' => Pesanan::where('jenis_pesanan_id', 2)->where('status_pesanan_id', 5)->count(),
         ];
 
-        return view('order.catering.index', compact('pesanans', 'stats', 'status'));
+        return view('admin.pesanan.catering.index', compact('pesanans', 'stats', 'status'));
     }
 
     public function show(Request $request, $id)
@@ -290,10 +290,10 @@ class PesananCateringController extends Controller
         $kebutuhanBahan = array_values($kebutuhan);
 
         if ($request->ajax()) {
-            return view('order.catering._detail', compact('pesanan', 'kebutuhanBahan'));
+            return view('admin.pesanan.catering._detail', compact('pesanan', 'kebutuhanBahan'));
         }
 
-        return view('order.catering.show', compact('pesanan', 'kebutuhanBahan'));
+        return view('admin.pesanan.catering.show', compact('pesanan', 'kebutuhanBahan'));
     }
 
     /** Konfirmasi pesanan setelah DP terverifikasi (status 1 → 2) */

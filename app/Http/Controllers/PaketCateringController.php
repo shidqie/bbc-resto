@@ -29,14 +29,14 @@ class PaketCateringController extends Controller
 
         $pakets = $query->latest()->get();
 
-        return view('menu.paket.index', compact('pakets', 'jenis'));
+        return view('admin.menu.paket.index', compact('pakets', 'jenis'));
     }
 
     public function create(Request $request)
     {
         $jenis = $request->query('jenis', 'catering');
 
-        return view('menu.paket.create', compact('jenis'));
+        return view('admin.menu.paket.create', compact('jenis'));
     }
 
     public function store(Request $request)
@@ -105,7 +105,7 @@ class PaketCateringController extends Controller
     {
         $paketCatering = Menu::with('komponen_paket.opsi')->findOrFail($id);
 
-        return view('menu.paket.show', compact('paketCatering'));
+        return view('admin.menu.paket.show', compact('paketCatering'));
     }
 
     public function edit($id)
@@ -113,7 +113,7 @@ class PaketCateringController extends Controller
         $paketCatering = Menu::with('komponen_paket.opsi')->findOrFail($id);
         $jenis = $paketCatering->jenis_menu_id == 2 ? 'catering' : 'nasi_box';
 
-        return view('menu.paket.edit', compact('paketCatering', 'jenis'));
+        return view('admin.menu.paket.edit', compact('paketCatering', 'jenis'));
     }
 
     public function update(Request $request, $id)

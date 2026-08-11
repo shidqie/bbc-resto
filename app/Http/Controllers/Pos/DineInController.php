@@ -155,7 +155,7 @@ class DineInController extends Controller
             $m->status = in_array($m->id, $activeMejaIds) ? 'terisi' : 'kosong';
         });
 
-        return view('pos.pesanan.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'cashiers', 'menuHabisIds', 'sisaPorsiMenu'));
+        return view('admin.pos.pesanan.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'cashiers', 'menuHabisIds', 'sisaPorsiMenu'));
     }
 
     public function tableStatusApi()
@@ -420,28 +420,28 @@ class DineInController extends Controller
     {
         $pesanan = Pesanan::with('detail_pesanan.menu')->findOrFail($pesananId);
 
-        return view('pos.pesanan.print-dapur', compact('pesanan'));
+        return view('admin.pos.pesanan.print-dapur', compact('pesanan'));
     }
 
     public function printMeja($pesananId)
     {
         $pesanan = Pesanan::with('detail_pesanan.menu', 'meja')->findOrFail($pesananId);
 
-        return view('pos.pesanan.print-meja', compact('pesanan'));
+        return view('admin.pos.pesanan.print-meja', compact('pesanan'));
     }
 
     public function printGabungan($pesananId)
     {
         $pesanan = Pesanan::with('detail_pesanan.menu', 'meja')->findOrFail($pesananId);
 
-        return view('pos.pesanan.print-gabungan', compact('pesanan'));
+        return view('admin.pos.pesanan.print-gabungan', compact('pesanan'));
     }
 
     public function printNota($pesananId)
     {
         $pesanan = Pesanan::with('detail_pesanan.menu', 'meja', 'pembayaran')->findOrFail($pesananId);
 
-        return view('pos.pesanan.print-nota', compact('pesanan'));
+        return view('admin.pos.pesanan.print-nota', compact('pesanan'));
     }
 
     public function printQrMeja(Request $request)
@@ -461,7 +461,7 @@ class DineInController extends Controller
             return response()->send('<h3>Tidak ada data QR Code yang bisa diunduh. Silakan generate QR terlebih dahulu.</h3>');
         }
 
-        return view('pos.pesanan.qr-meja', compact('mejas'));
+        return view('admin.pos.pesanan.qr-meja', compact('mejas'));
     }
 
     public function updateSubStatus(Request $request, $pesananId)

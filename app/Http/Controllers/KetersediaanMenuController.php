@@ -63,7 +63,7 @@ class KetersediaanMenuController extends Controller
             'tidak_cukup_catering' => $menus->getCollection()->filter(fn ($m) => $m->status_catering === 'Stok Tidak Cukup')->count(),
         ];
 
-        return view('inventory.ketersediaan-menu.index', compact('menus', 'kategoris', 'jenisMenus', 'stats'));
+        return view('admin.persediaan.ketersediaan-menu.index', compact('menus', 'kategoris', 'jenisMenus', 'stats'));
     }
 
     protected function porsiPada(Menu $menu, string $jenisPersediaan): float

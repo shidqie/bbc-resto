@@ -60,6 +60,6 @@ class PesananDineInController extends Controller
             'selesai'  => Pesanan::where('jenis_pesanan_id', 1)->where('status_pesanan_id', 5)->count(),
         ];
 
-        return view('order.dine-in.index', compact('pesanans', 'stats', 'status', 'period'));
+        return view('admin.pesanan.dine-in.index', compact('pesanans', 'stats', 'status', 'period'));
     }
 }

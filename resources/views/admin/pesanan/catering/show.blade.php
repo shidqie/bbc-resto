@@ -14,6 +14,6 @@
         </x-ui.page-header>
     </div>
 
-    @include('order.catering._detail')
+    @include('admin.pesanan.catering._detail')
 </div>
 @endsection

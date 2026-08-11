@@ -22,7 +22,7 @@ class KategoriMenuController extends Controller
 
         $kategoris = $query->withCount('menu')->orderBy('id', 'asc')->paginate(15)->withQueryString();
 
-        return view('menu.kategori.index', compact('kategoris'));
+        return view('admin.menu.kategori.index', compact('kategoris'));
     }
 
     public function store(Request $request)

@@ -14,6 +14,6 @@
         </x-ui.page-header>
     </div>
 
-    @include('order.nasi-box._detail')
+    @include('admin.pesanan.nasi-box._detail')
 </div>
 @endsection

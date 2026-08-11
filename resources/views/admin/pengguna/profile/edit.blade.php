@@ -31,7 +31,7 @@
         <div x-show="activeTab === 'profile'" x-transition:enter="transition ease-out duration-150"
              class="bg-white rounded-lg p-6 md:p-8 border border-neutral-200">
             <div class="max-w-xl">
-                @include('profile.partials.update-profile-information-form')
+                @include('admin.pengguna.profile.partials.update-profile-information-form')
             </div>
         </div>
 
@@ -39,7 +39,7 @@
         <div x-show="activeTab === 'password'" x-transition:enter="transition ease-out duration-150"
              class="bg-white rounded-lg p-6 md:p-8 border border-neutral-200">
             <div class="max-w-xl">
-                @include('profile.partials.update-password-form')
+                @include('admin.pengguna.profile.partials.update-password-form')
             </div>
         </div>
 

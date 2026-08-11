@@ -55,7 +55,7 @@ class PenerimaanBahanController extends Controller
             'selesai' => 'Selesai',
         ];
 
-        return view('pengadaan.penerimaan.index', compact('penerimaans', 'statuses'));
+        return view('admin.pengadaan.penerimaan.index', compact('penerimaans', 'statuses'));
     }
 
     public function create(PurchaseOrder $po)
@@ -73,7 +73,7 @@ class PenerimaanBahanController extends Controller
 
         $kodePenerimaan = $this->kodePenerimaan();
 
-        return view('pengadaan.penerimaan.create', compact('po', 'items', 'kodePenerimaan'));
+        return view('admin.pengadaan.penerimaan.create', compact('po', 'items', 'kodePenerimaan'));
     }
 
     public function store(Request $request, PurchaseOrder $po)
@@ -245,7 +245,7 @@ class PenerimaanBahanController extends Controller
                 ->values();
         }
 
-        return view('pengadaan.penerimaan.show', compact('penerimaan', 'total_pembelian', 'sisaItems'));
+        return view('admin.pengadaan.penerimaan.show', compact('penerimaan', 'total_pembelian', 'sisaItems'));
     }
 
     protected function kodePenerimaan(): string
