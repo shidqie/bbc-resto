@@ -66,9 +66,6 @@
                     </div>
                 @endif
 
-                <a href="{{ route('home') }}#catering" onclick="if(!isLoggedIn){ handleOrderClick(event, '{{ route('pesan.catering') }}'); }" class="px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-800 transition shadow-xs">
-                    Pesan Sekarang
-                </a>
             </div>
 
             {{-- Mobile Hamburger Button --}}
@@ -147,10 +144,6 @@
                 </div>
             @endif
 
-            <a href="{{ route('home') }}#catering" onclick="if(!isLoggedIn){ handleOrderClick(event, '{{ route('pesan.catering') }}'); }"
-               class="mobile-nav-link mt-2 py-3 rounded-xl bg-neutral-900 text-white text-center text-sm font-semibold hover:bg-neutral-800 transition-colors block">
-                Pesan Sekarang
-            </a>
 
         </div>
     </div>

@@ -50,7 +50,6 @@
         @endif
 
         <a href="{{ $type === 'catering' ? route('pesan.catering', ['paket_id' => $paket->id]) : route('pesan.nasibox', ['paket_id' => $paket->id]) }}"
-           onclick="handleOrderClick(event, this.href)"
            class="mt-auto inline-flex items-center justify-center gap-1.5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
             <span>Pesan Sekarang</span>
             <x-heroicon-o-arrow-right class="w-3 h-3" />

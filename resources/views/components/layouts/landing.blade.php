@@ -99,22 +99,7 @@
     <script>
         const isLoggedIn = {{ Auth::guard('pelanggan')->check() ? 'true' : 'false' }};
         function handleOrderClick(event, url) {
-            if (!isLoggedIn) {
-                event.preventDefault();
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Daftar/Login Diperlukan',
-                    text: 'Anda harus mendaftar atau login terlebih dahulu untuk memesan Katering dan Nasi Box.',
-                    confirmButtonText: 'Login Sekarang',
-                    confirmButtonColor: '#0D3024',
-                    showCancelButton: true,
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '{{ route('konsumen.login') }}';
-                    }
-                });
-            } else if (url) {
+            if (url) {
                 window.location.href = url;
             }
         }
