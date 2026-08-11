@@ -613,7 +613,7 @@ document.addEventListener('alpine:init', () => {
 });
 </script>
 
-<div x-data="posSystem()" x-init="startTableStatusPolling()" class="pos-root min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] w-full flex flex-col lg:flex-row lg:overflow-hidden bg-[#f5f5f0] text-[#111827]">
+<div x-data="posSystem" x-init="startTableStatusPolling()" class="pos-root min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] w-full flex flex-col lg:flex-row lg:overflow-hidden bg-[#f5f5f0] text-[#111827]">
 
   {{-- ─────────────────────────────── LEFT PANEL ────────────────────────────── --}}
   <div class="flex-1 flex flex-col min-w-0 lg:overflow-hidden">
@@ -663,24 +663,24 @@ document.addEventListener('alpine:init', () => {
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1 pb-0.5">
         
         {{-- Area Kiri: Search Input --}}
-        <div class="relative w-full md:w-64 shrink-0" x-show="leftView !== 'qr'">
+        <div class="relative w-full md:w-64 shrink-0" x-show="leftView !== 'qr'" x-cloak>
           <x-heroicon-o-magnifying-glass class="w-4 h-4 absolute left-3 top-2.5 text-gray-400 pointer-events-none" style="width: 16px; height: 16px;" />
-          <input x-show="leftView === 'menu'" x-model="searchQuery" type="text" placeholder="Cari menu…"
+          <input x-show="leftView === 'menu'" x-cloak x-model="searchQuery" type="text" placeholder="Cari menu…"
                  class="w-full h-9 pl-9 pr-7 text-sm font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
           
-          <input x-show="leftView === 'meja'" x-model="tableSearch" type="text" placeholder="Cari meja…"
+          <input x-show="leftView === 'meja'" x-cloak x-model="tableSearch" type="text" placeholder="Cari meja…"
                  class="w-full h-9 pl-9 pr-7 text-sm font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
           
-          <input x-show="leftView === 'open_bills'" x-model="openBillSearch" type="text" placeholder="Cari pesanan…"
+          <input x-show="leftView === 'open_bills'" x-cloak x-model="openBillSearch" type="text" placeholder="Cari pesanan…"
                  class="w-full h-9 pl-9 pr-7 text-sm font-medium rounded-xl border border-neutral-200 bg-white focus:border-neutral-900 transition-all outline-none">
-          <button x-show="(leftView === 'menu' && searchQuery) || (leftView === 'meja' && tableSearch) || (leftView === 'open_bills' && openBillSearch)"
+          <button x-show="(leftView === 'menu' && searchQuery) || (leftView === 'meja' && tableSearch) || (leftView === 'open_bills' && openBillSearch)" x-cloak
                   @click="searchQuery = ''; tableSearch = ''; openBillSearch = ''"
                   class="absolute right-2.5 top-1.5 text-gray-400 hover:text-gray-600 text-sm leading-none">&times;</button>
         </div>
 
         {{-- Area Kanan: Filters --}}
         <div class="flex-1 overflow-hidden">
-          <div x-show="leftView === 'menu'" class="flex overflow-x-auto no-scrollbar gap-2">
+          <div x-show="leftView === 'menu'" x-cloak class="flex overflow-x-auto no-scrollbar gap-2">
             <button @click="activeCategory = 'semua'"
                     :class="activeCategory === 'semua' ? 'chip-active shadow-xs' : 'chip-default'"
                     class="shrink-0 inline-flex items-center gap-1.5 px-4 h-9 rounded-xl text-xs font-extrabold transition-all hover:scale-[1.02]">
@@ -696,7 +696,7 @@ document.addEventListener('alpine:init', () => {
             @endforeach
           </div>
 
-          <div x-show="leftView === 'meja'" class="flex overflow-x-auto no-scrollbar gap-2">
+          <div x-show="leftView === 'meja'" x-cloak class="flex overflow-x-auto no-scrollbar gap-2">
             <button @click="tableFilter = 'semua'"
                     :class="tableFilter === 'semua' ? 'chip-active shadow-xs' : 'chip-default'"
                     class="shrink-0 inline-flex items-center px-4 h-9 rounded-xl text-xs font-extrabold transition-all hover:scale-[1.02]">
@@ -826,7 +826,7 @@ document.addEventListener('alpine:init', () => {
     </header>
 
     {{-- ══════════════════════  VIEW 1 · MENU CATALOG  ══════════════════════ --}}
-    <div x-show="leftView === 'menu'" class="flex-1 overflow-y-auto p-4 bg-white">
+    <div x-show="leftView === 'menu'" x-cloak class="flex-1 overflow-y-auto p-4 bg-white">
       <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
         @foreach($menus as $menu)
         @php 
@@ -894,7 +894,7 @@ document.addEventListener('alpine:init', () => {
     </div>
 
     {{-- ══════════════════════  VIEW 2 · MANAJEMEN MEJA  ══════════════════════ --}}
-    <div x-show="leftView === 'meja'" class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0]">
+    <div x-show="leftView === 'meja'" x-cloak class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0]">
 
       <div class="bg-white border border-gray-200/80 rounded-xl shadow-xs overflow-x-auto overflow-y-visible min-h-64">
         <table class="w-full text-left border-collapse">
@@ -991,7 +991,7 @@ document.addEventListener('alpine:init', () => {
     </div>
 
     {{-- ══════════════════════  VIEW 3 · PESANAN BELUM DIBAYAR  ════════════════════════ --}}
-    <div x-show="leftView === 'open_bills'" class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0]">
+    <div x-show="leftView === 'open_bills'" x-cloak class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0]">
 
 
       {{-- Empty state --}}

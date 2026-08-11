@@ -49,19 +49,17 @@ Route::post('/qr-menu/order', [QrMenuController::class, 'storeOrder'])->name('qr
 Route::get('/qr-menu/{token}/status', [QrMenuController::class, 'statusChecker'])->name('qr.menu.status');
 Route::get('/qr-menu/{token}/status/api', [QrMenuController::class, 'checkOrderStatus'])->name('qr.menu.status.api');
 
-// ─── PESANAN (Katering & Nasi Box) Harus Login ───────────────────────────────────────────────────
-Route::middleware(['auth:pelanggan'])->group(function () {
-    // Catering
-    Route::get('/pesan/catering', [PesananCateringController::class, 'create'])->name('pesan.catering');
-    Route::post('/pesan/catering', [PesananCateringController::class, 'store'])->name('pesan.catering.store');
-    Route::get('/pesan/catering/komponen/{paketId}', [PesananCateringController::class, 'getKomponen'])->name('pesan.catering.komponen');
-    Route::post('/pesan/catering/preview', [PesananCateringController::class, 'preview'])->name('pesan.catering.preview');
+// ─── PESANAN (Katering & Nasi Box) ───────────────────────────────────────────────────
+// Catering
+Route::get('/pesan/catering', [PesananCateringController::class, 'create'])->name('pesan.catering');
+Route::post('/pesan/catering', [PesananCateringController::class, 'store'])->name('pesan.catering.store');
+Route::get('/pesan/catering/komponen/{paketId}', [PesananCateringController::class, 'getKomponen'])->name('pesan.catering.komponen');
+Route::post('/pesan/catering/preview', [PesananCateringController::class, 'preview'])->name('pesan.catering.preview');
 
-    // Nasi Box
-    Route::get('/pesan/nasi-box', [PesananNasiBoxController::class, 'create'])->name('pesan.nasibox');
-    Route::post('/pesan/nasi-box', [PesananNasiBoxController::class, 'store'])->name('pesan.nasibox.store');
-    Route::post('/pesan/nasi-box/preview', [PesananNasiBoxController::class, 'preview'])->name('pesan.nasibox.preview');
-});
+// Nasi Box
+Route::get('/pesan/nasi-box', [PesananNasiBoxController::class, 'create'])->name('pesan.nasibox');
+Route::post('/pesan/nasi-box', [PesananNasiBoxController::class, 'store'])->name('pesan.nasibox.store');
+Route::post('/pesan/nasi-box/preview', [PesananNasiBoxController::class, 'preview'])->name('pesan.nasibox.preview');
 
 // ─── PUBLIK — Bayar & Status ─────────────────────────────────────────────────
 Route::get('/pesan/bayar', [BuktiPembayaranController::class, 'cari'])->name('pesanan.bayar.cari');
