@@ -13,7 +13,7 @@
             <dl class="space-y-3 text-sm">
                 <div class="grid grid-cols-3 gap-4">
                     <dt class="text-gray-500 font-medium">Kode Bahan</dt>
-                    <dd class="col-span-2 font-mono font-semibold text-gray-900">{{ $bahanBaku->kode_bahan }}</dd>
+                    <dd class="col-span-2 font-mono font-semibold text-gray-900">{{ $bahanBaku->id_bahan_baku }}</dd>
                 </div>
                 <div class="grid grid-cols-3 gap-4">
                     <dt class="text-gray-500 font-medium">Nama Bahan</dt>
@@ -35,6 +35,27 @@
                         @else
                             <span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">Nonaktif</span>
                         @endif
+                    </dd>
+                @php 
+                    $stokHarian = (float) ($bahanBaku->stok_harian?->jumlah_stok ?? 0);
+                    $stokCatering = (float) ($bahanBaku->stok_catering_balance?->jumlah_stok ?? 0);
+                    $stok = $stokHarian + $stokCatering;
+                @endphp
+                <div class="grid grid-cols-3 gap-4 pt-3 mt-3 border-t border-gray-100">
+                    <dt class="text-gray-500 font-medium pt-1">Total Stok</dt>
+                    <dd class="col-span-2">
+                        <span class="font-bold text-gray-900 text-lg">{{ rtrim(rtrim(number_format($stok, 2, ',', '.'), '0'), ',') }}</span> <span class="text-xs text-gray-500">{{ $bahanBaku->satuan->singkatan }}</span>
+                        
+                        <div class="mt-2 grid grid-cols-2 gap-2 text-xs">
+                            <div class="bg-white p-2 rounded border border-gray-100">
+                                <span class="block text-gray-400 mb-0.5">Harian</span>
+                                <span class="font-semibold text-gray-700">{{ rtrim(rtrim(number_format($stokHarian, 2, ',', '.'), '0'), ',') }}</span>
+                            </div>
+                            <div class="bg-white p-2 rounded border border-gray-100">
+                                <span class="block text-gray-400 mb-0.5">Catering</span>
+                                <span class="font-semibold text-gray-700">{{ rtrim(rtrim(number_format($stokCatering, 2, ',', '.'), '0'), ',') }}</span>
+                            </div>
+                        </div>
                     </dd>
                 </div>
             </dl>
@@ -65,13 +86,15 @@
                         <td class="px-3 py-2">
                             @php
                                 $isMasuk = $mutasi->jenis_mutasi_stok_id == 1;
+                                $jenisPers = $mutasi->jenis_persediaan === \App\Models\StokBahan::JENIS_CATERING ? 'Catering' : 'Harian';
                             @endphp
                             <span class="text-xs font-medium {{ $isMasuk ? 'text-emerald-600' : 'text-red-600' }}">
                                 {{ $isMasuk ? 'Masuk' : 'Keluar' }}
                             </span>
+                            <div class="text-[10px] text-gray-400">{{ $jenisPers }}</div>
                         </td>
                         <td class="px-3 py-2 text-right font-medium {{ $isMasuk ? 'text-emerald-600' : 'text-red-600' }}">
-                            {{ $isMasuk ? '+' : '-' }}{{ number_format($mutasi->jumlah, 2) }}
+                            {{ $isMasuk ? '+' : '-' }}{{ rtrim(rtrim(number_format($mutasi->jumlah, 2, ',', '.'), '0'), ',') }}
                         </td>
                         <td class="px-3 py-2 text-gray-500 text-xs truncate max-w-[120px]" title="{{ $mutasi->catatan }}">
                             {{ $mutasi->catatan ?? '-' }}

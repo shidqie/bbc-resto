@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0 bg-white sticky top-0 z-10 shadow-sm">
         <div>
             <h3 class="font-bold text-gray-900 text-lg flex items-center gap-2">
-                {{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }}
+                {{ $pesanan->id_pesanan ?? 'DIN-'.$pesanan->id }}
                 @php
                     $color = 'gray';
                     if($pesanan->status_pesanan_id == 5) $color = 'emerald';

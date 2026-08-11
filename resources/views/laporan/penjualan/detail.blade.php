@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
         <div>
             <h3 class="text-lg font-bold text-gray-900 tracking-tight">Detail Pesanan</h3>
-            <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $pesanan->nomor_pesanan }}</p>
+            <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $pesanan->id_pesanan }}</p>
         </div>
         <button type="button" onclick="closeDetailDrawer()" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
             <x-heroicon-o-x-mark class="w-5 h-5" />
@@ -41,7 +41,7 @@
                         @else
                             {{ optional($pesanan->pelanggan)->nama ?? '-' }}
                             @if(optional($pesanan->pelanggan)->nomor_telepon)
-                                <span class="text-xs text-gray-400 block mt-0.5">{{ $pesanan->pelanggan->nomor_telepon }}</span>
+                                <span class="text-xs text-gray-400 block mt-0.5">{{ \App\Support\WhatsAppNumber::formatForDisplay($pesanan->pelanggan->nomor_telepon) }}</span>
                             @endif
                         @endif
                     </span>

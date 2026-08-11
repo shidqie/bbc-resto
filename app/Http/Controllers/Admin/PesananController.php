@@ -45,7 +45,7 @@ class PesananController extends Controller
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('nomor_pesanan', 'like', "%{$search}%")
+                $q->where('id_pesanan', 'like', "%{$search}%")
                     ->orWhere('catatan', 'like', "%{$search}%");
             });
         }

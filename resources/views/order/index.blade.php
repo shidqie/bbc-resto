@@ -33,7 +33,7 @@
         <x-ui.data-table :paginator="$pesanans">
             <x-slot:toolbar>
                 <form action="{{ route('pesanan.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
-                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama / Meja…" />
+                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama…" />
                     <x-ui.multi-select name="jenis" :options="['dine_in' => 'Dine In', 'catering' => 'Katering', 'nasi_box' => 'Nasi Box']" :selected="request('jenis')" label="Jenis" type="radio" />
                     <x-ui.multi-select name="status" :options="['baru' => 'Baru', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status')" label="Status" type="radio" />
                     @if(request()->hasAny(['search', 'jenis', 'status']))
@@ -81,11 +81,9 @@
                                 <p class="font-semibold text-gray-900 text-xs truncate max-w-[120px]">{{ $nama }}</p>
                             </div>
                             @if($phone)
-                                <p class="text-xs text-emerald-600 font-medium mt-0.5">{{ $phone }}</p>
+                                <p class="text-xs text-emerald-600 font-medium mt-0.5">{{ \App\Support\WhatsAppNumber::formatForDisplay($phone) }}</p>
                             @endif
-                            @if($p->no_meja)
-                                <x-ui.badge color="warning" size="sm" class="mt-1">Meja {{ $p->no_meja }}</x-ui.badge>
-                            @endif
+
                         </td>
 
                         {{-- Rincian Menu --}}

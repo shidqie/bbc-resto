@@ -7,7 +7,7 @@
     {{-- Header --}}
     <div class="px-6 py-5 border-b border-gray-100 shrink-0 bg-white sticky top-0 z-10 shadow-sm">
         <x-ui.page-header
-            title="{{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }}"
+            title="{{ $pesanan->id_pesanan ?? 'DIN-'.$pesanan->id }}"
             subtitle="Dibuat {{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('d F Y, H:i') }} &bull; {{ optional($pesanan->jenis_pesanan)->nama_jenis ?? '-' }}"
             :breadcrumbs="['Penjualan', 'Semua Pesanan', 'Detail']">
             <x-slot:actions>
@@ -44,7 +44,7 @@
                     <tbody class="divide-y divide-gray-100">
                         <tr class="hover:bg-slate-50">
                             <td class="px-5 py-3 font-semibold text-gray-500 w-1/3">Kode Pesanan</td>
-                            <td class="px-5 py-3 text-gray-900 font-bold">{{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }}</td>
+                            <td class="px-5 py-3 text-gray-900 font-bold">{{ $pesanan->id_pesanan ?? 'DIN-'.$pesanan->id }}</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-5 py-3 font-semibold text-gray-500">Jenis Pesanan</td>
@@ -59,7 +59,7 @@
                             $wa = '-';
                             if ($pesanan->pelanggan) {
                                 $nama = $pesanan->pelanggan->nama;
-                                $wa = $pesanan->pelanggan->nomor_telepon ?? '-';
+                                $wa = $pesanan->pelanggan->nomor_telepon ? \App\Support\WhatsAppNumber::formatForDisplay($pesanan->pelanggan->nomor_telepon) : '-';
                             } elseif (!empty($pesanan->catatan)) {
                                 if (preg_match('/^Pemesan:\s*(.+)$/m', $pesanan->catatan, $m)) {
                                     $nama = trim($m[1]);
@@ -94,14 +94,8 @@
                         </tr>
                         <tr class="hover:bg-slate-50">
                             @php
-                                $totalBayar = $pesanan->pembayaran->sum('jumlah_dibayar');
-                                if($totalBayar >= $pesanan->total_tagihan && $pesanan->total_tagihan > 0) {
-                                    $payStatus = 'Lunas';
-                                } elseif($totalBayar > 0) {
-                                    $payStatus = 'DP';
-                                } else {
-                                    $payStatus = 'Belum Bayar';
-                                }
+                                $statusPembayaran = \App\Models\StatusPembayaran::find($pesanan->status_pembayaran_id);
+                                $payStatus = $statusPembayaran ? $statusPembayaran->nama_status : 'Unknown';
                             @endphp
                             <td class="px-5 py-3 font-semibold text-gray-500">Status Pembayaran</td>
                             <td class="px-5 py-3 text-gray-900 font-bold">{{ $payStatus }}</td>
@@ -354,7 +348,7 @@
                     </div>
                     <div class="md:col-span-2">
                         <p class="text-xs text-gray-500 font-medium">Nomor WhatsApp</p>
-                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->nomor_telepon_penerima ?? '-' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->nomor_telepon_penerima ? \App\Support\WhatsAppNumber::formatForDisplay($pesanan->jadwal_pesanan->nomor_telepon_penerima) : '-' }}</p>
                     </div>
                     <div class="md:col-span-2">
                         <p class="text-xs text-gray-500 font-medium">Alamat Pengantaran</p>

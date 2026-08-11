@@ -57,7 +57,7 @@
                             {{ ($pembayarans->firstItem() ?? 1) + $index }}
                         </td>
                         <td class="px-4 py-4">
-                            <span class="font-mono text-xs font-bold text-gray-900">{{ optional($pembayaran->pesanan)->nomor_pesanan ?? 'DIN-'.optional($pembayaran->pesanan)->id ?? '-' }}</span>
+                            <span class="font-mono text-xs font-bold text-gray-900">{{ optional($pembayaran->pesanan)->id_pesanan ?? 'DIN-'.optional($pembayaran->pesanan)->id ?? '-' }}</span>
                         </td>
                         <td class="px-4 py-4 text-sm text-gray-700">
                             {{ \Carbon\Carbon::parse($pembayaran->dibuat_pada)->translatedFormat('d M Y, H.i') }} WIB

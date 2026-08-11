@@ -7,6 +7,7 @@ use App\Models\Meja;
 use App\Models\Pembayaran;
 use App\Models\Pesanan;
 use App\Services\OrderService;
+use App\Helpers\QrisHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +39,13 @@ class DineInPaymentController extends Controller
         $meja = $pesanan->meja;
         $totalTagihan = $pesanan->total_tagihan;
 
-        return view('pos.pesanan.checkout', compact('meja', 'pesanan', 'totalTagihan'));
+        // Base Static QRIS dari restoran
+        $staticQris = "00020101021126690021ID.CO.BANKMANDIRI.WWW01189360000801988998370211719889983700303UMI51440014ID.CO.QRIS.WWW0215ID10264761295010303UMI5204581253033605802ID5915Rumah Makan BBC6015Bandung Barat (61054055162070703A016304AC4D";
+        
+        // Generate Dynamic QRIS string
+        $qrisString = QrisHelper::generateDynamicQris($staticQris, $totalTagihan);
+
+        return view('pos.pesanan.checkout', compact('meja', 'pesanan', 'totalTagihan', 'qrisString'));
     }
 
     public function processPayment(Request $request, $mejaId)

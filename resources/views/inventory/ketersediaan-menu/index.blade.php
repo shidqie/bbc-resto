@@ -64,7 +64,7 @@
                         <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">{{ $menus->firstItem() + $i }}</td>
                         <td class="px-4 py-4">
                             <p class="font-semibold text-gray-900 leading-tight">{{ $menu->nama_menu }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">{{ $menu->kode_menu }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $menu->id_menu }}</p>
                         </td>
                         <td class="px-4 py-4 text-sm text-gray-600 font-medium">{{ $menu->kategori_menu->nama_kategori ?? '-' }}</td>
                         <td class="px-4 py-4 text-right text-sm text-gray-700 font-semibold">{{ number_format($menu->harga_jual, 0, ',', '.') }}</td>

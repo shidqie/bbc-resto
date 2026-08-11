@@ -76,7 +76,7 @@
                         <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">{{ $bahanBakus->firstItem() + $i }}</td>
                         <td class="px-4 py-4">
                             <p class="font-semibold text-gray-900 leading-tight">{{ $bahan->nama_bahan }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">{{ $bahan->kode_bahan }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $bahan->id_bahan_baku }}</p>
                         </td>
                         <td class="px-4 py-4 text-sm text-gray-600 font-medium">{{ $bahan->satuan->nama_satuan ?? '-' }}</td>
                         <td class="px-4 py-4 text-right">

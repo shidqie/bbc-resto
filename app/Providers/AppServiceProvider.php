@@ -25,22 +25,22 @@ class AppServiceProvider extends ServiceProvider
     {
         // Kelola pengguna (CRUD, toggle status, reset password)
         Gate::define('kelola-pengguna', function ($user) {
-            return $user->peran && in_array($user->peran->nama_peran, ['Pemilik', 'Manajer', 'Admin Sistem']);
+            return $user->peran && in_array($user->peran->nama_peran, ['Pemilik', 'Manajer']);
         });
 
         // Kelola hak akses (roles)
         Gate::define('kelola-hak-akses', function ($user) {
-            return $user->peran && in_array($user->peran->nama_peran, ['Pemilik', 'Manajer', 'Admin Sistem']);
+            return $user->peran && in_array($user->peran->nama_peran, ['Pemilik', 'Manajer']);
         });
 
         // Hapus pengguna (Pemilik dan Admin Sistem)
         Gate::define('hapus-pengguna', function ($user) {
-            return $user->peran && in_array($user->peran->nama_peran, ['Pemilik', 'Admin Sistem']);
+            return $user->peran && in_array($user->peran->nama_peran, ['Pemilik']);
         });
 
         // Ubah pengguna berperan tinggi (Pemilik/Manajer) oleh Pemilik atau Admin Sistem
         Gate::define('ubah-pengguna-prioritas', function ($user) {
-            return $user->peran && in_array($user->peran->nama_peran, ['Pemilik', 'Admin Sistem']);
+            return $user->peran && in_array($user->peran->nama_peran, ['Pemilik']);
         });
     }
 }

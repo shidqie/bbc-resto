@@ -19,7 +19,11 @@
             </x-slot:actions>
         </x-ui.page-header>
 
-        @php $stok = (float) ($bahanBaku->stok_harian?->jumlah_stok ?? 0); @endphp
+        @php 
+            $stokHarian = (float) ($bahanBaku->stok_harian?->jumlah_stok ?? 0);
+            $stokCatering = (float) ($bahanBaku->stok_catering_balance?->jumlah_stok ?? 0);
+            $stok = $stokHarian + $stokCatering;
+        @endphp
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
@@ -38,13 +42,24 @@
                         @endif
                     </div>
                     <h2 class="text-xl font-bold text-gray-900 mb-1">{{ $bahanBaku->nama_bahan }}</h2>
-                    <p class="text-sm text-gray-500 mb-4">{{ $bahanBaku->kode_bahan }}</p>
+                    <p class="text-sm text-gray-500 mb-4">{{ $bahanBaku->id_bahan_baku }}</p>
                     
                     <div class="inline-flex flex-col border border-gray-100 rounded-xl px-6 py-3 bg-gray-50/50 mb-4 w-full">
-                        <span class="text-xs text-gray-500 font-medium mb-1">Stok Saat Ini</span>
+                        <span class="text-xs text-gray-500 font-medium mb-1">Total Stok Saat Ini</span>
                         <span class="text-3xl font-bold {{ $stok <= 0 ? 'text-red-600' : ($stok <= $bahanBaku->stok_minimal ? 'text-yellow-600' : 'text-emerald-600') }}">
                             {{ rtrim(rtrim(number_format($stok, 2, ',', '.'), '0'), ',') }} <span class="text-base font-normal text-gray-500">{{ $bahanBaku->satuan->singkatan }}</span>
                         </span>
+                        
+                        <div class="mt-3 pt-3 border-t border-gray-200 flex justify-between text-sm">
+                            <div class="text-left">
+                                <span class="block text-xs text-gray-400">Harian</span>
+                                <span class="font-semibold text-gray-700">{{ rtrim(rtrim(number_format($stokHarian, 2, ',', '.'), '0'), ',') }}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="block text-xs text-gray-400">Catering</span>
+                                <span class="font-semibold text-gray-700">{{ rtrim(rtrim(number_format($stokCatering, 2, ',', '.'), '0'), ',') }}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div>
@@ -102,7 +117,7 @@
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                         <h3 class="font-semibold text-gray-900">Riwayat Stok (5 Terakhir)</h3>
-                        <a href="{{ route('mutasi-stok.index', ['search' => $bahanBaku->kode_bahan]) }}" class="text-sm text-[#3B82F6] hover:text-[#2563EB] font-medium">
+                        <a href="{{ route('mutasi-stok.index', ['search' => $bahanBaku->id_bahan_baku]) }}" class="text-sm text-[#3B82F6] hover:text-[#2563EB] font-medium">
                             Lihat Semua Riwayat <x-heroicon-o-chevron-right class="ml-1 w-5 h-5 inline-block shrink-0" />
                         </a>
                     </div>
@@ -139,7 +154,11 @@
                                         {{ $isMasuk ? '+' : '-' }}{{ rtrim(rtrim(number_format($mutasi->jumlah, 2, ',', '.'), '0'), ',') }}
                                     </td>
                                     <td class="px-4 py-3 text-right text-gray-900 font-medium">
-                                        {{ rtrim(rtrim(number_format($runningSisa, 2, ',', '.'), '0'), ',') }}
+                                        @php
+                                            $jenisPersediaanName = $mutasi->jenis_persediaan === \App\Models\StokBahan::JENIS_CATERING ? 'Catering' : 'Harian';
+                                        @endphp
+                                        <div class="text-xs text-gray-400 font-normal mb-0.5">{{ $jenisPersediaanName }}</div>
+                                        {{ rtrim(rtrim(number_format($mutasi->stok_sesudah ?? $runningSisa, 2, ',', '.'), '0'), ',') }}
                                     </td>
                                     <td class="px-4 py-3 text-gray-600 text-sm">
                                         {{ Str::limit($mutasi->catatan, 30) ?: '-' }}

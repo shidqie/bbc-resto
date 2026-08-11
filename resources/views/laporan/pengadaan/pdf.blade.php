@@ -35,7 +35,7 @@
             @foreach($pengadaans as $index => $p)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $p->nomor_pengadaan }}</td>
+                <td>{{ $p->id_pengadaan }}</td>
                 <td>{{ \Carbon\Carbon::parse($p->tanggal_pengadaan)->format('d/m/Y') }}</td>
                 <td>{{ ucfirst($p->jenis_pengadaan) }}</td>
                 <td>{{ optional($p->pemasok)->nama_pemasok ?? '—' }}</td>

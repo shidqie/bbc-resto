@@ -38,12 +38,11 @@
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
                     <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
-                    <th class="px-4 py-3.5 text-left">Pelanggan</th>
+                    <th class="px-4 py-3.5 text-left">Konsumen</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
-                    <th class="px-4 py-3.5 text-left">Jumlah Porsi</th>
-                    <th class="px-4 py-3.5 text-right">Total</th>
-                    <th class="px-4 py-3.5 text-center">Status</th>
-                    <th class="px-4 py-3.5 text-center">Pembayaran</th>
+                    <th class="px-4 py-3.5 text-right">Total Tagihan</th>
+                    <th class="px-4 py-3.5 text-center">Status Pesanan</th>
+                    <th class="px-4 py-3.5 text-center">Status Pembayaran</th>
                     <th class="px-4 py-3.5 text-center">Aksi</th>
                 </x-ui.table.header>
                 <tbody class="divide-y divide-gray-100">
@@ -56,71 +55,101 @@
                             {{ $p->dibuat_pada ? \Carbon\Carbon::parse($p->dibuat_pada)->translatedFormat('d M Y, H.i') . ' WIB' : '-' }}
                         </td>
                         <td class="px-4 py-4 align-middle">
-                            <span class="font-mono text-xs font-bold text-gray-900">{{ $p->nomor_pesanan }}</span>
+                            <span class="font-mono text-xs font-bold text-gray-900">{{ $p->id_pesanan }}</span>
                         </td>
                         <td class="px-4 py-4 align-middle">
                             <p class="font-medium text-gray-900 text-sm">{{ optional($p->pelanggan)->nama ?? $p->jadwal_pesanan->nama_penerima ?? '-' }}</p>
-                            @if($p->pelanggan && $p->pelanggan->nomor_telepon)
-                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $p->pelanggan->nomor_telepon) }}" target="_blank" class="text-xs text-emerald-600 font-medium hover:underline inline-flex items-center gap-1 mt-0.5">
-                                    <i class="ph-bold ph-whatsapp-logo"></i>
-                                    <span class="whitespace-nowrap">{{ $p->pelanggan->nomor_telepon }}</span>
-                                </a>
-                            @endif
                         </td>
                         <td class="px-4 py-4 align-middle whitespace-nowrap">
                             @if($p->jadwal_pesanan?->tanggal_acara)
                                 <p class="font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->tanggal_acara)->format('d M Y') }}</p>
-                                <p class="text-xs text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->tanggal_acara)->format('H:i') }}</p>
                             @else
                                 <span class="text-xs text-gray-400">-</span>
                             @endif
-                        </td>
-                        <td class="px-4 py-4 align-middle">
-                            @php $paket = $p->detail_pesanan->first(); @endphp
-                            <x-ui.badge color="primary" size="sm">{{ $paket->jumlah ?? 0 }} Porsi</x-ui.badge>
-                            <p class="text-xs text-gray-500 mt-1 truncate max-w-[120px]">{{ $paket->menu->nama_menu ?? 'Paket Katering' }}</p>
                         </td>
                         <td class="px-4 py-4 text-right font-bold text-gray-900 tabular-nums whitespace-nowrap">
                             Rp {{ number_format($p->total_tagihan, 0, ',', '.') }}
                             @php $totalP = (float) $p->total_tagihan; @endphp
                         </td>
                         <td class="px-4 py-4 text-center align-middle">
-                            @php
-                                $sColorMap = [1 => 'warning', 2 => 'primary', 3 => 'primary', 4 => 'primary', 5 => 'success', 6 => 'danger'];
-                                $sColor = $sColorMap[$p->status_pesanan_id] ?? 'gray';
-                            @endphp
-                            <x-ui.badge :color="$sColor" size="sm">{{ $p->status_pesanan->nama_status ?? '-' }}</x-ui.badge>
+                            @if(in_array($p->status_pesanan_id, [5, 6]))
+                                @php
+                                    $sColorMap = [5 => 'success', 6 => 'danger'];
+                                    $sColor = $sColorMap[$p->status_pesanan_id] ?? 'gray';
+                                @endphp
+                                <x-ui.badge :color="$sColor" size="sm">{{ $p->status_pesanan->nama_status ?? '-' }}</x-ui.badge>
+                            @else
+                                <form action="{{ route('admin.pesanan.catering.update-status', $p->id) }}" method="POST" class="inline-block">
+                                    @csrf @method('PATCH')
+                                    @php
+                                        $allowed = [
+                                            1 => [1, 2],
+                                            2 => [2, 3],
+                                            3 => [3, 4],
+                                            4 => [4, 5],
+                                        ];
+                                        $validNext = $allowed[$p->status_pesanan_id] ?? [$p->status_pesanan_id];
+                                    @endphp
+                                    <select name="status" onchange="this.form.submit()" class="text-xs font-semibold rounded-lg border-gray-300 py-1.5 pl-3 pr-8 focus:ring-[#0D3024] focus:border-[#0D3024] bg-gray-50 hover:bg-white transition-colors cursor-pointer">
+                                        @if(in_array(1, $validNext)) <option value="1" {{ $p->status_pesanan_id == 1 ? 'selected' : '' }}>Menunggu Konfirmasi</option> @endif
+                                        @if(in_array(2, $validNext)) <option value="2" {{ $p->status_pesanan_id == 2 ? 'selected' : '' }}>Dikonfirmasi</option> @endif
+                                        @if(in_array(3, $validNext)) <option value="3" {{ $p->status_pesanan_id == 3 ? 'selected' : '' }}>Sedang Diproses</option> @endif
+                                        @if(in_array(4, $validNext)) <option value="4" {{ $p->status_pesanan_id == 4 ? 'selected' : '' }}>Siap Dikirim</option> @endif
+                                        @if(in_array(5, $validNext)) <option value="5" {{ $p->status_pesanan_id == 5 ? 'selected' : '' }}>Selesai</option> @endif
+                                    </select>
+                                </form>
+                            @endif
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             @php
-                                $dpP = (float) $p->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
-                                $lunasP = (float) $p->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
-                                $bayarP = $lunasP >= $totalP ? 'lunas' : ($dpP > 0 ? 'dp' : 'belum');
-                                $bayarColor = $bayarP === 'lunas' ? 'success' : ($bayarP === 'dp' ? 'primary' : 'warning');
-                                $bayarLabel = $bayarP === 'lunas' ? 'Lunas' : ($bayarP === 'dp' ? 'DP Terbayar' : 'Belum Bayar');
+                                $totalDiterimaPP = (float) $p->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+                                $totalMenungguPP = (float) $p->pembayaran->where('status_verifikasi', 'menunggu_verifikasi')->sum('jumlah_dibayar');
+                                
+                                $bayarLabel = 'Belum Bayar';
+                                $bayarColor = 'danger';
+
+                                if ($totalDiterimaPP >= $totalP) {
+                                    $bayarLabel = 'Lunas';
+                                    $bayarColor = 'success';
+                                } else {
+                                    $hasPelunasanMenunggu = $p->pembayaran->where('jenis_pembayaran', 'pelunasan')->where('status_verifikasi', 'menunggu_verifikasi')->isNotEmpty();
+                                    $hasDpMenunggu = $p->pembayaran->where('jenis_pembayaran', 'uang_muka')->where('status_verifikasi', 'menunggu_verifikasi')->isNotEmpty();
+                                    
+                                    if ($hasPelunasanMenunggu || ($totalMenungguPP >= $totalP)) {
+                                        $bayarLabel = 'Menunggu Verifikasi Pelunasan';
+                                        $bayarColor = 'warning';
+                                    } elseif ($totalDiterimaPP > 0) {
+                                        $bayarLabel = 'Menunggu Pelunasan';
+                                        $bayarColor = 'primary';
+                                    } elseif ($hasDpMenunggu || $totalMenungguPP > 0) {
+                                        $bayarLabel = 'Menunggu Verifikasi DP';
+                                        $bayarColor = 'warning';
+                                    }
+                                }
                             @endphp
-                            <x-ui.badge :color="$bayarColor" size="sm">{{ $bayarLabel }}</x-ui.badge>
-                            @if($dpP > 0)
-                                <p class="text-xs text-gray-400 mt-0.5">Rp {{ number_format($dpP, 0, ',', '.') }}</p>
-                            @endif
+                            <x-ui.badge :color="$bayarColor" size="sm" class="whitespace-nowrap">{{ $bayarLabel }}</x-ui.badge>
                         </td>
                         <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
                                 <button type="button" @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.catering.show', $p->id) }}'})" title="Detail" class="text-gray-500 transition hover:text-gray-900">
                                     <x-heroicon-o-eye class="w-4 h-4" />
                                 </button>
-                                @php $buktiPending = $p->pembayaran->firstWhere('status_verifikasi', 'menunggu_verifikasi'); @endphp
+                                
+                                @php
+                                    $buktiPending = $p->pembayaran->firstWhere('status_verifikasi', 'menunggu_verifikasi');
+                                    $buktiTerakhir = $p->pembayaran->whereNotNull('bukti_pembayaran')->last();
+                                @endphp
+                                
+
                                 @if($buktiPending)
                                     <form id="form-verif-{{ $buktiPending->id }}" action="{{ route('admin.bukti.verifikasi-dp', $buktiPending->id) }}" method="POST" class="hidden">
                                         @csrf @method('PATCH')
                                     </form>
-                                    <x-ui.action-button onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi" class="text-green-600 transition hover:text-green-800">
                                         <x-heroicon-o-check-badge class="w-4 h-4" />
-                                    </x-ui.action-button>
+                                    </button>
                                 @endif
-                                <a href="{{ route('admin.pesanan.catering.pdf', $p->id) }}" target="_blank" title="Cetak" class="text-gray-500 transition hover:text-gray-900">
-                                    <x-heroicon-o-printer class="w-4 h-4" />
-                                </a>
+
                                 @if(!in_array($p->status_pesanan_id, [5, 6]))
                                     <form id="form-batal-{{ $p->id }}" action="{{ route('admin.pesanan.catering.update-status', $p->id) }}" method="POST" class="hidden">
                                         @csrf @method('PATCH')
@@ -176,7 +205,7 @@
     {{-- Drawer Panel --}}
     <div class="fixed top-0 right-0 h-full w-full sm:w-[600px] md:w-[700px] lg:w-[800px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-200"
          :class="open ? 'translate-x-0' : 'translate-x-full'" 
-         style="transform: translateX(100%); display:flex; flex-direction:column;">
+         style="display:flex; flex-direction:column;">
         
         {{-- Header --}}
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white shadow-sm z-10">

@@ -44,12 +44,12 @@
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
                     <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
-                    <th class="px-4 py-3.5 text-left">Jenis</th>
+                    <th class="px-4 py-3.5 text-left">Jenis Pesanan</th>
                     <th class="px-4 py-3.5 text-left">Konsumen</th>
-                    <th class="px-4 py-3.5 text-left">Meja</th>
-                    <th class="px-4 py-3.5 text-right">Total</th>
+
+                    <th class="px-4 py-3.5 text-right">Total Tagihan</th>
                     <th class="px-4 py-3.5 text-center">Status Pesanan</th>
-                    <th class="px-4 py-3.5 text-center">Pembayaran</th>
+                    <th class="px-4 py-3.5 text-center">Status Pembayaran</th>
                     <th class="px-4 py-3.5 text-center">Aksi</th>
                 </x-ui.table.header>
                 <tbody class="divide-y divide-gray-100">
@@ -63,7 +63,7 @@
                         </td>
                         <td class="px-4 py-4">
                             <div class="flex items-center gap-2">
-                                <span class="font-mono text-xs font-bold text-gray-900">{{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }}</span>
+                                <span class="font-mono text-xs font-bold text-gray-900">{{ $pesanan->id_pesanan ?? 'DIN-'.$pesanan->id }}</span>
                                 @if(\Carbon\Carbon::parse($pesanan->dibuat_pada)->diffInMinutes(now()) < 15)
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-red-500 text-white animate-pulse">BARU</span>
                                 @endif
@@ -94,9 +94,7 @@
                             @endphp
                             <p class="font-medium text-gray-900 text-sm">{{ $nama }}</p>
                         </td>
-                        <td class="px-4 py-4 text-sm text-gray-600">
-                            {{ optional($pesanan->meja)->nomor_meja ?? '-' }}
-                        </td>
+
                         <td class="px-4 py-4 text-right font-bold text-gray-900">
                             Rp{{ number_format($pesanan->total_tagihan, 0, ',', '.') }}
                         </td>
@@ -114,17 +112,14 @@
                         </td>
                         <td class="px-4 py-4 text-center">
                             @php
-                                $totalBayar = $pesanan->pembayaran->sum('jumlah_dibayar');
-                                if($totalBayar >= $pesanan->total_tagihan && $pesanan->total_tagihan > 0) {
-                                    $payStatus = 'Lunas';
-                                    $payColor = 'success';
-                                } elseif($totalBayar > 0) {
-                                    $payStatus = 'DP';
-                                    $payColor = 'warning';
-                                } else {
-                                    $payStatus = 'Belum Lunas';
-                                    $payColor = 'danger';
-                                }
+                                $statusPembayaran = \App\Models\StatusPembayaran::find($pesanan->status_pembayaran_id);
+                                $payStatus = $statusPembayaran ? $statusPembayaran->nama_status : 'Unknown';
+                                
+                                $payColor = 'gray';
+                                if($pesanan->status_pembayaran_id == 5) $payColor = 'success';
+                                elseif(in_array($pesanan->status_pembayaran_id, [2, 4])) $payColor = 'warning';
+                                elseif($pesanan->status_pembayaran_id == 6) $payColor = 'danger';
+                                elseif(in_array($pesanan->status_pembayaran_id, [1, 3])) $payColor = 'primary';
                             @endphp
                             <x-ui.badge :color="$payColor" size="sm">
                                 {{ $payStatus }}

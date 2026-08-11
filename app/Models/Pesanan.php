@@ -100,4 +100,21 @@ class Pesanan extends BaseModel
     {
         return (float) $this->total_tagihan * ($this->persentaseDP() / 100);
     }
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->id_pesanan)) {
+                $latest = static::orderBy('id', 'desc')->first();
+                $nextId = $latest ? $latest->id + 1 : 1;
+                $prefix = 'XX';
+                if ($model->jenis_pesanan_id == 1) $prefix = 'DI';
+                elseif ($model->jenis_pesanan_id == 2) $prefix = 'CT';
+                elseif ($model->jenis_pesanan_id == 3) $prefix = 'NB';
+                
+                $model->id_pesanan = $prefix . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+            }
+        });
+    }
 }
+

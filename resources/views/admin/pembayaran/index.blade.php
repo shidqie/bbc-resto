@@ -44,7 +44,7 @@
                             {{ ($pembayarans->firstItem() ?? 1) + $index }}
                         </td>
                         <td class="px-4 py-4">
-                            <span class="font-mono text-xs font-bold text-gray-900">{{ optional($bayar->pesanan)->nomor_pesanan ?? 'DIN-'.optional($bayar->pesanan)->id ?? '-' }}</span>
+                            <span class="font-mono text-xs font-bold text-gray-900">{{ optional($bayar->pesanan)->id_pesanan ?? 'DIN-'.optional($bayar->pesanan)->id ?? '-' }}</span>
                         </td>
                         <td class="px-4 py-4 text-sm text-gray-700">
                             {{ \Carbon\Carbon::parse($bayar->dibuat_pada)->format('d/m/Y H:i') }}

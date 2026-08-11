@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Pengguna;
 use App\Models\Peran;
+use App\Support\WhatsAppNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -73,7 +73,7 @@ class UserController extends Controller
             'nama' => $validated['nama'],
             'email' => $validated['email'],
             'kata_sandi' => Hash::make($validated['password']),
-            'nomor_telepon' => $validated['nomor_telepon'] ?? null,
+            'nomor_telepon' => isset($validated['nomor_telepon']) ? WhatsAppNumber::normalize($validated['nomor_telepon']) : null,
             'peran_id' => $validated['peran_id'],
             'status_aktif' => $validated['status_aktif'] ?? true,
         ]);
@@ -126,77 +126,44 @@ class UserController extends Controller
 
     public function destroyPelanggan(\App\Models\Pelanggan $pelanggan)
     {
-        // Delete all orders linked to this customer to maintain referential integrity
-        $pelanggan->pesanan()->delete();
-        $pelanggan->delete();
+        // Hapus semua data terkait secara berurutan untuk menjaga integritas referensi.
+        \Illuminate\Support\Facades\DB::transaction(function () use ($pelanggan) {
+            $pesananIds = $pelanggan->pesanan()->pluck('id');
+            $detailIds = \Illuminate\Support\Facades\DB::table('detail_pesanan')
+                ->whereIn('pesanan_id', $pesananIds)->pluck('id');
+
+            // Anak dari detail_pesanan
+            \Illuminate\Support\Facades\DB::table('pilihan_pesanan_catering')->whereIn('detail_pesanan_id', $detailIds)->delete();
+            \Illuminate\Support\Facades\DB::table('detail_tiket_dapur')->whereIn('detail_pesanan_id', $detailIds)->delete();
+            \Illuminate\Support\Facades\DB::table('mutasi_stok')->whereIn('detail_pesanan_id', $detailIds)->delete();
+
+            // Rantai pengadaan (pengadaan -> penerimaan -> mutasi)
+            $pengadaanIds = \Illuminate\Support\Facades\DB::table('pengadaan_bahan')->whereIn('pesanan_id', $pesananIds)->pluck('id');
+            $detailPengadaanIds = \Illuminate\Support\Facades\DB::table('detail_pengadaan_bahan')->whereIn('pengadaan_bahan_id', $pengadaanIds)->pluck('id');
+            $penerimaanIds = \Illuminate\Support\Facades\DB::table('penerimaan_bahan')->whereIn('pengadaan_bahan_id', $pengadaanIds)->pluck('id');
+            $detailPenerimaanIds = \Illuminate\Support\Facades\DB::table('detail_penerimaan_bahan')
+                ->whereIn('detail_pengadaan_bahan_id', $detailPengadaanIds)
+                ->orWhereIn('penerimaan_bahan_id', $penerimaanIds)
+                ->pluck('id');
+
+            \Illuminate\Support\Facades\DB::table('mutasi_stok')->whereIn('detail_penerimaan_bahan_id', $detailPenerimaanIds)->delete();
+            \Illuminate\Support\Facades\DB::table('detail_penerimaan_bahan')->whereIn('id', $detailPenerimaanIds)->delete();
+            \Illuminate\Support\Facades\DB::table('penerimaan_bahan')->whereIn('id', $penerimaanIds)->delete();
+            \Illuminate\Support\Facades\DB::table('detail_pengadaan_bahan')->whereIn('pengadaan_bahan_id', $pengadaanIds)->delete();
+            \Illuminate\Support\Facades\DB::table('pengadaan_bahan')->whereIn('pesanan_id', $pesananIds)->delete();
+
+            // Anak langsung dari pesanan
+            foreach (['jadwal_pesanan', 'payment_sessions', 'pembayaran', 'pengantaran', 'stok_catering', 'tiket_dapur'] as $tabel) {
+                \Illuminate\Support\Facades\DB::table($tabel)->whereIn('pesanan_id', $pesananIds)->delete();
+            }
+
+            \Illuminate\Support\Facades\DB::table('detail_pesanan')->whereIn('pesanan_id', $pesananIds)->delete();
+            \Illuminate\Support\Facades\DB::table('pesanan')->whereIn('id', $pesananIds)->delete();
+
+            $pelanggan->delete();
+        });
+
         return redirect()->route('users.index', ['type' => 'pelanggan'])->with('success', 'Data konsumen berhasil dihapus.');
-    }
-
-    public function storePelanggan(Request $request)
-    {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255|unique:pelanggan,email',
-            'nomor_telepon' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-        ]);
-
-        \App\Models\Pelanggan::create($validated);
-
-        return redirect()->route('users.index', ['type' => 'pelanggan'])->with('success', 'Data konsumen berhasil ditambahkan.');
-    }
-
-    public function updatePelanggan(Request $request, \App\Models\Pelanggan $pelanggan)
-    {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255|unique:pelanggan,email,' . $pelanggan->id,
-            'nomor_telepon' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-        ]);
-
-        $pelanggan->update($validated);
-
-        return redirect()->route('users.index', ['type' => 'pelanggan'])->with('success', 'Data konsumen berhasil diperbarui.');
-    }
-
-    public function update(Request $request, Pengguna $user)
-    {
-        // Prevent users from deactivating themselves
-        if ($user->id === auth()->id() && $request->has('status_aktif') && !$request->boolean('status_aktif')) {
-            return redirect()->back()->withErrors(['status_aktif' => 'Anda tidak bisa menonaktifkan akun Anda sendiri.']);
-        }
-
-        // Prevent non-Pemilik and non-Admin Sistem from modifying Pemilik or Manajer
-        $currentUser = auth()->user();
-        if (!$currentUser->isPemilik() && !$currentUser->isAdminSistem() && ($user->isPemilik() || $user->isManajer())) {
-            abort(403, 'Anda tidak memiliki izin untuk mengubah pengguna dengan peran Pemilik atau Manajer.');
-        }
-
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('pengguna', 'email')->ignore($user->id)],
-            'nomor_telepon' => 'nullable|string|max:20',
-            'peran_id' => 'required|exists:peran,id',
-            'status_aktif' => 'boolean',
-            'password' => 'nullable|string|min:8|confirmed',
-        ]);
-
-        $data = [
-            'nama' => $validated['nama'],
-            'email' => $validated['email'],
-            'nomor_telepon' => $validated['nomor_telepon'] ?? null,
-            'peran_id' => $validated['peran_id'],
-            'status_aktif' => $validated['status_aktif'] ?? true,
-        ];
-
-        if ($request->filled('password')) {
-            $data['kata_sandi'] = Hash::make($request->password);
-        }
-
-        $user->update($data);
-
-        return redirect()->route('users.index')->with('success', 'Data pengguna berhasil diperbarui.');
     }
 
     public function toggleStatus(Pengguna $user)
@@ -211,7 +178,7 @@ class UserController extends Controller
             ], 403);
         }
 
-        // Prevent non-Pemilik and non-Admin Sistem from modifying Pemilik or Manajer
+        // Prevent non-Pemilik from modifying Pemilik or Manajer
         if (!$currentUser->isPemilik() && !$currentUser->isAdminSistem() && ($user->isPemilik() || $user->isManajer())) {
             return response()->json([
                 'success' => false,
@@ -246,7 +213,7 @@ class UserController extends Controller
     {
         $currentUser = auth()->user();
 
-        // Prevent non-Pemilik and non-Admin Sistem from resetting password for Pemilik or Manajer
+        // Prevent non-Pemilik from resetting password for Pemilik or Manajer
         if (!$currentUser->isPemilik() && !$currentUser->isAdminSistem() && ($user->isPemilik() || $user->isManajer())) {
             return response()->json([
                 'success' => false,
@@ -279,7 +246,7 @@ class UserController extends Controller
             return redirect()->route('users.index')->withErrors(['error' => 'Anda tidak bisa menghapus akun Anda sendiri.']);
         }
 
-        // Prevent non-Pemilik and non-Admin Sistem from deleting Pemilik or Manajer
+        // Prevent non-Pemilik from deleting Pemilik or Manajer
         if (!$currentUser->isPemilik() && !$currentUser->isAdminSistem() && ($user->isPemilik() || $user->isManajer())) {
             return redirect()->route('users.index')->withErrors(['error' => 'Anda tidak memiliki izin untuk menghapus pengguna dengan peran Pemilik atau Manajer.']);
         }

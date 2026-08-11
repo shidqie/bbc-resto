@@ -17,11 +17,9 @@ class UserRoleSeeder extends Seeder
             'Pemilik' => Peran::firstOrCreate(['nama_peran' => 'Pemilik']),
             'Manajer' => Peran::firstOrCreate(['nama_peran' => 'Manajer']),
             'Kasir' => Peran::firstOrCreate(['nama_peran' => 'Kasir']),
-            'Pelayan' => Peran::firstOrCreate(['nama_peran' => 'Pelayan']),
             'Dapur' => Peran::firstOrCreate(['nama_peran' => 'Dapur']),
             'Pengantaran' => Peran::firstOrCreate(['nama_peran' => 'Pengantaran']),
             'Pelanggan' => Peran::firstOrCreate(['nama_peran' => 'Pelanggan']),
-            'Admin Sistem' => Peran::firstOrCreate(['nama_peran' => 'Admin Sistem']),
         ];
 
         // 2. Wipe existing users (Disable FK checks temporarily to avoid constraint errors)
@@ -61,14 +59,6 @@ class UserRoleSeeder extends Seeder
             'status_aktif' => true,
         ]);
 
-        Pengguna::create([
-            'nama' => 'Pelayan BBC',
-            'email' => 'pelayan@bbc.com',
-            'kata_sandi' => $password,
-            'peran_id' => $roles['Pelayan']->id,
-            'nomor_telepon' => '08110000004',
-            'status_aktif' => true,
-        ]);
 
         Pengguna::create([
             'nama' => 'Dapur BBC',
@@ -80,20 +70,11 @@ class UserRoleSeeder extends Seeder
         ]);
 
         Pengguna::create([
-            'nama' => 'Pengantaran BBC',
+            'nama' => 'Tim Pengantaran BBC',
             'email' => 'pengantaran@bbc.com',
             'kata_sandi' => $password,
             'peran_id' => $roles['Pengantaran']->id,
             'nomor_telepon' => '08110000006',
-            'status_aktif' => true,
-        ]);
-
-        Pengguna::create([
-            'nama' => 'Admin Sistem BBC',
-            'email' => 'adminsistem@bbc.com',
-            'kata_sandi' => $password,
-            'peran_id' => $roles['Admin Sistem']->id,
-            'nomor_telepon' => '08110000007',
             'status_aktif' => true,
         ]);
 
@@ -102,10 +83,8 @@ class UserRoleSeeder extends Seeder
         $this->command->info('- Pemilik (08110000001)');
         $this->command->info('- Manager (08110000002)');
         $this->command->info('- Kasir (08110000003)');
-        $this->command->info('- Pelayan (08110000004)');
         $this->command->info('- Dapur (08110000005)');
         $this->command->info('- Pengantaran (08110000006)');
-        $this->command->info('- Admin Sistem (08110000007)');
         $this->command->info('Password untuk semua akun: password');
     }
 }

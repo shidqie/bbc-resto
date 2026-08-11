@@ -6,11 +6,6 @@
 <div x-data="{
     activeTab: '{{ request('type', 'karyawan') === 'pelanggan' ? 'pelanggan' : 'karyawan' }}',
     showCreateModal: false,
-    showEditModal: false,
-    editForm: { id: '', nama: '', email: '', nomor_telepon: '', peran_id: '', status_aktif: true },
-    showCreatePelangganModal: false,
-    showEditPelangganModal: false,
-    pelangganForm: { id: '', nama: '', email: '', nomor_telepon: '', alamat: '' },
     busy: false,
 
     toggleStatus(id, nama, aktif) {
@@ -33,13 +28,9 @@
     <!-- Header Area -->
     <x-ui.page-header title="Manajemen Pengguna" subtitle="Kelola data karyawan dan konsumen yang terdaftar di sistem." :breadcrumbs="['Manajemen Pengguna', 'Data Karyawan']">
         <x-slot:actions>
-            <button x-show="activeTab === 'karyawan'" @click="showCreateModal = true" class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+            <button @click="showCreateModal = true" class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
                 <x-heroicon-o-plus class="w-4 h-4" />
                 Tambah Karyawan
-            </button>
-            <button x-show="activeTab === 'pelanggan'" @click="showCreatePelangganModal = true; pelangganForm = {id: '', nama: '', email: '', nomor_telepon: '', alamat: ''}" x-cloak class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
-                <x-heroicon-o-plus class="w-4 h-4" />
-                Tambah Konsumen
             </button>
         </x-slot:actions>
     </x-ui.page-header>
@@ -84,16 +75,13 @@
                         <td class="px-4 py-4 align-middle">
                             <div class="min-w-0">
                                 <div class="font-medium text-gray-900 text-sm truncate">{{ $user->nama }}</div>
-                                @if(!$user->status_aktif)
-                                    <div class="text-xs text-red-500">Nonaktif</div>
-                                @endif
                             </div>
                         </td>
                         <td class="px-4 py-4 align-middle">
                             <div class="text-sm text-gray-600">{{ $user->email }}</div>
                         </td>
                         <td class="px-4 py-4 align-middle">
-                            <div class="text-sm text-gray-600">{{ $user->nomor_telepon ?? '-' }}</div>
+                            <div class="text-sm text-gray-600">{{ $user->nomor_telepon ? \App\Support\WhatsAppNumber::formatForDisplay($user->nomor_telepon) : '-' }}</div>
                         </td>
                         <td class="px-4 py-4 align-middle">
                             @if($user->peran)
@@ -107,12 +95,13 @@
                                 <a href="{{ route('users.show', $user) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors">
                                     <x-heroicon-o-eye class="w-3 h-3" />
                                 </a>
-                                <button type="button" @click="showEditModal = true; editForm = { id: '{{ $user->id }}', nama: '{{ addslashes($user->nama) }}', email: '{{ addslashes($user->email) }}', nomor_telepon: '{{ addslashes($user->nomor_telepon) }}', peran_id: '{{ $user->peran_id }}', status_aktif: {{ $user->status_aktif ? 'true' : 'false' }} }" title="Ubah" class="text-gray-500 transition hover:text-gray-900">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                </button>
-                                <button type="button" @click="toggleStatus('{{ $user->id }}', '{{ addslashes($user->nama) }}', {{ $user->status_aktif ? 'true' : 'false' }})" :disabled="busy" :title="'{{ $user->status_aktif ? 'Nonaktifkan' : 'Aktifkan' }}'" class="text-gray-500 transition hover:text-gray-900">
-                                    <x-heroicon-o-power class="w-4 h-4" />
-                                </button>
+                                <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus karyawan ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" title="Hapus" class="w-7 h-7 rounded-full flex items-center justify-center bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">
+                                        <x-heroicon-o-trash class="w-3 h-3" />
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </x-ui.table.row>
@@ -166,7 +155,7 @@
                             <div class="text-sm text-gray-600 truncate max-w-xs">{{ $user->email ?? '-' }}</div>
                         </td>
                         <td class="px-4 py-4 align-middle">
-                            <div class="text-sm text-gray-600">{{ $user->nomor_telepon ?? '-' }}</div>
+                            <div class="text-sm text-gray-600">{{ $user->nomor_telepon ? \App\Support\WhatsAppNumber::formatForDisplay($user->nomor_telepon) : '-' }}</div>
                         </td>
                         <td class="px-4 py-4 align-middle">
                             <div class="text-sm text-gray-600 truncate max-w-xs">
@@ -175,12 +164,9 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <x-ui.action-button onclick="openPelangganDrawer({{ $user->id }})" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
-                                </x-ui.action-button>
-                                <button type="button" @click="showEditPelangganModal = true; pelangganForm = { id: {{ $user->id }}, nama: '{{ addslashes($user->nama) }}', email: '{{ addslashes($user->email ?? '') }}', nomor_telepon: '{{ addslashes($user->nomor_telepon ?? '') }}', alamat: '{{ addslashes($user->alamat ?? '') }}' }" title="Ubah" class="text-gray-500 transition hover:text-gray-900">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                </button>
+                                <a href="{{ route('pelanggan.show', $user) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors">
+                                    <x-heroicon-o-eye class="w-3 h-3" />
+                                </a>
                                 <form action="{{ route('pelanggan.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus data konsumen ini? Semua riwayat pesanan juga akan terhapus.');">
                                     @csrf
                                     @method('DELETE')
@@ -204,36 +190,32 @@
         </div>
     </div>
 
-    <!-- ================= MODAL: TAMBAH/EDIT KARYAWAN ================= -->
-    <div x-show="showCreateModal || showEditModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showCreateModal = false; showEditModal = false">
+    <!-- ================= MODAL: TAMBAH KARYAWAN ================= -->
+    <div x-show="showCreateModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showCreateModal = false">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900" x-text="showEditModal ? 'Edit Karyawan' : 'Tambah Karyawan'"></h3>
-                <button @click="showCreateModal = false; showEditModal = false" class="text-gray-400 hover:text-gray-600">
+                <h3 class="text-lg font-semibold text-gray-900">Tambah Karyawan</h3>
+                <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-600">
                     <x-heroicon-o-x-mark class="w-5 h-5" />
                 </button>
             </div>
 
-            <form :action="showEditModal ? '/users/' + editForm.id : '{{ route('users.store') }}'" method="POST">
+            <form action="{{ route('users.store') }}" method="POST">
                 @csrf
-                <div x-show="showEditModal">
-                    <input type="hidden" name="_method" value="PUT">
-                </div>
 
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                        <input type="text" name="nama" :value="showEditModal ? editForm.nama : ''" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                        <input type="text" name="nama" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" :value="showEditModal ? editForm.email : ''" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                        <input type="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
-                        <input type="text" name="nomor_telepon" :value="showEditModal ? editForm.nomor_telepon : ''" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                        <x-input-wa name="nomor_telepon" label="Nomor WhatsApp" placeholder="08xxxxxxxxxx" :value="old('nomor_telepon')" />
                     </div>
 
                     <div>
@@ -241,31 +223,31 @@
                         <select name="peran_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                             <option value="">Pilih Peran</option>
                             @foreach($roles as $role)
-                                <option value="{{ $role->id }}" :selected="showEditModal && editForm.peran_id == '{{ $role->id }}'">{{ $role->nama_peran }}</option>
+                                <option value="{{ $role->id }}">{{ $role->nama_peran }}</option>
                             @endforeach
                         </select>
                     </div>
 
-                    <div x-show="!showEditModal">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
-                        <input type="password" name="password" :required="!showEditModal" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                        <input type="password" name="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                     </div>
 
-                    <div x-show="!showEditModal">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Kata Sandi</label>
-                        <input type="password" name="password_confirmation" :required="!showEditModal" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                        <input type="password" name="password_confirmation" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                     </div>
 
                     <div>
                         <label class="flex items-center">
-                            <input type="checkbox" name="status_aktif" value="1" :checked="showEditModal ? editForm.status_aktif : true" class="rounded border-gray-300 text-primary focus:ring-primary">
+                            <input type="checkbox" name="status_aktif" value="1" checked class="rounded border-gray-300 text-primary focus:ring-primary">
                             <span class="ml-2 text-sm text-gray-700">Akun Aktif</span>
                         </label>
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-2 mt-6">
-                    <button type="button" @click="showCreateModal = false; showEditModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    <button type="button" @click="showCreateModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         Batal
                     </button>
                     <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800">
@@ -276,115 +258,4 @@
         </div>
     </div>
 
-    <!-- ================= MODAL: TAMBAH/EDIT PELANGGAN ================= -->
-    <div x-show="showCreatePelangganModal || showEditPelangganModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showCreatePelangganModal = false; showEditPelangganModal = false">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900" x-text="showEditPelangganModal ? 'Edit Konsumen' : 'Tambah Konsumen'"></h3>
-                <button @click="showCreatePelangganModal = false; showEditPelangganModal = false" class="text-gray-400 hover:text-gray-600">
-                    <x-heroicon-o-x-mark class="w-5 h-5" />
-                </button>
-            </div>
-
-            <form :action="showEditPelangganModal ? '/pelanggan/' + pelangganForm.id : '{{ route('pelanggan.store') }}'" method="POST">
-                @csrf
-                <div x-show="showEditPelangganModal">
-                    <input type="hidden" name="_method" value="PUT">
-                </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama" :value="pelangganForm.nama" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" :value="pelangganForm.email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
-                        <input type="text" name="nomor_telepon" :value="pelangganForm.nomor_telepon" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap</label>
-                        <textarea name="alamat" x-model="pelangganForm.alamat" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 mt-6">
-                    <button type="button" @click="showCreatePelangganModal = false; showEditPelangganModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800">
-                        Simpan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ================= MODAL: PELANGGAN DRAWER ================= -->
-    <div id="drawerPelanggan" class="fixed inset-x-0 bottom-0 top-16 z-40 hidden">
-        <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px]" onclick="closePelangganDrawer()"></div>
-        <div class="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300" id="drawerPelangganPanel">
-            
-            {{-- Header --}}
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
-                <div>
-                    <h2 class="font-semibold text-gray-900">Detail Konsumen</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Informasi lengkap konsumen dan riwayat aktivitas.</p>
-                </div>
-                <button onclick="closePelangganDrawer()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-
-            {{-- Content --}}
-            <div id="drawerPelangganContent" class="flex-1 overflow-y-auto">
-                <!-- Data will be loaded via AJAX -->
-            </div>
-            
-        </div>
-    </div>
-
-    </div>
-
-</div>
-
-<script>
-    function openPelangganDrawer(id) {
-        const drawer = document.getElementById('drawerPelanggan');
-        const panel = document.getElementById('drawerPelangganPanel');
-        const content = document.getElementById('drawerPelangganContent');
-        
-        // Show Loading
-        content.innerHTML = '<div class="flex items-center justify-center h-32"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>';
-        
-        drawer.classList.remove('hidden');
-        drawer.style.display = 'flex';
-        requestAnimationFrame(() => {
-            panel.classList.remove('translate-x-full');
-        });
-
-        fetch(`/pelanggan/${id}?ajax=1`)
-            .then(res => res.text())
-            .then(html => {
-                content.innerHTML = html;
-            });
-    }
-
-    function closePelangganDrawer() {
-        const drawer = document.getElementById('drawerPelanggan');
-        const panel = document.getElementById('drawerPelangganPanel');
-        
-        panel.classList.add('translate-x-full');
-        setTimeout(() => {
-            drawer.classList.add('hidden');
-            drawer.style.display = 'none';
-        }, 300);
-    }
-</script>
 @endsection

@@ -84,13 +84,18 @@
         </div>
 
         {{-- ── RIGHT: FORM ── --}}
-        <div class="flex-1 flex items-center justify-center px-6 py-16 sm:px-12 bg-[#f5f5f0]">
+        <div class="flex-1 relative flex items-center justify-center px-6 py-16 sm:px-12 bg-[#f5f5f0]">
+
+            <a href="{{ route('home') }}"
+               class="absolute top-6 left-6 sm:top-8 sm:left-8 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#0D3024] transition-colors fu d1">
+                <x-heroicon-o-arrow-left class="w-4 h-4" />
+                Kembali
+            </a>
+
             <div class="w-full max-w-[360px]">
 
                 <div class="lg:hidden flex items-center gap-2.5 mb-10">
-                    <div class="w-8 h-8 rounded-full bg-[#0D3024] flex items-center justify-center">
-                        <x-heroicon-o-user-plus class="text-white w-3 h-3" />
-                    </div>
+                    <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-full object-contain">
                     <span class="text-sm font-bold text-[#111827] tracking-wide">BBC Resto · Konsumen</span>
                 </div>
 
@@ -117,11 +122,11 @@
                     @csrf
 
                     <div class="fu d2">
-                        <label for="nama" class="block text-sm font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Nama Lengkap</label>
+                        <label for="nama" class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap</label>
                         <input id="nama" type="text" name="nama" value="{{ old('nama') }}"
                                required autofocus autocomplete="name"
                                placeholder="Nama Anda"
-                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024]">
+                               class="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none">
                     </div>
 
                     <div class="fu d2">
@@ -129,33 +134,33 @@
                     </div>
 
                     <div class="fu d3">
-                        <label for="email" class="block text-sm font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Email <span class="text-gray-300 normal-case">(opsional)</span></label>
+                        <label for="email" class="block text-xs font-bold text-gray-700 mb-1">Email <span class="text-gray-400 font-normal">(opsional)</span></label>
                         <input id="email" type="email" name="email" value="{{ old('email') }}"
                                autocomplete="email"
                                placeholder="nama@email.com"
-                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024]">
+                               class="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none">
                     </div>
 
                     <div class="fu d3">
-                        <label for="kata_sandi" class="block text-sm font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Password</label>
+                        <label for="kata_sandi" class="block text-xs font-bold text-gray-700 mb-1">Password</label>
                         <input id="kata_sandi" type="password" name="kata_sandi" x-model="pw" required minlength="8" autocomplete="new-password"
                                placeholder="Minimal 8 karakter"
-                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024]">
-                        <p class="text-sm text-gray-400 mt-1.5" x-show="pw.length > 0 && pw.length < 8">Minimal 8 karakter.</p>
+                               class="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none">
+                        <p class="text-[11px] text-gray-400 font-medium mt-1">Minimal 8 karakter.</p>
                     </div>
 
                     <div class="fu d3">
-                        <label for="kata_sandi_confirmation" class="block text-sm font-semibold text-gray-400 uppercase tracking-[0.1em] mb-1.5">Ulangi Password</label>
+                        <label for="kata_sandi_confirmation" class="block text-xs font-bold text-gray-700 mb-1">Ulangi Password</label>
                         <input id="kata_sandi_confirmation" type="password" name="kata_sandi_confirmation" x-model="pw2" required autocomplete="new-password"
                                placeholder="••••••••"
-                               class="w-full px-4 py-3 bg-white border rounded-xl text-sm font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024]"
+                               class="w-full px-3.5 py-2 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none"
                                :class="pw2 && !match ? 'border-red-300' : 'border-gray-200'">
-                        <p class="text-sm text-red-500 font-medium mt-1.5" x-show="pw2 && !match" x-cloak>Password tidak cocok.</p>
+                        <p class="text-[11px] text-red-500 font-medium mt-1" x-show="pw2 && !match" x-cloak>Password tidak cocok.</p>
                     </div>
 
                     <div class="pt-1 fu d4">
                         <button type="submit"
-                                class="w-full py-3.5 bg-[#0D3024] hover:bg-[#1a4a35] text-white font-semibold text-sm rounded-xl transition-all duration-200 active:scale-[0.99]">
+                                class="w-full py-2.5 bg-[#0D3024] hover:bg-[#1a4a35] text-white font-semibold text-xs rounded-xl transition-all duration-200 active:scale-[0.99]">
                             Daftar
                         </button>
                     </div>

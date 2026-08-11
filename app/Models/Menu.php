@@ -48,4 +48,17 @@ class Menu extends BaseModel
     {
         return $this->hasOne(KetentuanPaket::class, 'menu_id');
     }
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->id_menu)) {
+                $latest = static::orderBy('id', 'desc')->first();
+                $nextId = $latest ? $latest->id + 1 : 1;
+                $prefix = 'MN';
+                $model->id_menu = $prefix . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+            }
+        });
+    }
 }
+

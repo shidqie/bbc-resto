@@ -25,4 +25,28 @@ class KonsumenPesananController extends Controller
 
         return view('akun.pesanan', compact('pelanggan', 'pesanans'));
     }
+
+    public function show($id_pesanan): View
+    {
+        $pelanggan = Auth::guard('pelanggan')->user();
+
+        $pesanan = $pelanggan->pesanan()
+            ->with([
+                'detail_pesanan.menu',
+                'jadwal_pesanan',
+                'pengantaran',
+                'status_pesanan',
+                'pembayaran',
+            ])
+            ->where('id_pesanan', $id_pesanan)
+            ->firstOrFail();
+
+        $jenisPesanan = match ($pesanan->jenis_pesanan_id) {
+            2 => 'Catering',
+            3 => 'Nasi Box',
+            default => 'Dine In',
+        };
+
+        return view('akun.pesanan-detail', compact('pelanggan', 'pesanan', 'jenisPesanan'));
+    }
 }

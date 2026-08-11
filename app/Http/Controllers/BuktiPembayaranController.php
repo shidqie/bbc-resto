@@ -15,7 +15,7 @@ class BuktiPembayaranController extends Controller
         $kodePesanan = $request->query('kode_pesanan');
 
         if ($kodePesanan) {
-            $pesanan = Pesanan::where('nomor_pesanan', $kodePesanan)->first();
+            $pesanan = Pesanan::where('id_pesanan', $kodePesanan)->first();
             if ($pesanan) {
                 return redirect()->route('pesanan.bayar', $kodePesanan);
             }
@@ -30,7 +30,7 @@ class BuktiPembayaranController extends Controller
     public function show($kodePesanan)
     {
         $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran', 'pelanggan'])
-            ->where('nomor_pesanan', $kodePesanan)
+            ->where('id_pesanan', $kodePesanan)
             ->first();
 
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
@@ -52,7 +52,7 @@ class BuktiPembayaranController extends Controller
     /** GET /pesan/bayar/status/{kodePesanan} — polling JSON status pembayaran */
     public function statusJson($kodePesanan)
     {
-        $pesanan = Pesanan::where('nomor_pesanan', $kodePesanan)->first();
+        $pesanan = Pesanan::where('id_pesanan', $kodePesanan)->first();
 
         if (! $pesanan) {
             return response()->json([
@@ -84,10 +84,10 @@ class BuktiPembayaranController extends Controller
         $request->validate([
             'kode_pesanan' => 'required|string',
             'jenis_pembayaran' => 'required|in:dp,pelunasan',
-            'file_bukti' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'file_bukti' => 'required|file|mimes:jpeg,png,jpg,pdf|max:1024',
         ]);
 
-        $pesanan = Pesanan::where('nomor_pesanan', $request->kode_pesanan)->first();
+        $pesanan = Pesanan::where('id_pesanan', $request->kode_pesanan)->first();
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
 
         $total = (float) $pesanan->total_tagihan;
@@ -95,10 +95,11 @@ class BuktiPembayaranController extends Controller
             ->where('status_verifikasi', 'diterima') // Sebagian / Lunas
             ->sum('jumlah_dibayar');
 
-        $jenisBayarId = $request->jenis_pembayaran === 'pelunasan' ? 3 : 2; // PELUNASAN / UANG_MUKA
+        $dpPersentase = $pesanan->jenis_pesanan_id == 3 ? 0.25 : 0.5; // Nasi Box = 25%, Catering = 50%
+
         $jumlahBayar = $request->jenis_pembayaran === 'pelunasan'
             ? max(0, $total - $dpSudahBayar)
-            : max(0, $total * 0.5 - $dpSudahBayar);
+            : max(0, $total * $dpPersentase - $dpSudahBayar);
 
         if ($jumlahBayar <= 0) {
             return back()->with('error', 'Tagihan untuk pembayaran ini sudah lunas.');
@@ -106,18 +107,28 @@ class BuktiPembayaranController extends Controller
 
         $path = $request->file('file_bukti')->store('bukti-pembayaran', 'public');
 
+        $jenisBayar = $request->jenis_pembayaran === 'pelunasan' ? 'pelunasan' : 'uang_muka';
+
         Pembayaran::create([
-            'nomor_pembayaran' => 'PAY-'.date('YmdHis').'-'.rand(100, 999),
+            'kode_pembayaran' => 'PAY-'.date('YmdHis').'-'.rand(100, 999),
             'pesanan_id' => $pesanan->id,
-            'metode_pembayaran_id' => 3, // Transfer Bank
-            'status_pembayaran_id' => 1, // Menunggu
-            'jenis_pembayaran_id' => $jenisBayarId,
-            'jumlah_bayar' => $jumlahBayar,
+            'metode_pembayaran' => 'transfer_bank',
+            'status_verifikasi' => 'menunggu_verifikasi',
+            'jenis_pembayaran' => $jenisBayar,
+            'jumlah_tagihan' => $jumlahBayar,
+            'jumlah_dibayar' => $jumlahBayar,
+            'tanggal_pembayaran' => now(),
             'bukti_pembayaran' => $path,
             'catatan' => 'Bukti diunggah oleh pemesan',
         ]);
 
-        return redirect()->route('pesanan.bayar', $pesanan->nomor_pesanan)
+        if ($jenisBayar === 'uang_muka') {
+            $pesanan->update(['status_pembayaran_id' => 2]); // Menunggu Verifikasi DP
+        } else {
+            $pesanan->update(['status_pembayaran_id' => 4]); // Menunggu Verifikasi Pelunasan
+        }
+
+        return redirect()->route('pesanan.bayar', $pesanan->id_pesanan)
             ->with('success', 'Bukti pembayaran berhasil dikirim! Kami akan memverifikasi dalam 1×24 jam.');
     }
 
@@ -125,7 +136,7 @@ class BuktiPembayaranController extends Controller
     public function invoicePdf($kodePesanan)
     {
         $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran'])
-            ->where('nomor_pesanan', $kodePesanan)
+            ->where('id_pesanan', $kodePesanan)
             ->first();
 
         abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');

@@ -62,7 +62,7 @@
         @endphp
         <tr>
             <td>{{ $i + 1 }}</td>
-            <td>{{ $bahan->kode_bahan ?? '-' }}</td>
+            <td>{{ $bahan->id_bahan_baku ?? '-' }}</td>
             <td>{{ $bahan->nama_bahan }}</td>
             <td>{{ $bahan->kategori_bahan_baku?->nama_kategori ?? '-' }}</td>
             <td class="text-right">{{ number_format($item['stok_awal'] ?? $item['stokAwal'] ?? 0, 2) }}</td>

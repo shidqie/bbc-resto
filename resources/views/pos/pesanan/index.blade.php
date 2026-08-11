@@ -4,7 +4,7 @@
 <script src="{{ asset('js/qrcode.min.js') }}"></script>
 @endpush
 
-@php $isPelayan = auth()->user()->peran->nama_peran === 'Pelayan'; @endphp
+@php $isPelayan = false; @endphp
 
 @section('content')
 {{-- ╔══════════════════════════════════════╗ --}}
@@ -179,7 +179,7 @@ function posSystemData() {
       this.filteredRiwayat.forEach(t => {
         const total = (t.items || []).reduce((s, i) => s + ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * i.qty), 0);
         rows.push([
-          t.nomor_pesanan || ('DIN-' + t.id),
+          t.id_pesanan || ('DIN-' + t.id),
           `"${t.nama_konsumen || ''}"`,
           t.meja ? t.meja.nomor_meja : '-',
           t.created_at || '',
@@ -542,7 +542,7 @@ function posSystemData() {
                             }).fire({
                                 icon: 'info',
                                 title: 'Ada Pesanan Baru!',
-                                text: 'Pesanan #' + (data.open_bills[0].nomor_pesanan || data.open_bills[0].id) + ' telah masuk.'
+                                text: 'Pesanan #' + (data.open_bills[0].id_pesanan || data.open_bills[0].id) + ' telah masuk.'
                             });
                         }
                     }
@@ -827,7 +827,7 @@ document.addEventListener('alpine:init', () => {
 
     {{-- ══════════════════════  VIEW 1 · MENU CATALOG  ══════════════════════ --}}
     <div x-show="leftView === 'menu'" class="flex-1 overflow-y-auto p-4 bg-white">
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
         @foreach($menus as $menu)
         @php 
             $isHabis = $menu->status_aktif == false || in_array($menu->id, $menuHabisIds ?? []);
@@ -838,10 +838,10 @@ document.addEventListener('alpine:init', () => {
              x-transition:enter-start="opacity-0 translate-y-1"
              x-transition:enter-end="opacity-100 translate-y-0"
              @if(!$isHabis) @click="addToCart({{ $menu->id }}, '{{ addslashes($menu->nama_menu) }}', {{ $menu->harga_jual }})" @endif
-             class="group cursor-pointer flex flex-col bg-white border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-gray-300 transition-all duration-300 rounded-xl overflow-hidden {{ $isHabis ? 'opacity-50 grayscale pointer-events-none select-none' : '' }}">
+             class="group cursor-pointer flex flex-col bg-white border border-gray-100 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-gray-300 transition-all duration-300 rounded-xl overflow-hidden {{ $isHabis ? 'opacity-50 grayscale pointer-events-none select-none' : '' }}">
 
           {{-- Thumbnail --}}
-          <div class="relative w-full aspect-[4/3] bg-gray-50 border-b border-gray-100">
+          <div class="relative w-full aspect-[4/3] bg-gray-50 border-b border-gray-100 overflow-hidden">
             @if($menu->foto)
               <img src="{{ Storage::url($menu->foto) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 {{ $isHabis ? 'grayscale opacity-60' : '' }}" alt="{{ $menu->nama_menu }}">
             @else
@@ -853,19 +853,19 @@ document.addEventListener('alpine:init', () => {
                   }
               @endphp
               <div class="w-full h-full flex items-center justify-center bg-gray-50 {{ $isHabis ? 'grayscale opacity-60' : '' }}">
-                  <span class="text-3xl font-black text-gray-300 tracking-widest">{{ $initials }}</span>
+                  <span class="text-2xl font-black text-gray-300 tracking-widest">{{ $initials }}</span>
               </div>
             @endif
 
             {{-- Category Label --}}
-            <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-bold px-2.5 py-1 rounded-full border border-gray-100">
-              {{ Str::limit($menu->kategori_menu->nama_kategori ?? 'Menu', 18) }}
+            <span class="absolute top-2 left-2 bg-white/90 backdrop-blur-xs text-neutral-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-gray-100 max-w-[85%] truncate" title="{{ $menu->kategori_menu->nama_kategori ?? 'Menu' }}">
+              {{ $menu->kategori_menu->nama_kategori ?? 'Menu' }}
             </span>
 
             {{-- Overlay Habis Badge --}}
             @if($isHabis)
             <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-[1px] flex items-center justify-center">
-              <span class="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-xl shadow-md tracking-wider uppercase">
+              <span class="bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-md tracking-wider uppercase">
                 {{ $isBahanHabis ? 'BAHAN HABIS' : 'HABIS' }}
               </span>
             </div>
@@ -873,14 +873,16 @@ document.addEventListener('alpine:init', () => {
           </div>
 
           {{-- Info --}}
-          <div class="p-3.5 flex-1 flex flex-col justify-between gap-2">
+          <div class="p-3 flex-1 flex flex-col justify-between gap-1.5">
             <div>
-              <p class="text-sm font-extrabold text-[#111827] leading-snug line-clamp-2">{{ $menu->nama_menu }}</p>
+              <p class="text-xs font-bold text-[#111827] leading-snug line-clamp-2" title="{{ $menu->nama_menu }}">{{ $menu->nama_menu }}</p>
             </div>
             <div class="flex items-center justify-between mt-auto pt-1">
-              <span class="text-sm font-black text-[#0D3024]">Rp {{ number_format($menu->harga_jual, 0, ',', '.') }}</span>
+              <div>
+                <span class="text-xs font-extrabold text-[#0D3024] block">Rp {{ number_format($menu->harga_jual, 0, ',', '.') }}</span>
+              </div>
               @if(!$isHabis)
-              <button type="button" class="w-7 h-7 rounded-full bg-[#0D3024]/10 text-[#0D3024] flex items-center justify-center hover:bg-[#0D3024] hover:text-white transition-colors">
+              <button type="button" class="w-6 h-6 rounded-full bg-[#0D3024]/10 text-[#0D3024] flex items-center justify-center hover:bg-[#0D3024] hover:text-white transition-colors shrink-0">
                 <x-heroicon-o-plus class="w-3 h-3" />
               </button>
               @endif
@@ -1005,23 +1007,21 @@ document.addEventListener('alpine:init', () => {
 
       {{-- List Open Bills --}}
       {{-- List Open Bills Table --}}
-      <div x-show="openBills.length > 0" class="bg-white border border-gray-200/80 rounded-xl shadow-xs overflow-x-auto overflow-y-visible min-h-64 pb-[150px]">
-        <table class="w-full text-left border-collapse min-w-[900px]">
-          <thead>
-            <tr class="bg-gray-50/50 border-b border-gray-100">
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-center w-10">No</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">Tanggal Pesan</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">No. Pesanan</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">Meja</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">Pelanggan</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">No. Telepon</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">Metode</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-right">Total</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-center">Status Pesanan</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-center">Status Pembayaran</th>
-              <th class="py-4 px-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
-            </tr>
-          </thead>
+      <div x-show="openBills.length > 0" class="pb-[150px]">
+        <x-ui.table class="min-w-[1000px]">
+          <x-ui.table.header>
+            <th class="px-4 py-3.5 text-center w-12">No</th>
+            <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
+            <th class="px-4 py-3.5 text-left">No. Pesanan</th>
+            <th class="px-4 py-3.5 text-left">Meja</th>
+            <th class="px-4 py-3.5 text-left">Pelanggan</th>
+            <th class="px-4 py-3.5 text-left">No. Telepon</th>
+            <th class="px-4 py-3.5 text-left">Metode</th>
+            <th class="px-4 py-3.5 text-right">Total</th>
+            <th class="px-4 py-3.5 text-center">Status Pesanan</th>
+            <th class="px-4 py-3.5 text-center">Status Pembayaran</th>
+            <th class="px-4 py-3.5 text-right">Aksi</th>
+          </x-ui.table.header>
           <tbody class="divide-y divide-gray-100">
             <template x-for="(bill, index) in openBills.filter(b => {
                 if (openBillFilter === 'pos' && b.sumber_pesanan === 'self_order') return false;
@@ -1029,26 +1029,26 @@ document.addEventListener('alpine:init', () => {
                 if (openBillStatusFilter !== 'semua' && b.status !== openBillStatusFilter) return false;
                 if (openBillSearch) {
                     const query = openBillSearch.toLowerCase();
-                    const noPesanan = String(b.nomor_pesanan || ('din-' + b.id)).toLowerCase();
+                    const noPesanan = String(b.id_pesanan || ('din-' + b.id)).toLowerCase();
                     const pelanggan = String(b.nama_konsumen || '').toLowerCase();
                     if (!noPesanan.includes(query) && !pelanggan.includes(query)) return false;
                 }
                 return true;
               })" :key="bill.id">
-              <tr class="transition-colors group" :class="bill.is_new ? 'bg-amber-50/50' : 'hover:bg-slate-50'">
+              <x-ui.table.row x-bind:class="bill.is_new ? 'bg-amber-50/50' : ''">
                 
                 {{-- No --}}
-                <td class="py-3.5 px-4 text-center font-bold text-gray-500 text-sm" x-text="index + 1"></td>
+                <td class="px-4 py-4 text-center font-bold text-gray-500 text-sm align-middle" x-text="index + 1"></td>
                 
                 {{-- Tanggal Pesan --}}
-                <td class="py-3.5 px-4">
-                  <span class="text-sm font-bold text-slate-700" x-text="bill.dibuat_pada ? (new Date(bill.dibuat_pada).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'}) + ', ' + new Date(bill.dibuat_pada).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}).replace(':', '.') + ' WIB') : '-'"></span>
+                <td class="px-4 py-4 align-middle whitespace-nowrap text-sm text-gray-700">
+                  <span x-text="bill.dibuat_pada ? (new Date(bill.dibuat_pada).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'}) + ', ' + new Date(bill.dibuat_pada).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}).replace(':', '.') + ' WIB') : '-'"></span>
                 </td>
 
                 {{-- No. Pesanan --}}
-                <td class="py-3.5 px-4">
+                <td class="px-4 py-4 align-middle">
                   <div class="flex items-center gap-2">
-                    <span class="text-sm font-mono text-slate-900 font-bold" x-text="bill.nomor_pesanan || ('DIN-' + bill.id)"></span>
+                    <span class="text-xs font-mono text-slate-900 font-bold" x-text="bill.id_pesanan || ('DIN-' + bill.id)"></span>
                     <template x-if="bill.is_new || bill.is_new_order">
                       <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-red-500 text-white animate-pulse">BARU</span>
                     </template>
@@ -1056,52 +1056,51 @@ document.addEventListener('alpine:init', () => {
                 </td>
                 
                 {{-- Meja --}}
-                <td class="py-3.5 px-4">
+                <td class="px-4 py-4 align-middle">
                   <span class="text-sm font-semibold text-slate-700" x-text="bill.meja ? (bill.meja.nomor_meja.startsWith('Meja') ? bill.meja.nomor_meja : 'Meja ' + bill.meja.nomor_meja) : '-'"></span>
                 </td>
 
                 {{-- Customer --}}
-                <td class="py-3.5 px-4">
-                  <span class="font-semibold text-sm text-slate-900" x-text="(bill.nama_konsumen || 'Tamu').split(' – ')[0].split(' - ')[0]"></span>
+                <td class="px-4 py-4 align-middle">
+                  <span class="font-medium text-sm text-slate-900" x-text="(bill.nama_konsumen || 'Tamu').split(' – ')[0].split(' - ')[0]"></span>
                 </td>
 
                 {{-- No. Telepon --}}
-                <td class="py-3.5 px-4">
+                <td class="px-4 py-4 align-middle">
                   <span class="text-sm text-slate-500 font-medium"
                         x-text="bill.no_telepon || '-'"></span>
                 </td>
 
                 {{-- Metode --}}
-                <td class="py-3.5 px-4">
+                <td class="px-4 py-4 align-middle">
                   <span class="text-xs font-semibold px-2 py-1 rounded-lg"
                         :class="bill.sumber_pesanan === 'self_order' ? 'bg-violet-50 text-violet-700 border border-violet-200' : 'bg-blue-50 text-blue-700 border border-blue-200'"
                         x-text="bill.sumber_pesanan === 'self_order' ? 'Self Order' : 'POS'"></span>
                 </td>
                 
                 {{-- Total Tagihan --}}
-                <td class="py-3.5 px-4 text-right">
-                  <span class="font-bold text-sm text-slate-900"
-                        x-text="'Rp ' + formatPrice(bill.total_tagihan || (bill.items || []).reduce((s, i) => s + (i.subtotal || ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * (i.qty || 0))), 0))"></span>
+                <td class="px-4 py-4 text-right align-middle font-bold text-gray-900 tabular-nums whitespace-nowrap">
+                  <span x-text="'Rp ' + formatPrice(bill.total_tagihan || (bill.items || []).reduce((s, i) => s + (i.subtotal || ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * (i.qty || 0))), 0))"></span>
                 </td>
                 
                 {{-- Status Pesanan --}}
-                <td class="py-3.5 px-4 text-center">
-                  <span class="px-2 py-1 text-xs font-bold uppercase rounded-lg border whitespace-nowrap inline-block"
-                        :class="bill.status_raw === 'selesai' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (bill.status_raw === 'dibatalkan' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200')"
+                <td class="px-4 py-4 text-center align-middle">
+                  <span class="inline-flex items-center gap-1.5 font-medium rounded-full border text-xs px-2 py-0.5"
+                        :class="bill.status_raw === 'selesai' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' : (bill.status_raw === 'dibatalkan' ? 'bg-red-50 text-red-700 border-red-200/50' : 'bg-blue-50 text-blue-700 border-blue-200/50')"
                         x-text="bill.status">
                   </span>
                 </td>
                 
                 {{-- Pembayaran --}}
-                <td class="py-3.5 px-4 text-center">
-                  <span class="px-2 py-1 text-xs font-bold rounded-lg border whitespace-nowrap inline-block"
-                        :class="bill.status_raw === 'selesai' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (bill.status_raw === 'dibatalkan' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200')"
+                <td class="px-4 py-4 text-center align-middle">
+                  <span class="inline-flex items-center gap-1.5 font-medium rounded-full border text-xs px-2 py-0.5"
+                        :class="bill.status_raw === 'selesai' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' : (bill.status_raw === 'dibatalkan' ? 'bg-red-50 text-red-700 border-red-200/50' : 'bg-orange-50 text-orange-700 border-orange-200/50')"
                         x-text="bill.status_raw === 'selesai' ? 'Lunas' : (bill.status_raw === 'dibatalkan' ? 'Dibatalkan' : 'Belum Bayar')">
                   </span>
                 </td>
                 
                 {{-- Action Buttons --}}
-                <td class="py-4 px-4 text-right">
+                <td class="px-4 py-4 text-right align-middle">
                   <div class="flex items-center justify-end gap-1.5">
                     <template x-if="bill.status_raw === 'aktif'">
                       <div class="flex items-center justify-end gap-1.5">
@@ -1111,8 +1110,6 @@ document.addEventListener('alpine:init', () => {
                                 class="flex items-center justify-center p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all shadow-xs">
                           <x-heroicon-o-eye class="w-4 h-4" />
                         </button>
-
-
 
                         <!-- Print (Dropdown): Struk Meja, Checker Dapur, Nota Pelanggan -->
                         <template x-if="bill.status !== 'Menunggu Konfirmasi'">
@@ -1189,11 +1186,10 @@ document.addEventListener('alpine:init', () => {
                     </template>
                   </div>
                 </td>
-                
-              </tr>
+              </x-ui.table.row>
             </template>
           </tbody>
-        </table>
+        </x-ui.table>
       </div>
 
     </div>
@@ -1331,9 +1327,10 @@ document.addEventListener('alpine:init', () => {
             <input type="text" x-model="customerName" placeholder="Nama Pelanggan / Konsumen *"
                    class="w-full h-10 px-3.5 text-sm font-medium rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none transition">
 
-            {{-- Input 3: No HP --}}
-            <input type="text" x-model="customerPhone" placeholder="No. HP / Telepon (Opsional)"
-                   oninput="this.value = this.value.replace(/[^0-9]/g, ''); customerPhone = this.value"
+            {{-- Input 3: No WhatsApp --}}
+            <input type="text" x-model="customerPhone" placeholder="No. WhatsApp (Opsional)"
+                   inputmode="numeric" pattern="[0-9]*"
+                   oninput="let v = this.value.replace(/[^0-9]/g, ''); if(v.startsWith('62')) v = '0' + v.substring(2); if(v.length > 0 && v[0] !== '0') v = '0' + v; if(v.length > 1 && v[1] !== '8') v = '08' + v.substring(1); this.value = v; customerPhone = v"
                    class="w-full h-10 px-3.5 text-sm font-medium rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none transition">
           </div>
         </div>
@@ -1419,7 +1416,7 @@ document.addEventListener('alpine:init', () => {
             <div>
               <div class="flex items-center gap-1.5">
                 <h2 class="text-xs font-black text-slate-900 uppercase tracking-wider">PESANAN DISIMPAN</h2>
-                <span class="px-2 py-0.5 rounded-full bg-[#0D3024] text-emerald-300 font-black text-xs tracking-wide" x-text="savedPesananObject ? ('#' + (savedPesananObject.nomor_pesanan || ('DIN-' + savedPesananObject.id))) : ''"></span>
+                <span class="px-2 py-0.5 rounded-full bg-[#0D3024] text-emerald-300 font-black text-xs tracking-wide" x-text="savedPesananObject ? ('#' + (savedPesananObject.id_pesanan || ('DIN-' + savedPesananObject.id))) : ''"></span>
               </div>
               <p class="text-xs font-bold text-emerald-800 mt-0.5" x-text="savedPesananObject ? ((savedPesananObject.meja ? (savedPesananObject.meja.nomor_meja.startsWith('Meja') ? savedPesananObject.meja.nomor_meja : 'Meja ' + savedPesananObject.meja.nomor_meja) : 'Meja -') + ' • ' + savedPesananObject.nama_konsumen) : ''"></p>
             </div>
@@ -1465,7 +1462,7 @@ document.addEventListener('alpine:init', () => {
               <div class="border-b border-dashed border-gray-300 py-0.5"></div>
 
               <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 space-y-1 text-xs">
-                <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">No. Order:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? ('#' + (savedPesananObject.nomor_pesanan || ('DIN-' + savedPesananObject.id))) : '-'"></span></div>
+                <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">No. Order:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? ('#' + (savedPesananObject.id_pesanan || ('DIN-' + savedPesananObject.id))) : '-'"></span></div>
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">Meja:</span><span class="font-extrabold text-emerald-800" x-text="savedPesananObject && savedPesananObject.meja ? (savedPesananObject.meja.nomor_meja.startsWith('Meja') ? savedPesananObject.meja.nomor_meja : 'Meja ' + savedPesananObject.meja.nomor_meja) : '-'"></span></div>
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">Pelanggan:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? savedPesananObject.nama_konsumen : '-'"></span></div>
               </div>
@@ -1526,7 +1523,7 @@ document.addEventListener('alpine:init', () => {
               <div class="border-b border-dashed border-gray-300 py-0.5"></div>
 
               <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 space-y-1 text-xs">
-                <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">No. Order:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? ('#' + (savedPesananObject.nomor_pesanan || ('DIN-' + savedPesananObject.id))) : '-'"></span></div>
+                <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">No. Order:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? ('#' + (savedPesananObject.id_pesanan || ('DIN-' + savedPesananObject.id))) : '-'"></span></div>
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">Meja:</span><span class="font-extrabold text-emerald-800" x-text="savedPesananObject && savedPesananObject.meja ? (savedPesananObject.meja.nomor_meja.startsWith('Meja') ? savedPesananObject.meja.nomor_meja : 'Meja ' + savedPesananObject.meja.nomor_meja) : '-'"></span></div>
                 <div class="flex justify-between items-center"><span class="text-gray-400 font-medium">Pelanggan:</span><span class="font-bold text-gray-900" x-text="savedPesananObject ? savedPesananObject.nama_konsumen : '-'"></span></div>
               </div>
@@ -1596,7 +1593,7 @@ document.addEventListener('alpine:init', () => {
     <div class="bg-white rounded-xl p-6 max-w-lg w-full space-y-4 shadow-2xl border border-gray-100" @click.outside="showTrxDetailModal = false">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div>
-          <h3 class="text-base font-extrabold text-slate-900" x-text="'Detail Transaksi #' + (selectedTrxDetail ? (selectedTrxDetail.nomor_pesanan || ('DIN-' + selectedTrxDetail.id)) : '')"></h3>
+          <h3 class="text-base font-extrabold text-slate-900" x-text="'Detail Transaksi #' + (selectedTrxDetail ? (selectedTrxDetail.id_pesanan || ('DIN-' + selectedTrxDetail.id)) : '')"></h3>
           <p class="text-xs text-slate-400 font-medium" x-text="selectedTrxDetail ? (selectedTrxDetail.dibuat_pada || selectedTrxDetail.created_at) : ''"></p>
         </div>
         <button type="button" @click="showTrxDetailModal = false" class="text-gray-400 hover:text-gray-600 font-bold text-lg">&times;</button>
@@ -1667,7 +1664,7 @@ document.addEventListener('alpine:init', () => {
             <x-heroicon-o-clipboard-document-check class="w-5 h-5 text-emerald-600" />
             Checker Meja
           </h3>
-          <p class="text-xs text-slate-400 font-medium mt-0.5" x-text="checkerBill ? ('#' + (checkerBill.nomor_pesanan || ('DIN-' + checkerBill.id))) : ''"></p>
+          <p class="text-xs text-slate-400 font-medium mt-0.5" x-text="checkerBill ? ('#' + (checkerBill.id_pesanan || ('DIN-' + checkerBill.id))) : ''"></p>
         </div>
         <button type="button" @click="showCheckerModal = false" class="text-gray-400 hover:text-gray-600 font-bold text-lg">&times;</button>
       </div>
@@ -1740,7 +1737,7 @@ document.addEventListener('alpine:init', () => {
       </div>
 
       <div class="space-y-3 text-xs">
-        <p class="text-slate-600 font-medium">Anda akan membatalkan (Void) pesanan <strong x-text="trxToVoid ? ('#' + (trxToVoid.nomor_pesanan || ('DIN-' + trxToVoid.id))) : ''"></strong>. Transaksi tidak akan dihapus dan tetap tercatat untuk audit trail.</p>
+        <p class="text-slate-600 font-medium">Anda akan membatalkan (Void) pesanan <strong x-text="trxToVoid ? ('#' + (trxToVoid.id_pesanan || ('DIN-' + trxToVoid.id))) : ''"></strong>. Transaksi tidak akan dihapus dan tetap tercatat untuk audit trail.</p>
 
         <div class="space-y-1.5">
           <label class="font-extrabold text-slate-700">Pilih Alasan Void <span class="text-red-500">*</span></label>
@@ -1865,7 +1862,7 @@ document.addEventListener('alpine:init', () => {
       
       {{-- Modal Header --}}
       <div class="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 shrink-0">
-        <h3 class="text-sm font-black text-[#0D3024] tracking-wide" x-text="(receiptType === 'meja' ? 'Table Receipt' : 'Receipt Preview') + ' - Order #' + (previewTrx?.nomor_pesanan || ('DIN-' + previewTrx?.id))"></h3>
+        <h3 class="text-sm font-black text-[#0D3024] tracking-wide" x-text="(receiptType === 'meja' ? 'Table Receipt' : 'Receipt Preview') + ' - Order #' + (previewTrx?.id_pesanan || ('DIN-' + previewTrx?.id))"></h3>
         <button type="button" @click="showReceiptPreview = false" class="text-gray-400 hover:text-gray-700 transition-colors">
           <x-heroicon-o-x-mark class="w-5 h-5" />
         </button>
@@ -1881,7 +1878,7 @@ document.addEventListener('alpine:init', () => {
           
           <div class="grid grid-cols-[80px_1fr] gap-x-2">
             <span class="text-gray-500">Order #:</span>
-            <span class="text-right font-bold" x-text="previewTrx?.nomor_pesanan || ('DIN-' + previewTrx?.id)"></span>
+            <span class="text-right font-bold" x-text="previewTrx?.id_pesanan || ('DIN-' + previewTrx?.id)"></span>
             
             <span class="text-gray-500">Date:</span>
             <span class="text-right" x-text="previewTrx ? (previewTrx.dibuat_pada || previewTrx.created_at) : ''"></span>
@@ -1963,7 +1960,7 @@ document.addEventListener('alpine:init', () => {
       
       {{-- Modal Header --}}
       <div class="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 shrink-0">
-        <h3 class="text-sm font-black text-[#0D3024] tracking-wide" x-text="'Kitchen Preview - Order #' + (previewTrx?.nomor_pesanan || ('ORD-' + previewTrx?.id))"></h3>
+        <h3 class="text-sm font-black text-[#0D3024] tracking-wide" x-text="'Kitchen Preview - Order #' + (previewTrx?.id_pesanan || ('ORD-' + previewTrx?.id))"></h3>
         <button type="button" @click="showKitchenPreview = false" class="text-gray-400 hover:text-gray-700 transition-colors">
           <x-heroicon-o-x-mark class="w-5 h-5" />
         </button>
@@ -1976,7 +1973,7 @@ document.addEventListener('alpine:init', () => {
           
           <div class="border-b border-dashed border-gray-400 my-3"></div>
           
-          <div class="font-bold mb-1" x-text="'Order #' + (previewTrx?.nomor_pesanan || ('ORD-' + previewTrx?.id))"></div>
+          <div class="font-bold mb-1" x-text="'Order #' + (previewTrx?.id_pesanan || ('ORD-' + previewTrx?.id))"></div>
           <div>Time: <span x-text="previewTrx ? (previewTrx.dibuat_pada || previewTrx.created_at) : ''"></span></div>
           <div>Type: DINE-IN</div>
           <div class="font-bold text-sm mt-1 uppercase">TABLE: <span x-text="previewTrx?.meja?.nomor_meja || '-'"></span></div>

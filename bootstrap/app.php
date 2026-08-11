@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => CheckRole::class,
         ]);
-        $middleware->redirectGuestsTo(fn ($request) => $request->is('akun/*')
+        $middleware->redirectGuestsTo(fn ($request) => $request->is('akun/*') || $request->is('lacak-pesanan') || $request->is('pesan/*')
             ? route('konsumen.login')
             : route('admin.login'));
         $middleware->validateCsrfTokens(except: [

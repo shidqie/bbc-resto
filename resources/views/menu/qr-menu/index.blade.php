@@ -113,8 +113,9 @@
     {{-- Menu Grid --}}
     <div class="grid grid-cols-2 gap-3.5">
         <template x-for="m in filtered" :key="m.id">
-            <div class="bg-white rounded-lg overflow-hidden border border-neutral-200 transition-colors hover:border-neutral-300 cursor-pointer"
-                 @click="openDetail(m)">
+            <div :class="(m.status==='habis'||m.is_habis) ? 'opacity-90 cursor-not-allowed' : 'cursor-pointer hover:border-neutral-300'" 
+                 class="bg-white rounded-lg overflow-hidden border border-neutral-200 transition-colors"
+                 @click="if(m.status!=='habis' && !m.is_habis) openDetail(m)">
                 {{-- Image --}}
                 <div class="relative w-full aspect-[4/3] bg-neutral-50">
                     <template x-if="m.foto">
@@ -304,8 +305,9 @@
                            class="w-full h-10 px-3 bg-white border border-neutral-200 rounded-lg text-sm font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
                 </div>
                 <div>
-                    <input x-model="nomorHpInput" type="tel" placeholder="No. HP (Opsional)"
-                           maxlength="16"
+                    <input x-model="nomorHpInput" type="tel" placeholder="No. WhatsApp (Opsional)"
+                           inputmode="numeric" pattern="[0-9]*" maxlength="15"
+                           oninput="let v = this.value.replace(/[^0-9]/g, ''); if(v.startsWith('62')) v = '0' + v.substring(2); if(v.length > 0 && v[0] !== '0') v = '0' + v; if(v.length > 1 && v[1] !== '8') v = '08' + v.substring(1); nomorHpInput = v; this.value = v"
                            class="w-full h-10 px-3 bg-white border border-neutral-200 rounded-lg text-sm font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
                 </div>
             </div>
@@ -386,7 +388,7 @@
                 <template x-if="!sending && metodePembayaran !== 'qris'">
                     <x-heroicon-o-paper-airplane class="w-5 h-5" />
                 </template>
-                <span x-text="sending?'Mengirim…':(metodePembayaran==='qris'?'Lanjut ke Pembayaran QRIS':'Kirim Pesanan ke Kasir')"></span>
+                <span x-text="sending?'Mengirim…':(metodePembayaran==='qris'?'Lanjut ke Pembayaran QRIS':'Pesan Menu')"></span>
             </button>
         </div>
     </div>
@@ -527,13 +529,13 @@ function qrMenu(){
 
         // ── Cart actions ──────────────────────────────
         qty(id){ const c=this.cart.find(x=>x.id===id); return c?c.qty:0; },
-        add(m){ const c=this.cart.find(x=>x.id===m.id); c?c.qty++:this.cart.push({id:m.id,nama:m.nama,harga:m.harga,qty:1,catatan:''}); },
+        add(m){ if(m.status==='habis'||m.is_habis) return; const c=this.cart.find(x=>x.id===m.id); c?c.qty++:this.cart.push({id:m.id,nama:m.nama,harga:m.harga,qty:1,catatan:''}); },
         inc(id){ const c=this.cart.find(x=>x.id===id); if(c) c.qty++; },
         dec(id){ const c=this.cart.find(x=>x.id===id); if(c){c.qty--; if(c.qty<=0) this.cart=this.cart.filter(x=>x.id!==id);} },
         rm(id){ this.cart=this.cart.filter(x=>x.id!==id); },
 
         // ── Detail modal ──────────────────────────────
-        openDetail(m){ this.dm=m; this.dQty=1; this.dNote=''; this.modal='detail'; },
+        openDetail(m){ if(m.status==='habis'||m.is_habis) return; this.dm=m; this.dQty=1; this.dNote=''; this.modal='detail'; },
         addDetail(){
             const c=this.cart.find(x=>x.id===this.dm.id);
             if(c){c.qty+=this.dQty; if(this.dNote) c.catatan=this.dNote;}

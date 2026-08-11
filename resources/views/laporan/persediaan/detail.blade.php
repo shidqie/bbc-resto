@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
         <div>
             <h3 class="text-lg font-bold text-gray-900 tracking-tight">Detail Bahan Baku</h3>
-            <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $bahan->kode_bahan }}</p>
+            <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $bahan->id_bahan_baku }}</p>
         </div>
         <button type="button" onclick="closeDetailDrawer()" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
             <x-heroicon-o-x-mark class="w-5 h-5" />

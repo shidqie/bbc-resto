@@ -29,7 +29,7 @@
                 <div class="text-left border border-gray-200/80 rounded-xl overflow-hidden bg-white shadow-lg shadow-gray-200/50">
                     <div class="p-6 border-b border-gray-100 bg-gray-50/40">
                         <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Nomor Invoice</p>
-                        <p class="font-['Anonymous_Pro'] text-xl font-medium tracking-wider text-[#0D3024]">{{ $pesanan->nomor_pesanan }}</p>
+                        <p class="font-['Anonymous_Pro'] text-xl font-medium tracking-wider text-[#0D3024]">{{ $pesanan->id_pesanan }}</p>
                     </div>
                     <div class="p-6 space-y-4">
                         <div class="flex justify-between items-start gap-4">
@@ -62,11 +62,11 @@
                 <!-- Aksi -->
                 <div class="mt-8 space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <a href="{{ route('pesanan.invoice', $pesanan->nomor_pesanan) }}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0D3024] hover:bg-[#164032] text-white font-bold tracking-widest text-xs uppercase rounded-xl transition-all border border-[#0D3024]">
+                        <a href="{{ route('pesanan.invoice', $pesanan->id_pesanan) }}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0D3024] hover:bg-[#164032] text-white font-bold tracking-widest text-xs uppercase rounded-xl transition-all border border-[#0D3024]">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 16l5 5 5-5M12 3v12"/></svg>
                             Unduh Bukti Pesanan
                         </a>
-                        <a href="{{ route('lacak.index', ['kode_pesanan' => $pesanan->nomor_pesanan]) }}" class="flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold tracking-widest text-xs uppercase rounded-xl transition-all border border-emerald-200/50">
+                        <a href="{{ route('lacak.index', ['kode_pesanan' => $pesanan->id_pesanan]) }}" class="flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold tracking-widest text-xs uppercase rounded-xl transition-all border border-emerald-200/50">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             Lacak Pesanan
                         </a>

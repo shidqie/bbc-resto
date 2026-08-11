@@ -37,25 +37,32 @@ class DineInController extends Controller
             ->where('status_aktif', true)
             ->get();
 
-        // Hitung menu yang habis berdasarkan stok bahan baku
-        $menuHabisIds = $menus->filter(function ($menu) {
-            // Jika tidak ada resep, anggap tersedia
+        $menuHabisIds = [];
+        $sisaPorsiMenu = [];
+        foreach ($menus as $menu) {
             if ($menu->resep_menu->isEmpty()) {
-                return false;
+                $sisaPorsiMenu[$menu->id] = 0;
+                continue;
             }
-            // Cek setiap bahan baku dalam resep
+            $porsi = PHP_INT_MAX;
             foreach ($menu->resep_menu as $resep) {
                 $bahan = $resep->bahan_baku;
                 if (!$bahan) continue;
                 $stok = (float) ($bahan->stok_relasi->jumlah_stok ?? 0);
                 $kebutuhan = (float) ($resep->jumlah ?? 0);
-                // Jika stok bahan baku kurang dari kebutuhan 1 porsi, menu habis
-                if ($kebutuhan > 0 && $stok < $kebutuhan) {
-                    return true;
+                if ($kebutuhan > 0) {
+                    $bisa = (int) floor($stok / $kebutuhan);
+                    if ($bisa < $porsi) {
+                        $porsi = $bisa;
+                    }
                 }
             }
-            return false;
-        })->pluck('id')->toArray();
+            if ($porsi == PHP_INT_MAX) $porsi = 0;
+            $sisaPorsiMenu[$menu->id] = $porsi;
+            if ($porsi <= 0) {
+                $menuHabisIds[] = $menu->id;
+            }
+        }
 
         $kategoriIds = $menus->pluck('kategori_menu_id')->filter()->unique();
         $kategoris = KategoriMenu::whereIn('id', $kategoriIds)->orderBy('id', 'asc')->get();
@@ -148,7 +155,7 @@ class DineInController extends Controller
             $m->status = in_array($m->id, $activeMejaIds) ? 'terisi' : 'kosong';
         });
 
-        return view('pos.pesanan.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'cashiers', 'menuHabisIds'));
+        return view('pos.pesanan.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'cashiers', 'menuHabisIds', 'sisaPorsiMenu'));
     }
 
     public function tableStatusApi()
@@ -255,7 +262,7 @@ class DineInController extends Controller
                 $arr['active_order'] = [
                     'id' => $order->id,
                     'meja_id' => $order->meja_id,
-                    'nomor_pesanan' => $order->nomor_pesanan,
+                    'id_pesanan' => $order->id_pesanan,
                     'nama_konsumen' => $namaKonsumen,
                     'meja' => $order->meja ? $order->meja->toArray() : null,
                     'dibuat_pada' => $order->dibuat_pada ? $order->dibuat_pada->toDateTimeString() : null,
@@ -331,7 +338,7 @@ class DineInController extends Controller
             $totalTagihan = $subtotal + $pajak;
 
             $pesananData = [
-                'nomor_pesanan' => 'DIN-'.time().'-'.rand(100, 999), 'tanggal_pesanan' => now(),
+                 'tanggal_pesanan' => now(),
                 'jenis_pesanan_id' => 1, // Dine In
                 'meja_id' => $request->meja_id,
                 'pelayan_id' => \Illuminate\Support\Facades\Auth::id(),
@@ -543,7 +550,7 @@ class DineInController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Pesanan #'.$pesanan->nomor_pesanan.' berhasil dibatalkan (Void).',
+            'message' => 'Pesanan #'.$pesanan->id_pesanan.' berhasil dibatalkan (Void).',
         ]);
     }
 

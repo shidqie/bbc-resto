@@ -41,7 +41,7 @@ class KonsumenAuthenticatedSessionController extends Controller
         Auth::guard('pelanggan')->login($pelanggan, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        return redirect()->intended(route('konsumen.pesanan.index'));
+        return redirect()->intended(route('home'));
     }
 
     public function destroy(Request $request): RedirectResponse

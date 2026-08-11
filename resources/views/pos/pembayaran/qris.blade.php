@@ -25,9 +25,9 @@
             <div class="space-y-6">
                 <!-- Total Amount -->
                 <div class="text-center pb-6 border-b border-gray-100">
-                    <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">Total Tagihan</p>
-                    <p class="mt-1 text-4xl font-black text-[#0D3024]">Rp{{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</p>
-                    <p class="mt-2 text-xs font-semibold text-gray-400">Kode Pesanan: <span class="text-gray-600 font-mono font-bold">#{{ optional($pembayaran->pesanan)->nomor_pesanan ?? $pembayaran->pesanan_id }}</span></p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Tagihan</p>
+                    <p class="mt-1 text-2xl font-bold text-[#0D3024]">Rp{{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</p>
+                    <p class="mt-2 text-xs font-semibold text-gray-400">Kode Pesanan: <span class="text-gray-600 font-mono font-bold">#{{ optional($pembayaran->pesanan)->id_pesanan ?? $pembayaran->pesanan_id }}</span></p>
                 </div>
 
                 <!-- QR Code Display -->
@@ -40,10 +40,10 @@
                             <div x-show="status === 'success'" 
                                  x-transition.opacity.duration.500ms
                                  class="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center" style="display: none;">
-                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3 text-green-500 shadow-sm">
-                                    <x-heroicon-o-check-circle class="w-10 h-10 font-bold" />
+                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2 text-green-500 shadow-sm">
+                                    <x-heroicon-o-check-circle class="w-8 h-8 font-bold" />
                                 </div>
-                                <p class="text-lg font-black text-green-600 tracking-tight">Pembayaran Lunas!</p>
+                                <p class="text-base font-bold text-green-600 tracking-tight">Pembayaran Lunas!</p>
                             </div>
                         @else
                             <div class="w-64 h-64 flex items-center justify-center bg-gray-50 rounded-xl text-gray-400">

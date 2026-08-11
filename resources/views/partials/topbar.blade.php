@@ -8,14 +8,7 @@
 <header class="no-print sticky top-0 h-16 bg-white border-b border-neutral-200 px-6 flex items-center justify-between shrink-0 z-[100]">
     {{-- Area Kiri: Halo Role Greeting (Hanya Muncul di Dashboard & Point of Sale) --}}
     <div class="flex items-center gap-3">
-        @if(request()->routeIs('dashboard') || request()->routeIs('pos.*'))
-            @php
-                $roleName = auth()->user()->peran->nama_peran ?? 'Admin';
-            @endphp
-            <h2 class="text-base font-semibold text-neutral-900 flex items-center gap-2 tracking-tight">
-                <x-heroicon-o-shield-check class="text-[#0D3024] w-4 h-4" /> Halo, <span class="text-[#0D3024]">{{ $roleName }}</span>
-            </h2>
-        @endif
+
     </div>
 
     <div class="flex items-center gap-3">

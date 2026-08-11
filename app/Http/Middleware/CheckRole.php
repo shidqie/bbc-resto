@@ -22,7 +22,7 @@ class CheckRole
         $userRole = auth()->user()->peran->nama_peran ?? 'Konsumen';
 
         // Jika peran user ada di dalam daftar roles yang diizinkan (atau role dengan akses penuh)
-        if (in_array($userRole, $roles) || in_array($userRole, ['Admin', 'Super Admin', 'Pemilik', 'Admin Sistem'])) {
+        if (in_array($userRole, $roles) || in_array($userRole, ['Admin', 'Super Admin', 'Pemilik'])) {
             return $next($request);
         }
 

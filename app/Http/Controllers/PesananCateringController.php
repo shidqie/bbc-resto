@@ -65,13 +65,22 @@ class PesananCateringController extends Controller
 
         try {
             $paket = Menu::findOrFail($request->paket_id);
-            $total = $paket->harga_jual * $request->jumlah_porsi;
-            $ongkir = ($request->metode_pengiriman === 'delivery') ? ($request->jarak_km * 5000) : 0;
+            $subtotal = $paket->harga_jual * $request->jumlah_porsi;
+            $ongkir = 0;
+            $ongkir_normal = 0;
+            if ($request->metode_pengiriman === 'delivery') {
+                $ongkir = \App\Models\Pengantaran::hitungOngkir((float) $request->jarak_km, $request->jumlah_porsi);
+                $jarak_km = (float) $request->jarak_km;
+                $ongkir_normal = $jarak_km > 0 ? (10000 + ($jarak_km * 3000)) : 0;
+            }
+            $total = round($subtotal + $ongkir);
+            $dp = round($total * 0.5);
 
             return response()->json([
                 'ongkir' => $ongkir,
-                'total' => $total + $ongkir,
-                'dp' => ($total + $ongkir) * 0.5,
+                'ongkir_normal' => $ongkir_normal,
+                'total' => $total,
+                'dp' => $dp,
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -84,20 +93,34 @@ class PesananCateringController extends Controller
         $request->validate([
             'nama_pemesan' => 'required|string|max:255',
             'kontak' => 'required|string|max:20',
-            'tanggal_acara' => 'required|date',
-            'lokasi_acara' => 'required|string',
+            'tanggal_acara' => 'required|date|after_or_equal:' . \Carbon\Carbon::today()->addDays(4)->toDateString(),
             'metode_pengiriman' => 'required|in:pickup,delivery',
+            'lokasi_acara' => 'required_if:metode_pengiriman,delivery|nullable|string',
             'paket_id' => 'required|exists:menu,id',
             'jumlah_porsi' => 'required|integer|min:1',
             'komponen' => 'nullable|array',
             'opsi_pembayaran' => 'required|in:dp,lunas',
+        ], [
+            'nama_pemesan.required' => 'Nama pemesan wajib diisi.',
+            'kontak.required' => 'Kontak WhatsApp wajib diisi.',
+            'tanggal_acara.required' => 'Tanggal acara wajib diisi.',
+            'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-4 sebelum hari pelaksanaan acara.',
+            'lokasi_acara.required' => 'Alamat acara wajib diisi.',
+            'metode_pengiriman.required' => 'Metode pengantaran wajib dipilih.',
+            'jumlah_porsi.required' => 'Jumlah porsi wajib diisi.',
+            'jumlah_porsi.min' => 'Jumlah porsi minimal 1.',
         ]);
 
         $request->merge(['kontak' => WhatsAppNumber::normalize($request->kontak)]);
 
         $paket = Menu::with('komponen_paket')->findOrFail($request->paket_id);
         $subtotal = $paket->harga_jual * $request->jumlah_porsi;
-        $ongkir = ($request->metode_pengiriman === 'delivery') ? (($request->jarak_km ?? 1) * 5000) : 0;
+        
+        $ongkir = 0;
+        if ($request->metode_pengiriman === 'delivery') {
+            $ongkir = \App\Models\Pengantaran::hitungOngkir((float) $request->jarak_km, $request->jumlah_porsi);
+        }
+        
         $totalTagihan = $subtotal + $ongkir;
 
         try {
@@ -107,19 +130,12 @@ class PesananCateringController extends Controller
                 ? Auth::guard('pelanggan')->user()
                 : Pelanggan::firstOrCreate(
                     ['nomor_telepon' => $request->kontak],
-                    ['nama' => $request->nama_pemesan, 'alamat' => $request->lokasi_acara]
+                    ['nama' => $request->nama_pemesan, 'alamat' => '-']
                 );
 
-            // Kode invoice berurutan per hari: CTR-20260801-001
-            $prefix = 'CTR-'.now()->format('Ymd');
-            $seq = Pesanan::where('nomor_pesanan', 'like', $prefix.'-%')->count();
-            do {
-                $seq++;
-                $nomorPesanan = sprintf('%s-%03d', $prefix, $seq);
-            } while (Pesanan::where('nomor_pesanan', $nomorPesanan)->exists());
 
             $pesanan = Pesanan::create([
-                'nomor_pesanan' => $nomorPesanan,
+                
                 'jenis_pesanan_id' => 2, // Catering
                 'pelanggan_id' => $pelanggan->id,
                 'status_pesanan_id' => 1, // Menunggu Konfirmasi
@@ -128,11 +144,19 @@ class PesananCateringController extends Controller
                 'total_tagihan' => $totalTagihan,
             ]);
 
+            $tanggal_acara_datetime = $request->tanggal_acara;
+            if ($request->filled('jam_acara')) {
+                $tanggal_acara_datetime = \Carbon\Carbon::parse($request->tanggal_acara . ' ' . $request->jam_acara);
+            }
+            
+            $alamat = $request->metode_pengiriman === 'delivery' ? $request->lokasi_acara : 'Diambil di Toko (Pickup)';
+
             // Jadwal Pesanan
             JadwalPesanan::create([
                 'pesanan_id' => $pesanan->id,
-                'tanggal_acara' => $request->tanggal_acara,
-                'alamat_pengantaran' => $request->lokasi_acara,
+                'tanggal_acara' => $tanggal_acara_datetime,
+                'waktu_pengantaran' => $request->jam_pengambilan ?? null,
+                'alamat_pengantaran' => $alamat,
                 'nama_penerima' => $request->nama_pemesan,
                 'nomor_telepon_penerima' => $request->kontak,
             ]);
@@ -157,39 +181,29 @@ class PesananCateringController extends Controller
                 }
             }
 
+            // Pengantaran (jika delivery)
             if ($request->metode_pengiriman === 'delivery') {
                 Pengantaran::create([
-                    'nomor_pengantaran' => 'ANT-'.time().'-'.rand(100, 999),
+                    'nomor_pengantaran' => 'DO-' . time(),
                     'pesanan_id' => $pesanan->id,
-                    'status_pengantaran_id' => 1, // Menunggu
-                    'jadwal_pengantaran' => $request->tanggal_acara.' 08:00:00',
+                    'status_pengantaran_id' => 1, // Menunggu Jadwal
+                    'jadwal_pengantaran' => $request->tanggal_acara,
                     'nama_penerima' => $request->nama_pemesan,
                     'nomor_telepon_penerima' => $request->kontak,
                     'alamat_pengantaran' => $request->lokasi_acara,
+                    'jarak_pengantaran' => $request->jarak_km,
                     'biaya_pengantaran' => $ongkir,
                 ]);
-            }
-
-            // Deduct stok bahan baku
-            $kebutuhanService = app(\App\Services\KebutuhanBahanService::class);
-            $pesanan->load('detail_pesanan.menu');
-            $stokCukup = $kebutuhanService->deductBahanPesanan($pesanan, 'catering');
-
-            if (!$stokCukup) {
-                throw new \Exception('StokBahanTidakCukup');
             }
 
             return $pesanan;
         });
 
         } catch (\Exception $e) {
-            if ($e->getMessage() === 'StokBahanTidakCukup') {
-                return redirect()->back()->with('error', 'Pesanan gagal diproses karena stok bahan baku catering tidak mencukupi.');
-            }
             throw $e;
         }
 
-        return redirect()->route('pesanan.bayar', $pesanan->nomor_pesanan)
+        return redirect()->route('pesanan.bayar', $pesanan->id_pesanan)
             ->with('success', 'Pesanan Catering berhasil dibuat!');
     }
 
@@ -205,7 +219,7 @@ class PesananCateringController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('nomor_pesanan', 'like', "%{$search}%")
+                $q->where('id_pesanan', 'like', "%{$search}%")
                     ->orWhereHas('pelanggan', function ($p) use ($search) {
                         $p->where('nama', 'like', "%{$search}%")
                             ->orWhere('nomor_telepon', 'like', "%{$search}%");
@@ -251,9 +265,9 @@ class PesananCateringController extends Controller
             'jadwal_pesanan',
             'pengantaran',
             'pelanggan',
-            'pembayaran.status_pembayaran',
-            'pembayaran.jenis_pembayaran',
+            'pembayaran',
             'status_pesanan',
+            'jenis_pesanan',
         ])->findOrFail($id);
 
         // Kebutuhan bahan baku (BOM) untuk acara ini (FR-08)
@@ -314,9 +328,10 @@ class PesananCateringController extends Controller
         ]);
 
         $pembayaran->update([
-            'status_pembayaran_id' => 3, // LUNAS
-            'diproses_oleh' => Auth::id(),
-            'catatan' => $request->filled('catatan_admin')
+            'status_verifikasi' => 'diterima',
+            'diverifikasi_oleh' => Auth::id(),
+            'tanggal_verifikasi' => now(),
+            'catatan_verifikasi' => $request->filled('catatan_admin')
                 ? $request->catatan_admin
                 : 'Diverifikasi oleh admin',
         ]);
@@ -331,11 +346,11 @@ class PesananCateringController extends Controller
             ->findOrFail($id);
 
         $type = 'catering';
-        $kodePesanan = $pesanan->nomor_pesanan;
+        $kodePesanan = $pesanan->id_pesanan;
 
         $pdf = Pdf::loadView('pesanan.invoice-pdf', compact('pesanan', 'type', 'kodePesanan'));
 
-        return $pdf->download('bukti-pesanan-'.$pesanan->nomor_pesanan.'.pdf');
+        return $pdf->download('bukti-pesanan-'.$pesanan->id_pesanan.'.pdf');
     }
 
     public function updateStatus(Request $request, $id)
@@ -355,6 +370,32 @@ class PesananCateringController extends Controller
         ];
         $status = $statusMap[$request->status] ?? (int) $request->status;
 
+        // Peta transisi status yang diizinkan
+        $allowedTransitions = [
+            1 => [2, 6], // Menunggu Konfirmasi -> Dikonfirmasi / Dibatalkan
+            2 => [3, 6], // Dikonfirmasi -> Sedang Diproses / Dibatalkan
+            3 => [4],    // Sedang Diproses -> Siap Dikirim
+            4 => [5],    // Siap Dikirim -> Selesai
+            5 => [],     // Selesai -> final
+            6 => [],     // Dibatalkan -> final
+        ];
+
+        $currentStatus = $pesanan->status_pesanan_id;
+
+        // Validasi transisi status
+        if (!in_array($status, $allowedTransitions[$currentStatus] ?? [])) {
+            // Jika membatalkan (6) selalu diperbolehkan kecuali sudah selesai
+            if ($status != 6 || $currentStatus == 5) {
+                return back()->with('error', 'Perubahan status tidak diizinkan dari status saat ini.');
+            }
+        }
+
+        // Validasi syarat DP (Untuk masuk ke status 2 atau 3)
+        // status_pembayaran_id >= 3 berarti DP sudah diverifikasi (Menunggu Pelunasan / Lunas)
+        if (in_array($status, [2, 3]) && !in_array($pesanan->status_pembayaran_id, [3, 4, 5])) {
+            return back()->with('error', 'Status tidak bisa diubah karena pembayaran DP belum diverifikasi.');
+        }
+
         if ($status == 6) {
             $alasan = $request->alasan_batal;
             $pesanan->update([
@@ -362,29 +403,28 @@ class PesananCateringController extends Controller
                 'catatan' => $alasan ? trim($pesanan->catatan.' [BATAL: '.$alasan.']') : $pesanan->catatan,
             ]);
 
+            app(OrderService::class)->restoreStockPesanan($pesanan);
+
+            if ($pesanan->pengantaran) {
+                $pesanan->pengantaran->update(['status_pengantaran_id' => 5]); // Gagal / Batal
+            }
+
             return back()->with('success', 'Pesanan dibatalkan.');
         }
 
-        // Jika status berpindah ke Sedang Produksi (ID 11) dan belum pernah dipotong stok
-        if ($status == 11 && $pesanan->status_pesanan_id < 11) {
+        // Jika status berpindah ke Sedang Diproses (ID 3) dan belum pernah dipotong stok
+        if ($status == 3 && $pesanan->status_pesanan_id < 3) {
             app(OrderService::class)->potongStokPesanan($pesanan);
         }
         
         $pesanan->update(['status_pesanan_id' => $status]);
 
-        // Jika metode pengiriman = diantar dan status = Produksi Selesai
-        if ($status == 12 && $pesanan->metode_pengiriman === 'diantar') {
-            // Cek apakah sudah ada di pengantaran
-            if (!$pesanan->pengantaran) {
-                // Buat data pengantaran dengan status Menunggu (ID 1)
-                $pesanan->pengantaran()->create([
-                    'nomor_pengantaran' => 'DO-' . time() . '-' . $pesanan->id,
-                    'status_pengantaran_id' => 1,
-                    'jadwal_pengantaran' => $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->tanggal_acara . ' ' . ($pesanan->jadwal_pesanan->waktu_pengantaran ?? '00:00:00') : now(),
-                    'nama_penerima' => $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->nama_penerima : $pesanan->pelanggan->nama ?? 'Unknown',
-                    'nomor_telepon_penerima' => $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->nomor_telepon_penerima : $pesanan->pelanggan->telepon ?? '000',
-                    'alamat_pengantaran' => $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->alamat_pengantaran : 'Alamat belum diatur',
-                ]);
+        // Sinkronisasi dengan Pengantaran (Jika ada jadwal pengantaran)
+        if ($pesanan->pengantaran) {
+            if ($status == 4) { // Siap Dikirim
+                $pesanan->pengantaran->update(['status_pengantaran_id' => 2]); // Siap Dikirim di Pengantaran
+            } elseif ($status == 5) { // Selesai
+                $pesanan->pengantaran->update(['status_pengantaran_id' => 4]); // Selesai/Diterima di Pengantaran
             }
         }
 

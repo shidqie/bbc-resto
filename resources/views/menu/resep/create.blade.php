@@ -6,7 +6,7 @@
         {{-- PAGE HEADER --}}
         <x-ui.page-header
             title="Atur Resep (BOM)"
-            subtitle="Menu: {{ $menu->nama_menu }} ({{ $menu->kode_menu }})"
+            subtitle="Menu: {{ $menu->nama_menu }} ({{ $menu->id_menu }})"
             :breadcrumbs="['Manajemen Menu', 'Data Menu', 'Resep']">
             <x-slot:actions>
                 <a href="{{ route('resep.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 transition">

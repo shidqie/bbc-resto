@@ -1,4 +1,3 @@
-@if(!request()->has('ajax'))
 @extends('layouts.pos')
 
 @section('title', 'Detail Data Konsumen')
@@ -14,16 +13,12 @@
             </button>
         </x-slot:actions>
     </x-ui.page-header>
-@else
-<div class="p-5 flex flex-col w-full h-full">
-@endif
 
     <!-- Main Content Grid -->
-    <div class="@if(!request()->has('ajax')) grid grid-cols-1 lg:grid-cols-3 @else flex flex-col @endif gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Profile Card -->
-        <div class="@if(!request()->has('ajax')) lg:col-span-1 @endif">
+        <div class="lg:col-span-1">
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                @if(!request()->has('ajax'))
                 <!-- Profile Header -->
                 <div class="bg-gradient-to-br from-primary to-primary/80 p-6 text-white">
                     <div class="flex items-center gap-4">
@@ -38,8 +33,6 @@
                         </div>
                     </div>
                 </div>
-                @endif
-
                 <!-- Profile Details -->
                 <div class="p-6 space-y-4">
                     <div>
@@ -57,7 +50,7 @@
                         <div class="text-gray-900">
                             @if($pelanggan->nomor_telepon)
                                 <a href="https://wa.me/{{ str_replace(['+', '-', ' '], '', $pelanggan->nomor_telepon) }}" target="_blank" class="text-green-600 hover:text-green-800 flex items-center gap-1">
-                                    {{ $pelanggan->nomor_telepon }}
+                                    {{ \App\Support\WhatsAppNumber::formatForDisplay($pelanggan->nomor_telepon) }}
                                     <x-heroicon-o-arrow-top-right-on-square class="w-3 h-3" />
                                 </a>
                             @else
@@ -82,7 +75,7 @@
         </div>
 
         <!-- Activity & Orders -->
-        <div class="@if(!request()->has('ajax')) lg:col-span-2 @endif space-y-6">
+        <div class="lg:col-span-2 space-y-6">
             <!-- Riwayat Pesanan -->
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div class="p-6 border-b border-gray-200">
@@ -109,7 +102,7 @@
                             @foreach($pesananList as $pesanan)
                             <tr class="hover:bg-gray-50/60 transition-colors">
                                 <td class="px-4 py-3">
-                                    <div class="font-medium text-gray-900">#{{ $pesanan->nomor_pesanan ?? 'PES-' . $pesanan->id }}</div>
+                                    <div class="font-medium text-gray-900">#{{ $pesanan->id_pesanan ?? 'PES-' . $pesanan->id }}</div>
                                     <div class="text-xs text-gray-500">{{ optional($pesanan->jenis_pesanan)->nama_jenis ?? 'Pesanan' }}</div>
                                 </td>
                                 <td class="px-4 py-3">
@@ -189,6 +182,4 @@
         </div>
     </div>
 </div>
-@if(!request()->has('ajax'))
 @endsection
-@endif

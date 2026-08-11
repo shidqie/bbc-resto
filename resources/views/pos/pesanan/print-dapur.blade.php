@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checker Dapur - {{ $pesanan->nomor_pesanan }}</title>
+    <title>Checker Dapur - {{ $pesanan->id_pesanan }}</title>
     <style>
         @page { size: 80mm auto; margin: 0; }
         body { 
@@ -43,7 +43,7 @@
         <tr>
             <td>Invoice</td>
             <td>:</td>
-            <td style="text-align: right;">{{ $pesanan->nomor_pesanan ?? '-' }}</td>
+            <td style="text-align: right;">{{ $pesanan->id_pesanan ?? '-' }}</td>
         </tr>
         <tr>
             <td>Tanggal</td>

@@ -46,17 +46,26 @@
             </div>
 
             <div class="p-4 space-y-3" x-show="!k.confirming">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Nama Item Menu <span class="text-red-500">*</span></label>
-                        <input type="text" x-model="k.nama" :name="'komponen[' + i + '][nama_komponen]'" required :disabled="readonly"
-                               placeholder="Cth: Lauk Ayam / Aneka Sup"
-                               class="w-full text-sm font-bold px-3.5 py-2 border border-gray-200 bg-white rounded-xl focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none disabled:bg-gray-50 disabled:text-gray-600">
+                <div :class="readonly ? 'grid grid-cols-1 gap-2' : 'grid grid-cols-1 md:grid-cols-2 gap-3'">
+                    {{-- Read-only header row --}}
+                    <div class="grid grid-cols-2 gap-4" x-show="readonly" x-cloak>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Item Menu</p>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Pilihan</p>
                     </div>
-                    <div>
+                    <div class="grid grid-cols-2 gap-4" x-show="readonly" x-cloak>
+                        <p class="text-sm font-semibold text-gray-800" x-text="k.nama"></p>
+                        <p class="text-sm font-semibold text-gray-800" x-text="k.tipe === 'fixed' ? 'Pasti Dapat' : 'Pilih 1'"></p>
+                    </div>
+                    <div x-show="!readonly">
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Nama Item Menu <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="k.nama" :name="'komponen[' + i + '][nama_komponen]'" required
+                               placeholder="Cth: Lauk Ayam / Aneka Sup"
+                               class="w-full text-sm font-bold px-3.5 py-2 border border-gray-200 bg-white rounded-xl focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none">
+                    </div>
+                    <div x-show="!readonly">
                         <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Tipe Pilihan</label>
-                        <input type="hidden" :name="'komponen[' + i + '][tipe]'" :value="k.tipe" :disabled="readonly">
-                        <div class="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-xl" x-show="!readonly">
+                        <input type="hidden" :name="'komponen[' + i + '][tipe]'" :value="k.tipe">
+                        <div class="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-xl">
                             <button type="button" @click="k.tipe = 'choice'"
                                     :class="k.tipe === 'choice' ? 'bg-white text-[#0D3024] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                                     class="px-2 py-1.5 rounded-lg text-xs font-bold transition-all">Pilih 1</button>
@@ -64,7 +73,7 @@
                                     :class="k.tipe === 'fixed' ? 'bg-white text-[#0D3024] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                                     class="px-2 py-1.5 rounded-lg text-xs font-bold transition-all">Pasti Dapat</button>
                         </div>
-                        <p class="text-[10px] text-gray-400 mt-1" x-show="!readonly">"Pilih 1" = konsumen memilih satu opsi.</p>
+                        <p class="text-[10px] text-gray-400 mt-1">"Pilih 1" = konsumen memilih satu opsi.</p>
                     </div>
                 </div>
 
@@ -74,9 +83,11 @@
                         <template x-for="(o, oi) in k.opsi" :key="oi">
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-[#0D3024] rounded-full text-xs font-bold">
                                 <span x-text="o"></span>
-                                <button type="button" @click="rmOpsi(k, oi)" class="text-emerald-700 hover:text-red-600 transition-colors">
-                                    <x-heroicon-o-x-mark class="w-3 h-3" />
-                                </button>
+                                <template x-if="!readonly">
+                                    <button type="button" @click="rmOpsi(k, oi)" class="text-emerald-700 hover:text-red-600 transition-colors">
+                                        <x-heroicon-o-x-mark class="w-3 h-3" />
+                                    </button>
+                                </template>
                             </span>
                         </template>
                     </div>

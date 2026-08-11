@@ -27,7 +27,7 @@ class PembayaranController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
                   ->orWhereHas('pesanan', function($qP) use ($search) {
-                      $qP->where('nomor_pesanan', 'like', "%{$search}%");
+                      $qP->where('id_pesanan', 'like', "%{$search}%");
                   });
             });
         }
@@ -61,9 +61,8 @@ class PembayaranController extends Controller
             ]);
 
             if ($pembayaran->pesanan && $pembayaran->pesanan->status_pesanan_id != 5) {
-                app(\App\Services\OrderService::class)->potongStokPesanan($pembayaran->pesanan);
-                
                 if ($pembayaran->pesanan->jenis_pesanan_id == 1) {
+                    app(\App\Services\OrderService::class)->potongStokPesanan($pembayaran->pesanan);
                     $pembayaran->pesanan->update(['status_pesanan_id' => 5]);
                     if ($pembayaran->pesanan->meja) {
                         $pembayaran->pesanan->meja->update(['status_meja_id' => 1]);

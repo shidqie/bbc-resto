@@ -20,7 +20,7 @@ class BahanBakuController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('kode_bahan', 'like', "%{$search}%")
+                $q->where('id_bahan_baku', 'like', "%{$search}%")
                     ->orWhere('nama_bahan', 'like', "%{$search}%");
             });
         }
@@ -57,7 +57,7 @@ class BahanBakuController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kode_bahan' => 'nullable|string|unique:bahan_baku,kode_bahan',
+            'id_bahan_baku' => 'nullable|string|unique:bahan_baku,id_bahan_baku',
             'nama_bahan' => 'required|string|max:255',
             'kategori_bahan_baku_id' => 'required|exists:kategori_bahan_baku,id',
             'satuan_id' => 'required|exists:satuan,id',
@@ -74,10 +74,10 @@ class BahanBakuController extends Controller
 
         DB::beginTransaction();
         try {
-            $kodeBahan = $validated['kode_bahan'] ?: 'BB-'.strtoupper(uniqid());
+            
             
             $bahanBaku = BahanBaku::create([
-                'kode_bahan' => $kodeBahan,
+                
                 'nama_bahan' => $validated['nama_bahan'],
                 'kategori_bahan_baku_id' => $validated['kategori_bahan_baku_id'],
                 'satuan_id' => $validated['satuan_id'],
@@ -137,7 +137,7 @@ class BahanBakuController extends Controller
 
     public function drawer($id)
     {
-        $bahanBaku = BahanBaku::with(['kategori_bahan_baku', 'satuan'])->findOrFail($id);
+        $bahanBaku = BahanBaku::with(['kategori_bahan_baku', 'satuan', 'stok_harian', 'stok_catering_balance'])->findOrFail($id);
         $mutasiStoks = MutasiStok::with(['jenis_mutasi_stok'])->where('bahan_baku_id', $id)->latest('tanggal_mutasi')->take(10)->get();
 
         return view('inventory.bahan-baku.drawer', compact('bahanBaku', 'mutasiStoks'));

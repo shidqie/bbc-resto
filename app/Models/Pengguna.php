@@ -80,7 +80,7 @@ class Pengguna extends Authenticatable
 
     public function pembayaranDiproses()
     {
-        return $this->hasMany(Pembayaran::class, 'diproses_oleh');
+        return $this->hasMany(Pembayaran::class, 'diverifikasi_oleh');
     }
 
     public function isPemilik(): bool
@@ -130,6 +130,24 @@ class Pengguna extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->peran && in_array($this->peran->nama_peran, ['Admin', 'Super Admin', 'Admin Sistem']);
+        return $this->peran && in_array($this->peran->nama_peran, ['Admin', 'Super Admin']);
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->id_pengguna)) {
+                $latest = static::orderBy('id', 'desc')->first();
+                $nextId = $latest ? $latest->id + 1 : 1;
+                $prefix = 'PG';
+                $model->id_pengguna = $prefix . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+            }
+        });
+    }
+
+    public function hasRole(...$roles)
+    {
+        $userRole = $this->peran->nama_peran ?? '';
+        return in_array($userRole, $roles);
     }
 }

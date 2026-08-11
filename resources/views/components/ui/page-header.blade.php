@@ -28,9 +28,9 @@
                 </ol>
             </nav>
         @endif
-        <h1 class="text-2xl font-black text-gray-900 tracking-tight">{{ $title }}</h1>
+        <h1 class="text-lg font-bold text-gray-900 tracking-tight">{{ $title }}</h1>
         @if($subtitle)
-            <p class="text-sm text-gray-500 font-medium mt-1">{{ $subtitle }}</p>
+            <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $subtitle }}</p>
         @endif
     </div>
 

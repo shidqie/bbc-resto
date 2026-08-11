@@ -90,4 +90,17 @@ class BahanBaku extends BaseModel
     {
         return (float) ($this->stok_bahans->firstWhere('jenis_persediaan', $jenisPersediaan)?->jumlah_stok ?? 0);
     }
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->id_bahan_baku)) {
+                $latest = static::orderBy('id', 'desc')->first();
+                $nextId = $latest ? $latest->id + 1 : 1;
+                $prefix = 'BB';
+                $model->id_bahan_baku = $prefix . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+            }
+        });
+    }
 }
+

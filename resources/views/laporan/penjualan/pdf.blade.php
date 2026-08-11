@@ -51,7 +51,7 @@
             @foreach($pesanans as $index => $p)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $p->nomor_pesanan }}</td>
+                <td>{{ $p->id_pesanan }}</td>
                 <td>{{ \Carbon\Carbon::parse($p->tanggal_pesanan)->format('d/m/Y H:i') }}</td>
                 <td>{{ optional($p->pelanggan)->nama ?? 'Umum' }}</td>
                 <td>{{ optional($p->jenis_pesanan)->nama_jenis ?? '—' }}</td>

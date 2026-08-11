@@ -40,6 +40,9 @@ Route::middleware('auth:pelanggan')->group(function () {
     Route::get('akun/pesanan', [KonsumenPesananController::class, 'index'])
         ->name('konsumen.pesanan.index');
 
+    Route::get('akun/pesanan/{id_pesanan}', [KonsumenPesananController::class, 'show'])
+        ->name('konsumen.pesanan.show');
+
     Route::get('akun/profile', [KonsumenProfileController::class, 'edit'])
         ->name('konsumen.profile');
 

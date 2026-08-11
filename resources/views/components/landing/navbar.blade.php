@@ -1,192 +1,154 @@
-<nav class="sticky top-0 z-50 bg-white border-b border-neutral-200"
-     x-data="{ open: false, layanan: false, akun: false }">
+<nav id="landing-navbar" class="sticky top-0 z-50 bg-white border-b border-neutral-200">
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="h-16 flex items-center justify-between gap-4">
+        <div class="h-16 flex items-center justify-between gap-4" x-data="{ layanan: false, akun: false }">
 
-            {{-- Logo --}}
-            <a href="{{ route('home') }}" class="flex items-center gap-2.5 shrink-0">
-                <img src="{{ asset('images/logo-saung.png') }}" alt="Saung Babakan Cinta"
-                     class="w-8 h-8 rounded object-contain">
-                <span class="text-sm font-semibold tracking-tight text-neutral-900">Saung Babakan Cinta</span>
-            </a>
+            {{-- 1. LEFT: Logo --}}
+            <div class="flex items-center shrink-0">
+                <a href="{{ route('home') }}" class="flex items-center gap-2.5">
+                    <img src="{{ asset('images/logo-saung.png') }}" alt="Saung Babakan Cinta" class="w-8 h-8 rounded object-contain">
+                    <span class="text-sm font-bold tracking-tight text-neutral-900">Saung Babakan Cinta</span>
+                </a>
+            </div>
 
-            {{-- Desktop Menu --}}
-            <div class="hidden lg:flex items-center gap-8">
-
-                <a href="{{ route('home') }}#beranda" class="text-sm text-neutral-600 hover:text-neutral-900 transition">
-                    Beranda
-                </a>
-                <a href="{{ route('home') }}#tentang" class="text-sm text-neutral-600 hover:text-neutral-900 transition">
-                    Tentang
-                </a>
-                <a href="{{ route('home') }}#menu-dinein" class="text-sm text-neutral-600 hover:text-neutral-900 transition">
-                    Menu
-                </a>
+            {{-- 2. CENTER: Nav Links --}}
+            <div class="hidden lg:flex items-center justify-center gap-6 xl:gap-8">
+                <a href="{{ route('home') }}#beranda" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Beranda</a>
+                <a href="{{ route('home') }}#tentang" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Tentang</a>
+                <a href="{{ route('home') }}#menu-dinein" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Menu</a>
 
                 {{-- Dropdown Layanan --}}
-                <div class="relative"
-                     @mouseenter="layanan = true"
-                     @mouseleave="layanan = false">
-                    <button
-                        @click="layanan = !layanan"
-                        @focus="layanan = true"
-                        @blur="layanan = false"
-                        class="flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900 transition">
+                <div class="relative" @mouseenter="layanan = true" @mouseleave="layanan = false">
+                    <button @click="layanan = !layanan" class="flex items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">
                         Layanan
-                        <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                             :class="layanan ? 'rotate-180' : ''"
-                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5 transition-transform duration-200 opacity-70" :class="layanan ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
 
-                    <div x-show="layanan"
-                         x-cloak
-                         x-transition
-                         class="absolute left-0 top-full mt-2 w-48 rounded-xl bg-white border border-neutral-200 overflow-hidden">
-                        <a href="{{ route('qr.scanner') }}"
-                           class="block px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">
-                            Dine in
-                        </a>
-                        <a href="{{ route('home') }}#catering"
-                           class="block px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">
-                            Katering
-                        </a>
-                        <a href="{{ route('home') }}#nasi-box"
-                           class="block px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">
-                            Nasi Box
-                        </a>
+                    <div x-show="layanan" x-cloak x-transition class="absolute left-0 top-full mt-2 w-44 rounded-xl bg-white border border-neutral-200/80 shadow-lg py-1.5 overflow-hidden">
+                        <a href="{{ route('home') }}#menu-dinein" class="block px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">Dine in</a>
+                        <a href="{{ route('home') }}#catering" class="block px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">Katering</a>
+                        <a href="{{ route('home') }}#nasi-box" class="block px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">Nasi Box</a>
                     </div>
                 </div>
 
-                <a href="{{ route('home') }}#galeri" class="text-sm text-neutral-600 hover:text-neutral-900 transition">
-                    Galeri
-                </a>
-                <a href="{{ route('home') }}#lacak-pesanan" class="text-sm text-neutral-600 hover:text-neutral-900 transition">
-                    Lacak Pesanan
-                </a>
-                <a href="{{ route('home') }}#kontak" class="text-sm text-neutral-600 hover:text-neutral-900 transition">
-                    Kontak
-                </a>
+                <a href="{{ route('home') }}#galeri" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Galeri</a>
+                <a href="{{ route('home') }}#kontak" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Kontak</a>
             </div>
 
-            {{-- Desktop Actions --}}
-            <div class="hidden lg:flex items-center gap-6 shrink-0">
-
+            {{-- 3. RIGHT: Actions (Auth & Pesan Sekarang) --}}
+            <div class="hidden lg:flex items-center justify-end gap-4 shrink-0">
                 @if(Auth::guard('web')->check())
-                    <a href="{{ route('dashboard') }}"
-                       class="text-sm text-neutral-600 hover:text-neutral-900 transition">
-                        Dasbor Admin
-                    </a>
+                    <a href="{{ route('dashboard') }}" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Dasbor Admin</a>
                 @elseif(Auth::guard('pelanggan')->check())
-                    <div class="relative"
-                         @mouseenter="akun = true"
-                         @mouseleave="akun = false">
-                        <button
-                            @click="akun = !akun"
-                            @focus="akun = true"
-                            @blur="akun = false"
-                            class="flex items-center gap-1.5 text-sm text-neutral-600 hover:text-neutral-900 transition">
-                            {{ Auth::guard('pelanggan')->user()->nama }}
-                            <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                 :class="akun ? 'rotate-180' : ''"
-                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="relative" @mouseenter="akun = true" @mouseleave="akun = false">
+                        <button @click="akun = !akun" class="flex items-center gap-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">
+                            Profil Saya
+                            <svg class="w-3.5 h-3.5 transition-transform duration-200 opacity-70" :class="akun ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-
-                        <div x-show="akun"
-                             x-cloak
-                             x-transition
-                             class="absolute right-0 top-full mt-2 w-48 rounded-xl bg-white border border-neutral-200 overflow-hidden">
-                            <a href="{{ route('konsumen.pesanan.index') }}"
-                               class="block px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">
-                                Pesanan Saya
-                            </a>
-                            <a href="{{ route('konsumen.profile') }}"
-                               class="block px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">
-                                Profil
-                            </a>
+                        <div x-show="akun" x-cloak x-transition class="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white border border-neutral-200/80 shadow-lg py-1.5 overflow-hidden">
+                            <a href="{{ route('konsumen.pesanan.index') }}" class="block px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">Pesanan Saya</a>
+                            <a href="{{ route('konsumen.profile') }}" class="block px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">Profil</a>
                             <form method="POST" action="{{ route('konsumen.logout') }}">
                                 @csrf
-                                <button type="submit"
-                                        class="w-full text-left px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">
-                                    Keluar
-                                </button>
+                                <button type="submit" class="w-full text-left px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">Keluar</button>
                             </form>
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('konsumen.login') }}"
-                       class="text-sm text-neutral-600 hover:text-neutral-900 transition">
-                        Masuk
-                    </a>
+                    <div class="flex items-center text-sm font-medium text-neutral-600">
+                        <a href="{{ route('konsumen.login') }}" class="hover:text-neutral-900 transition">Login</a>
+                        <span class="mx-1.5 text-neutral-300">|</span>
+                        <a href="{{ route('konsumen.register') }}" class="hover:text-neutral-900 transition">Daftar</a>
+                    </div>
                 @endif
 
-                <a href="{{ route('home') }}#catering"
-                   class="px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-700 transition">
+                <a href="{{ route('home') }}#catering" onclick="if(!isLoggedIn){ handleOrderClick(event, '{{ route('pesan.catering') }}'); }" class="px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-800 transition shadow-xs">
                     Pesan Sekarang
                 </a>
             </div>
 
-            {{-- Mobile Button --}}
-            <button class="lg:hidden p-2 -mr-2 text-neutral-900" @click="open = !open" aria-label="Menu">
-                <svg x-show="!open" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-                <svg x-show="open" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+            {{-- Mobile Hamburger Button --}}
+            <button id="mobile-menu-toggle" class="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-colors" aria-label="Toggle menu" aria-expanded="false">
+                <svg id="icon-hamburger" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <svg id="icon-close" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
 
         </div>
     </div>
 
-    {{-- Mobile Menu --}}
-    <div x-show="open"
-         x-cloak
-         x-transition
-         class="lg:hidden border-t border-neutral-100">
+    {{-- Minimalist Mobile Menu (NO ICONS) --}}
+    <div id="mobile-nav-menu">
+        <div class="px-6 py-4 flex flex-col space-y-1">
 
-        <div class="px-6 py-4 flex flex-col">
+            {{-- Nav Links --}}
+            <a href="{{ route('home') }}#beranda" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
+                Beranda
+            </a>
+            <a href="{{ route('home') }}#tentang" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
+                Tentang
+            </a>
+            <a href="{{ route('home') }}#menu-dinein" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
+                Menu
+            </a>
 
-            <a href="{{ route('home') }}#beranda" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Beranda</a>
-            <a href="{{ route('home') }}#tentang" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Tentang</a>
-            <a href="{{ route('home') }}#menu-dinein" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Menu</a>
-            <a href="{{ route('qr.scanner') }}" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Dine in</a>
-            <a href="{{ route('home') }}#catering" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Katering</a>
-            <a href="{{ route('home') }}#nasi-box" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Nasi Box</a>
-            <a href="{{ route('home') }}#galeri" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Galeri</a>
-            <a href="{{ route('home') }}#lacak-pesanan" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Lacak Pesanan</a>
-            <a href="{{ route('home') }}#kontak" class="py-3 text-sm text-neutral-600 border-b border-neutral-100">Kontak</a>
+            {{-- Layanan Group --}}
+            <div class="py-2 space-y-1">
+                <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Layanan</p>
+                <a href="{{ route('home') }}#menu-dinein" class="mobile-nav-link block py-2 pl-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors">
+                    Dine in
+                </a>
+                <a href="{{ route('home') }}#catering" class="mobile-nav-link block py-2 pl-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors">
+                    Katering
+                </a>
+                <a href="{{ route('home') }}#nasi-box" class="mobile-nav-link block py-2 pl-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors">
+                    Nasi Box
+                </a>
+            </div>
 
+            <a href="{{ route('home') }}#galeri" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
+                Galeri
+            </a>
+            <a href="{{ route('home') }}#kontak" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
+                Kontak
+            </a>
+
+            {{-- Auth Section --}}
             @if(Auth::guard('web')->check())
-                <a href="{{ route('dashboard') }}" class="py-3 text-sm text-neutral-900 font-medium border-b border-neutral-100">Dasbor Admin</a>
+                <a href="{{ route('dashboard') }}" class="mobile-nav-link py-2.5 text-sm font-semibold text-neutral-900">
+                    Dasbor Admin
+                </a>
             @elseif(Auth::guard('pelanggan')->check())
-                <a href="{{ route('konsumen.pesanan.index') }}" class="py-3 text-sm text-neutral-900 font-medium border-b border-neutral-100">Pesanan Saya</a>
-                <a href="{{ route('konsumen.profile') }}" class="py-3 text-sm text-neutral-900 font-medium border-b border-neutral-100">Profil</a>
-                <form method="POST" action="{{ route('konsumen.logout') }}" class="pt-4">
+                <a href="{{ route('konsumen.pesanan.index') }}" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800">
+                    Pesanan Saya
+                </a>
+                <a href="{{ route('konsumen.profile') }}" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800">
+                    Profil
+                </a>
+                <form method="POST" action="{{ route('konsumen.logout') }}" class="py-2">
                     @csrf
-                    <button type="submit" class="w-full py-2.5 rounded-xl border border-neutral-200 text-sm text-neutral-700 font-medium">
+                    <button type="submit" class="w-full py-2.5 rounded-xl border border-neutral-200 text-sm text-neutral-800 font-medium hover:bg-neutral-50 transition-colors">
                         Keluar
                     </button>
                 </form>
             @else
-                <div class="pt-4 flex gap-2">
+                <div class="pt-3 pb-1 flex gap-3">
                     <a href="{{ route('konsumen.login') }}"
-                       class="flex-1 py-2.5 rounded-xl border border-neutral-200 text-sm text-neutral-900 text-center font-medium">
+                       class="flex-1 py-2.5 rounded-xl border border-neutral-200 text-sm text-neutral-900 text-center font-medium hover:bg-neutral-50 transition-colors">
                         Masuk
                     </a>
                     <a href="{{ route('konsumen.register') }}"
-                       class="flex-1 py-2.5 rounded-xl bg-neutral-900 text-white text-sm text-center font-medium">
+                       class="flex-1 py-2.5 rounded-xl bg-neutral-900 text-white text-sm text-center font-semibold hover:bg-neutral-800 transition-colors">
                         Daftar
                     </a>
                 </div>
             @endif
 
-            <a href="{{ route('home') }}#catering"
-               class="mt-3 py-2.5 rounded-xl bg-neutral-900 text-white text-center text-sm font-medium">
+            <a href="{{ route('home') }}#catering" onclick="if(!isLoggedIn){ handleOrderClick(event, '{{ route('pesan.catering') }}'); }"
+               class="mobile-nav-link mt-2 py-3 rounded-xl bg-neutral-900 text-white text-center text-sm font-semibold hover:bg-neutral-800 transition-colors block">
                 Pesan Sekarang
             </a>
 
@@ -194,3 +156,61 @@
     </div>
 
 </nav>
+
+<script>
+(function() {
+    const toggle = document.getElementById('mobile-menu-toggle');
+    const menu = document.getElementById('mobile-nav-menu');
+    const iconHamburger = document.getElementById('icon-hamburger');
+    const iconClose = document.getElementById('icon-close');
+    const navLinks = document.querySelectorAll('.mobile-nav-link');
+
+    if (!toggle || !menu) return;
+
+    function openMenu() {
+        menu.classList.add('is-open');
+        iconHamburger.classList.add('hidden');
+        iconClose.classList.remove('hidden');
+        toggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+        menu.classList.remove('is-open');
+        iconHamburger.classList.remove('hidden');
+        iconClose.classList.add('hidden');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+
+    toggle.addEventListener('click', function() {
+        if (menu.classList.contains('is-open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    // Close when any nav link is clicked
+    navLinks.forEach(function(link) {
+        link.addEventListener('click', function() {
+            closeMenu();
+        });
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', function(e) {
+        const navbar = document.getElementById('landing-navbar');
+        if (navbar && !navbar.contains(e.target) && menu.classList.contains('is-open')) {
+            closeMenu();
+        }
+    });
+
+    // Close on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && menu.classList.contains('is-open')) {
+            closeMenu();
+        }
+    });
+})();
+</script>

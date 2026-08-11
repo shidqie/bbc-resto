@@ -63,6 +63,25 @@
         html { scroll-behavior: smooth; }
         .mobile-nav { display: none; }
         .mobile-nav.active { display: flex; }
+        /* Alpine.js x-cloak: hide elements until Alpine.js is initialized */
+        [x-cloak] { display: none !important; }
+        /* Mobile menu smooth transition */
+        #mobile-nav-menu {
+            display: none;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            background: #fff;
+            border-top: 1px solid #f3f4f6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        #mobile-nav-menu.is-open {
+            display: block;
+            max-height: 90vh;
+            opacity: 1;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col relative">
@@ -76,5 +95,29 @@
     <x-landing.footer />
 
     @stack('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const isLoggedIn = {{ Auth::guard('pelanggan')->check() ? 'true' : 'false' }};
+        function handleOrderClick(event, url) {
+            if (!isLoggedIn) {
+                event.preventDefault();
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Daftar/Login Diperlukan',
+                    text: 'Anda harus mendaftar atau login terlebih dahulu untuk memesan Katering dan Nasi Box.',
+                    confirmButtonText: 'Login Sekarang',
+                    confirmButtonColor: '#0D3024',
+                    showCancelButton: true,
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '{{ route('konsumen.login') }}';
+                    }
+                });
+            } else if (url) {
+                window.location.href = url;
+            }
+        }
+    </script>
 </body>
 </html>

@@ -45,8 +45,7 @@ class LaporanController extends Controller
         $jenisPenjualan = $request->input('jenis', []);
         $jenisPenjualan = is_array($jenisPenjualan) ? $jenisPenjualan : (array) $jenisPenjualan;
         
-        $statusPembayaran = $request->input('status_pembayaran', []);
-        $statusPembayaran = is_array($statusPembayaran) ? $statusPembayaran : (array) $statusPembayaran;
+
         
         $search = $request->input('search', '');
 
@@ -56,7 +55,7 @@ class LaporanController extends Controller
 
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('nomor_pesanan', 'like', "%{$search}%")
+                $q->where('id_pesanan', 'like', "%{$search}%")
                   ->orWhereHas('pelanggan', function($q) use ($search) {
                       $q->where('nama', 'like', "%{$search}%");
                   });
@@ -74,20 +73,11 @@ class LaporanController extends Controller
             }
         }
 
-        if (!empty($statusPembayaran)) {
-            $query->where(function($q) use ($statusPembayaran) {
-                if (in_array('belum', $statusPembayaran)) {
-                    $q->orWhereDoesntHave('pembayaran')
-                      ->orWhereHas(fn ($sq) => $sq->where('id', 1));
-                }
-                if (in_array('dp', $statusPembayaran)) {
-                    $q->orWhereHas(fn ($sq) => $sq->where('id', 2));
-                }
-                if (in_array('lunas', $statusPembayaran)) {
-                    $q->orWhereHas(fn ($sq) => $sq->where('id', 3));
-                }
-            });
-        }
+        // Hanya hitung penjualan yang sudah Lunas (3) atau Selesai (5)
+        $query->where(function($q) {
+            $q->where('status_pembayaran_id', 3)
+              ->orWhere('status_pesanan_id', 5);
+        });
 
         $pesanansAll = $query->orderByDesc('tanggal_pesanan')->get();
         
@@ -109,7 +99,7 @@ class LaporanController extends Controller
         $stats = compact('totalTransaksi', 'totalPendapatan', 'totalDineIn', 'totalCatering', 'totalNasiBox');
 
         return view('laporan.penjualan.index', compact(
-            'pesanans', 'stats', 'startDate', 'endDate', 'jenisPenjualan', 'statusPembayaran', 'periode'
+            'pesanans', 'stats', 'startDate', 'endDate', 'jenisPenjualan', 'periode'
         ));
     }
 
@@ -143,9 +133,6 @@ class LaporanController extends Controller
         $jenisPenjualan = $request->input('jenis', []);
         $jenisPenjualan = is_array($jenisPenjualan) ? $jenisPenjualan : (array) $jenisPenjualan;
         
-        $statusPembayaran = $request->input('status_pembayaran', []);
-        $statusPembayaran = is_array($statusPembayaran) ? $statusPembayaran : (array) $statusPembayaran;
-        
         $search = $request->input('search', '');
 
         $query = Pesanan::with(['jenis_pesanan', 'pelanggan', 'meja'])
@@ -154,7 +141,7 @@ class LaporanController extends Controller
 
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('nomor_pesanan', 'like', "%{$search}%")
+                $q->where('id_pesanan', 'like', "%{$search}%")
                   ->orWhereHas('pelanggan', function($q) use ($search) {
                       $q->where('nama', 'like', "%{$search}%");
                   });
@@ -172,20 +159,11 @@ class LaporanController extends Controller
             }
         }
 
-        if (!empty($statusPembayaran)) {
-            $query->where(function($q) use ($statusPembayaran) {
-                if (in_array('belum', $statusPembayaran)) {
-                    $q->orWhereDoesntHave('pembayaran')
-                      ->orWhereHas(fn ($sq) => $sq->where('id', 1));
-                }
-                if (in_array('dp', $statusPembayaran)) {
-                    $q->orWhereHas(fn ($sq) => $sq->where('id', 2));
-                }
-                if (in_array('lunas', $statusPembayaran)) {
-                    $q->orWhereHas(fn ($sq) => $sq->where('id', 3));
-                }
-            });
-        }
+        // Hanya hitung penjualan yang sudah Lunas (3) atau Selesai (5)
+        $query->where(function($q) {
+            $q->where('status_pembayaran_id', 3)
+              ->orWhere('status_pesanan_id', 5);
+        });
 
         $pesanans = $query->orderByDesc('tanggal_pesanan')->get();
         
@@ -448,7 +426,7 @@ class LaporanController extends Controller
             ->whereBetween('tanggal_pengadaan', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
 
         if ($search) {
-            $query->where('nomor_pengadaan', 'like', "%{$search}%");
+            $query->where('id_pengadaan', 'like', "%{$search}%");
         }
         if (!empty($jenisPermintaan)) {
             $query->whereIn('jenis_pengadaan', $jenisPermintaan);
@@ -527,7 +505,7 @@ class LaporanController extends Controller
             ->whereBetween('tanggal_pengadaan', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
 
         if ($search) {
-            $query->where('nomor_pengadaan', 'like', "%{$search}%");
+            $query->where('id_pengadaan', 'like', "%{$search}%");
         }
         if (!empty($jenisPermintaan)) {
             $query->whereIn('jenis_pengadaan', $jenisPermintaan);

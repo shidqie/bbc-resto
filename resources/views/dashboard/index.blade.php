@@ -8,41 +8,41 @@
         <x-ui.page-header title="Dashboard" subtitle="Ringkasan performa operasional resto, katering, dan nasi box hari ini." :breadcrumbs="['Dashboard']" />
 
         {{-- ── STAT CARDS ── --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Pesanan Hari Ini</span>
-                <span class="text-2xl font-bold text-gray-900">{{ $pesananHariIni }}</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
+                <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pesanan Hari Ini</span>
+                <span class="text-xl font-bold text-gray-900">{{ $pesananHariIni }}</span>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Pendapatan Hari Ini</span>
-                <span class="text-2xl font-bold text-gray-900 tabular-nums">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</span>
+            <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
+                <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pendapatan Hari Ini</span>
+                <span class="text-xl font-bold text-gray-900 tabular-nums">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</span>
             </div>
         </div>
 
         {{-- ── CHART (Full Width) --}}
-        <div class="bg-white rounded-lg p-6 border border-neutral-200 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-4 pb-3 border-b border-neutral-100">
+        <div class="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-neutral-100">
                 <div>
-                    <h2 class="font-semibold text-neutral-900 text-base">Tren Pendapatan (7 Hari Terakhir)</h2>
+                    <h2 class="font-bold text-neutral-900 text-sm">Tren Pendapatan (7 Hari Terakhir)</h2>
                     <p class="text-xs text-neutral-400 font-medium">Grafik akumulasi omset harian resto & catering</p>
                 </div>
-                <span class="px-2.5 py-1 bg-neutral-100 text-neutral-600 text-xs font-medium rounded border border-neutral-200">
+                <span class="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-[11px] font-medium rounded border border-neutral-200">
                     Realtime
                 </span>
             </div>
-            <div class="h-64 w-full relative">
+            <div class="h-48 sm:h-56 w-full relative">
                 <canvas id="incomeChart"></canvas>
             </div>
         </div>
 
         {{-- ── TRANSAKSI TERBARU (Full Width) --}}
-        <div class="bg-white rounded-lg p-6 border border-neutral-200">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b border-neutral-100">
+        <div class="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200">
+            <div class="flex justify-between items-center mb-3 pb-2.5 border-b border-neutral-100">
                 <div>
-                    <h3 class="font-semibold text-neutral-900 text-base">Transaksi Terbaru</h3>
+                    <h3 class="font-bold text-neutral-900 text-sm">Transaksi Terbaru</h3>
                     <p class="text-xs text-neutral-400 font-medium">Pesanan resto & catering yang baru masuk</p>
                 </div>
-                <a href="{{ route('admin.pesanan.index') }}" class="text-xs font-medium text-neutral-600 hover:text-neutral-900 shrink-0">
+                <a href="{{ route('admin.pesanan.index') }}" class="text-xs font-semibold text-neutral-600 hover:text-neutral-900 shrink-0">
                     Lihat Semua &rarr;
                 </a>
             </div>

@@ -34,7 +34,7 @@ class ResepController extends Controller
             ->withCount('resep_menu', 'komponen_paket')
             ->when($search, function ($q) use ($search) {
                 $q->where('nama_menu', 'like', "%{$search}%")
-                    ->orWhere('kode_menu', 'like', "%{$search}%");
+                    ->orWhere('id_menu', 'like', "%{$search}%");
             })
             ->when($kategoriId, function ($q) use ($kategoriId) {
                 $q->where('kategori_menu_id', $kategoriId);
@@ -72,7 +72,7 @@ class ResepController extends Controller
         $jsResepMenus = $semuaMenu->map(fn ($m) => [
             'id' => $m->id,
             'nama_menu' => $m->nama_menu,
-            'kode_menu' => $m->kode_menu,
+            'id_menu' => $m->id_menu,
             'jenis_menu_id' => $m->jenis_menu_id,
             'kategori_menu_id' => $m->kategori_menu_id,
             'harga_jual' => $m->harga_jual,
@@ -95,7 +95,7 @@ class ResepController extends Controller
         $menuSatuanOptions = $semuaMenu->map(fn ($m) => [
             'id' => $m->id,
             'nama_menu' => $m->nama_menu,
-            'kode_menu' => $m->kode_menu,
+            'id_menu' => $m->id_menu,
             'resep_menu_count' => $m->resep_menu_count,
             'resep_lengkap' => $m->resep_menu->count() > 0 && $m->resep_menu->every(fn ($r) => $r->dikonfirmasi),
         ])->values();
@@ -104,7 +104,7 @@ class ResepController extends Controller
             $jsPaketKomposisi[$paket->id] = [
                 'id' => $paket->id,
                 'nama_menu' => $paket->nama_menu,
-                'kode_menu' => $paket->kode_menu,
+                'id_menu' => $paket->id_menu,
                 'komponen' => $paket->komponen_paket->map(fn ($k) => [
                     'id' => $k->id,
                     'nama_item' => $k->nama_item,

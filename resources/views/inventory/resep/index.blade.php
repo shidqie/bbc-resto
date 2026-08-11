@@ -51,7 +51,7 @@
                                 @endif
                                 <div>
                                     <p class="font-semibold text-gray-900 leading-tight text-sm">{{ $menu->nama }}</p>
-                                    <p class="text-xs text-gray-400 font-mono mt-0.5">{{ $menu->kode_menu ?? 'MNU-'.str_pad($menu->id,2,'0',STR_PAD_LEFT) }}</p>
+                                    <p class="text-xs text-gray-400 font-mono mt-0.5">{{ $menu->id_menu ?? 'MNU-'.str_pad($menu->id,2,'0',STR_PAD_LEFT) }}</p>
                                 </div>
                             </div>
                         </td>

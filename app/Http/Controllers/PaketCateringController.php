@@ -63,7 +63,7 @@ class PaketCateringController extends Controller
 
         $paket = Menu::create([
             'nama_menu' => $request->nama_paket,
-            'kode_menu' => 'PKT-'.strtoupper(uniqid()),
+            'id_menu' => 'PKT-'.strtoupper(uniqid()),
             'jenis_menu_id' => $jenisId,
             'kategori_menu_id' => null,
             'harga_jual' => $request->harga,

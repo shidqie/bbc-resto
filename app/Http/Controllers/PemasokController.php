@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pemasok;
+use App\Support\WhatsAppNumber;
 use Illuminate\Http\Request;
 
 class PemasokController extends Controller
@@ -42,7 +43,7 @@ class PemasokController extends Controller
         Pemasok::create([
             'kode_pemasok' => $kode,
             'nama_pemasok' => $request->nama_pemasok,
-            'nomor_telepon' => $request->nomor_telepon,
+            'nomor_telepon' => WhatsAppNumber::normalize($request->nomor_telepon),
             'email' => $request->email,
             'alamat' => $request->alamat,
             'nama_kontak' => $request->nama_kontak,
@@ -69,7 +70,7 @@ class PemasokController extends Controller
 
         $pemasok->update([
             'nama_pemasok' => $request->nama_pemasok,
-            'nomor_telepon' => $request->nomor_telepon,
+            'nomor_telepon' => WhatsAppNumber::normalize($request->nomor_telepon),
             'email' => $request->email,
             'alamat' => $request->alamat,
             'nama_kontak' => $request->nama_kontak,

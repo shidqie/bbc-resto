@@ -6,7 +6,7 @@
     'bgImage' => null,
 ])
 
-<section {{ $id ? 'id='.$id : '' }} {{ $attributes->merge(['class' => 'relative py-16 md:py-24 overflow-hidden ' . ($bgBatik && !$bgImage ? 'bg-primary/[0.02] bg-batik' : '')]) }}>
+<section {{ $id ? 'id='.$id : '' }} {{ $attributes->merge(['class' => 'relative py-10 md:py-14 overflow-hidden ' . ($bgBatik && !$bgImage ? 'bg-primary/[0.02] bg-batik' : '')]) }}>
     @if($bgImage)
         <img src="{{ $bgImage }}" alt="Background" class="absolute inset-0 w-full h-full object-cover">
         <div class="absolute inset-0 bg-canvas/30"></div>

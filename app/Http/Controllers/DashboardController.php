@@ -21,6 +21,10 @@ class DashboardController extends Controller
             return redirect()->route('member.dashboard');
         }
 
+        if ($userRole === 'Pengantaran') {
+            return redirect()->route('admin.jadwal.index');
+        }
+
         // 1. Statistik Hari Ini
         $today = Carbon::today();
 
@@ -68,7 +72,7 @@ class DashboardController extends Controller
         foreach (Pesanan::with('jenis_pesanan', 'status_pesanan')->latest()->take(10)->get() as $p) {
             $pesananTerbaru->push((object) [
                 'id' => $p->id,
-                'no' => $p->nomor_pesanan,
+                'no' => $p->id_pesanan,
                 'tanggal' => $p->dibuat_pada,
                 'total' => $p->total_tagihan,
                 'status' => $p->status_pesanan->nama_status ?? '-',

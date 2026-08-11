@@ -12,17 +12,6 @@
                     <x-heroicon-o-arrow-left class="w-4 h-4" />
                     Kembali
                 </button>
-                @if($user->peran)
-                <a href="{{ route('users.index') }}" class="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
-                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                    Ubah Data
-                </a>
-                @elseif(isset($editUrl))
-                <a href="{{ $editUrl }}" class="bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
-                    <x-heroicon-o-pencil-square class="w-4 h-4" />
-                    Ubah Data
-                </a>
-                @endif
             </div>
         </x-slot:actions>
     </x-ui.page-header>
@@ -68,7 +57,7 @@
                         <div class="text-gray-900">
                             @if($user->nomor_telepon)
                                 <a href="https://wa.me/{{ str_replace(['+', '-', ' '], '', $user->nomor_telepon) }}" target="_blank" class="text-green-600 hover:text-green-800 flex items-center gap-1">
-                                    {{ $user->nomor_telepon }}
+                                    {{ \App\Support\WhatsAppNumber::formatForDisplay($user->nomor_telepon) }}
                                     <x-heroicon-o-arrow-top-right-on-square class="w-3 h-3" />
                                 </a>
                             @else
@@ -93,20 +82,7 @@
                     </div>
 
                     @if($user->peran)
-                    <div>
-                        <label class="block text-sm font-medium text-gray-500 mb-1">Status Akun</label>
-                        <div>
-                            @if($user->status_aktif)
-                                <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 py-1 px-3 rounded-full text-sm font-medium">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>Aktif
-                                </span>
-                            @else
-                                <span class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 border border-gray-200 py-1 px-3 rounded-full text-sm font-medium">
-                                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>Nonaktif
-                                </span>
-                            @endif
-                        </div>
-                    </div>
+
 
                     <div>
                         <label class="block text-sm font-medium text-gray-500 mb-1">Bergabung</label>
@@ -161,6 +137,7 @@
         </div>
 
         <!-- Activity & Orders -->
+        @if(!$user->peran)
         <div class="lg:col-span-2 space-y-6">
             <!-- Riwayat Pesanan -->
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -287,6 +264,7 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 </div>
 @endsection

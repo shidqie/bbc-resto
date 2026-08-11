@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\DB;
  */
 class StockService
 {
+    protected array $bahanBakuCache = [];
+
     /**
      * Tambah stok (masuk: penerimaan pengadaan, retur, pembalikan pembatalan).
      */
@@ -116,10 +118,21 @@ class StockService
      */
     protected function lockStok(int $bahanBakuId, string $jenisPersediaan): StokBahan
     {
-        return StokBahan::lockForUpdate()->firstOrCreate(
-            ['bahan_baku_id' => $bahanBakuId, 'jenis_persediaan' => $jenisPersediaan],
-            ['jumlah_stok' => 0, 'stok_minimal' => 0, 'terakhir_diperbarui' => now()]
-        );
+        $stok = StokBahan::where('bahan_baku_id', $bahanBakuId)
+            ->where('jenis_persediaan', $jenisPersediaan)
+            ->first();
+            
+        if (!$stok) {
+            $stok = StokBahan::create([
+                'bahan_baku_id' => $bahanBakuId,
+                'jenis_persediaan' => $jenisPersediaan,
+                'jumlah_stok' => 0,
+                'stok_minimal' => 0,
+                'terakhir_diperbarui' => now()
+            ]);
+        }
+        
+        return StokBahan::where('id', $stok->id)->lockForUpdate()->first();
     }
 
     /**
@@ -138,7 +151,10 @@ class StockService
         array $referensi = [],
         string $jenisPersediaan = StokBahan::JENIS_HARIAN,
     ): MutasiStok {
-        $bahanBaku = BahanBaku::findOrFail($bahanBakuId);
+        if (!isset($this->bahanBakuCache[$bahanBakuId])) {
+            $this->bahanBakuCache[$bahanBakuId] = BahanBaku::findOrFail($bahanBakuId);
+        }
+        $bahanBaku = $this->bahanBakuCache[$bahanBakuId];
 
         return MutasiStok::create([
             'bahan_baku_id' => $bahanBakuId,

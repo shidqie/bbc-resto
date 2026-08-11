@@ -10,9 +10,11 @@ class PenerimaanBahan extends BaseModel
 
     public $timestamps = false;
 
-    public function pengadaan_bahan()
+    // pengadaan_bahan_id dropped; relation moved to purchase_order
+
+    public function purchase_order()
     {
-        return $this->belongsTo(PengadaanBahan::class, 'pengadaan_bahan_id');
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 
     public function diterima_oleh_pengguna()

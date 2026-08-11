@@ -58,7 +58,7 @@
                         {{-- Baris header paket --}}
                         <x-ui.table.row class="bg-amber-50/70 border-b border-amber-100">
                             <td class="px-4 py-2.5 text-gray-500 font-medium">{{ $menus->firstItem() + $loop->index }}</td>
-                            <td class="px-4 py-2.5 font-mono text-xs text-gray-400">{{ $menu->kode_menu }}</td>
+                            <td class="px-4 py-2.5 font-mono text-xs text-gray-400">{{ $menu->id_menu }}</td>
                             <td class="px-4 py-2.5">
                                 <div class="flex items-center gap-2">
                                     <x-ui.badge color="warning" size="xs" class="uppercase">Paket</x-ui.badge>
@@ -170,7 +170,7 @@
                     @else
                     <x-ui.table.row>
                         <td class="px-4 py-4 text-gray-500 font-medium align-middle">{{ $menus->firstItem() + $loop->index }}</td>
-                        <td class="px-4 py-4 align-middle font-mono text-sm text-gray-500">{{ $menu->kode_menu }}</td>
+                        <td class="px-4 py-4 align-middle font-mono text-sm text-gray-500">{{ $menu->id_menu }}</td>
                         <td class="px-4 py-4 align-middle font-medium text-gray-900">{{ $menu->nama_menu }}</td>
                         <td class="px-4 py-4 align-middle">
                             @if($jenisKode == 'dine_in' || $jenisKode == 'reguler')
@@ -452,13 +452,13 @@ function openResepForm(menuId, readOnly = false) {
 
     document.getElementById('formResep').action = `${BASE_URL}/menu/${menu.id}/resep`;
     document.getElementById('resepFormTitle').textContent = readOnly ? 'Detail Resep (BOM)' : 'Atur Resep (BOM)';
-    document.getElementById('resepFormSubtitle').textContent = (menu.nama_menu ?? '') + ' (' + (menu.kode_menu ?? '') + ')';
+    document.getElementById('resepFormSubtitle').textContent = (menu.nama_menu ?? '') + ' (' + (menu.id_menu ?? '') + ')';
 
     const info = document.getElementById('resepFormInfo');
     const kat = menu.kategori_menu_id ? '' : '';
     info.innerHTML = [
         `<div><div class="text-gray-400">Nama Menu</div><div class="font-semibold text-gray-800">${menu.nama_menu ?? '-'}</div></div>`,
-        `<div><div class="text-gray-400">Kode Menu</div><div class="font-semibold text-gray-800">${menu.kode_menu ?? '-'}</div></div>`,
+        `<div><div class="text-gray-400">Kode Menu</div><div class="font-semibold text-gray-800">${menu.id_menu ?? '-'}</div></div>`,
         `<div><div class="text-gray-400">Hasil Resep</div><div class="font-semibold text-gray-800">1 porsi</div></div>`,
         `<div><div class="text-gray-400">Status</div><div class="font-semibold ${menu.status_aktif ? 'text-green-600' : 'text-red-500'}">${menu.status_aktif ? 'Aktif' : 'Nonaktif'}</div></div>`,
     ].join('');
@@ -674,7 +674,7 @@ function openKomposisiForm(paketId) {
     if (!data) return;
 
     document.getElementById('formKomposisi').action = `${BASE_URL}/menu/${paketId}/komposisi`;
-    document.getElementById('komposisiSubtitle').textContent = `${data.nama_menu} (${data.kode_menu})`;
+    document.getElementById('komposisiSubtitle').textContent = `${data.nama_menu} (${data.id_menu})`;
 
     document.getElementById('tetapContainer').innerHTML = '';
     document.getElementById('kelompokContainer').innerHTML = '';

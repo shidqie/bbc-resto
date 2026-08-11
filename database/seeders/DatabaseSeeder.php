@@ -24,9 +24,9 @@ class DatabaseSeeder extends Seeder
 
         // Meja Dummy
         DB::table('meja')->insert([
-            ['id' => 1, 'nomor_meja' => 'Meja 01', 'kapasitas' => 4, 'status_meja_id' => 1],
-            ['id' => 2, 'nomor_meja' => 'Meja 02', 'kapasitas' => 4, 'status_meja_id' => 1],
-            ['id' => 3, 'nomor_meja' => 'Meja 03', 'kapasitas' => 2, 'status_meja_id' => 1],
+            ['id' => 1, 'nomor_meja' => 'Meja 1', 'kapasitas' => 4, 'status_meja_id' => 1],
+            ['id' => 2, 'nomor_meja' => 'Meja 2', 'kapasitas' => 4, 'status_meja_id' => 1],
+            ['id' => 3, 'nomor_meja' => 'Meja 3', 'kapasitas' => 2, 'status_meja_id' => 1],
         ]);
 
         // 4. Jenis Menu

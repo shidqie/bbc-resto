@@ -2,220 +2,250 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\PenerimaanBahan;
 use App\Models\DetailPenerimaanBahan;
-use App\Models\DetailPengadaanBahan;
-use App\Models\PengadaanBahan;
+use App\Models\DetailPurchaseOrder;
+use App\Models\PurchaseOrder;
 use App\Models\StatusPengadaan;
 use App\Models\StokBahan;
+use App\Services\PengadaanStatusService;
 use App\Services\StockService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PenerimaanBahanController extends Controller
 {
     public function index(Request $request)
     {
-        $pendingQuery = PengadaanBahan::with(['pemasok', 'status_pengadaan', 'detail_pengadaan_bahan.bahan_baku'])
-            ->whereIn('status_pengadaan_id', [
-                StatusPengadaan::idByKode(StatusPengadaan::MENUNGGU_PENERIMAAN),
-                StatusPengadaan::idByKode(StatusPengadaan::DITERIMA_SEBAGIAN),
-            ])
-            ->orderBy('tanggal_pengadaan', 'desc');
-
-        $riwayatQuery = PenerimaanBahan::with(['pengadaan_bahan', 'diterima_oleh_pengguna', 'detail_penerimaan_bahan'])
-            ->orderBy('diterima_pada', 'desc');
+        $query = PenerimaanBahan::with([
+            'purchase_order.pengadaan_bahan',
+            'diterima_oleh_pengguna',
+            'detail_penerimaan_bahan',
+        ])->orderBy('diterima_pada', 'desc');
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $pendingQuery->where(function ($q) use ($search) {
-                $q->where('nomor_pengadaan', 'like', "%{$search}%");
-            });
-            $riwayatQuery->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nomor_penerimaan', 'like', "%{$search}%")
-                  ->orWhere('kode_permintaan', 'like', "%{$search}%");
+                    ->orWhere('kode_permintaan', 'like', "%{$search}%")
+                    ->orWhereHas('purchase_order', fn ($pq) => $pq->where('nomor_po', 'like', "%{$search}%"));
             });
         }
 
-        $statusPenerimaan = ['menunggu_penerimaan', 'sedang_diperiksa', 'diterima_sebagian', 'selesai', 'ditolak'];
         if ($request->filled('status')) {
-            $status = $request->status;
-            if ($status === 'menunggu_penerimaan') {
-                $riwayatQuery->whereIn('status', ['menunggu_penerimaan', 'sedang_diperiksa']);
-            } else {
-                $riwayatQuery->where('status', $status);
-            }
+            $query->where('status', $request->status);
         }
 
-        $pending = $pendingQuery->get();
-        $riwayat = $riwayatQuery->get();
+        if ($request->filled('supplier')) {
+            $query->where('supplier', 'like', "%{$request->supplier}%");
+        }
 
-        return view('inventory.pengadaan.penerimaan.index', compact('pending', 'riwayat', 'statusPenerimaan'));
+        if ($request->filled('dari')) {
+            $query->whereDate('diterima_pada', '>=', $request->dari);
+        }
+
+        if ($request->filled('sampai')) {
+            $query->whereDate('diterima_pada', '<=', $request->sampai);
+        }
+
+        $penerimaans = $query->paginate(10)->withQueryString();
+
+        $statuses = [
+            'diproses' => 'Diproses',
+            'selesai' => 'Selesai',
+        ];
+
+        return view('pengadaan.penerimaan.index', compact('penerimaans', 'statuses'));
     }
 
-    public function create(Request $request)
+    public function create(PurchaseOrder $po)
     {
-        $pilihan = PengadaanBahan::with(['detail_pengadaan_bahan.bahan_baku.satuan'])
-            ->whereIn('status_pengadaan_id', [
-                StatusPengadaan::idByKode(StatusPengadaan::MENUNGGU_PENERIMAAN),
-                StatusPengadaan::idByKode(StatusPengadaan::DITERIMA_SEBAGIAN),
-            ])
-            ->orderBy('tanggal_pengadaan', 'desc')
-            ->get();
+        abort_unless(app(PengadaanStatusService::class)->poMasihBisaDiterima($po), 403, 'Purchase Order ini tidak dapat diterima (sudah selesai/dibatalkan).');
 
-        $pengadaan = null;
-        $items = [];
-        if ($request->filled('permintaan')) {
-            $pengadaan = PengadaanBahan::with(['detail_pengadaan_bahan.bahan_baku.satuan', 'status_pengadaan'])
-                ->findOrFail($request->permintaan);
-            $kode = StatusPengadaan::kodeById($pengadaan->status_pengadaan_id);
-            abort_unless(in_array($kode, [StatusPengadaan::MENUNGGU_PENERIMAAN, StatusPengadaan::DITERIMA_SEBAGIAN]), 403, 'Permintaan ini tidak menunggu penerimaan.');
+        $po->load([
+            'pengadaan_bahan',
+            'pengadaan_bahan.status_pengadaan',
+            'detail_purchase_order.bahan_baku.satuan',
+        ]);
 
-            foreach ($pengadaan->detail_pengadaan_bahan as $detail) {
-                $sisa = (float) $detail->jumlah_dipesan - (float) $detail->jumlah_diterima;
-                if ($sisa > 0) {
-                    $items[] = ['detail' => $detail, 'sisa' => $sisa];
-                }
-            }
-        }
+        $statusService = app(PengadaanStatusService::class);
+        $items = $statusService->sisaDetailPo($po)->where('sisa', '>', 0)->values();
 
         $kodePenerimaan = $this->kodePenerimaan();
 
-        return view('inventory.pengadaan.penerimaan.create', compact('pilihan', 'pengadaan', 'items', 'kodePenerimaan'));
+        return view('pengadaan.penerimaan.create', compact('po', 'items', 'kodePenerimaan'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, PurchaseOrder $po)
     {
+        abort_unless(app(PengadaanStatusService::class)->poMasihBisaDiterima($po), 403, 'Purchase Order ini tidak dapat diterima (sudah selesai/dibatalkan).');
+
         $request->validate([
-            'pengadaan_bahan_id' => 'required|exists:pengadaan_bahan,id',
             'tanggal_penerimaan' => 'nullable|date',
-            'supplier' => 'nullable|string|max:150',
             'nomor_nota' => 'nullable|string|max:100',
             'catatan' => 'nullable|string',
-            'jumlah_diterima' => 'required|array|min:1',
-            'kondisi' => 'required|array|min:1',
+            'item_checked' => 'required|array|min:1',
+            'jumlah_diterima' => 'required|array',
+            'harga_beli' => 'nullable|array',
+            'kondisi' => 'nullable|array',
         ]);
 
-        $pengadaan = PengadaanBahan::findOrFail($request->pengadaan_bahan_id);
-        $kode = StatusPengadaan::kodeById($pengadaan->status_pengadaan_id);
-        abort_unless(in_array($kode, [StatusPengadaan::MENUNGGU_PENERIMAAN, StatusPengadaan::DITERIMA_SEBAGIAN]), 403, 'Permintaan ini tidak menunggu penerimaan.');
+        $statusService = app(PengadaanStatusService::class);
+        $sisaItems = $statusService->sisaDetailPo($po)->where('sisa', '>', 0)->keyBy('detail_id');
 
-        DB::transaction(function () use ($request, $pengadaan) {
+        $checkeds = collect($request->item_checked)->filter(fn ($v) => $v)->keys()->all();
+
+        $pengadaan = $po->pengadaan_bahan;
+        $jenisPersediaan = $pengadaan->jenis_pengadaan === 'catering' ? StokBahan::JENIS_CATERING : StokBahan::JENIS_HARIAN;
+        $stokService = app(StockService::class);
+
+        DB::transaction(function () use ($request, $po, $pengadaan, $jenisPersediaan, $stokService, $sisaItems, $checkeds) {
             $penerimaan = PenerimaanBahan::create([
                 'nomor_penerimaan' => $this->kodePenerimaan(),
-                'pengadaan_bahan_id' => $pengadaan->id,
-                'kode_permintaan' => $pengadaan->nomor_pengadaan,
+                'purchase_order_id' => $po->id,
+                'kode_permintaan' => $pengadaan->id_pengadaan,
                 'diterima_oleh' => auth()->id() ?? 1,
-                'diterima_pada' => $request->tanggal_penerimaan ? $request->tanggal_penerimaan . ' ' . now()->format('H:i:s') : now(),
-                'supplier' => $request->supplier,
+                'diterima_pada' => $request->tanggal_penerimaan
+                    ? \Carbon\Carbon::parse($request->tanggal_penerimaan . ' ' . now()->format('H:i:s'))
+                    : now(),
+                'supplier' => $po->supplier,
                 'nomor_nota' => $request->nomor_nota,
-                'status' => 'sedang_diperiksa',
+                'status' => 'diproses',
                 'catatan' => $request->catatan,
             ]);
 
-            foreach ($request->jumlah_diterima as $detailId => $jumlah) {
-                $detailPermintaan = DetailPengadaanBahan::with('bahan_baku')->find($detailId);
-                if (! $detailPermintaan) continue;
-
-                $diterima = (float) str_replace(',', '.', $jumlah);
-                $diminta = max(0, (float) $detailPermintaan->jumlah_dipesan - (float) $detailPermintaan->jumlah_diterima);
-
-                DetailPenerimaanBahan::create([
-                    'penerimaan_bahan_id' => $penerimaan->id,
-                    'detail_pengadaan_bahan_id' => $detailPermintaan->id,
-                    'bahan_baku_id' => $detailPermintaan->bahan_baku_id,
-                    'jumlah_diterima' => $diterima,
-                    'jumlah_diminta' => $diminta,
-                    'jumlah_kurang' => max(0, $diminta - $diterima),
-                    'satuan_id' => $detailPermintaan->satuan_id,
-                    'kondisi' => $request->kondisi[$detailId] ?? 'Baik',
-                    'harga_satuan' => (float) $detailPermintaan->harga_satuan,
-                    'catatan' => null,
-                ]);
-            }
-        });
-
-        return redirect()->route('pengadaan.penerimaan.index')
-            ->with('success', 'Penerimaan bahan berhasil disimpan. Verifikasi untuk menambah stok.');
-    }
-
-    public function verify(Request $request, PenerimaanBahan $penerimaan)
-    {
-        if ($penerimaan->status === 'selesai' || $penerimaan->status === 'ditolak') {
-            return back()->withErrors(['Verifikasi tidak dapat dilakukan untuk penerimaan ini.']);
-        }
-
-        $penerimaan->load(['detail_penerimaan_bahan.bahan_baku', 'pengadaan_bahan']);
-        if (! $penerimaan->pengadaan_bahan) {
-            return back()->withErrors(['Kode permintaan tidak tersedia atau tidak valid.']);
-        }
-
-        if ($penerimaan->detail_penerimaan_bahan->isEmpty() || $penerimaan->detail_penerimaan_bahan->every(fn($d) => (float) $d->jumlah_diterima <= 0)) {
-            return back()->withErrors(['Jumlah diterima belum diisi.']);
-        }
-
-        if ($penerimaan->detail_penerimaan_bahan->some(fn($d) => ! in_array($d->kondisi, ['Baik', 'Rusak', 'Kurang']))) {
-            return back()->withErrors(['Kondisi bahan belum dipilih.']);
-        }
-
-        if (blank($penerimaan->supplier) && blank($penerimaan->nomor_nota)) {
-            return back()->withErrors(['Data supplier atau nomor nota harus diisi.']);
-        }
-
-        DB::transaction(function () use ($penerimaan) {
-            $pengadaan = $penerimaan->pengadaan_bahan;
-            $stokService = app(StockService::class);
-
             $anyKurang = false;
-            foreach ($penerimaan->detail_penerimaan_bahan as $detail) {
-                if ((float) $detail->jumlah_diterima <= 0) continue;
+            $totalDiterima = 0;
 
-                $keterangan = "Penerimaan {$penerimaan->nomor_penerimaan} / {$penerimaan->kode_permintaan}";
+            // Preload details to avoid N+1 queries
+            $detailsPo = DetailPurchaseOrder::with(['bahan_baku', 'detail_pengadaan_bahan'])
+                ->whereIn('id', $checkeds)
+                ->get()
+                ->keyBy('id');
 
-                // Stok masuk dicatat ke setiap jenis persediaan (Harian & Catering).
-                foreach ([StokBahan::JENIS_HARIAN, StokBahan::JENIS_CATERING] as $jenisPersediaan) {
-                    $stokService->addStock(
-                        $detail->bahan_baku_id,
-                        (float) $detail->jumlah_diterima,
-                        $keterangan,
-                        1,
-                        auth()->id(),
-                        ['detail_penerimaan_bahan_id' => $detail->id],
-                        $jenisPersediaan
-                    );
+            foreach ($sisaItems as $detailId => $item) {
+                if (! in_array($detailId, $checkeds)) {
+                    continue;
                 }
 
-                $detailPermintaan = $detail->detail_pengadaan_bahan;
+                $raw = $request->jumlah_diterima[$detailId] ?? 0;
+                $diterima = (float) str_replace(',', '.', $raw);
+                if ($diterima < 0) {
+                    $diterima = 0;
+                }
+
+                $detailPo = $detailsPo->get($item['detail_id']);
+                if (! $detailPo) {
+                    continue;
+                }
+
+                $sisaPo = (float) $detailPo->sisa;
+                $diterimaFinal = max(0, min($diterima, $sisaPo));
+
+                if ($diterimaFinal <= 0) {
+                    $anyKurang = true;
+                    continue;
+                }
+
+                $hargaRaw = isset($request->harga_beli[$detailId]) && $request->harga_beli[$detailId] !== ''
+                    ? $request->harga_beli[$detailId]
+                    : (float) ($detailPo->detail_pengadaan_bahan?->harga_satuan ?? 0);
+
+                $hargaBeli = is_numeric($hargaRaw)
+                    ? (float) $hargaRaw
+                    : (float) str_replace(['Rp', '.', ' '], '', $hargaRaw);
+
+                $diminta = (float) $detailPo->jumlah_dipesan;
+
+                $detailPenerimaan = DetailPenerimaanBahan::create([
+                    'penerimaan_bahan_id' => $penerimaan->id,
+                    'detail_purchase_order_id' => $detailPo->id,
+                    'bahan_baku_id' => $detailPo->bahan_baku_id,
+                    'jumlah_diterima' => $diterimaFinal,
+                    'jumlah_diminta' => $diminta,
+                    'jumlah_kurang' => max(0, $diminta - $diterimaFinal),
+                    'satuan_id' => $detailPo->satuan_id,
+                    'kondisi' => $request->kondisi[$detailId] ?? 'Baik',
+                    'harga_satuan' => $hargaBeli,
+                    'nama_supplier' => $po->supplier,
+                ]);
+
+                // Update jumlah diterima pada baris PO.
+                $detailPo->jumlah_diterima = (float) $detailPo->jumlah_diterima + $diterimaFinal;
+                $detailPo->save();
+
+                // Stok masuk hanya pada jenis persediaan sesuai permintaan (harian/catering).
+                $keterangan = "Penerimaan {$penerimaan->nomor_penerimaan} / {$po->nomor_po}";
+                $stokService->addStock(
+                    $detailPo->bahan_baku_id,
+                    $diterimaFinal,
+                    $keterangan,
+                    1,
+                    auth()->id(),
+                    ['detail_penerimaan_bahan_id' => $detailPenerimaan->id],
+                    $jenisPersediaan
+                );
+
+                // Akumulasi jumlah diterima pada detail permintaan.
+                $detailPermintaan = $detailPo->detail_pengadaan_bahan;
                 if ($detailPermintaan) {
-                    $detailPermintaan->jumlah_diterima = (float) $detailPermintaan->jumlah_diterima + (float) $detail->jumlah_diterima;
+                    $detailPermintaan->jumlah_diterima = (float) $detailPermintaan->jumlah_diterima + $diterimaFinal;
                     $detailPermintaan->save();
                 }
 
-                if ((float) $detail->jumlah_kurang > 0) {
+                $totalDiterima += $diterimaFinal;
+
+                if ($diterimaFinal < $diminta) {
                     $anyKurang = true;
                 }
             }
 
-            $statusPenerimaan = $anyKurang ? 'diterima_sebagian' : 'selesai';
-            $penerimaan->status = $statusPenerimaan;
+            if ($totalDiterima <= 0) {
+                // Tidak ada barang yang benar-benar diterima → tetap selesai agar tidak diblokir double.
+                $penerimaan->status = 'selesai';
+            } else {
+                $penerimaan->status = $anyKurang ? 'diproses' : 'selesai';
+            }
             $penerimaan->diverifikasi_oleh = auth()->id() ?? 1;
             $penerimaan->waktu_verifikasi = now();
             $penerimaan->save();
 
-            $statusPengadaan = $anyKurang ? StatusPengadaan::DITERIMA_SEBAGIAN : StatusPengadaan::SELESAI;
-            $pengadaan->status_pengadaan_id = StatusPengadaan::idByKode($statusPengadaan);
+            // Update status PO & atau permintaan via derived status.
+            $po->refresh();
+            $poStatus = app(PengadaanStatusService::class)->impliedPoStatus($po);
+            $po->status = $poStatus;
+            $po->save();
+
+            $pengadaan->refresh();
+            $kode = app(PengadaanStatusService::class)->impliedStatusKode($pengadaan);
+            $pengadaan->status_pengadaan_id = \App\Models\StatusPengadaan::idByKode($kode);
             $pengadaan->save();
         });
 
         return redirect()->route('pengadaan.penerimaan.index')
-            ->with('success', 'Penerimaan berhasil diverifikasi. Stok bahan baku bertambah.');
+            ->with('success', 'Penerimaan berhasil disimpan. Stok bahan yang diterima telah diperbarui.');
     }
 
     public function show(PenerimaanBahan $penerimaan)
     {
-        $penerimaan->load(['pengadaan_bahan', 'diterima_oleh_pengguna', 'diverifikasi_oleh_pengguna', 'detail_penerimaan_bahan.bahan_baku.satuan']);
+        $penerimaan->load([
+            'purchase_order.pengadaan_bahan',
+            'diterima_oleh_pengguna',
+            'detail_penerimaan_bahan.bahan_baku.satuan',
+        ]);
 
-        return view('inventory.pengadaan.penerimaan.show', compact('penerimaan'));
+        // Perubahan di baris ini: $totalPembelian diubah menjadi $total_pembelian
+        $total_pembelian = $penerimaan->detail_penerimaan_bahan->sum(fn ($d) => (float) $d->jumlah_diterima * (float) $d->harga_satuan);
+        
+        $sisaItems = collect();
+        if ($penerimaan->purchase_order_id) {
+            $sisaItems = app(PengadaanStatusService::class)
+                ->sisaDetailPo($penerimaan->purchase_order)
+                ->where('sisa', '>', 0)
+                ->values();
+        }
+
+        return view('pengadaan.penerimaan.show', compact('penerimaan', 'total_pembelian', 'sisaItems'));
     }
 
     protected function kodePenerimaan(): string

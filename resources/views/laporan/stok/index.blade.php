@@ -88,7 +88,7 @@
                     @endphp
                     <x-ui.table.row>
                         <td class="px-4 py-4 text-sm text-gray-400 font-medium">{{ $i + 1 }}</td>
-                        <td class="px-4 py-4 font-mono text-sm font-semibold text-gray-500">{{ $bahan->kode_bahan ?? '-' }}</td>
+                        <td class="px-4 py-4 font-mono text-sm font-semibold text-gray-500">{{ $bahan->id_bahan_baku ?? '-' }}</td>
                         <td class="px-4 py-4">
                             <p class="font-semibold text-gray-900">{{ $bahan->nama_bahan }}</p>
                             <p class="text-xs text-gray-400 mt-0.5">{{ $bahan->kategori_bahan_baku?->nama_kategori ?? '-' }}</p>

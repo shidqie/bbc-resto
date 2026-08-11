@@ -15,8 +15,11 @@ class LacakPesananController extends Controller
 
         if ($kodePesanan) {
             $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran', 'pelanggan'])
-                ->where('nomor_pesanan', $kodePesanan)
-                ->orWhere('nomor_pesanan', 'like', "%{$kodePesanan}%")
+                ->where('pelanggan_id', auth('pelanggan')->id())
+                ->where(function($q) use ($kodePesanan) {
+                    $q->where('id_pesanan', $kodePesanan)
+                      ->orWhere('id_pesanan', 'like', "%{$kodePesanan}%");
+                })
                 ->latest()
                 ->first();
 
@@ -24,7 +27,7 @@ class LacakPesananController extends Controller
                 $jenisPesanan = match ($pesanan->jenis_pesanan_id) {
                     2 => 'Catering',
                     3 => 'Nasi Box',
-                    default => 'Dine In / Takeaway',
+                    default => 'Dine In',
                 };
             }
         }

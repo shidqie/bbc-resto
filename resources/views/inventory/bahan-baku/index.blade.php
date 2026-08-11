@@ -89,7 +89,7 @@
                         <tr class="hover:bg-gray-50/60 transition-colors group {{ !$item->status_aktif ? 'opacity-60' : '' }}">
                             <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">{{ $bahanBakus->firstItem() + $i }}</td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="inline-block text-xs font-mono font-semibold text-gray-700 bg-gray-100 rounded-xl px-2 py-1">{{ $item->kode_bahan }}</span>
+                                <span class="inline-block text-xs font-mono font-semibold text-gray-700 bg-gray-100 rounded-xl px-2 py-1">{{ $item->id_bahan_baku }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
                                 <p class="font-semibold text-gray-900 leading-tight">{{ $item->nama_bahan }}</p>
@@ -261,7 +261,7 @@
             <div class="px-5 py-5 space-y-4 flex-1">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kode Bahan</label>
-                    <input type="text" name="kode_bahan" id="bbKode" readonly placeholder="Otomatis (BB-XXXX)" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-gray-50 text-gray-500">
+                    <input type="text" name="id_bahan_baku" id="bbKode" readonly placeholder="Otomatis (BB-XXXX)" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-gray-50 text-gray-500">
                 </div>
 
                 <div>
@@ -432,7 +432,7 @@
             document.getElementById('formBahanBaku').action = `${BASE_URL}/bahan-baku/${bb.id}`;
             document.getElementById('formBahanBakuMethod').innerHTML = '<input type="hidden" name="_method" value="PUT">';
             
-            document.getElementById('bbKode').value = bb.kode_bahan;
+            document.getElementById('bbKode').value = bb.id_bahan_baku;
             document.getElementById('bbNama').value = bb.nama_bahan;
             document.getElementById('bbKategori').value = bb.kategori_bahan_baku_id;
             document.getElementById('bbSatuan').value = bb.satuan_id;

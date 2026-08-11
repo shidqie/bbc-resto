@@ -72,9 +72,14 @@
         {{-- Menu Table --}}
         <x-ui.data-table :paginator="$menus">
             <x-slot:toolbar>
-                <form action="{{ route('menu.index') }}" method="GET" class="w-full">
+                <form action="{{ route('menu.index') }}" method="GET" class="w-full flex items-center gap-3">
                     <input type="hidden" name="jenis_menu_id" value="{{ request('jenis_menu_id') }}">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode…" width="w-full sm:w-72" />
+                    <select name="filter_resep" onchange="this.form.submit()" class="h-10 px-3 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white transition-all text-gray-700">
+                        <option value="">Resep Menu</option>
+                        <option value="ada" {{ request('filter_resep') == 'ada' ? 'selected' : '' }}>Sudah Ada Resep</option>
+                        <option value="belum" {{ request('filter_resep') == 'belum' ? 'selected' : '' }}>Belum Ada Resep</option>
+                    </select>
                 </form>
             </x-slot:toolbar>
 
@@ -94,7 +99,7 @@
                         @forelse($menus as $menu)
                         <x-ui.table.row>
                             <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">
-                                {{ $loop->iteration }}
+                                {{ $menus->firstItem() + $loop->index }}
                             </td>
                             <td class="px-4 py-3">
                                 @if($menu->foto)
@@ -425,7 +430,7 @@ function openMenuModal(menuId = null, isView = false, defaultTab = 'informasi') 
     } else {
         document.getElementById('menuModalTitle').textContent = menu ? 'Edit Menu' : 'Tambah Menu Baru';
     }
-    const menuKode = menu?.kode_menu ?? '';
+    const menuKode = menu?.id_menu ?? '';
     const menuNama = menu?.nama_menu ?? menu?.nama ?? '';
     document.getElementById('menuModalSubtitle').textContent = menu ? (menuKode + (menuNama ? ' - ' + menuNama : '')) : 'Isi informasi menu';
 

@@ -184,17 +184,18 @@ class DineInService
 
             // --- SYNC ke tabel Pesanan (normalized) agar kasir POS bisa membaca ---
             // Cek apakah sudah ada entry di pesanan untuk PesananDinein ini
-            $pesananNorm = Pesanan::where('nomor_pesanan', $kodePesanan)->first();
+            $pesananNorm = Pesanan::where('id_pesanan', $kodePesanan)->first();
             if (! $pesananNorm) {
                 $pesananNorm = Pesanan::create([
-                    'nomor_pesanan' => $kodePesanan,
-                    'tanggal_pesanan' => now(),
-                    'jenis_pesanan_id' => 1, // Dine In
-                    'meja_id' => $meja->id,
-                    'pelayan_id' => $staffId,
-                    'status_pesanan_id' => 1, // Menunggu Pembayaran
-                    'total_tagihan' => $totalTagihan,
-                    'catatan' => 'Pemesan: '.$namaKonsumen,
+                    'id_pesanan'         => $kodePesanan,
+                    'tanggal_pesanan'    => now(),
+                    'jenis_pesanan_id'   => 1, // Dine In
+                    'meja_id'            => $meja->id,
+                    'pelayan_id'         => $staffId,
+                    'status_pesanan_id'  => 1, // Menunggu Konfirmasi
+                    'status_pembayaran_id' => 1, // Menunggu Pembayaran DP
+                    'total_tagihan'      => $totalTagihan,
+                    'catatan'            => 'Pemesan: '.$namaKonsumen,
                 ]);
             } else {
                 $pesananNorm->update([
@@ -264,10 +265,11 @@ class DineInService
             }
 
             // Update status Master Pesanan (PesananDinein menulis ke tabel pesanan yang sama)
-            $masterPesanan = Pesanan::where('nomor_pesanan', $pesanan->kode_pesanan)->first();
+            $masterPesanan = Pesanan::where('id_pesanan', $pesanan->kode_pesanan)->first();
             if ($masterPesanan) {
                 $masterPesanan->update([
                     'status_pesanan_id' => 5, // Selesai
+                    'status_pembayaran_id' => 5, // Lunas
                 ]);
             }
 

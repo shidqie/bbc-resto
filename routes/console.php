@@ -17,3 +17,8 @@ Schedule::command('stok:check-menipis')
 // Schedule::command('stok:check-menipis')
 //     ->everyFifteenMinutes()
 //     ->description('Cek dan buat notifikasi stok menipis/habis');
+
+// Auto cancel pesanan yang telat lunas
+Schedule::command('pesanan:auto-cancel')
+    ->daily()
+    ->description('Batalkan pesanan yang belum lunas melewati batas hari pelunasan');

@@ -15,9 +15,11 @@ class DetailPenerimaanBahan extends BaseModel
         return $this->belongsTo(PenerimaanBahan::class, 'penerimaan_bahan_id');
     }
 
-    public function detail_pengadaan_bahan()
+    // detail_pengadaan_bahan_id dropped; relation moved to detail_purchase_order
+
+    public function detail_purchase_order()
     {
-        return $this->belongsTo(DetailPengadaanBahan::class, 'detail_pengadaan_bahan_id');
+        return $this->belongsTo(DetailPurchaseOrder::class, 'detail_purchase_order_id');
     }
 
     public function bahan_baku()

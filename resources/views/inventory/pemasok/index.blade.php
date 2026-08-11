@@ -57,7 +57,7 @@
                             <p class="text-sm text-gray-700 font-medium">{{ $pemasok->nama_kontak ?? '-' }}</p>
                             <p class="text-xs text-gray-400 mt-0.5">{{ $pemasok->email ?? '-' }}</p>
                         </td>
-                        <td class="px-4 py-4 align-middle text-sm text-gray-600 font-medium">{{ $pemasok->nomor_telepon ?? '-' }}</td>
+                        <td class="px-4 py-4 align-middle text-sm text-gray-600 font-medium">{{ $pemasok->nomor_telepon ? \App\Support\WhatsAppNumber::formatForDisplay($pemasok->nomor_telepon) : '-' }}</td>
                         <td class="px-4 py-4 align-middle text-center">
                             @php
                                 $stColor = $pemasok->status_aktif ? 'success' : 'danger';

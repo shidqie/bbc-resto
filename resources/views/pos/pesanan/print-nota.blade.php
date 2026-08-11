@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Struk Pembayaran - {{ $pesanan->nomor_pesanan }}</title>
+    <title>Struk Pembayaran - {{ $pesanan->id_pesanan }}</title>
     <style>
         @page { size: 80mm auto; margin: 0; }
         body { 
@@ -51,7 +51,7 @@
         <tr>
             <td>Order Number</td>
             <td>:</td>
-            <td>{{ $pesanan->nomor_pesanan }}</td>
+            <td>{{ $pesanan->id_pesanan }}</td>
         </tr>
         <tr>
             <td>Customer</td>

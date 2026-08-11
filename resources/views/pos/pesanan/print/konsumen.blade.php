@@ -41,8 +41,8 @@
     </div>
     <div class="receipt-container" style="max-width: 300px;">
     <div class="text-center mb-2">
-        <h2 style="margin:0;font-size:16px;">SBC. RESTO</h2>
-        <div style="font-size:10px;">Jln. Pangsalatan No. 1<br>Telp: 0812-3456-7890</div>
+        <h2 style="margin:0;font-size:16px;">SBC RESTO</h2>
+        <div style="font-size:10px;">Jl. Ciloa No.km 6, Pasirhalang, Cisarua, KBB<br>Telp/WA: +62 813-9461-6635</div>
     </div>
     
     <div class="border-top border-bottom mb-2 mt-2">

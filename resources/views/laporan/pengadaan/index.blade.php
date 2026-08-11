@@ -88,7 +88,7 @@
                             {{ $pengadaans->firstItem() + $i }}
                         </td>
                         <td class="px-4 py-4 align-middle">
-                            <span class="font-mono font-bold text-gray-900 text-sm">{{ $p->nomor_pengadaan }}</span>
+                            <span class="font-mono font-bold text-gray-900 text-sm">{{ $p->id_pengadaan }}</span>
                         </td>
                         <td class="px-4 py-4 align-middle whitespace-nowrap">
                             <p class="font-semibold text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->tanggal_pengadaan)->format('d M Y') }}</p>

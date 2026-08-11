@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Form Permintaan Pembelian Bahan Baku</title>
+    <title>Purchase Order {{ $po->nomor_po }}</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; color: #111; }
         .header { text-align: center; margin-bottom: 6px; }
@@ -18,6 +18,8 @@
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .footer { margin-top: 24px; font-size: 10px; color: #777; text-align: center; }
+        .sign { margin-top: 40px; width: 100%; }
+        .sign td { width: 50%; text-align: center; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -26,14 +28,16 @@
     </div>
 
     <div class="title">
-        <h3>Form Permintaan Pembelian Bahan Baku</h3>
+        <h3>Purchase Order</h3>
     </div>
 
     <table class="info">
-        <tr><td class="label">Kode Permintaan</td><td>: {{ $pengadaan->nomor_pengadaan }}</td></tr>
-        <tr><td class="label">Tanggal Permintaan</td><td>: {{ \Carbon\Carbon::parse($pengadaan->tanggal_pengadaan)->format('d/m/Y') }}</td></tr>
-        @if($pengadaan->catatan)
-        <tr><td class="label">Catatan</td><td>: {{ $pengadaan->catatan }}</td></tr>
+        <tr><td class="label">Kode PO</td><td>: {{ $po->nomor_po }}</td></tr>
+        <tr><td class="label">Tanggal PO</td><td>: {{ \Carbon\Carbon::parse($po->tanggal_po)->format('d/m/Y') }}</td></tr>
+        <tr><td class="label">Supplier/Toko</td><td>: {{ $po->supplier }}</td></tr>
+        <tr><td class="label">Kode Permintaan</td><td>: {{ optional($po->pengadaan_bahan)->id_pengadaan ?? '-' }}</td></tr>
+        @if($po->catatan)
+        <tr><td class="label">Catatan</td><td>: {{ $po->catatan }}</td></tr>
         @endif
     </table>
 
@@ -41,25 +45,34 @@
         <thead>
             <tr>
                 <th class="text-center" style="width:30px;">No</th>
-                <th>Kode Bahan</th>
-                <th>Nama Bahan Baku</th>
-                <th class="text-center">Jumlah Permintaan</th>
+                <th>Bahan Baku</th>
+                <th class="text-center">Jumlah</th>
                 <th class="text-center">Satuan</th>
-                <th>Catatan</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($pengadaan->detail_pengadaan_bahan as $i => $d)
+            @foreach($po->detail_purchase_order as $i => $d)
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
-                <td>{{ optional($d->bahan_baku)->kode_bahan ?? '-' }}</td>
                 <td>{{ optional($d->bahan_baku)->nama_bahan ?? '-' }}</td>
                 <td class="text-center">{{ (float) $d->jumlah_dipesan }}</td>
-                <td class="text-center">{{ optional($d->satuan)->nama_satuan ?? optional(optional($d->bahan_baku)->satuan)->nama_satuan ?? '-' }}</td>
-                <td>{{ $d->catatan ?? '' }}</td>
+                <td class="text-center">{{ optional(optional($d->bahan_baku)->satuan)->nama_satuan ?? '-' }}</td>
             </tr>
             @endforeach
         </tbody>
+    </table>
+
+    <table class="sign">
+        <tr>
+            <td>
+                <div>Mengetahui,</div>
+                <div style="margin-top: 70px;">({{ optional($po->pengadaan_bahan?->diajukan_oleh_pengguna)->nama ?? '________________' }})</div>
+            </td>
+            <td>
+                <div>Dibuat Oleh,</div>
+                <div style="margin-top: 70px;">({{ optional($po->dibuat_oleh_pengguna)->nama ?? '________________' }})</div>
+            </td>
+        </tr>
     </table>
 
     <div class="footer">Dokumen ini dibuat otomatis oleh sistem BBC Resto — {{ now()->format('d/m/Y H:i') }}</div>

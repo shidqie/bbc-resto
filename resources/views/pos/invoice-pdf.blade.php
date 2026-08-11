@@ -73,7 +73,8 @@
         <tr>
             <td>Contact</td>
             <td>:</td>
-            <td>{{ $pesanan->kontak ?? $pesanan->nomor_wa ?? $pesanan->no_hp ?? '-' }}</td>
+            @php($posKontak = $pesanan->kontak ?? $pesanan->nomor_wa ?? $pesanan->no_hp ?? '')
+            <td>{{ $posKontak ? \App\Support\WhatsAppNumber::formatForDisplay($posKontak) : '-' }}</td>
         </tr>
         <tr>
             <td>Event Date</td>

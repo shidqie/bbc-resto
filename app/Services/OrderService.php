@@ -65,7 +65,7 @@ class OrderService
      * Potong stok bahan untuk pesanan (FR-10).
      * Titik potong stok berbeda per jenis:
      *  - Dine-In:      saat pesanan dinyatakan selesai / pembayaran berhasil.
-     *  - Catering/Nasi Box: saat produksi dimulai (status 3 = DIPROSES).
+     *  - Catering/Nasi Box: saat produksi dimulai (status 2 = DIPROSES).
      *
      * Idempoten: detail yang sudah dipotong (stock_deducted_at terisi) dilewati.
      * Stok dipotong pada jenis persediaan sesuai jenis pesanan.

@@ -123,7 +123,7 @@
                 
                 <div>
                     <label class="block text-sm font-semibold text-gray-900 mb-1.5">Nomor Meja <span class="text-red-500">*</span></label>
-                    <input type="text" name="nomor_meja" id="inputNomorMeja" required class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white" placeholder="Contoh: 01, A1, VVIP-1">
+                    <input type="text" name="nomor_meja" id="inputNomorMeja" required class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white" placeholder="Contoh: 1, A1, VVIP-1">
                 </div>
 
                 <div>
@@ -172,7 +172,7 @@
             
             <!-- Detail Meja -->
             <div class="w-full max-w-[300px] mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                <h4 class="text-base font-bold text-gray-900 mb-3" id="detailNomorMeja">Meja 01</h4>
+                <h4 class="text-base font-bold text-gray-900 mb-3" id="detailNomorMeja">Meja 1</h4>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between"><span class="text-gray-500">Kode Meja</span> <span class="font-medium text-gray-900" id="detailKodeMeja">-</span></div>
                     <div class="flex justify-between"><span class="text-gray-500">Kapasitas</span> <span class="font-medium text-gray-900" id="detailKapasitas">-</span></div>

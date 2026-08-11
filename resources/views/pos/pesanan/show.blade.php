@@ -76,8 +76,8 @@
                             </tbody>
                             <tfoot>
                                 <tr class="border-t-2 border-gray-100 bg-gray-50/80 print-bg">
-                                    <td colspan="3" class="px-6 py-4 text-right font-extrabold text-gray-500 uppercase text-sm">Total Harga:</td>
-                                    <td class="px-6 py-4 font-black text-[#3B82F6] text-xl text-right">
+                                    <td colspan="3" class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs tracking-wider">Total Harga:</td>
+                                    <td class="px-6 py-4 font-bold text-[#3B82F6] text-lg text-right">
                                         Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}
                                     </td>
                                 </tr>

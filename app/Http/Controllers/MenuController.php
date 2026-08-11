@@ -22,7 +22,7 @@ class MenuController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('nama_menu', 'like', "%{$search}%")
-                    ->orWhere('kode_menu', 'like', "%{$search}%");
+                    ->orWhere('id_menu', 'like', "%{$search}%");
             });
         }
 
@@ -36,6 +36,14 @@ class MenuController extends Controller
 
         if ($request->has('kategori') && $request->kategori != '') {
             $query->where('kategori_menu_id', $request->kategori);
+        }
+
+        if ($request->has('filter_resep') && $request->filter_resep != '') {
+            if ($request->filter_resep == 'ada') {
+                $query->has('resep_menu');
+            } elseif ($request->filter_resep == 'belum') {
+                $query->doesntHave('resep_menu');
+            }
         }
 
         $menus = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
@@ -117,7 +125,7 @@ class MenuController extends Controller
         return DB::transaction(function () use ($request, $namaMenu, $hargaJual, $jenisId, $statusAktif) {
             $data = [
                 'nama_menu' => $namaMenu,
-                'kode_menu' => 'PRD-'.strtoupper(uniqid()),
+                'id_menu' => 'PRD-'.strtoupper(uniqid()),
                 'kategori_menu_id' => $request->kategori_menu_id,
                 'jenis_menu_id' => $jenisId,
                 'harga_jual' => $hargaJual,
@@ -246,8 +254,8 @@ class MenuController extends Controller
 
             $menu->update($data);
 
+            $menu->resep_menu()->delete(); // Always clear existing recipes
             if ($request->has('bahan_baku_id') && is_array($request->bahan_baku_id)) {
-                $menu->resep_menu()->delete(); // Clear existing
                 foreach ($request->bahan_baku_id as $index => $bahanId) {
                     if (empty($bahanId) || empty($request->jumlah_kebutuhan[$index])) {
                         continue;
@@ -266,8 +274,8 @@ class MenuController extends Controller
                 }
             }
 
+            $menu->komponen_paket()->delete(); // Always clear existing components
             if ($request->has('komponen') && is_array($request->komponen)) {
-                $menu->komponen_paket()->delete(); // Clear existing
                 foreach ($request->komponen as $komp) {
                     if (empty($komp['nama_komponen'])) continue;
                     $tipe = (isset($komp['tipe']) && $komp['tipe'] === 'choice') ? 'pilihan' : 'tetap';

@@ -10,7 +10,7 @@
     @php
         $userRole = auth()->user()->peran->nama_peran ?? '';
         $hasRole = function(...$roles) use ($userRole) {
-            if (in_array($userRole, ['Admin', 'Super Admin', 'Pemilik', 'Admin Sistem'])) return true;
+            if (in_array($userRole, ['Admin', 'Super Admin', 'Pemilik'])) return true;
             return in_array($userRole, $roles);
         };
     @endphp
@@ -39,12 +39,14 @@
     <nav class="flex-1 py-5 px-2.5 space-y-1 no-scrollbar" :class="sidebarOpen ? 'overflow-y-auto' : 'overflow-visible'">
 
         {{-- Dashboard --}}
+        @if(!$hasRole('Pelanggan', 'Konsumen', 'Pengantaran'))
         @include('partials.sidebar-link', [
             'route' => 'dashboard',
             'icon' => 'heroicon-s-home',
             'label' => 'Dashboard',
             'active' => request()->routeIs('dashboard'),
         ])
+        @endif
 
         {{-- Divider --}}
         <div class="py-1.5" x-show="sidebarOpen"><div class="h-px w-full bg-neutral-100"></div></div>
@@ -52,32 +54,40 @@
         {{-- Penjualan --}}
         @php
         $penjualanItems = [];
-        if ($hasRole('Kasir', 'Pemilik', 'Admin Sistem')) {
-            $penjualanItems[] = ['label' => 'Semua Pesanan', 'url' => route('admin.pesanan.index'), 'active' => request()->routeIs('admin.pesanan.*')];
+        if ($hasRole('Pemilik')) {
+            $penjualanItems[] = ['label' => 'Semua Daftar Pesanan', 'url' => route('admin.pesanan.index'), 'active' => request()->routeIs('admin.pesanan.index')];
         }
-        if ($hasRole('Kasir', 'Pelayan', 'Pemilik', 'Admin Sistem')) {
-                $penjualanItems[] = ['label' => 'Dine In', 'url' => route('pos.dinein.index'), 'active' => request()->routeIs('pos.dinein.*')];
-            }
-        if ($hasRole('Kasir', 'Pemilik', 'Admin Sistem')) {
-            $penjualanItems[] = ['label' => 'Pembayaran', 'url' => route('admin.verifikasi_pembayaran.index'), 'active' => request()->routeIs('admin.verifikasi_pembayaran.*')];
+        if ($hasRole('Kasir', 'Pemilik')) {
+            $penjualanItems[] = ['label' => 'Daftar Pesanan Dine In', 'url' => route('admin.pesanan.dinein.index'), 'active' => request()->routeIs('admin.pesanan.dinein.*')];
         }
-        if ($hasRole('Pemilik', 'Admin Sistem')) {
-            $penjualanItems[] = ['label' => 'Katering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
-            $penjualanItems[] = ['label' => 'Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
+        if ($hasRole('Pemilik')) {
+            $penjualanItems[] = ['label' => 'Daftar Pesanan Katering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
+            $penjualanItems[] = ['label' => 'Daftar Pesanan Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
         }
+
             
             @endphp
             @if(count($penjualanItems))
             @include('partials.sidebar-submenu', [
                 'icon' => 'ionicon-cart-sharp',
-                'label' => 'Penjualan',
+                'label' => 'Daftar Pesanan',
                 'isOpen' => request()->routeIs('pos.dinein.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.pembayaran.*') || request()->routeIs('admin.jadwal.*'),
                 'items' => $penjualanItems,
                 ])
                 @endif
                 
+                {{-- Jadwal Pengantaran --}}
+                @if($hasRole('Pemilik', 'Pengantaran'))
+                @include('partials.sidebar-link', [
+                    'route' => 'admin.jadwal.index',
+                    'icon' => 'gmdi-local-shipping-o',
+                    'label' => 'Jadwal Pengantaran',
+                    'active' => request()->routeIs('admin.jadwal.*') || request()->routeIs('admin.jadwal-pengantaran.*'),
+                ])
+                @endif
+                
                 {{-- Menu & Paket --}}
-                @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem'))
+                @if($hasRole('Admin', 'Manajer', 'Pemilik'))
                 @include('partials.sidebar-submenu', [
                     'icon' => 'gmdi-menu-book-r',
                     'label' => 'Manajemen Menu',
@@ -90,7 +100,7 @@
                         @endif
                         
                         {{-- Meja --}}
-                        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem'))
+                        @if($hasRole('Admin', 'Manajer', 'Pemilik'))
                             @include('partials.sidebar-submenu', [
                                 'icon' => 'gmdi-table-bar',
                                 'label' => 'Manajemen Meja',
@@ -102,7 +112,7 @@
                         @endif
 
 {{-- Persediaan --}}
-        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem', 'Dapur'))
+        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur'))
         @include('partials.sidebar-submenu', [
             'icon' => 'heroicon-s-archive-box',
             'label' => 'Persediaan',
@@ -117,15 +127,14 @@
         @endif
 
      {{-- Pengadaan --}}
-                        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Admin Sistem', 'Dapur'))
+                        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur'))
                             @include('partials.sidebar-submenu', [
                                 'icon' => 'heroicon-s-shopping-bag',
                                 'label' => 'Pengadaan',
                                 'isOpen' => request()->routeIs('pengadaan.*'),
                                 'items' => [
                                     ['label' => 'Semua Permintaan', 'url' => route('pengadaan.permintaan.index'), 'active' => request()->routeIs('pengadaan.permintaan.*')],
-                                    ['label' => 'Form Permintaan Harian', 'url' => route('pengadaan.harian.create'), 'active' => request()->routeIs('pengadaan.harian.*')],
-                                    ['label' => 'Form Permintaan Catering', 'url' => route('pengadaan.catering.create'), 'active' => request()->routeIs('pengadaan.catering.*')],
+                                    ['label' => 'Purchase Order', 'url' => route('pengadaan.po.index'), 'active' => request()->routeIs('pengadaan.po.*')],
                                     ['label' => 'Penerimaan Bahan Baku', 'url' => route('pengadaan.penerimaan.index'), 'active' => request()->routeIs('pengadaan.penerimaan.*')],
                                 ],
                             ])
@@ -146,7 +155,7 @@
         @endif
 
         {{-- Manajemen Pengguna --}}
-        @if($hasRole('Pemilik', 'Manajer', 'Admin Sistem'))
+        @if($hasRole('Pemilik'))
         @include('partials.sidebar-submenu', [
             'icon' => 'fluentui-people-28',
             'label' => 'Manajemen Pengguna',

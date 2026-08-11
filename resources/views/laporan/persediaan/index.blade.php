@@ -81,7 +81,7 @@
                             {{ $paginatedBahan->firstItem() + $i }}
                         </td>
                         <td class="px-4 py-4 align-middle">
-                            <span class="font-mono font-bold text-gray-900 text-sm">{{ $item['kode_bahan'] ?? '-' }}</span>
+                            <span class="font-mono font-bold text-gray-900 text-sm">{{ $item['id_bahan_baku'] ?? '-' }}</span>
                         </td>
                         <td class="px-4 py-4 align-middle">
                             <p class="font-semibold text-gray-900 text-sm">{{ $item['nama_bahan'] }}</p>

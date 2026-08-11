@@ -113,7 +113,7 @@
         <div class="bg-white rounded-lg border border-neutral-200 p-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-base font-semibold text-neutral-900">Pesanan Aktif</h3>
-                <span class="mono text-xs font-mono text-neutral-500" x-text="pesanan.nomor_pesanan"></span>
+                <span class="mono text-xs font-mono text-neutral-500" x-text="pesanan.id_pesanan"></span>
             </div>
 
             <div class="flex items-center justify-between">

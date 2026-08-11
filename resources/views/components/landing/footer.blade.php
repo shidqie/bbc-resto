@@ -44,12 +44,7 @@
                 </a>
             @endauth
 
-            @if(Route::has('admin.login') && ! Auth::guard('web')->check())
-                <a href="{{ route('admin.login') }}"
-                   class="hover:text-secondary-container transition-colors">
-                    Portal Admin
-                </a>
-            @endif
+
         </div>
     </div>
 </footer>

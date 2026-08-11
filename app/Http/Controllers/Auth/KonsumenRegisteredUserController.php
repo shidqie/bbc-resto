@@ -55,6 +55,6 @@ class KonsumenRegisteredUserController extends Controller
         Auth::guard('pelanggan')->login($pelanggan);
         $request->session()->regenerate();
 
-        return redirect()->route('konsumen.pesanan.index');
+        return redirect()->route('home');
     }
 }

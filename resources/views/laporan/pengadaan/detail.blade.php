@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
         <div>
             <h3 class="text-lg font-bold text-gray-900 tracking-tight">Detail Pengadaan</h3>
-            <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $pengadaan->nomor_pengadaan }}</p>
+            <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $pengadaan->id_pengadaan }}</p>
         </div>
         <button type="button" onclick="closeDetailDrawer()" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
             <x-heroicon-o-x-mark class="w-5 h-5" />
@@ -64,7 +64,7 @@
                 <li class="px-4 py-3 flex justify-between items-center">
                     <div>
                         <p class="text-sm font-semibold text-gray-900">{{ optional($detail->bahan_baku)->nama_bahan ?? '-' }}</p>
-                        <p class="text-xs text-gray-400 font-mono mt-0.5">{{ optional($detail->bahan_baku)->kode_bahan ?? '-' }}</p>
+                        <p class="text-xs text-gray-400 font-mono mt-0.5">{{ optional($detail->bahan_baku)->id_bahan_baku ?? '-' }}</p>
                     </div>
                     <div class="text-right">
                         <span class="text-sm font-bold text-gray-900 tabular-nums">{{ (float)$detail->jumlah_dipesan }}</span>

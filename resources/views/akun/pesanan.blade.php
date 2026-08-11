@@ -42,72 +42,7 @@
             </div>
 
             {{-- Daftar Pesanan --}}
-            @forelse($pesanans as $o)
-                @php
-                    $paket = $o->detail_pesanan->first();
-                    $totalO = (float) $o->total_tagihan;
-                    $dpO = (float) $o->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
-                    $lunasO = (float) $o->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
-                    $bayarLabel = $lunasO >= $totalO ? 'Lunas' : ($dpO > 0 ? 'DP Terbayar' : 'Belum Bayar');
-                    $bayarColor = $lunasO >= $totalO ? 'bg-emerald-100 text-emerald-700' : ($dpO > 0 ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700');
-
-                    $statusMap = [
-                        1 => ['Menunggu Konfirmasi', 'bg-amber-100 text-amber-700'],
-                        2 => ['Dikonfirmasi', 'bg-blue-100 text-blue-700'],
-                        3 => ['Diproses', 'bg-indigo-100 text-indigo-700'],
-                        4 => ['Siap Dikirim', 'bg-cyan-100 text-cyan-700'],
-                        5 => ['Selesai', 'bg-emerald-100 text-emerald-700'],
-                        6 => ['Dibatalkan', 'bg-rose-100 text-rose-700'],
-                    ];
-                    $st = $statusMap[$o->status_pesanan_id] ?? ['-' , 'bg-gray-100 text-gray-700'];
-                @endphp
-
-                <div class="bg-white rounded-xl border border-primary/10 overflow-hidden mb-5">
-                    <div class="flex flex-wrap items-center gap-3 px-6 py-4 border-b border-primary/5 bg-primary/[0.03]">
-                        <span class="font-mono text-sm font-bold text-primary">{{ $o->nomor_pesanan }}</span>
-                        <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $o->jenis_pesanan_id === 2 ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700' }}">
-                            {{ $o->jenis_pesanan_id === 2 ? 'Katering' : 'Nasi Box' }}
-                        </span>
-                        <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $st[1] }}">{{ $st[0] }}</span>
-                        <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $bayarColor }}">{{ $bayarLabel }}</span>
-                        <span class="ml-auto text-xs text-body/50 font-medium">
-                            {{ $o->pengantaran ? 'Diantar' : 'Ambil Sendiri' }}
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-6 py-5 text-sm">
-                        <div>
-                            <p class="text-xs font-semibold text-body/50 uppercase tracking-wide mb-1">Tanggal Pesan</p>
-                            <p class="font-medium">{{ $o->dibuat_pada ? \Carbon\Carbon::parse($o->dibuat_pada)->format('d M Y H:i') : '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-body/50 uppercase tracking-wide mb-1">Tanggal Acara</p>
-                            <p class="font-medium">{{ $o->jadwal_pesanan?->tanggal_acara ? \Carbon\Carbon::parse($o->jadwal_pesanan->tanggal_acara)->format('d M Y') : '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-body/50 uppercase tracking-wide mb-1">Paket & Porsi</p>
-                            <p class="font-medium">{{ $paket->menu->nama_menu ?? 'Paket' }} · {{ $paket->jumlah ?? 0 }} porsi</p>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-body/50 uppercase tracking-wide mb-1">Total Tagihan</p>
-                            <p class="font-bold text-primary">Rp {{ number_format($totalO, 0, ',', '.') }}</p>
-                            @if($dpO > 0)
-                                <p class="text-xs text-body/50">DP: Rp {{ number_format($dpO, 0, ',', '.') }}</p>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="px-6 py-3.5 border-t border-primary/5 flex flex-wrap items-center gap-2 bg-canvas/50">
-                        <a href="{{ route('lacak.index', ['nomor' => $o->nomor_pesanan]) }}" class="text-xs font-semibold text-primary hover:underline">Lacak Status</a>
-                        @if($o->status_pesanan_id === 1)
-                            <span class="text-primary/20">|</span>
-                            <a href="{{ route('pesanan.bayar', $o->nomor_pesanan) }}" class="text-xs font-semibold text-amber-600 hover:underline">Bayar</a>
-                        @endif
-                        <span class="text-primary/20">|</span>
-                        <a href="{{ route('pesanan.invoice', $o->nomor_pesanan) }}" target="_blank" class="text-xs font-semibold text-body/60 hover:underline">Lihat Invoice</a>
-                    </div>
-                </div>
-            @empty
+            @if($pesanans->isEmpty())
                 <div class="bg-white rounded-xl border border-dashed border-primary/20 p-14 text-center">
                     <x-heroicon-o-shopping-bag class="w-12 h-12 text-primary/30 mx-auto mb-4" />
                     <h2 class="text-lg font-bold text-primary">Belum ada pesanan</h2>
@@ -116,7 +51,74 @@
                         Pesan Sekarang
                     </a>
                 </div>
-            @endforelse
+            @else
+                <div class="bg-white rounded-xl border border-primary/10 overflow-hidden mb-5 shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead>
+                                <tr class="border-b border-primary/10 bg-primary/[0.03] text-xs font-bold text-body/50 uppercase tracking-wider">
+                                    <th class="py-4 px-5">Kode Pesanan</th>
+                                    <th class="py-4 px-5">Tanggal Acara</th>
+                                    <th class="py-4 px-5">Paket & Porsi</th>
+                                    <th class="py-4 px-5">Status Pembayaran</th>
+                                    <th class="py-4 px-5">Status Pesanan</th>
+                                    <th class="py-4 px-5 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-primary/5 text-sm">
+                                @foreach($pesanans as $o)
+                                    @php
+                                        $paket = $o->detail_pesanan->first();
+                                        $totalO = (float) $o->total_tagihan;
+                                        $dpO = (float) $o->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+                                        $lunasO = (float) $o->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+                                        $terakhirBayarO = $o->pembayaran->last();
+                                        $statusVerifikasiO = $terakhirBayarO ? $terakhirBayarO->status_verifikasi : null;
+
+                                        $bayarLabel = $lunasO >= $totalO ? 'Lunas' : ($statusVerifikasiO === 'menunggu_verifikasi' ? 'Menunggu Verifikasi' : ($statusVerifikasiO === 'ditolak' ? 'Ditolak' : ($dpO > 0 ? 'DP Terbayar' : 'Belum Bayar')));
+                                        $bayarColor = $lunasO >= $totalO ? 'bg-emerald-100 text-emerald-700' : ($statusVerifikasiO === 'menunggu_verifikasi' ? 'bg-blue-100 text-blue-700' : ($statusVerifikasiO === 'ditolak' ? 'bg-red-100 text-red-700' : ($dpO > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')));
+
+                                        $statusMap = [
+                                            1 => ['Menunggu Konfirmasi', 'bg-amber-100 text-amber-700'],
+                                            2 => ['Dikonfirmasi', 'bg-blue-100 text-blue-700'],
+                                            3 => ['Diproses', 'bg-indigo-100 text-indigo-700'],
+                                            4 => ['Siap Dikirim', 'bg-cyan-100 text-cyan-700'],
+                                            5 => ['Selesai', 'bg-emerald-100 text-emerald-700'],
+                                            6 => ['Dibatalkan', 'bg-rose-100 text-rose-700'],
+                                        ];
+                                        $st = $statusMap[$o->status_pesanan_id] ?? ['-' , 'bg-gray-100 text-gray-700'];
+                                    @endphp
+                                    <tr class="hover:bg-primary/[0.01] transition-colors">
+                                        <td class="py-4 px-5">
+                                            <div class="font-mono font-bold text-primary">{{ $o->id_pesanan }}</div>
+                                            <div class="text-[11px] text-body/50 mt-1 font-medium">{{ $o->dibuat_pada ? \Carbon\Carbon::parse($o->dibuat_pada)->format('d M Y H:i') : '-' }}</div>
+                                        </td>
+                                        <td class="py-4 px-5 font-medium text-gray-800">
+                                            {{ $o->jadwal_pesanan?->tanggal_acara ? \Carbon\Carbon::parse($o->jadwal_pesanan->tanggal_acara)->format('d M Y') : '-' }}
+                                        </td>
+                                        <td class="py-4 px-5">
+                                            <div class="font-medium text-gray-900">{{ $paket->menu->nama_menu ?? 'Paket' }}</div>
+                                            <div class="text-[11px] text-body/50 mt-1 font-medium">{{ $paket->jumlah ?? 0 }} porsi</div>
+                                        </td>
+                                        <td class="py-4 px-5">
+                                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full {{ $bayarColor }}">{{ $bayarLabel }}</span>
+                                        </td>
+                                        <td class="py-4 px-5">
+                                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full {{ $st[1] }}">{{ $st[0] }}</span>
+                                        </td>
+                                        <td class="py-4 px-5 text-right space-x-3">
+                                            <a href="{{ route('konsumen.pesanan.show', $o->id_pesanan) }}" class="text-xs font-bold text-primary hover:underline">Detail</a>
+                                            @if($o->status_pesanan_id === 1 && $bayarLabel !== 'Lunas')
+                                                <a href="{{ route('pesanan.bayar', $o->id_pesanan) }}" class="text-xs font-bold text-amber-600 hover:underline">Bayar</a>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
 
         </div>
     </section>

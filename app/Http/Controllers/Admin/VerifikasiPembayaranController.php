@@ -17,7 +17,7 @@ class VerifikasiPembayaranController extends Controller
         $status = $request->query('status', 'menunggu_verifikasi');
         $search = $request->query('search');
 
-        $query = Pembayaran::with(['pesanan.detail_pesanan'])
+        $query = Pembayaran::with(['pesanan.detail_pesanan', 'pesanan.jadwal_pesanan'])
             ->whereNotNull('bukti_pembayaran');
 
         if ($status === 'menunggu_verifikasi') {
@@ -30,7 +30,7 @@ class VerifikasiPembayaranController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('kode_pembayaran', 'like', "%{$search}%")
                     ->orWhereHas('pesanan', function ($pq) use ($search) {
-                        $pq->where('nomor_pesanan', 'like', "%{$search}%");
+                        $pq->where('id_pesanan', 'like', "%{$search}%");
                     });
             });
         }
@@ -70,19 +70,27 @@ class VerifikasiPembayaranController extends Controller
                 // If it's a Dine In order (jenis_pesanan_id = 1)
                 if ($pesanan->jenis_pesanan_id == 1) {
                     app(OrderService::class)->completeOrder($pesanan);
-                    $pesanan->update(['status_pesanan_id' => 5]); // Selesai
+                    $pesanan->update([
+                        'status_pesanan_id' => 5, // Selesai
+                        'status_pembayaran_id' => 5, // Lunas
+                    ]);
                     if ($pesanan->meja) {
                         $pesanan->meja->update(['status_meja_id' => 1]); // Tersedia
                     }
                 } 
-                // For Catering/Nasi Box DP (jenis_pesanan_id = 2 or 3)
+                // For Catering/Nasi Box (jenis_pesanan_id = 2 or 3)
                 else {
-                    app(OrderService::class)->potongStokPesanan($pesanan);
-                    
                     if ($pembayaran->jenis_pembayaran === 'uang_muka') {
-                        $pesanan->update(['status_pesanan_id' => 6]); // Example: DP Dibayar (Adjust status ID as needed)
-                    } elseif ($pembayaran->jenis_pembayaran === 'pelunasan' || $pembayaran->jenis_pembayaran === 'pembayaran_penuh') {
-                        $pesanan->update(['status_pesanan_id' => 8]); // Example: Lunas
+                        $pesanan->update(['status_pembayaran_id' => 3]); // Menunggu Pelunasan
+                        
+                        // We set status to 2 (Diproses) once DP is verified
+                        if ($pesanan->status_pesanan_id == 1) {
+                            $pesanan->update(['status_pesanan_id' => 2]);
+                        }
+                    } else {
+                        // Pelunasan verified -> Lunas
+                        $pesanan->update(['status_pembayaran_id' => 5]); // Lunas
+                        // Let admin update order status manually via detail pesanan page, or we could set it if necessary
                     }
                 }
 
@@ -94,6 +102,9 @@ class VerifikasiPembayaranController extends Controller
                     'tanggal_verifikasi' => now(),
                     'catatan_verifikasi' => $request->catatan,
                 ]);
+
+                $pesanan = $pembayaran->pesanan;
+                $pesanan->update(['status_pembayaran_id' => 6]); // Ditolak
 
                 $msg = 'Pembayaran ditolak.';
             }

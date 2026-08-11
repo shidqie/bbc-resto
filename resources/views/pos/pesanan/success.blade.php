@@ -4,7 +4,7 @@
 <div class="h-[calc(100vh-65px)] flex flex-col bg-[#f5f5f0] text-[#111827] font-sans">
 
     <div class="w-full px-6 pt-6">
-        <x-ui.page-header title="Pembayaran Berhasil!" subtitle="Pesanan #{{ $pesanan->nomor_pesanan ?? 'DIN-'.$pesanan->id }} telah berhasil dibayar." :breadcrumbs="['Penjualan', 'Dine In', 'Sukses']" />
+        <x-ui.page-header title="Pembayaran Berhasil!" subtitle="Pesanan #{{ $pesanan->id_pesanan ?? 'DIN-'.$pesanan->id }} telah berhasil dibayar." :breadcrumbs="['Penjualan', 'Dine In', 'Sukses']" />
     </div>
 
     <div class="flex-1 flex items-center justify-center p-6">

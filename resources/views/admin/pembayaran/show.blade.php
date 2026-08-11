@@ -8,7 +8,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <p class="text-xs text-gray-500 font-medium">Kode Pesanan</p>
-                    <p class="text-sm font-bold text-gray-900 font-mono">{{ optional($pembayaran->pesanan)->nomor_pesanan ?? 'DIN-'.optional($pembayaran->pesanan)->id ?? '-' }}</p>
+                    <p class="text-sm font-bold text-gray-900 font-mono">{{ optional($pembayaran->pesanan)->id_pesanan ?? 'DIN-'.optional($pembayaran->pesanan)->id ?? '-' }}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 font-medium">Nama Pelanggan</p>

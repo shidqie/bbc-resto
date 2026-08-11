@@ -7,215 +7,363 @@
         $isPelunasan = $lunas >= $dpAmount && $lunas < $pesanan->total_tagihan;
         $amountToPay = $isPelunasan ? max(0, $pesanan->total_tagihan - $lunas) : max(0, $dpAmount - $dpTerbayar);
         $payTitle = $isPelunasan ? 'Pelunasan Tagihan' : 'Pembayaran Uang Muka';
-        $payDesc = $isPelunasan ? 'Selesaikan pembayaran untuk memulai proses pengiriman.' : 'Selesaikan pembayaran awal untuk mengonfirmasi pesanan Anda.';
+        $payDesc = $isPelunasan ? 'Selesaikan pembayaran sisa untuk mengonfirmasi pengiriman pesanan.' : 'Selesaikan DP ' . $dpPersen . '% untuk mengonfirmasi pesanan Anda.';
         $namaPemesan = optional($pesanan->pelanggan)->nama ?? optional($pesanan->jadwal_pesanan)->nama_penerima;
         $paket = $pesanan->detail_pesanan->first();
         $satuan = $type === 'nasi_box' ? 'Box' : 'Porsi';
+        
+        // Status Badge Logic
+        $terakhirBayar = $pesanan->pembayaran->last();
+        $statusVerifikasi = $terakhirBayar ? $terakhirBayar->status_verifikasi : null;
+        
+        if ($lunas >= $pesanan->total_tagihan) {
+            $badgeText = 'Lunas';
+            $badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+            $badgeDot = 'bg-emerald-500';
+            $badgeIcon = '';
+        } elseif ($statusVerifikasi === 'menunggu_verifikasi') {
+            $badgeText = 'Menunggu Verifikasi';
+            $badgeClass = 'bg-blue-50 text-blue-700 border-blue-200/80';
+            $badgeDot = 'bg-blue-500 animate-pulse';
+            $badgeIcon = '';
+        } elseif ($statusVerifikasi === 'ditolak') {
+            $badgeText = 'Ditolak';
+            $badgeClass = 'bg-red-50 text-red-700 border-red-200/80';
+            $badgeDot = 'bg-red-500';
+            $badgeIcon = '';
+        } elseif ($dpTerbayar > 0) {
+            $badgeText = 'DP Terbayar';
+            $badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+            $badgeDot = 'bg-emerald-500';
+            $badgeIcon = '';
+        } else {
+            $badgeText = 'Menunggu Pembayaran';
+            $badgeClass = 'bg-amber-50 text-amber-700 border-amber-200/80';
+            $badgeDot = 'bg-amber-500 animate-pulse';
+            $badgeIcon = '';
+        }
     @endphp
 
-    <x-slot:title>{{ $payTitle }}</x-slot:title>
+    <x-slot:title>{{ $payTitle }} — {{ $pesanan->id_pesanan }}</x-slot:title>
 
-    <div class="min-h-screen bg-[#FFFFFF] text-[#111827] selection:bg-[#3B82F6] selection:text-white">
-        <!-- Minimalist Header -->
-        <header class="py-12 border-b border-gray-100">
-            <div class="max-w-6xl mx-auto px-6 md:px-12 flex justify-between items-end">
+    <div class="min-h-screen bg-[#F9FAFB] text-[#111827] pb-16">
+        
+        {{-- Header Bar --}}
+        <div class="bg-white border-b border-gray-200/80 py-6 mb-8 shadow-2xs">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-[40px] font-medium leading-tight tracking-tight mb-2 text-[#0D3024]">{{ $payTitle }}</h1>
-                    <p class="text-gray-500 text-base font-light">{{ $payDesc }}</p>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">{{ $payTitle }}</h1>
+                    <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $payDesc }}</p>
                 </div>
-                <div class="hidden sm:block text-right">
-                    <div class="font-['Anonymous_Pro'] text-sm text-gray-400 mb-1">NO. INVOICE</div>
-                    <div class="font-['Anonymous_Pro'] text-lg font-medium tracking-wider text-gray-800">{{ $pesanan->nomor_pesanan }}</div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Invoice:</span>
+                    <span class="font-mono text-xs font-bold bg-gray-100 text-gray-800 px-3 py-1.5 rounded-xl border border-gray-200/80">{{ $pesanan->id_pesanan }}</span>
                 </div>
             </div>
-        </header>
+        </div>
 
-        <main class="max-w-6xl mx-auto px-6 md:px-12 py-12 lg:py-16">
-
+        <main class="max-w-6xl mx-auto px-4 sm:px-6">
 
             @if(session('success'))
-                <div class="mb-8 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium">{{ session('success') }}</div>
+                <div class="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                    {{ session('success') }}
+                </div>
             @endif
             @if(session('error'))
-                <div class="mb-8 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium">{{ session('error') }}</div>
+                <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                    {{ session('error') }}
+                </div>
             @endif
 
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-12">
+            {{-- 2-Column Main Layout: KIRI (65% / 7 cols) & KANAN (35% / 5 cols) --}}
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-                <!-- LEFT: Ringkasan Transaksi & Metode Pembayaran -->
-                <div class="lg:col-span-3 space-y-10">
+                {{-- ── KIRI (65%): Informasi Pesanan, Ringkasan Tagihan & Detail Menu ── --}}
+                <div class="lg:col-span-7 space-y-6">
 
-                    <!-- 1. Ringkasan Transaksi -->
-                    <div>
-                        <h2 class="text-xl font-medium mb-6 text-gray-900 border-b border-gray-100 pb-3">Ringkasan Transaksi</h2>
+                    {{-- 1. Ringkasan Pembayaran --}}
+                    <div class="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-none space-y-4">
+                        <h3 class="text-sm font-bold text-gray-900 border-b border-gray-100 pb-3 mb-4">Ringkasan Pembayaran</h3>
+                        
+                        <div class="space-y-3 text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-500">Subtotal</span>
+                                <span class="font-bold text-gray-900">Rp {{ number_format($pesanan->total_tagihan, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-500">DP {{ $dpPersen }}% (Uang Muka)</span>
+                                <span class="font-bold text-gray-900">Rp {{ number_format($dpAmount, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-500">Sisa Pelunasan</span>
+                                <span class="font-bold text-red-600">Rp {{ number_format($pesanan->total_tagihan - $dpAmount, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-                            <div class="space-y-1">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Nomor Invoice</p>
-                                <p class="font-['Anonymous_Pro'] text-base font-medium text-gray-800">{{ $pesanan->nomor_pesanan }}</p>
+                        <div class="bg-[#0D3024] text-white rounded-xl p-4 mt-4">
+                            <p class="text-emerald-300 text-[10px] font-bold uppercase mb-1">Total yang Harus Dibayar ({{ $isPelunasan ? 'Pelunasan' : 'DP '.$dpPersen.'%' }})</p>
+                            <p class="text-2xl font-bold">Rp {{ number_format($amountToPay, 0, ',', '.') }}</p>
+                        </div>
+
+                        @if(!$isPelunasan)
+                        <div class="bg-amber-50 rounded-xl border border-amber-100 p-3 mt-3 flex gap-2">
+                            <span class="text-amber-600 mt-0.5">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                            </span>
+                            <p class="text-[10px] text-amber-800 font-medium leading-relaxed">Pembayaran DP sebesar {{ $dpPersen }}% wajib dilakukan untuk mengonfirmasi pesanan Anda.</p>
+                        </div>
+                        @endif
+                    </div>
+
+                    {{-- 2. Kartu Informasi Pesanan --}}
+                    <div class="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-none">
+                        <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+                            <h2 class="text-sm font-bold text-gray-900">Rincian Pesanan</h2>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border {{ $badgeClass }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $badgeDot }}"></span>
+                                {{ $badgeIcon }} {{ $badgeText }}
+                            </span>
+                        </div>
+
+                        <div class="space-y-3.5 text-xs">
+                            <div class="grid grid-cols-3">
+                                <span class="text-gray-500 font-medium">Invoice</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ $pesanan->id_pesanan }}</span>
                             </div>
-                            <div class="space-y-1">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Produk / Layanan</p>
-                                <p class="text-base font-medium text-gray-800">{{ $paket->menu->nama_menu ?? 'Paket' }} <span class="text-gray-400 font-light">&times; {{ $paket->jumlah ?? '-' }} {{ $satuan }}</span></p>
+                            <div class="grid grid-cols-3">
+                                <span class="text-gray-500 font-medium">Pemesan</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ $namaPemesan }}</span>
                             </div>
-                            <div class="space-y-1">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Pemesan</p>
-                                <p class="text-base font-medium text-gray-800">{{ $namaPemesan }}</p>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Keperluan Pembayaran</p>
-                                <p class="text-base font-medium text-gray-800">{{ $isPelunasan ? 'Pelunasan Tagihan' : 'Uang Muka '.$dpPersen.'%' }}</p>
+                            <div class="grid grid-cols-3">
+                                <span class="text-gray-500 font-medium">Produk / Layanan</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ $paket->menu->nama_menu ?? 'Paket' }} <span class="text-gray-500 font-normal">({{ $paket->jumlah ?? '-' }} {{ $satuan }})</span></span>
                             </div>
                             @if($pesanan->jadwal_pesanan)
-                            <div class="space-y-1">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Tanggal Acara</p>
-                                <p class="text-base font-medium text-gray-800">{{ \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->format('d F Y') }}</p>
+                            <div class="grid grid-cols-3">
+                                <span class="text-gray-500 font-medium">Tanggal Acara</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->format('d F Y') }}</span>
                             </div>
                             @endif
-                            <div class="space-y-1">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Status Pembayaran</p>
-                                <span class="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-200/60">
-                                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5 animate-pulse"></span>
-                                    {{ $isPelunasan ? 'Menunggu Pelunasan' : 'Menunggu Pembayaran' }}
-                                </span>
+                            <div class="grid grid-cols-3">
+                                <span class="text-gray-500 font-medium">Jenis Layanan</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ $type === 'nasi_box' ? 'Nasi Box' : 'Catering' }}</span>
                             </div>
-                        </div>
-
-                        <!-- Jumlah Dibayar — fokus utama -->
-                        <div class="mt-6 p-6 rounded-xl bg-[#0D3024] text-white relative overflow-hidden">
-                            <div class="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5"></div>
-                            <div class="absolute right-10 -bottom-10 w-28 h-28 rounded-full bg-white/5"></div>
-                            <p class="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-2">
-                                {{ $isPelunasan ? 'Sisa Pembayaran' : 'Total Yang Harus Dibayar' }}
-                            </p>
-                            <p class="text-4xl sm:text-5xl font-medium tracking-tight">Rp {{ number_format($amountToPay, 0, ',', '.') }}</p>
-                            <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-white/60">
-                                <span>Total Tagihan: <strong class="text-white/90 font-medium">Rp {{ number_format($pesanan->total_tagihan, 0, ',', '.') }}</strong></span>
-                                @if($dpTerbayar > 0)
-                                    <span>Sudah Dibayar: <strong class="text-white/90 font-medium">- Rp {{ number_format($dpTerbayar, 0, ',', '.') }}</strong></span>
-                                @endif
+                            <div class="grid grid-cols-3">
+                                <span class="text-gray-500 font-medium">Metode Pengambilan</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ strtolower($pesanan->metode_pengiriman) === 'delivery' ? 'Diantar' : 'Diambil' }}</span>
                             </div>
+                            @if(strtolower($pesanan->metode_pengiriman) === 'delivery' && $pesanan->jadwal_pesanan)
+                            <div class="grid grid-cols-3">
+                                <span class="text-gray-500 font-medium">Alamat Pengantaran</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ $pesanan->jadwal_pesanan->alamat_pengantaran ?? '-' }}</span>
+                            </div>
+                            @endif
+                            @php
+                                $noTelepon = optional($pesanan->pelanggan)->no_telepon ?? optional($pesanan->jadwal_pesanan)->nomor_telepon_penerima;
+                            @endphp
+                            @if($noTelepon)
+                            <div class="grid grid-cols-3">
+                                <span class="text-gray-500 font-medium">No. Telepon / WhatsApp</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ $noTelepon }}</span>
+                            </div>
+                            @endif
+                            @if($pesanan->jadwal_pesanan && $pesanan->jadwal_pesanan->keterangan)
+                            <div class="grid grid-cols-3">
+                                <span class="text-gray-500 font-medium">Catatan</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ $pesanan->jadwal_pesanan->keterangan }}</span>
+                            </div>
+                            @endif
                         </div>
+                    </div>
 
-                        <!-- Detail Menu Pilihan -->
-                        <div class="mt-8 pt-6 border-t border-gray-100">
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Detail Menu Pilihan</p>
-                            <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+
+                    {{-- 3. Detail Menu Pilihan --}}
+                    <div class="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-none space-y-4">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-3">Detail Menu Pilihan</h3>
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    <th class="py-3 px-2 font-bold">KATEGORI</th>
+                                    <th class="py-3 px-2 font-bold">PILIHAN</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50 text-xs">
                                 @forelse($pesanan->detail_pesanan as $detail)
                                     @forelse($detail->pilihan_pesanan_catering as $pilihan)
-                                        <li class="flex items-start gap-2.5 text-sm text-gray-700">
-                                            <div class="w-4 h-4 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                            </div>
-                                            <span class="leading-relaxed">
-                                                <span class="text-gray-400">{{ $pilihan->komponen_paket->nama_komponen }}:</span>
-                                                <strong>{{ $pilihan->pilihan_komponen_paket->nama_pilihan }}</strong>
-                                            </span>
-                                        </li>
+                                        <tr class="hover:bg-gray-50/50 transition-colors">
+                                            <td class="py-3 px-2 text-gray-500">{{ $pilihan->komponen_paket->nama_komponen }}</td>
+                                            <td class="py-3 px-2 font-medium text-gray-900">{{ $pilihan->pilihan_komponen_paket->nama_pilihan }}</td>
+                                        </tr>
                                     @empty
-                                        <li class="flex items-start gap-2.5 text-sm text-gray-700">
-                                            <div class="w-4 h-4 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                            </div>
-                                            <span class="leading-relaxed">{{ $detail->menu->nama_menu ?? 'Menu' }}</span>
-                                        </li>
+                                        <tr class="hover:bg-gray-50/50 transition-colors">
+                                            <td class="py-3 px-2 text-gray-500">Menu</td>
+                                            <td class="py-3 px-2 font-medium text-gray-900">{{ $detail->menu->nama_menu ?? '-' }}</td>
+                                        </tr>
                                     @endforelse
                                 @empty
-                                    <li class="text-sm text-gray-400 italic">Tidak ada detail menu.</li>
+                                    <tr>
+                                        <td colspan="2" class="py-4 px-2 text-center text-gray-400 italic">Tidak ada detail menu.</td>
+                                    </tr>
                                 @endforelse
-                            </ul>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
+
+
+
                 </div>
 
-                <!-- RIGHT: Upload Bukti & Status -->
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="lg:sticky lg:top-8 space-y-6">
+                {{-- ── KANAN (35%): Timeline Status, Rekening & Upload Bukti ── --}}
+                <div class="lg:col-span-5 space-y-6">
 
-                        <!-- Bayar Manual (Upload Bukti) -->
-                        <div class="w-full border border-gray-200/80 rounded-xl overflow-hidden bg-white shadow-lg shadow-gray-200/50">
-                            <div class="p-6">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Upload Bukti Pembayaran</p>
-                                <form action="{{ route('pesanan.bukti.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                                    @csrf
-                                    <input type="hidden" name="kode_pesanan" value="{{ $pesanan->nomor_pesanan }}">
-                                    <input type="hidden" name="jenis_pembayaran" value="{{ $isPelunasan ? 'pelunasan' : 'dp' }}">
-                                    
-                                    <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
-                                        <p class="text-xs text-blue-700 mb-1">Total yang harus ditransfer:</p>
-                                        <p class="text-xl font-bold text-blue-900">Rp {{ number_format($amountToPay, 0, ',', '.') }}</p>
-                                    </div>
-                                    
-                                    <p class="text-xs text-gray-500">Silakan transfer sesuai nominal di atas ke rekening berikut:</p>
-                                    
-                                    <div class="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl space-y-1">
-                                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Bank Tujuan</p>
-                                        <p class="text-lg font-bold text-emerald-900">BCA</p>
-                                        <p class="text-xl font-black font-['Anonymous_Pro'] text-[#0D3024] tracking-wider my-1">2780378231</p>
-                                        <p class="text-sm font-medium text-emerald-800">A/N HENI</p>
-                                    </div>
-                                    
-                                    <p class="text-xs text-gray-500">Lalu unggah bukti transfer di bawah ini. Admin akan memverifikasi dalam 1×24 jam.</p>
-                                    
-                                    <input type="file" name="file_bukti" accept="image/*,.pdf" required
-                                           class="block w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:tracking-widest file:uppercase file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer bg-gray-50 border border-gray-200 rounded-xl">
-                                    @error('file_bukti') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
-                                    
-                                    <button type="submit" class="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0D3024] hover:bg-[#164032] text-white font-bold tracking-widest text-sm uppercase rounded-xl transition-all shadow-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 8l5-5m0 0l5 5m-5-5v12"/></svg>
-                                        Kirim Bukti Pembayaran
-                                    </button>
-                                </form>
+                    {{-- Informasi Penting --}}
+                    <div class="bg-blue-50/50 rounded-2xl border border-blue-100 p-6 shadow-none">
+                        <h3 class="text-xs font-bold text-blue-900 mb-3">Informasi Penting</h3>
+                        <ul class="list-disc pl-4 space-y-1.5 text-[11px] text-blue-800 leading-relaxed">
+                            <li>DP (Uang Muka) tidak dapat dikembalikan jika pesanan dibatalkan oleh konsumen.</li>
+                            <li>Pelunasan wajib dilakukan maksimal H-7 sebelum tanggal acara.</li>
+                            <li>Jika tidak melakukan pelunasan hingga batas waktu, pesanan akan dianggap batal.</li>
+                        </ul>
+                    </div>
+
+
+
+                    {{-- 2. Card Pembayaran & Upload Bukti --}}
+                    @if($lunas >= $pesanan->total_tagihan)
+                        {{-- APABILA SUDAH DIVERIFIKASI ADMIN --}}
+                        <div class="bg-white rounded-2xl border border-emerald-200 p-6 shadow-none space-y-4">
+                            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-800 text-center">
+                                <p class="text-xs font-bold text-emerald-900">Pembayaran Terverifikasi!</p>
+                                <p class="text-[11px] text-emerald-700 mt-0.5">Bukti pembayaran Anda telah disetujui oleh admin.</p>
                             </div>
-                        </div>
 
-                        <!-- Status Pembayaran -->
-                        <div class="w-full border border-gray-200/80 rounded-xl overflow-hidden bg-white shadow-lg shadow-gray-200/50">
-                            <div class="p-6">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Status Pembayaran</p>
-                                <div class="space-y-4">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-900">Pesanan Diterima</p>
-                                            <p class="text-xs text-gray-400">Pesanan telah masuk ke sistem</p>
-                                        </div>
+                        </div>
+                    @elseif($statusVerifikasi === 'menunggu_verifikasi')
+                        {{-- APABILA BUKTI SUDAH DIUNGGAH DAN MENUNGGU VERIFIKASI ADMIN --}}
+                        <div class="bg-white rounded-2xl border border-blue-200 p-6 shadow-none space-y-4">
+                            <div class="p-3.5 bg-blue-50 rounded-xl border border-blue-100 text-blue-900 text-center">
+                                <p class="text-xs font-bold text-blue-900">Bukti Pembayaran Terkirim!</p>
+                                <p class="text-[11px] text-blue-700 mt-0.5">Menunggu proses verifikasi admin Resto (1×24 Jam).</p>
+                            </div>
+
+                        </div>
+                    @else
+                        {{-- FORM UPLOAD BUKTI UNTUK PENGGUNA BARU --}}
+                        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-none space-y-5" x-data="{ copied: false }">
+                            
+                            {{-- Clean Nominal Transfer Row --}}
+                            <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                                <span class="text-xs font-bold text-gray-700">Nominal Transfer</span>
+                                <span class="text-sm font-extrabold text-[#0D3024]">Rp {{ number_format($amountToPay, 0, ',', '.') }}</span>
+                            </div>
+
+                            {{-- 1. Informasi Rekening --}}
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-2">1. Informasi Rekening</label>
+                                <div class="p-4 bg-emerald-50/60 border border-emerald-200/70 rounded-xl space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Bank BCA</span>
+                                        <span class="text-[11px] font-medium text-emerald-700">A/N HENI</span>
                                     </div>
-                                    <div class="flex items-center gap-4 {{ $dpTerbayar > 0 ? 'opacity-100' : 'opacity-40' }}">
-                                        <div class="w-9 h-9 rounded-full {{ $dpTerbayar > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400' }} flex items-center justify-center shrink-0">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="{{ $dpTerbayar > 0 ? 'M5 13l4 4L19 7' : 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }}"/></svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-900">DP Dibayar</p>
-                                            <p class="text-xs text-gray-400">Uang muka sebesar {{ $dpPersen }}% (Rp {{ number_format($dpAmount, 0, ',', '.') }})</p>
-                                        </div>
+                                    <div class="text-lg font-bold font-mono text-[#0D3024] tracking-wider">
+                                        2780378231
                                     </div>
-                                    <div class="flex items-center gap-4 {{ $lunas >= $pesanan->total_tagihan ? 'opacity-100' : 'opacity-40' }}">
-                                        <div class="w-9 h-9 rounded-full {{ $lunas >= $pesanan->total_tagihan ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400' }} flex items-center justify-center shrink-0">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="{{ $lunas >= $pesanan->total_tagihan ? 'M5 13l4 4L19 7' : 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }}"/></svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-900">Lunas</p>
-                                            <p class="text-xs text-gray-400">Seluruh tagihan terbayar</p>
-                                        </div>
-                                    </div>
+                                    <button type="button" @click="navigator.clipboard.writeText('2780378231'); copied = true; setTimeout(() => copied = false, 2000)"
+                                            class="w-full py-2 bg-white hover:bg-emerald-100/50 border border-emerald-300 text-emerald-900 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-2xs">
+                                        <template x-if="!copied">
+                                            <span class="font-bold">Salin Nomor Rekening</span>
+                                        </template>
+                                        <template x-if="copied">
+                                            <span class="font-bold text-emerald-700">Berhasil Disalin!</span>
+                                        </template>
+                                    </button>
                                 </div>
                             </div>
-                        <!-- Bukti Pesanan -->
-                        <div class="w-full">
-                            <a href="{{ route('pesanan.invoice', $pesanan->nomor_pesanan) }}" target="_blank" class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-emerald-50 text-[#0D3024] font-bold tracking-widest text-xs uppercase rounded-xl transition-all border border-gray-200">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 16l5 5 5-5M12 3v12"/></svg>
-                                Unduh Bukti Pesanan
-                            </a>
+
+                            {{-- 2. Form Drag & Drop Upload Bukti --}}
+                            <form action="{{ route('pesanan.bukti.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4"
+                                  x-data="{ filePreview: null, fileName: '', isDragging: false }">
+                                @csrf
+                                <input type="hidden" name="kode_pesanan" value="{{ $pesanan->id_pesanan }}">
+                                <input type="hidden" name="jenis_pembayaran" value="{{ $isPelunasan ? 'pelunasan' : 'dp' }}">
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-2">2. Upload Bukti Pembayaran</label>
+                                    
+                                    <div @dragover.prevent="isDragging = true"
+                                         @dragleave.prevent="isDragging = false"
+                                         @drop.prevent="isDragging = false; const files = $event.dataTransfer.files; if(files.length > 0) { $refs.fileInput.files = files; handleFileSelect({ target: $refs.fileInput }); }"
+                                         class="border-2 border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer"
+                                         :class="isDragging ? 'border-[#0D3024] bg-[#0D3024]/5' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 hover:border-gray-300'">
+                                        
+                                        <template x-if="!filePreview">
+                                            <div @click="$refs.fileInput.click()">
+                                                <p class="text-xs font-bold text-gray-800 mb-0.5">Klik atau tarik file ke sini</p>
+                                                <p class="text-[11px] text-gray-400 font-medium mb-3">JPG • PNG • PDF • Maks 1 MB</p>
+                                                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0D3024] text-white text-xs font-semibold shadow-2xs">
+                                                    Pilih File
+                                                </span>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="filePreview">
+                                            <div>
+                                                <template x-if="!filePreview.startsWith('data:application/pdf')">
+                                                    <img :src="filePreview" class="max-h-36 mx-auto rounded-lg shadow-none border border-gray-200 object-cover mb-2">
+                                                </template>
+                                                <template x-if="filePreview.startsWith('data:application/pdf')">
+                                                    <div class="h-16 w-16 mx-auto flex items-center justify-center bg-gray-100 rounded-lg mb-2">
+                                                        <svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9.5 8.5c0 .8-.7 1.5-1.5 1.5H7v2H5.5V9H8c.8 0 1.5.7 1.5 1.5v1zm5 2c0 .8-.7 1.5-1.5 1.5h-2.5V9H13c.8 0 1.5.7 1.5 1.5v3zm4-3H17v1.5h1.5v1.5H17V17h-1.5V9h3v1.5zM7 10.5h1v1H7v-1zm6 0h1v2h-1v-2z"/></svg>
+                                                    </div>
+                                                </template>
+                                                <p class="text-xs font-bold text-gray-800 truncate" x-text="fileName"></p>
+                                                <button type="button" @click="filePreview = null; fileName = ''; $refs.fileInput.value = ''"
+                                                        class="mt-2 text-xs text-red-500 font-bold hover:underline">
+                                                    Ganti File
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                        <input type="file" x-ref="fileInput" name="file_bukti" accept="image/jpeg,image/png,application/pdf" class="hidden" required
+                                               @change="
+                                                    const file = $event.target.files[0];
+                                                    if(file) {
+                                                        if (file.size > 1048576) {
+                                                            alert('Ukuran file maksimal 1MB');
+                                                            $refs.fileInput.value = '';
+                                                            return;
+                                                        }
+                                                        const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+                                                        if (!validTypes.includes(file.type)) {
+                                                            alert('Format file tidak didukung. Harap upload JPG, PNG, atau PDF.');
+                                                            $refs.fileInput.value = '';
+                                                            return;
+                                                        }
+                                                        fileName = file.name;
+                                                        const reader = new FileReader();
+                                                        reader.onload = (e) => { filePreview = e.target.result; };
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                               ">
+                                    </div>
+                                    @error('file_bukti') <p class="text-xs text-red-600 font-medium mt-1">{{ $message }}</p> @enderror
+                                </div>
+
+                                {{-- 4. Tombol Submit (Full Width dengan Icon Check) --}}
+                                <button type="submit"
+                                        class="w-full py-3 bg-[#0D3024] hover:bg-[#1a4a35] text-white font-bold text-xs rounded-xl shadow-none flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.99]">
+                                    Kirim Bukti Pembayaran
+                                </button>
+                            </form>
+
                         </div>
-                    </div>
+                    @endif
+
                 </div>
 
             </div>
 
         </main>
     </div>
-
 </x-layouts.landing>

@@ -1,5 +1,5 @@
 Internal 
-Pemilik memiliki hak akses penuh terhadap seluruh modul pada sistem. Pemilik dapat mengelola data penjualan catering dan nasi box, data menu dan paket, manajemen meja, persediaan bahan baku katering dan nasi box, pengadaan bahan baku katering dan nasi box, laporan.
+Pemilik memiliki hak akses penuh terhadap seluruh modul pada sistem teteapi han y. Pemilik dapat mengelola data penjualan catering dan nasi box, data menu dan paket, manajemen meja, persediaan bahan baku katering dan nasi box, pengadaan bahan baku katering dan nasi box, laporan.
 
 Kasir memiliki hak akses untuk mengelola proses penjualan dine in Point of sale dan self order,pesanan dine in serta konfirmasi pesanan lalu pembaayaran dan pencetakan bukti transaksi, struk meja, struk dapur.
 

@@ -55,7 +55,6 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
                         <x-ui.multi-select name="jenis" :options="['dinein' => 'Dine In', 'catering' => 'Catering', 'nasibox' => 'Nasi Box']" :selected="request('jenis', [])" label="Jenis" />
-                        <x-ui.multi-select name="status_pembayaran" :options="['belum' => 'Belum Bayar', 'dp' => 'DP', 'lunas' => 'Lunas']" :selected="request('status_pembayaran', [])" label="Status" />
                         <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'custom' => 'Kustom']" :selected="request('periode', 'bulan_ini')" label="Periode" type="radio" />
                         @if(request('periode') == 'custom' || (is_array(request('periode')) && in_array('custom', request('periode'))))
                             <div class="flex items-center gap-2 shrink-0">
@@ -66,7 +65,7 @@
                         @endif
                         
                         <div class="flex items-center gap-2 shrink-0">
-                            @if(request()->hasAny(['search', 'jenis', 'status_pembayaran']) || request('periode') != 'bulan_ini')
+                            @if(request()->hasAny(['search', 'jenis']) || request('periode') != 'bulan_ini')
                                 <a href="{{ route('laporan.penjualan') }}" class="text-sm font-medium text-rose-500 hover:text-rose-700 px-3 py-2 transition-colors">Reset Filter</a>
                             @endif
                         </div>
@@ -95,7 +94,7 @@
                             {{ \Carbon\Carbon::parse($p->tanggal_pesanan)->translatedFormat('d M Y, H.i') }} WIB
                         </td>
                         <td class="px-4 py-4 align-middle">
-                            <span class="font-mono font-bold text-gray-900 text-sm">{{ $p->nomor_pesanan }}</span>
+                            <span class="font-mono font-bold text-gray-900 text-sm">{{ $p->id_pesanan }}</span>
                         </td>
                         <td class="px-4 py-4 align-middle">
                             @php
