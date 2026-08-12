@@ -35,6 +35,7 @@
 
                 <a href="{{ route('home') }}#galeri" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Galeri</a>
                 <a href="{{ route('home') }}#kontak" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Kontak</a>
+                <a href="{{ route('lacak.index') }}" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Lacak Pesanan</a>
             </div>
 
             {{-- 3. RIGHT: Actions (Auth & Pesan Sekarang) --}}
@@ -111,6 +112,9 @@
             </a>
             <a href="{{ route('home') }}#kontak" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
                 Kontak
+            </a>
+            <a href="{{ route('lacak.index') }}" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
+                Lacak Pesanan
             </a>
 
             {{-- Auth Section --}}

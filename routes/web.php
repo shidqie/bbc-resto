@@ -215,10 +215,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/jadwal-pengantaran/pdf', [JadwalPengantaranController::class, 'exportPdf'])->name('admin.jadwal-pengantaran.pdf');
     });
 
-    // ─── LACAK PESANAN (Hanya untuk konsumen yang login) ───
-    Route::middleware(['auth:pelanggan'])->group(function () {
-        Route::get('/lacak-pesanan', [App\Http\Controllers\LacakPesananController::class, 'index'])->name('lacak.index');
-    });
+    // ─── LACAK PESANAN (Bisa untuk tamu/guest) ───
+    Route::get('/lacak-pesanan', [App\Http\Controllers\LacakPesananController::class, 'index'])->name('lacak.index');
     
     // ─── API LOKASI & JARAK ───
     Route::middleware(['role:Admin,Pengantaran'])->group(function () {

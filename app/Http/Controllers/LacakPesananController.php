@@ -14,14 +14,21 @@ class LacakPesananController extends Controller
         $jenisPesanan = null;
 
         if ($kodePesanan) {
-            $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran', 'pelanggan'])
-                ->where('pelanggan_id', auth('pelanggan')->id())
-                ->where(function($q) use ($kodePesanan) {
-                    $q->where('id_pesanan', $kodePesanan)
-                      ->orWhere('id_pesanan', 'like', "%{$kodePesanan}%");
-                })
-                ->latest()
-                ->first();
+            $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran', 'pelanggan']);
+            
+            if (auth('pelanggan')->check()) {
+                // If logged in, they can fuzzy search their own orders
+                $query->where('pelanggan_id', auth('pelanggan')->id())
+                      ->where(function($q) use ($kodePesanan) {
+                          $q->where('id_pesanan', $kodePesanan)
+                            ->orWhere('id_pesanan', 'like', "%{$kodePesanan}%");
+                      });
+            } else {
+                // If guest, must be exact match and we don't check pelanggan_id
+                $query->where('id_pesanan', $kodePesanan);
+            }
+
+            $pesanan = $query->latest()->first();
 
             if ($pesanan) {
                 $jenisPesanan = match ($pesanan->jenis_pesanan_id) {
