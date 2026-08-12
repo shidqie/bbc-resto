@@ -48,7 +48,7 @@
                         Terapkan Filter
                     </button>
                     @if(request()->hasAny(['search', 'jenis', 'status', 'dari', 'sampai']))
-                        <a href="{{ route('pengadaan.permintaan.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors">Reset</a>
+                        <x-ui.button href="{{ route('pengadaan.permintaan.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </div>
             </form>
@@ -96,28 +96,32 @@
                         </td>
                         <td class="px-4 py-4 align-middle">
                             <div class="flex items-center justify-center gap-1.5">
-                                <a href="{{ route('pengadaan.permintaan.show', $p->id) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </a>
+                                <x-ui.action-button href="{{ route('pengadaan.permintaan.show', $p->id) }}" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
                                 @if(! in_array($kodeStatus, ['selesai', 'dibatalkan']))
-                                    <a href="{{ route('pengadaan.po.create', $p->id) }}" title="Buat PO" class="inline-flex items-center gap-1 text-xs font-semibold text-white bg-emerald-600 rounded-lg px-2.5 py-1.5 hover:bg-emerald-700 transition-colors">
-                                        <x-heroicon-o-shopping-cart class="w-3 h-3" />
+                                    <x-ui.button href="{{ route('pengadaan.po.create', $p->id) }}" variant="primary" size="sm">
+                                        <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1 inline" />
                                         Buat PO
-                                    </a>
+                                    </x-ui.button>
                                 @endif
                                 @if(in_array($kodeStatus, ['draft', 'menunggu_pembelian']))
                                     <form id="form-batal-{{ $p->id }}" action="{{ route('pengadaan.permintaan.cancel', $p->id) }}" method="POST" class="inline">
                                         @csrf
                                     </form>
-                                    <button type="button" title="Batalkan" onclick="window.confirmDialog({ title: 'Batalkan Permintaan', name: '{{ $p->id_pengadaan }}', message: 'Permintaan yang dibatalkan tidak dapat diproses kembali.', formId: 'form-batal-{{ $p->id }}', confirmText: 'Batalkan', cancelText: 'Batal', type: 'warning' })" class="w-7 h-7 rounded-full flex items-center justify-center bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">
-                                        <x-heroicon-o-x-mark class="w-3 h-3" />
-                                    </button>
+                                    <x-ui.action-button type="button" title="Batalkan" onclick="window.confirmDialog({ title: 'Batalkan Permintaan', name: '{{ $p->id_pengadaan }}', message: 'Permintaan yang dibatalkan tidak dapat diproses kembali.', formId: 'form-batal-{{ $p->id }}', confirmText: 'Batalkan', cancelText: 'Batal', type: 'warning' })" class="text-rose-600 hover:text-rose-700">
+                                        <x-heroicon-o-x-mark class="w-4 h-4" />
+                                    </x-ui.action-button>
                                 @endif
                             </div>
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="clipboard" title="Belum ada permintaan bahan." message="Buat permintaan baru untuk kebutuhan harian atau Catering." :colspan="8" />
+                    <tr>
+                        <td colspan="8">
+                            <x-ui.empty-state icon="clipboard-document-list" title="Belum ada permintaan bahan." message="Buat permintaan baru untuk kebutuhan harian atau Catering." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

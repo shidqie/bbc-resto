@@ -26,15 +26,15 @@
                     
                     <template x-if="new URLSearchParams(window.location.search).get('periode') === 'kustom'">
                         <div class="flex items-center gap-2">
-                            <input type="date" name="start_date" value="{{ request('start_date') }}" class="text-sm border-gray-300 rounded-lg shadow-sm focus:border-[#0D3024] focus:ring-[#0D3024]">
+                            <x-ui.input type="date" name="start_date" value="{{ request('start_date') }}" />
                             <span class="text-gray-500 text-sm">s/d</span>
-                            <input type="date" name="end_date" value="{{ request('end_date') }}" class="text-sm border-gray-300 rounded-lg shadow-sm focus:border-[#0D3024] focus:ring-[#0D3024]">
-                            <button type="submit" class="px-3 py-1.5 bg-[#0D3024] text-white text-sm font-medium rounded-lg">Terapkan</button>
+                            <x-ui.input type="date" name="end_date" value="{{ request('end_date') }}" />
+                            <x-ui.button type="submit" variant="primary">Terapkan</x-ui.button>
                         </div>
                     </template>
 
                     @if(request()->hasAny(['search', 'jenis', 'periode', 'start_date', 'end_date']))
-                        <a href="{{ route('admin.pesanan.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                        <x-ui.button href="{{ route('admin.pesanan.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </form>
             </x-slot:toolbar>
@@ -137,7 +137,11 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="document-text" title="Belum ada pesanan" message="Belum ada pesanan yang sesuai kriteria pencarian." :colspan="10" />
+                    <tr>
+                        <td colspan="9">
+                            <x-ui.empty-state icon="document-text" title="Belum ada pesanan" message="Belum ada pesanan yang sesuai kriteria pencarian." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

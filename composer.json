@@ -18,6 +18,8 @@
         "faisal50x/blade-ionicons": "^1.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "mallardduck/blade-lucide-icons": "^2.0",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/browsershot": "^5.4"
     },
     "require-dev": {

@@ -38,11 +38,11 @@
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama bahan..." />
                     <x-ui.multi-select name="jenis_mutasi_stok_id" :options="['1' => 'Stok Masuk', '2' => 'Stok Keluar']" :selected="request('jenis_mutasi_stok_id')" label="Mutasi" type="radio" />
                     <x-ui.multi-select name="jenis_stok" :options="['OPERASIONAL' => 'Operasional', 'CATERING' => 'Katering']" :selected="request('jenis_stok')" label="Jenis Stok" type="radio" />
-                    <input type="date" name="tanggal" value="{{ request('tanggal') }}"
-                           class="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white shadow-sm outline-none transition-all focus:border-gray-400 focus:ring-1 focus:ring-gray-400 shrink-0"
-                           onchange="this.form.submit()">
+                    <div class="w-full xl:max-w-xs shrink-0">
+                        <x-ui.input type="date" name="tanggal" value="{{ request('tanggal') }}" onchange="this.form.submit()" />
+                    </div>
                     @if(request()->anyFilled(['search', 'jenis_mutasi_stok_id', 'jenis_stok', 'tanggal']))
-                        <a href="{{ route('mutasi-stok.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                        <x-ui.button href="{{ route('mutasi-stok.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </form>
             </x-slot:toolbar>
@@ -101,7 +101,11 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="clock" title="Belum ada riwayat mutasi" message="Data pergerakan stok akan muncul di sini." :colspan="7" />
+                    <tr>
+                        <td colspan="7">
+                            <x-ui.empty-state icon="clock" title="Belum ada riwayat mutasi" message="Data pergerakan stok akan muncul di sini." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

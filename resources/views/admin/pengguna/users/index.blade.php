@@ -26,9 +26,9 @@
     <div class="w-full p-6 space-y-5 flex flex-col flex-1 min-h-0">
 
     <!-- Header Area -->
-    <x-ui.page-header title="Manajemen Pengguna" subtitle="Kelola data karyawan dan konsumen yang terdaftar di sistem." :breadcrumbs="['Manajemen Pengguna', 'Data Karyawan']">
+    <x-ui.page-header title="Manajemen Pengguna" subtitle="Kelola data karyawan dan konsumen yang terdaftar di sistem." :breadcrumbs="['Manajemen Pengguna', request('type') === 'pelanggan' ? 'Data Konsumen' : 'Data Karyawan']">
         <x-slot:actions>
-            <button @click="showCreateModal = true" class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+            <button x-show="activeTab === 'karyawan'" x-cloak @click="showCreateModal = true" class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
                 <x-heroicon-o-plus class="w-4 h-4" />
                 Tambah Karyawan
             </button>
@@ -92,21 +92,25 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <a href="{{ route('users.show', $user) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </a>
+                                <x-ui.action-button href="{{ route('users.show', $user) }}" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
                                 <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus karyawan ini?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" title="Hapus" class="w-7 h-7 rounded-full flex items-center justify-center bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">
-                                        <x-heroicon-o-trash class="w-3 h-3" />
-                                    </button>
+                                    <x-ui.action-button type="submit" title="Hapus">
+                                        <x-heroicon-o-trash class="w-4 h-4" />
+                                    </x-ui.action-button>
                                 </form>
                             </div>
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="users" title="Belum ada data karyawan" message="Data akan muncul setelah karyawan ditambahkan." :colspan="6" />
+                    <tr>
+                        <td colspan="6">
+                            <x-ui.empty-state icon="users" title="Belum ada data karyawan" message="Data akan muncul setelah karyawan ditambahkan." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>
@@ -164,9 +168,9 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <a href="{{ route('pelanggan.show', $user) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </a>
+                                <x-ui.action-button href="{{ route('pelanggan.show', $user) }}" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
                                 <form action="{{ route('pelanggan.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus data konsumen ini? Semua riwayat pesanan juga akan terhapus.');">
                                     @csrf
                                     @method('DELETE')
@@ -178,7 +182,11 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="users" title="Belum ada data konsumen" message="Data akan muncul setelah konsumen ditambahkan." :colspan="6" />
+                    <tr>
+                        <td colspan="6">
+                            <x-ui.empty-state icon="users" title="Belum ada data konsumen" message="Data akan muncul setelah konsumen ditambahkan." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>
@@ -247,12 +255,12 @@
                 </div>
 
                 <div class="flex justify-end gap-2 mt-6">
-                    <button type="button" @click="showCreateModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    <x-ui.button variant="secondary" @click="showCreateModal = false">
                         Batal
-                    </button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800">
+                    </x-ui.button>
+                    <x-ui.button variant="primary" type="submit">
                         Simpan
-                    </button>
+                    </x-ui.button>
                 </div>
             </form>
         </div>

@@ -51,7 +51,7 @@
     $sizeClass  = $sizes[$size] ?? $sizes['md'];
 @endphp
 
-<span {{ $attributes->merge(['class' => "inline-flex items-center gap-1.5 font-medium rounded-full border $colorClass $sizeClass"]) }}>
+<span {{ $attributes->merge(['class' => "inline-flex items-center gap-1.5 font-medium rounded-md border $colorClass $sizeClass"]) }}>
     @if($dot)
         <span class="w-1.5 h-1.5 rounded-full {{ $dotClass }}"></span>
     @endif

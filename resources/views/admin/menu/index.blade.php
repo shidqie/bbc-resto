@@ -42,14 +42,12 @@
         <x-ui.page-header title="Manajemen Menu & Paket" subtitle="Kelola menu berdasarkan layanan dan kategorinya." :breadcrumbs="['Manajemen Menu', 'Data Menu']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
-                    <button onclick="openKategoriModal()" id="btnAddKategori" class="hidden inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <x-ui.button variant="secondary" icon="plus" onclick="openKategoriModal()" id="btnAddKategori" class="hidden">
                         Kategori Baru
-                    </button>
-                    <button onclick="openMenuModal()" id="btnAddMenu" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </x-ui.button>
+                    <x-ui.button variant="primary" icon="plus" onclick="openMenuModal()" id="btnAddMenu">
                         Menu Baru
-                    </button>
+                    </x-ui.button>
                 </div>
             </x-slot:actions>
         </x-ui.page-header>
@@ -115,7 +113,8 @@
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-700">
                                 {{ $menu->kategori_menu->nama_kategori ?? '–' }}
-                                                        <td class="px-4 py-3 text-sm text-gray-900">
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900">
                                 Rp{{ number_format($menu->harga_jual, 0, ',', '.') }}
                                 @if($menu->jenis_menu_id == '2' || $menu->jenis_menu_id == 'catering')
                                     /porsi
@@ -146,7 +145,11 @@
                             </td>
                         </x-ui.table.row>
                         @empty
-                        <x-empty-state icon="archive-box" title="Belum ada menu" message="Tambahkan menu untuk mulai melayani pelanggan." :colspan="7" />
+                        <tr>
+                            <td colspan="{{ $jenisId != 1 ? 7 : 6 }}">
+                                <x-ui.empty-state icon="archive-box" title="Belum ada menu" message="Tambahkan menu untuk mulai melayani pelanggan." />
+                            </td>
+                        </tr>
                         @endforelse
                 </tbody>
             </x-ui.table>
@@ -161,7 +164,7 @@
 {{-- ══════════════════════════════════════════ --}}
 <div id="drawerMenu" class="fixed inset-x-0 bottom-0 top-16 z-40 hidden">
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm opacity-0 transition-opacity duration-300" id="drawerMenuOverlay" onclick="closeMenuModal()"></div>
-    <div class="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300" id="drawerMenuPanel">
+    <div class="absolute right-0 top-0 h-full w-full max-w-4xl bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300" id="drawerMenuPanel">
         
         {{-- Header --}}
         <div class="flex items-center justify-between px-5 pt-4 pb-2 border-b border-gray-100 shrink-0">
@@ -189,8 +192,7 @@
             <div id="tabContentInformasi" class="px-5 py-5 space-y-4">
                 {{-- Nama --}}
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Menu <span class="text-red-500">*</span></label>
-                    <textarea name="nama" id="mnNama" rows="2" required placeholder="Contoh: Ayam Bakar Madu" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all resize-none"></textarea>
+                    <x-ui.textarea name="nama" id="mnNama" label="Nama Menu *" rows="2" required placeholder="Contoh: Ayam Bakar Madu" />
                 </div>
 
                 {{-- Komponen Paket Section (Hanya untuk Catering & Nasi Box) --}}
@@ -224,8 +226,7 @@
                 {{-- Harga + Status --}}
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Harga (Rp) <span class="text-red-500">*</span></label>
-                        <input type="number" name="harga" id="mnHarga" required min="0" placeholder="25000" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all font-medium">
+                        <x-ui.input type="number" name="harga" id="mnHarga" label="Harga (Rp) *" required min="0" placeholder="25000" class="font-medium" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Status <span class="text-red-500">*</span></label>
@@ -239,8 +240,7 @@
 
                 {{-- Deskripsi --}}
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi</label>
-                    <textarea name="deskripsi" id="mnDeskripsi" rows="2" placeholder="Penjelasan singkat mengenai menu…" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all resize-none"></textarea>
+                    <x-ui.textarea name="deskripsi" id="mnDeskripsi" label="Deskripsi" rows="2" placeholder="Penjelasan singkat mengenai menu…" />
                 </div>
 
                 {{-- Foto --}}
@@ -319,8 +319,8 @@
 
             {{-- Footer --}}
             <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/80 shrink-0 mt-auto">
-                <button type="button" id="btnBatalMenu" onclick="closeMenuModal()" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" id="btnSimpanMenu" class="text-sm font-semibold text-white bg-gray-900 rounded-lg px-5 py-2 hover:bg-gray-800 transition-colors">Simpan Menu</button>
+                <x-ui.button type="button" variant="secondary" id="btnBatalMenu" onclick="closeMenuModal()">Batal</x-ui.button>
+                <x-ui.button type="submit" variant="primary" id="btnSimpanMenu">Simpan Menu</x-ui.button>
             </div>
         </form>
     </div>
@@ -350,19 +350,17 @@
             <div id="formKatMethod"></div>
             <div class="px-5 py-5 space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Kategori <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama_kategori" id="katNama" required placeholder="Contoh: Makanan Utama" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all">
+                    <x-ui.input name="nama_kategori" id="katNama" label="Nama Kategori *" required placeholder="Contoh: Makanan Utama" />
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi</label>
-                    <textarea name="deskripsi" id="katDeskripsi" placeholder="Tuliskan deskripsi kategori..." rows="3" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all"></textarea>
+                    <x-ui.textarea name="deskripsi" id="katDeskripsi" label="Deskripsi" placeholder="Tuliskan deskripsi kategori..." rows="3" />
                 </div>
             </div>
 
             {{-- Footer --}}
             <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/80 shrink-0 mt-auto">
-                <button type="button" onclick="closeKategoriModal()" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" class="text-sm font-semibold text-white bg-gray-900 rounded-lg px-5 py-2 hover:bg-gray-800 transition-colors">Simpan Kategori</button>
+                <x-ui.button type="button" variant="secondary" onclick="closeKategoriModal()">Batal</x-ui.button>
+                <x-ui.button type="submit" variant="primary">Simpan Kategori</x-ui.button>
             </div>
         </form>
     </div>
@@ -383,15 +381,13 @@
         </div>
         <form id="formHapus" method="POST" action="">
             @csrf @method('DELETE')
-            <div class="flex gap-3 justify-center pt-1">
-                <button type="button" onclick="closeDeleteModal()"
-                    class="flex-1 text-sm font-semibold text-white bg-red-500 rounded-xl px-4 py-2.5 hover:bg-red-600 transition-colors">
+            <div class="flex gap-3 justify-center pt-1 w-full">
+                <x-ui.button type="button" variant="secondary" class="flex-1 w-full" onclick="closeDeleteModal()">
                     Batal
-                </button>
-                <button type="submit"
-                    class="flex-1 text-sm font-semibold text-white bg-gray-900 rounded-xl px-4 py-2.5 hover:bg-gray-800 transition-colors">
+                </x-ui.button>
+                <x-ui.button type="submit" variant="danger" class="flex-1 w-full">
                     Ya, Hapus
-                </button>
+                </x-ui.button>
             </div>
         </form>
     </div>

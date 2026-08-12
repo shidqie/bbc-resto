@@ -14,10 +14,9 @@
         <x-ui.page-header title="Kategori Menu" subtitle="Kelola daftar kategori menu Restoran" :breadcrumbs="['Manajemen Menu', 'Kategori Menu']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
-                    <button onclick="openModal('modalTambah', 'drawerTambahPanel')" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <x-ui.button variant="primary" icon="plus" onclick="openModal('modalTambah', 'drawerTambahPanel')">
                         Tambah Kategori
-                    </button>
+                    </x-ui.button>
                 </div>
             </x-slot:actions>
         </x-ui.page-header>
@@ -33,7 +32,7 @@
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         @if(request()->filled('search'))
-                            <a href="{{ route('kategori-menu.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                            <x-ui.button href="{{ route('kategori-menu.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                         @endif
                     </div>
                 </form>
@@ -78,7 +77,11 @@
                             </td>
                         </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="archive-box" title="Belum ada data kategori menu" message="Tambahkan kategori menu untuk mulai mengelompokkan menu." :colspan="5" />
+                    <tr>
+                        <td colspan="5">
+                            <x-ui.empty-state icon="tag" title="Belum ada data kategori menu" message="Tambahkan kategori menu untuk mulai mengelompokkan menu." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>
@@ -105,23 +108,21 @@
             @csrf
             <div class="px-5 py-5 space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Kategori <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama_kategori" placeholder="Contoh: Makanan Utama, Paket Hemat, dll" required class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all">
+                    <x-ui.input name="nama_kategori" label="Nama Kategori" placeholder="Contoh: Makanan Utama, Paket Hemat, dll" required />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi</label>
-                    <textarea name="deskripsi" placeholder="Tuliskan deskripsi kategori..." rows="3" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all"></textarea>
+                    <x-ui.textarea name="deskripsi" label="Deskripsi" placeholder="Tuliskan deskripsi kategori..." rows="3" />
                 </div>
             </div>
 
             <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/80 shrink-0 mt-auto">
-                <button type="button" onclick="closeModal('modalTambah', 'drawerTambahPanel')" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">
+                <x-ui.button variant="secondary" onclick="closeModal('modalTambah', 'drawerTambahPanel')">
                     Batal
-                </button>
-                <button type="submit" class="text-sm font-semibold text-white bg-gray-900 rounded-lg px-5 py-2 hover:bg-gray-800 transition-colors">
-                    Simpan Kategori
-                </button>
+                </x-ui.button>
+                <x-ui.button type="submit" variant="primary">
+                    Simpan
+                </x-ui.button>
             </div>
         </form>
     </div>
@@ -146,23 +147,21 @@
             @method('PUT')
             <div class="px-5 py-5 space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Kategori <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama_kategori" id="editNama" required class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all">
+                    <x-ui.input name="nama_kategori" id="editNama" label="Nama Kategori" required />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi</label>
-                    <textarea name="deskripsi" id="editDeskripsi" placeholder="Tuliskan deskripsi kategori..." rows="3" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all"></textarea>
+                    <x-ui.textarea name="deskripsi" id="editDeskripsi" label="Deskripsi" placeholder="Tuliskan deskripsi kategori..." rows="3" />
                 </div>
             </div>
 
             <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/80 shrink-0 mt-auto">
-                <button type="button" onclick="closeModal('modalEdit', 'drawerEditPanel')" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">
+                <x-ui.button variant="secondary" onclick="closeModal('modalEdit', 'drawerEditPanel')">
                     Batal
-                </button>
-                <button type="submit" class="text-sm font-semibold text-white bg-gray-900 rounded-lg px-5 py-2 hover:bg-gray-800 transition-colors">
+                </x-ui.button>
+                <x-ui.button type="submit" variant="primary">
                     Simpan Perubahan
-                </button>
+                </x-ui.button>
             </div>
         </form>
     </div>

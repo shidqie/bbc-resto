@@ -40,16 +40,14 @@
     @click.away="open = false">
     
     <button type="button" @click="open = !open" 
-        class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 focus:outline-none transition-colors">
+        class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-900/20 transition-all">
         <span>{{ $label }}</span>
         
         <span x-show="count > 0" x-text="count" style="display: none;" 
-              class="flex items-center justify-center w-5 h-5 text-[11px] font-bold text-white bg-emerald-500 rounded-full shadow-sm">
+              class="flex items-center justify-center w-5 h-5 text-[11px] font-bold text-white bg-gray-900 rounded-full shadow-sm">
         </span>
         
-        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{'rotate-180': open}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
+        <x-heroicon-o-chevron-down class="w-4 h-4 text-gray-400 transition-transform duration-200" x-bind:class="{'rotate-180': open}" />
     </button>
 
     <div x-show="open" 

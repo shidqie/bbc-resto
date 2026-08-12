@@ -21,7 +21,7 @@
                 <form action="{{ route('admin.pembayaran.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari ID Pembayaran / Kode Pesanan…" />
                     @if(request()->hasAny(['search']))
-                        <a href="{{ route('admin.pembayaran.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                        <x-ui.button href="{{ route('admin.pembayaran.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </form>
             </x-slot:toolbar>
@@ -80,15 +80,15 @@
                                 @if($bayar->status_verifikasi == 'menunggu_verifikasi')
                                     <form action="{{ route('admin.pembayaran.verify', $bayar->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" onclick="return confirm('Verifikasi pembayaran ini?')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1.5 rounded flex items-center gap-1 shadow-sm font-medium">
-                                            <x-heroicon-o-check class="w-3.5 h-3.5" /> Verifikasi
-                                        </button>
+                                        <x-ui.button type="submit" variant="primary" size="sm" onclick="return confirm('Verifikasi pembayaran ini?')">
+                                            <x-heroicon-o-check class="w-3.5 h-3.5 mr-1 inline" /> Verifikasi
+                                        </x-ui.button>
                                     </form>
                                     <form action="{{ route('admin.pembayaran.cancel', $bayar->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" onclick="return confirm('Batalkan pembayaran ini?')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1.5 rounded flex items-center gap-1 shadow-sm font-medium">
-                                            <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> Batal
-                                        </button>
+                                        <x-ui.button type="submit" variant="danger" size="sm" onclick="return confirm('Batalkan pembayaran ini?')">
+                                            <x-heroicon-o-x-mark class="w-3.5 h-3.5 mr-1 inline" /> Batal
+                                        </x-ui.button>
                                     </form>
                                 @else
                                     <x-ui.action-button onclick="openDetailDrawer({{ $bayar->id }})" title="Detail">
@@ -99,7 +99,11 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="clipboard" title="Belum ada pembayaran" message="Belum ada data pembayaran yang sesuai kriteria pencarian." :colspan="9" />
+                    <tr>
+                        <td colspan="8">
+                            <x-ui.empty-state icon="clipboard-document-list" title="Belum ada pembayaran" message="Belum ada data pembayaran yang sesuai kriteria pencarian." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

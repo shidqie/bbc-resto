@@ -12,10 +12,9 @@
             :breadcrumbs="['Daftar Pesanan', 'Dine In']">
             @if(auth()->user()->hasRole('Kasir'))
                 <x-slot:actions>
-                    <a href="{{ route('pos.dinein.index') }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-sm">
-                        <x-heroicon-m-plus class="w-4 h-4" />
+                    <x-ui.button variant="primary" icon="plus" href="{{ route('pos.dinein.index') }}">
                         Point Of Sale
-                    </a>
+                    </x-ui.button>
                 </x-slot:actions>
             @endif
         </x-ui.page-header>
@@ -137,17 +136,21 @@
                         </td>
                         <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.show', $p->id) }}'})" title="Detail" class="text-gray-500 transition hover:text-gray-900">
+                                <x-ui.action-button @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.show', $p->id) }}'})" title="Detail">
                                     <x-heroicon-o-eye class="w-4 h-4" />
-                                </button>
-                                <a href="{{ route('pos.dinein.print-gabungan', $p->id) }}" target="_blank" title="Cetak Struk" class="text-gray-500 transition hover:text-gray-900">
+                                </x-ui.action-button>
+                                <x-ui.action-button href="{{ route('pos.dinein.print-gabungan', $p->id) }}" target="_blank" title="Cetak Struk">
                                     <x-heroicon-o-printer class="w-4 h-4" />
-                                </a>
+                                </x-ui.action-button>
                             </div>
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="clipboard-document-list" title="Tidak ada pesanan Dine In" message="Tidak ada data pesanan Dine In." :colspan="10" />
+                    <tr>
+                        <td colspan="8">
+                            <x-ui.empty-state icon="clipboard-document-list" title="Tidak ada pesanan Dine In" message="Tidak ada data pesanan Dine In." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

@@ -6,7 +6,7 @@
 | Menggunakan Alpine.js untuk toggle open/close dan submenu.
 |--}}
 
-<aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="no-print bg-white border-r border-neutral-200 text-neutral-600 flex flex-col shrink-0 transition-all duration-300 relative z-20">
+<aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="no-print bg-white border-r border-slate-200/60 text-slate-600 flex flex-col shrink-0 transition-all duration-300 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
     @php
         $userRole = auth()->user()->peran->nama_peran ?? '';
         $hasRole = function(...$roles) use ($userRole) {
@@ -16,20 +16,20 @@
     @endphp
 
     {{-- Logo & Toggle --}}
-    <div class="h-16 flex items-center justify-between px-4 border-b border-neutral-100 shrink-0 transition-all duration-300">
-        <div class="flex items-center gap-2.5 overflow-hidden" x-show="sidebarOpen" x-transition:enter="transition delay-100 duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-            <img src="/images/logo-saung.png" alt="Logo" class="w-8 h-8 rounded object-contain shrink-0">
-            <span class="font-semibold text-neutral-900 text-sm tracking-tight whitespace-nowrap">SBC RESTO</span>
+    <div class="h-16 flex items-center justify-between px-4 border-b border-slate-100/80 shrink-0 transition-all duration-300">
+        <div class="flex items-center gap-3 overflow-hidden" x-show="sidebarOpen" x-transition:enter="transition delay-100 duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+            <img src="/images/logo-saung.png" alt="Logo" class="h-9 w-auto object-contain drop-shadow-sm shrink-0">
+            <span class="font-extrabold text-slate-900 text-sm tracking-tight whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">RM BBC</span>
         </div>
-        <img x-show="!sidebarOpen" src="/images/logo-saung.png" alt="Logo" class="w-7 h-7 rounded object-contain shrink-0 mx-auto" x-cloak>
+        <img x-show="!sidebarOpen" src="/images/logo-saung.png" alt="Logo" class="w-8 h-8 object-contain drop-shadow-sm shrink-0 mx-auto" x-cloak>
         <button @click="sidebarOpen = !sidebarOpen"
-                class="w-8 h-8 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors focus:outline-none shrink-0"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all focus:outline-none shrink-0 border border-transparent hover:border-blue-100/50 shadow-sm shadow-transparent hover:shadow-blue-500/5"
                 x-bind:class="sidebarOpen ? '' : 'hidden'"
                 title="Toggle Sidebar">
             <x-heroicon-o-chevron-left class="w-5 h-5" />
         </button>
         <button x-show="!sidebarOpen" @click="sidebarOpen = true"
-                class="w-8 h-8 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors focus:outline-none shrink-0 mx-auto mt-1"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all focus:outline-none shrink-0 mx-auto mt-1 border border-transparent hover:border-blue-100/50 shadow-sm shadow-transparent hover:shadow-blue-500/5"
                 title="Buka Sidebar" x-cloak>
             <x-heroicon-o-chevron-right class="text-sm w-5 h-5" />
         </button>
@@ -39,17 +39,17 @@
     <nav class="flex-1 py-5 px-2.5 space-y-1 no-scrollbar" :class="sidebarOpen ? 'overflow-y-auto' : 'overflow-visible'">
 
         {{-- Dashboard --}}
-        @if(!$hasRole('Pelanggan', 'Konsumen', 'Pengantaran'))
+        @if(!in_array($userRole, ['Pelanggan', 'Konsumen', 'Pengantaran']))
         @include('partials.sidebar-link', [
             'route' => 'dashboard',
-            'icon' => 'heroicon-s-home',
+            'icon' => 'heroicon-o-squares-2x2',
             'label' => 'Dashboard',
             'active' => request()->routeIs('dashboard'),
         ])
         @endif
 
         {{-- Divider --}}
-        <div class="py-1.5" x-show="sidebarOpen"><div class="h-px w-full bg-neutral-100"></div></div>
+        <div class="py-1.5 px-3" x-show="sidebarOpen"><div class="h-px w-full bg-gradient-to-r from-transparent via-slate-200/60 to-transparent"></div></div>
         
         {{-- Penjualan --}}
         @php
@@ -69,7 +69,7 @@
             @endphp
             @if(count($penjualanItems))
             @include('partials.sidebar-submenu', [
-                'icon' => 'ionicon-cart-sharp',
+                'icon' => 'heroicon-o-shopping-cart',
                 'label' => 'Daftar Pesanan',
                 'isOpen' => request()->routeIs('pos.dinein.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.pembayaran.*') || request()->routeIs('admin.jadwal.*'),
                 'items' => $penjualanItems,
@@ -80,7 +80,7 @@
                 @if($hasRole('Pemilik', 'Pengantaran'))
                 @include('partials.sidebar-link', [
                     'route' => 'admin.jadwal.index',
-                    'icon' => 'gmdi-local-shipping-o',
+                    'icon' => 'heroicon-o-truck',
                     'label' => 'Jadwal Pengantaran',
                     'active' => request()->routeIs('admin.jadwal.*') || request()->routeIs('admin.jadwal-pengantaran.*'),
                 ])
@@ -89,7 +89,7 @@
                 {{-- Menu & Paket --}}
                 @if($hasRole('Admin', 'Manajer', 'Pemilik'))
                 @include('partials.sidebar-submenu', [
-                    'icon' => 'gmdi-menu-book-r',
+                    'icon' => 'heroicon-o-book-open',
                     'label' => 'Manajemen Menu',
                     'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('paket-catering.*'),
                     'items' => [
@@ -102,7 +102,7 @@
                         {{-- Meja --}}
                         @if($hasRole('Admin', 'Manajer', 'Pemilik'))
                             @include('partials.sidebar-submenu', [
-                                'icon' => 'gmdi-table-bar',
+                                'icon' => 'heroicon-o-square-3-stack-3d',
                                 'label' => 'Manajemen Meja',
                                 'isOpen' => request()->routeIs('meja.*'),
                                 'items' => [
@@ -114,7 +114,7 @@
 {{-- Persediaan --}}
         @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur'))
         @include('partials.sidebar-submenu', [
-            'icon' => 'heroicon-s-archive-box',
+            'icon' => 'heroicon-o-archive-box',
             'label' => 'Persediaan',
             'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*') || request()->routeIs('stok-operasional.*') || request()->routeIs('stok-catering.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('penyesuaian-stok.*'),
             'items' => [
@@ -129,7 +129,7 @@
      {{-- Pengadaan --}}
                         @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur'))
                             @include('partials.sidebar-submenu', [
-                                'icon' => 'heroicon-s-shopping-bag',
+                                'icon' => 'heroicon-o-shopping-bag',
                                 'label' => 'Pengadaan',
                                 'isOpen' => request()->routeIs('pengadaan.*'),
                                 'items' => [
@@ -143,7 +143,7 @@
         {{-- Laporan --}}
         @if($hasRole('Pemilik', 'Manajer'))
         @include('partials.sidebar-submenu', [
-            'icon' => 'iconoir-reports-solid',
+            'icon' => 'heroicon-o-chart-bar',
             'label' => 'Laporan',
             'isOpen' => request()->routeIs('laporan.*'),
             'items' => [
@@ -153,11 +153,10 @@
             ],
         ])
         @endif
-
         {{-- Manajemen Pengguna --}}
         @if($hasRole('Pemilik'))
         @include('partials.sidebar-submenu', [
-            'icon' => 'fluentui-people-28',
+            'icon' => 'heroicon-o-users',
             'label' => 'Manajemen Pengguna',
             'isOpen' => request()->routeIs('users.*') || request()->routeIs('roles.*'),
             'items' => [
@@ -166,16 +165,41 @@
             ],
         ])
         @endif
+        {{-- Pengaturan --}}
+        @if($hasRole('Pemilik', 'Manajer'))
+        @include('partials.sidebar-submenu', [
+            'icon' => 'heroicon-o-cog-6-tooth',
+            'label' => 'Pengaturan',
+            'isOpen' => request()->routeIs('admin.pengaturan.*'),
+            'items' => [
+                ['label' => 'Pajak & Layanan', 'url' => route('admin.pengaturan.transaksi.index'), 'active' => request()->routeIs('admin.pengaturan.transaksi.*')],
+                ['label' => 'Tarif Pengiriman', 'url' => route('admin.pengaturan.pengiriman.index'), 'active' => request()->routeIs('admin.pengaturan.pengiriman.*')],
+            ],
+        ])
+        @endif
+
+       
     </nav>
 
     {{-- Footer Actions --}}
-    <div class="p-2.5 border-t border-neutral-100 shrink-0">
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl transition group" title="Logout">
-                <x-ri-logout-box-r-fill class="text-lg w-6 text-center shrink-0 text-neutral-400 group-hover:text-neutral-900" />
-                <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-200">Log Out</span>
-            </button>
-        </form>
+    <div class="p-3 border-t border-slate-100/80 shrink-0">
+        <div class="flex items-center justify-between p-2 -mx-2 rounded-xl hover:bg-slate-50 transition-colors duration-200 group/profile">
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="w-9 h-9 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200/50 group-hover/profile:bg-white group-hover/profile:shadow-sm transition-all">
+                    {{ strtoupper(substr(auth()->user()->nama ?? 'A', 0, 2)) }}
+                </div>
+                <div x-show="sidebarOpen" class="flex flex-col min-w-0" x-cloak>
+                    <p class="text-sm font-semibold text-slate-800 truncate">{{ auth()->user()->nama ?? 'User' }}</p>
+                    <p class="text-[12px] text-slate-500 truncate">{{ auth()->user()->peran->nama_peran ?? 'Admin' }}</p>
+                </div>
+            </div>
+            
+            <form method="POST" action="{{ route('logout') }}" x-show="sidebarOpen" x-cloak>
+                @csrf
+                <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 focus:outline-none border border-transparent hover:border-red-100" title="Logout">
+                    <x-heroicon-o-arrow-right-on-rectangle class="w-5 h-5" />
+                </button>
+            </form>
+        </div>
     </div>
 </aside>

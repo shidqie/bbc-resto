@@ -117,14 +117,17 @@ class PesananCateringController extends Controller
         $subtotal = $paket->harga_jual * $request->jumlah_porsi;
         
         $ongkir = 0;
+        $kalkulasiOngkir = null;
         if ($request->metode_pengiriman === 'delivery') {
-            $ongkir = \App\Models\Pengantaran::hitungOngkir((float) $request->jarak_km, $request->jumlah_porsi);
+            $kalkulasiService = app(\App\Services\KalkulasiPesananService::class);
+            $kalkulasiOngkir = $kalkulasiService->hitungOngkir($request->jumlah_porsi, (float) $request->jarak_km);
+            $ongkir = $kalkulasiOngkir['biaya_pengiriman'];
         }
         
         $totalTagihan = $subtotal + $ongkir;
 
         try {
-            $pesanan = DB::transaction(function () use ($request, $paket, $subtotal, $totalTagihan, $ongkir) {
+            $pesanan = DB::transaction(function () use ($request, $paket, $subtotal, $totalTagihan, $ongkir, $kalkulasiOngkir) {
             // Normalisasi: data pemesan disimpan di tabel pelanggan, bukan di catatan
             $pelanggan = Auth::guard('pelanggan')->check()
                 ? Auth::guard('pelanggan')->user()
@@ -182,7 +185,7 @@ class PesananCateringController extends Controller
             }
 
             // Pengantaran (jika delivery)
-            if ($request->metode_pengiriman === 'delivery') {
+            if ($request->metode_pengiriman === 'delivery' && $kalkulasiOngkir) {
                 Pengantaran::create([
                     'nomor_pengantaran' => 'DO-' . time(),
                     'pesanan_id' => $pesanan->id,
@@ -193,6 +196,9 @@ class PesananCateringController extends Controller
                     'alamat_pengantaran' => $request->lokasi_acara,
                     'jarak_pengantaran' => $request->jarak_km,
                     'biaya_pengantaran' => $ongkir,
+                    'tarif_per_km' => $kalkulasiOngkir['tarif_per_km'],
+                    'jarak_gratis' => $kalkulasiOngkir['jarak_gratis'],
+                    'jarak_berbayar' => $kalkulasiOngkir['jarak_berbayar'],
                 ]);
             }
 

@@ -13,10 +13,9 @@
         {{-- PAGE HEADER --}}
         <x-ui.page-header title="Manajemen Menu & Paket" subtitle="Kelola menu berdasarkan layanan dan kategorinya." :breadcrumbs="['Manajemen Menu', 'Paket']">
             <x-slot:actions>
-                <button onclick="openPaketForm()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <x-ui.button variant="primary" icon="plus" onclick="openPaketForm()">
                     Tambah Paket Baru
-                </button>
+                </x-ui.button>
             </x-slot:actions>
         </x-ui.page-header>
 
@@ -103,7 +102,11 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="document-text" title="Belum ada paket terdaftar." message="Tambahkan paket baru menggunakan tombol di atas." :colspan="7" />
+                    <tr>
+                        <td colspan="7">
+                            <x-ui.empty-state icon="document-text" title="Belum ada paket terdaftar." message="Tambahkan paket baru menggunakan tombol di atas." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

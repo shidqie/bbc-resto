@@ -94,14 +94,17 @@ class PesananNasiBoxController extends Controller
         $subtotal = $paket->harga_jual * $request->jumlah_box;
         
         $ongkir = 0;
+        $kalkulasiOngkir = null;
         if ($request->metode_pengiriman === 'delivery') {
-            $ongkir = \App\Models\Pengantaran::hitungOngkir((float) $request->jarak_km, $request->jumlah_box);
+            $kalkulasiService = app(\App\Services\KalkulasiPesananService::class);
+            $kalkulasiOngkir = $kalkulasiService->hitungOngkir($request->jumlah_box, (float) $request->jarak_km);
+            $ongkir = $kalkulasiOngkir['biaya_pengiriman'];
         }
         
         $totalTagihan = $subtotal + $ongkir;
 
         try {
-            $pesanan = DB::transaction(function () use ($request, $paket, $subtotal, $totalTagihan, $ongkir) {
+            $pesanan = DB::transaction(function () use ($request, $paket, $subtotal, $totalTagihan, $ongkir, $kalkulasiOngkir) {
             $pelanggan = Auth::guard('pelanggan')->check()
                 ? Auth::guard('pelanggan')->user()
                 : Pelanggan::firstOrCreate(
@@ -147,7 +150,7 @@ class PesananNasiBoxController extends Controller
             ]);
 
             // Pengantaran
-            if ($request->metode_pengiriman === 'delivery') {
+            if ($request->metode_pengiriman === 'delivery' && $kalkulasiOngkir) {
                 Pengantaran::create([
                     'nomor_pengantaran' => 'DO-' . time(),
                     'pesanan_id' => $pesanan->id,
@@ -158,6 +161,9 @@ class PesananNasiBoxController extends Controller
                     'alamat_pengantaran' => $request->lokasi_acara,
                     'jarak_pengantaran' => $request->jarak_km,
                     'biaya_pengantaran' => $ongkir,
+                    'tarif_per_km' => $kalkulasiOngkir['tarif_per_km'],
+                    'jarak_gratis' => $kalkulasiOngkir['jarak_gratis'],
+                    'jarak_berbayar' => $kalkulasiOngkir['jarak_berbayar'],
                 ]);
             }
 

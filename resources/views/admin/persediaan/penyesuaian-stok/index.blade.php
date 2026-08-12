@@ -11,10 +11,9 @@
             subtitle="Daftar Penyesuaian Stok Bila mana terjadi bahan baku busuk/rusak atau tidak sesuai dengn aktual "
             :breadcrumbs="['Persediaan', 'Penyesuaian Stok']">
             <x-slot:actions>
-                <a href="{{ route('penyesuaian-stok.create') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                    <x-heroicon-o-plus class="w-3 h-3" />
+                <x-ui.button variant="primary" icon="plus" href="{{ route('penyesuaian-stok.create') }}">
                     Buat Penyesuaian
-                </a>
+                </x-ui.button>
             </x-slot:actions>
         </x-ui.page-header>
 
@@ -63,14 +62,18 @@
                         </td>
                         <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <a href="{{ route('penyesuaian-stok.show', $adj->penyesuaian_stok_id) }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                </a>
+                                <x-ui.action-button href="{{ route('penyesuaian-stok.show', $adj->penyesuaian_stok_id) }}" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
                             </div>
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="clipboard" title="Belum ada penyesuaian stok" message="Penyesuaian akan muncul di sini setelah dibuat." :colspan="8" />
+                    <tr>
+                        <td colspan="8">
+                            <x-ui.empty-state icon="clipboard-document-list" title="Belum ada penyesuaian stok" message="Penyesuaian akan muncul di sini setelah dibuat." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

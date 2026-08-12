@@ -66,9 +66,9 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <a href="{{ route('pemasok.edit', $pemasok->id) }}" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
+                                <x-ui.action-button href="{{ route('pemasok.edit', $pemasok->id) }}" title="Ubah">
                                     <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                </a>
+                                </x-ui.action-button>
                                 <form action="{{ route('pemasok.destroy', $pemasok->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus pemasok ini?');">
                                     @csrf
                                     @method('DELETE')
@@ -80,7 +80,7 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="users" title="Belum ada pemasok" message="Tambah pemasok baru untuk memulai pengadaan." :colspan="6" />
+                    <x-ui.empty-state icon="users" title="Belum ada pemasok" message="Tambah pemasok baru untuk memulai pengadaan." />
                     @endforelse
                 </tbody>
             </x-ui.table>

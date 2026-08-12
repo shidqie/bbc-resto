@@ -38,7 +38,7 @@
                         Terapkan Filter
                     </button>
                     @if(request()->hasAny(['search', 'status', 'supplier', 'dari', 'sampai']))
-                        <a href="{{ route('pengadaan.po.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors">Reset</a>
+                        <x-ui.button href="{{ route('pengadaan.po.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </div>
             </form>
@@ -74,25 +74,26 @@
                         </td>
                         <td class="px-4 py-4 align-middle">
                             <div class="flex items-center justify-center gap-1.5">
-                                <a href="{{ route('pengadaan.po.show', $po->id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-white bg-emerald-600 rounded-lg px-2.5 py-1.5 hover:bg-emerald-700 transition-colors">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
-                                    Detail
-                                </a>
-                                <a href="{{ route('pengadaan.po.print', $po->id) }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-white bg-blue-600 rounded-lg px-2.5 py-1.5 hover:bg-blue-700 transition-colors">
-                                    <x-heroicon-o-printer class="w-3 h-3" />
-                                    Cetak PO
-                                </a>
+                                <x-ui.action-button href="{{ route('pengadaan.po.show', $po->id) }}" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
+                                <x-ui.action-button href="{{ route('pengadaan.po.print', $po->id) }}" target="_blank" title="Cetak PO">
+                                    <x-heroicon-o-printer class="w-4 h-4" />
+                                </x-ui.action-button>
                                 @if(app(\App\Services\PengadaanStatusService::class)->poMasihBisaDiterima($po))
-                                    <a href="{{ route('pengadaan.penerimaan.create', $po->id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-white bg-teal-600 rounded-lg px-2.5 py-1.5 hover:bg-teal-700 transition-colors">
-                                        <x-heroicon-o-inbox-arrow-down class="w-3 h-3" />
-                                        Terima Barang
-                                    </a>
+                                    <x-ui.action-button href="{{ route('pengadaan.penerimaan.create', $po->id) }}" title="Terima Barang">
+                                        <x-heroicon-o-inbox-arrow-down class="w-4 h-4" />
+                                    </x-ui.action-button>
                                 @endif
                             </div>
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="document" title="Belum ada purchase order." message="Buat PO dari halaman detail permintaan yang masih memiliki sisa kebutuhan." :colspan="8" />
+                    <tr>
+                        <td colspan="8">
+                            <x-ui.empty-state icon="document-text" title="Belum ada purchase order." message="Buat PO dari halaman detail permintaan yang masih memiliki sisa kebutuhan." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

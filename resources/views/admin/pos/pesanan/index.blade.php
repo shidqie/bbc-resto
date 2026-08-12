@@ -220,12 +220,19 @@ function posSystemData() {
     savedPesananObject: null,
     activePrintEmbed: 'gabungan',
 
+    // Pengaturan Pajak & Layanan
+    pajakAktif: {{ ($pengaturanTransaksi->pajak_aktif ?? false) ? 'true' : 'false' }},
+    persentasePajak: {{ (float) ($pengaturanTransaksi->persentase_pajak ?? 0) }},
+    layananAktif: {{ ($pengaturanTransaksi->layanan_aktif ?? false) ? 'true' : 'false' }},
+    persentaseLayanan: {{ (float) ($pengaturanTransaksi->persentase_layanan ?? 0) }},
+
     openBills: @json($openBills),
 
     // ── Computed ────────────────────────────────────
     get subTotal()   { return this.cart.reduce((t, i) => t + i.harga * i.qty, 0); },
-    get totalServiceFee() { return this.subTotal * 0.05; }, // 5% Service Fee
-    get totalPrice() { return this.subTotal + this.totalServiceFee; },
+    get totalServiceFee() { return this.layananAktif ? (this.subTotal * (this.persentaseLayanan / 100)) : 0; },
+    get totalPajak() { return this.pajakAktif ? ((this.subTotal + this.totalServiceFee) * (this.persentasePajak / 100)) : 0; },
+    get totalPrice() { return this.subTotal + this.totalServiceFee + this.totalPajak; },
     get totalQty()   { return this.cart.reduce((t, i) => t + i.qty, 0); },
 
     formatPrice(n) {
@@ -1329,7 +1336,7 @@ document.addEventListener('alpine:init', () => {
 
             {{-- Input 3: No WhatsApp --}}
             <input type="text" x-model="customerPhone" placeholder="No. WhatsApp (Opsional)"
-                   inputmode="numeric" pattern="[0-9]*"
+                   inputmode="numeric" pattern="[0-9]*" maxlength="13"
                    oninput="let v = this.value.replace(/[^0-9]/g, ''); if(v.startsWith('62')) v = '0' + v.substring(2); if(v.length > 0 && v[0] !== '0') v = '0' + v; if(v.length > 1 && v[1] !== '8') v = '08' + v.substring(1); this.value = v; customerPhone = v"
                    class="w-full h-10 px-3.5 text-sm font-medium rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none transition">
           </div>
@@ -1379,10 +1386,18 @@ document.addEventListener('alpine:init', () => {
               <span class="font-bold text-gray-700">Subtotal Item</span>
               <span class="font-bold text-gray-700" x-text="'Rp ' + formatPrice(subTotal)"></span>
             </div>
-            <div class="flex justify-between text-sm pb-2">
-              <span class="font-bold text-gray-700">Biaya Layanan (5%)</span>
-              <span class="font-bold text-gray-700" x-text="'Rp ' + formatPrice(totalServiceFee)"></span>
-            </div>
+            <template x-if="layananAktif && persentaseLayanan > 0">
+              <div class="flex justify-between text-sm pb-1">
+                <span class="font-bold text-gray-700" x-text="`Biaya Layanan (${persentaseLayanan}%)`"></span>
+                <span class="font-bold text-gray-700" x-text="'Rp ' + formatPrice(totalServiceFee)"></span>
+              </div>
+            </template>
+            <template x-if="pajakAktif && persentasePajak > 0">
+              <div class="flex justify-between text-sm pb-2">
+                <span class="font-bold text-gray-700" x-text="`Pajak (${persentasePajak}%)`"></span>
+                <span class="font-bold text-gray-700" x-text="'Rp ' + formatPrice(totalPajak)"></span>
+              </div>
+            </template>
             <div class="flex justify-between text-sm pt-1 border-t border-gray-200/60">
               <span class="font-bold text-gray-700">Total Tagihan</span>
               <span class="font-black text-base text-[#0D3024]" x-text="'Rp ' + formatPrice(totalPrice)"></span>

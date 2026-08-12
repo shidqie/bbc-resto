@@ -6,7 +6,6 @@ use App\Models\KategoriMenu;
 use App\Models\Meja;
 use App\Models\Menu;
 use App\Services\DineInService;
-use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

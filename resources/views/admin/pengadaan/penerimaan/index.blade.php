@@ -38,7 +38,7 @@
                         Terapkan Filter
                     </button>
                     @if(request()->hasAny(['search', 'status', 'supplier', 'dari', 'sampai']))
-                        <a href="{{ route('pengadaan.penerimaan.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors">Reset</a>
+                        <x-ui.button href="{{ route('pengadaan.penerimaan.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </div>
             </form>
@@ -73,14 +73,17 @@
                             <x-ui.badge :color="$pnr->status == 'selesai' ? 'success' : 'primary'" size="sm">{{ $pnr->status_nama }}</x-ui.badge>
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
-                            <a href="{{ route('pengadaan.penerimaan.show', $pnr->id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-white bg-emerald-600 rounded-lg px-2.5 py-1.5 hover:bg-emerald-700 transition-colors">
-                                <x-heroicon-o-eye class="w-3 h-3" />
-                                Detail
-                            </a>
+                                <x-ui.action-button href="{{ route('pengadaan.penerimaan.show', $pnr->id) }}" title="Detail">
+                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                </x-ui.action-button>
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="inbox-arrow-down" title="Belum ada penerimaan." message="Penerimaan dicatat dari Purchase Order yang masih bisa diterima." :colspan="8" />
+                    <tr>
+                        <td colspan="8">
+                            <x-ui.empty-state icon="inbox-arrow-down" title="Belum ada penerimaan." message="Penerimaan dicatat dari Purchase Order yang masih bisa diterima." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

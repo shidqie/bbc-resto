@@ -155,7 +155,9 @@ class DineInController extends Controller
             $m->status = in_array($m->id, $activeMejaIds) ? 'terisi' : 'kosong';
         });
 
-        return view('admin.pos.pesanan.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'cashiers', 'menuHabisIds', 'sisaPorsiMenu'));
+        $pengaturanTransaksi = \App\Models\PengaturanTransaksi::first();
+
+        return view('admin.pos.pesanan.index', compact('mejas', 'menus', 'kategoris', 'openBills', 'cashiers', 'menuHabisIds', 'sisaPorsiMenu', 'pengaturanTransaksi'));
     }
 
     public function tableStatusApi()
@@ -334,8 +336,8 @@ class DineInController extends Controller
                 $subtotal += $menu->harga_jual * $item['qty'];
             }
 
-            $pajak = $subtotal * 0.10; // 10% PB1 tax
-            $totalTagihan = $subtotal + $pajak;
+            $kalkulasiService = app(\App\Services\KalkulasiPesananService::class);
+            $kalkulasi = $kalkulasiService->hitungTotal($subtotal);
 
             $pesananData = [
                  'tanggal_pesanan' => now(),
@@ -343,9 +345,12 @@ class DineInController extends Controller
                 'meja_id' => $request->meja_id,
                 'pelayan_id' => \Illuminate\Support\Facades\Auth::id(),
                 'status_pesanan_id' => 1, // Menunggu Konfirmasi/Pembayaran
-                'jumlah_sebelum_potongan' => $subtotal,
-                'jumlah_pajak' => $pajak,
-                'total_tagihan' => $totalTagihan,
+                'jumlah_sebelum_potongan' => $kalkulasi['subtotal'],
+                'persentase_pajak' => $kalkulasi['persentase_pajak'],
+                'jumlah_pajak' => $kalkulasi['nominal_pajak'],
+                'persentase_biaya_layanan' => $kalkulasi['persentase_biaya_layanan'],
+                'biaya_pelayanan' => $kalkulasi['nominal_biaya_layanan'],
+                'total_tagihan' => $kalkulasi['total_tagihan'],
                 'catatan' => $request->nama_konsumen.' ('.($request->jumlah_tamu ?? 1).' tamu)',
             ];
             

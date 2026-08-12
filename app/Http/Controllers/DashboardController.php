@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $userRole = $user->peran->nama_peran ?? null;
 
         if ($userRole === 'Konsumen' || empty($userRole)) {
-            return redirect()->route('member.dashboard');
+            return redirect()->route('home');
         }
 
         if ($userRole === 'Pengantaran') {
@@ -48,16 +48,28 @@ class DashboardController extends Controller
         // 2. Data Grafik Pendapatan 7 Hari Terakhir
         $labels = [];
         $dataPendapatan = [];
+        $dataDineIn = [];
+        $dataCatering = [];
+        $dataNasiBox = [];
 
+        $daysIndo = [
+            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 
+            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+        ];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
-            $labels[] = $date->format('d M');
+            $labels[] = $daysIndo[$date->format('l')] . ', ' . $date->format('d');
 
             $totalPendapatan = Pembayaran::whereDate('dibuat_pada', $date)
                 ->where('status_verifikasi', 'diterima')
                 ->sum('jumlah_dibayar');
 
             $dataPendapatan[] = $totalPendapatan;
+
+            // Hitung jumlah pesanan per jenis
+            $dataDineIn[] = Pesanan::whereDate('dibuat_pada', $date)->where('jenis_pesanan_id', 1)->count();
+            $dataCatering[] = Pesanan::whereDate('dibuat_pada', $date)->where('jenis_pesanan_id', 2)->count();
+            $dataNasiBox[] = Pesanan::whereDate('dibuat_pada', $date)->where('jenis_pesanan_id', 3)->count();
         }
 
         // 3. Data Stok Menipis (List)
@@ -114,6 +126,9 @@ class DashboardController extends Controller
             'unreadNotifikasiStok',
             'labels',
             'dataPendapatan',
+            'dataDineIn',
+            'dataCatering',
+            'dataNasiBox',
             'listStokMenipis',
             'pesananTerbaru',
             'cateringMenunggu',

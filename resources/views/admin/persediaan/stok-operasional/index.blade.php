@@ -12,13 +12,12 @@
             subtitle="Monitor stok bahan baku untuk kebutuhan dine in dan nasi box."
             :breadcrumbs="['Persediaan', 'Stok Operasional']">
             <x-slot:actions>
-                <a href="{{ route('pengadaan.harian.create') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                    <x-heroicon-o-plus class="w-4 h-4" />
+                <x-ui.button variant="primary" icon="plus" href="{{ route('pengadaan.harian.create') }}">
                     Buat Permintaan
-                </a>
-                <a href="{{ route('bahan-baku.index') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
+                </x-ui.button>
+                <x-ui.button variant="secondary" href="{{ route('bahan-baku.index') }}">
                     Data Bahan Baku
-                </a>
+                </x-ui.button>
             </x-slot:actions>
         </x-ui.page-header>
 
@@ -52,7 +51,7 @@
                     <x-ui.multi-select name="kategori" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori')" label="Kategori" type="radio" />
                     <x-ui.multi-select name="status" :options="['aman' => 'Aman', 'menipis' => 'Menipis', 'habis' => 'Habis']" :selected="request('status')" label="Status" type="radio" />
                     @if(request()->hasAny(['search', 'kategori', 'status']))
-                        <a href="{{ route('stok-operasional.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                        <x-ui.button href="{{ route('stok-operasional.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </form>
             </x-slot:toolbar>
@@ -101,16 +100,20 @@
                         <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
                                 <x-ui.action-button onclick="openDetailDrawer({{ $bahan->id }})" title="Detail">
-                                    <x-heroicon-o-eye class="w-3 h-3" />
+                                    <x-heroicon-o-eye class="w-4 h-4" />
                                 </x-ui.action-button>
-                                <a href="{{ route('mutasi-stok.index', ['bahan_baku_id' => $bahan->id, 'jenis_persediaan' => 'Harian']) }}" title="Riwayat Stok" class="w-7 h-7 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors">
-                                    <x-heroicon-o-clock class="w-3 h-3" />
-                                </a>
+                                <x-ui.action-button href="{{ route('mutasi-stok.index', ['bahan_baku_id' => $bahan->id, 'jenis_persediaan' => 'Harian']) }}" title="Riwayat Stok">
+                                    <x-heroicon-o-clock class="w-4 h-4" />
+                                </x-ui.action-button>
                             </div>
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="cube" title="Belum ada data stok" message="Tidak ada data stok ditemukan." :colspan="7" />
+                    <tr>
+                        <td colspan="7">
+                            <x-ui.empty-state icon="cube" title="Belum ada data stok" message="Tidak ada data stok ditemukan." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

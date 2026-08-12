@@ -16,17 +16,17 @@
             :breadcrumbs="['Persediaan', 'Bahan Baku']">
             <x-slot:actions>
                 @if($tab == 'semua')
-                <button type="button" onclick="openBahanBakuModal()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-sm">
-                    <x-heroicon-o-plus class="w-4 h-4" /> Tambah Bahan
-                </button>
+                <x-ui.button variant="primary" icon="plus" onclick="openBahanBakuModal()">
+                    Tambah Bahan
+                </x-ui.button>
                 @elseif($tab == 'kategori')
-                <button type="button" onclick="openKategoriModal()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-sm">
-                    <x-heroicon-o-plus class="w-4 h-4" /> Tambah Kategori
-                </button>
+                <x-ui.button variant="primary" icon="plus" onclick="openKategoriModal()">
+                    Tambah Kategori
+                </x-ui.button>
                 @elseif($tab == 'satuan')
-                <button type="button" onclick="openSatuanModal()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-sm">
-                    <x-heroicon-o-plus class="w-4 h-4" /> Tambah Satuan
-                </button>
+                <x-ui.button variant="primary" icon="plus" onclick="openSatuanModal()">
+                    Tambah Satuan
+                </x-ui.button>
                 @endif
             </x-slot:actions>
         </x-ui.page-header>
@@ -105,25 +105,25 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <button type="button" onclick="openDetailDrawer({{ $item->id }})" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                        <x-heroicon-o-eye class="w-3 h-3" />
-                                    </button>
-                                    <button type="button" onclick="openBahanBakuModal({{ $item->id }})" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                        <x-heroicon-o-pencil-square class="w-3 h-3" />
-                                    </button>
+                                    <x-ui.action-button onclick="openDetailDrawer({{ $item->id }})" title="Detail">
+                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    </x-ui.action-button>
+                                    <x-ui.action-button onclick="openBahanBakuModal({{ $item->id }})" title="Ubah">
+                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    </x-ui.action-button>
                                     <form id="delete-bahan-{{ $item->id }}" action="{{ route('bahan-baku.destroy', $item->id) }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
-                                        <button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Bahan Baku', name: '{{ addslashes($item->nama_bahan) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-bahan-{{ $item->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                            <x-heroicon-o-trash class="w-3 h-3" />
-                                        </button>
+                                        <x-ui.action-button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Bahan Baku', name: '{{ addslashes($item->nama_bahan) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-bahan-{{ $item->id }}', confirmText: 'Hapus', cancelText: 'Batal' })">
+                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                        </x-ui.action-button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="py-14 text-center text-gray-400">
-                                <p class="text-sm font-medium">Belum ada data bahan baku.</p>
+                            <td colspan="7">
+                                <x-ui.empty-state icon="cube" title="Belum ada data bahan baku" message="Belum ada data bahan baku." />
                             </td>
                         </tr>
                         @endforelse
@@ -134,10 +134,9 @@
             
         @elseif($tab == 'kategori')
             <div class="flex items-center justify-start mb-4">
-                <button type="button" onclick="openKategoriModal()" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all bg-[#0D3024] border border-transparent rounded-xl hover:bg-emerald-900 focus:ring-2 focus:ring-[#D4A843] focus:ring-offset-2">
-                    <x-heroicon-s-plus class="w-4 h-4" />
+                <x-ui.button variant="primary" icon="plus" onclick="openKategoriModal()">
                     Tambah Kategori
-                </button>
+                </x-ui.button>
             </div>
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <table class="w-full text-sm">
@@ -157,21 +156,23 @@
                             <td class="px-4 py-3 text-right font-medium">{{ $kat->bahan_bakus_count }}</td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <button onclick="openKategoriModal({{ $kat->id }}, '{{ addslashes($kat->nama_kategori) }}')" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                        <x-heroicon-o-pencil-square class="w-3 h-3" />
-                                    </button>
+                                    <x-ui.action-button onclick="openKategoriModal({{ $kat->id }}, '{{ addslashes($kat->nama_kategori) }}')" title="Ubah">
+                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    </x-ui.action-button>
                                     <form id="delete-kategori-{{ $kat->id }}" action="{{ route('kategori-bahan.destroy', $kat->id) }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
-                                        <button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Kategori', name: '{{ addslashes($kat->nama_kategori) }}', message: 'Kategori ini akan dihapus dari sistem.', formId: 'delete-kategori-{{ $kat->id }}' })" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                            <x-heroicon-o-trash class="w-3 h-3" />
-                                        </button>
+                                        <x-ui.action-button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Kategori', name: '{{ addslashes($kat->nama_kategori) }}', message: 'Kategori ini akan dihapus dari sistem.', formId: 'delete-kategori-{{ $kat->id }}' })">
+                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                        </x-ui.action-button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="py-14 text-center text-gray-400 text-sm">Belum ada kategori bahan baku.</td>
+                            <td colspan="4">
+                                <x-ui.empty-state icon="tag" title="Belum ada kategori bahan baku" message="Belum ada kategori bahan baku." />
+                            </td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -181,10 +182,9 @@
             
         @elseif($tab == 'satuan')
             <div class="flex items-center justify-start mb-4">
-                <button type="button" onclick="openSatuanModal()" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-all bg-[#0D3024] border border-transparent rounded-xl hover:bg-emerald-900 focus:ring-2 focus:ring-[#D4A843] focus:ring-offset-2">
-                    <x-heroicon-s-plus class="w-4 h-4" />
+                <x-ui.button variant="primary" icon="plus" onclick="openSatuanModal()">
                     Tambah Satuan
-                </button>
+                </x-ui.button>
             </div>
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <table class="w-full text-sm">
@@ -206,21 +206,23 @@
                             <td class="px-4 py-3 text-right font-medium">{{ $sat->bahan_bakus_count }}</td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <button onclick="openSatuanModal({{ $sat->id }}, '{{ addslashes($sat->nama_satuan) }}', '{{ addslashes($sat->singkatan ?? '') }}')" title="Ubah" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-                                        <x-heroicon-o-pencil-square class="w-3 h-3" />
-                                    </button>
+                                    <x-ui.action-button onclick="openSatuanModal({{ $sat->id }}, '{{ addslashes($sat->nama_satuan) }}', '{{ addslashes($sat->singkatan ?? '') }}')" title="Ubah">
+                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    </x-ui.action-button>
                                     <form id="delete-satuan-{{ $sat->id }}" action="{{ route('satuan.destroy', $sat->id) }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
-                                        <button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Satuan', name: '{{ addslashes($sat->nama_satuan) }}', message: 'Satuan ini akan dihapus dari sistem.', formId: 'delete-satuan-{{ $sat->id }}' })" class="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                            <x-heroicon-o-trash class="w-3 h-3" />
-                                        </button>
+                                        <x-ui.action-button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Satuan', name: '{{ addslashes($sat->nama_satuan) }}', message: 'Satuan ini akan dihapus dari sistem.', formId: 'delete-satuan-{{ $sat->id }}' })">
+                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                        </x-ui.action-button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="py-14 text-center text-gray-400 text-sm">Belum ada data satuan.</td>
+                            <td colspan="5">
+                                <x-ui.empty-state icon="scale" title="Belum ada data satuan" message="Belum ada data satuan." />
+                            </td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -260,13 +262,11 @@
             
             <div class="px-5 py-5 space-y-4 flex-1">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kode Bahan</label>
-                    <input type="text" name="id_bahan_baku" id="bbKode" readonly placeholder="Otomatis (BB-XXXX)" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-gray-50 text-gray-500">
+                    <x-ui.input name="id_bahan_baku" id="bbKode" label="Kode Bahan" placeholder="Otomatis (BB-XXXX)" readonly class="bg-gray-50 text-gray-500" />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Bahan <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama_bahan" id="bbNama" required placeholder="Contoh: Daging Sapi" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 transition-all">
+                    <x-ui.input name="nama_bahan" id="bbNama" label="Nama Bahan *" required placeholder="Contoh: Daging Sapi" />
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -327,8 +327,8 @@
             </div>
 
             <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/80 shrink-0">
-                <button type="button" onclick="closeBahanBakuModal()" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" class="text-sm font-semibold text-white bg-gray-900 rounded-lg px-5 py-2 hover:bg-gray-800 transition-colors">Simpan</button>
+                <x-ui.button type="button" variant="secondary" onclick="closeBahanBakuModal()">Batal</x-ui.button>
+                <x-ui.button type="submit" variant="primary">Simpan</x-ui.button>
             </div>
         </form>
     </div>
@@ -351,13 +351,12 @@
             <div id="formKategoriMethod"></div>
             <div class="px-5 py-5 space-y-4 flex-1">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Kategori <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama_kategori" id="katNama" required placeholder="Contoh: Daging & Unggas" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 transition-all">
+                    <x-ui.input name="nama_kategori" id="katNama" label="Nama Kategori *" required placeholder="Contoh: Daging & Unggas" />
                 </div>
             </div>
             <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/80 shrink-0">
-                <button type="button" onclick="closeKategoriModal()" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" class="text-sm font-semibold text-white bg-gray-900 rounded-lg px-5 py-2 hover:bg-gray-800 transition-colors">Simpan</button>
+                <x-ui.button type="button" variant="secondary" onclick="closeKategoriModal()">Batal</x-ui.button>
+                <x-ui.button type="submit" variant="primary">Simpan</x-ui.button>
             </div>
         </form>
     </div>
@@ -380,17 +379,15 @@
             <div id="formSatuanMethod"></div>
             <div class="px-5 py-5 space-y-4 flex-1">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Satuan <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama_satuan" id="satNama" required placeholder="Contoh: Kilogram" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 transition-all">
+                    <x-ui.input name="nama_satuan" id="satNama" label="Nama Satuan *" required placeholder="Contoh: Kilogram" />
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Singkatan</label>
-                    <input type="text" name="singkatan" id="satSingkat" placeholder="Contoh: kg" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 transition-all">
+                    <x-ui.input name="singkatan" id="satSingkat" label="Singkatan" placeholder="Contoh: kg" />
                 </div>
             </div>
             <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/80 shrink-0">
-                <button type="button" onclick="closeSatuanModal()" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" class="text-sm font-semibold text-white bg-gray-900 rounded-lg px-5 py-2 hover:bg-gray-800 transition-colors">Simpan</button>
+                <x-ui.button type="button" variant="secondary" onclick="closeSatuanModal()">Batal</x-ui.button>
+                <x-ui.button type="submit" variant="primary">Simpan</x-ui.button>
             </div>
         </form>
     </div>

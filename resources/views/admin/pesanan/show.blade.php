@@ -19,13 +19,12 @@
                         elseif($pesanan->status_pesanan_id == 6) $color = 'red';
                         else $color = 'blue';
                     @endphp
-                    <span class="px-2.5 py-1 bg-{{$color}}-50 text-{{$color}}-700 border border-{{$color}}-200 rounded-lg text-xs font-extrabold uppercase tracking-wider shadow-sm">
+                    <x-ui.badge :color="$color" size="sm">
                         {{ optional($pesanan->status_pesanan)->nama_status ?? 'Unknown' }}
-                    </span>
-                    <a href="{{ route('admin.pesanan.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
-                        <x-heroicon-o-arrow-left class="w-4 h-4" />
+                    </x-ui.badge>
+                    <x-ui.button href="{{ route('admin.pesanan.index') }}" variant="secondary" icon="arrow-left">
                         Kembali
-                    </a>
+                    </x-ui.button>
                 </div>
             </x-slot:actions>
         </x-ui.page-header>

@@ -34,7 +34,7 @@
                     </div>
 
                     @if(request()->hasAny(['search']) || $status !== 'menunggu_verifikasi')
-                        <a href="{{ route('admin.verifikasi_pembayaran.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
+                        <x-ui.button href="{{ route('admin.verifikasi_pembayaran.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </form>
             </x-slot:toolbar>
@@ -90,16 +90,16 @@
                                     <form action="{{ route('admin.verifikasi_pembayaran.process', $pembayaran->id) }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="action" value="terima">
-                                        <button type="submit" onclick="return confirm('Verifikasi pembayaran ini?')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1.5 rounded flex items-center gap-1 shadow-sm font-medium">
-                                            <x-heroicon-o-check class="w-3.5 h-3.5" /> Verifikasi
-                                        </button>
+                                        <x-ui.button type="submit" variant="primary" size="sm" onclick="return confirm('Verifikasi pembayaran ini?')">
+                                            <x-heroicon-o-check class="w-3.5 h-3.5 mr-1 inline" /> Verifikasi
+                                        </x-ui.button>
                                     </form>
                                     <form action="{{ route('admin.verifikasi_pembayaran.process', $pembayaran->id) }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="action" value="tolak">
-                                        <button type="submit" onclick="return confirm('Batalkan pembayaran ini?')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1.5 rounded flex items-center gap-1 shadow-sm font-medium">
-                                            <x-heroicon-o-x-mark class="w-3.5 h-3.5" /> Batal
-                                        </button>
+                                        <x-ui.button type="submit" variant="danger" size="sm" onclick="return confirm('Batalkan pembayaran ini?')">
+                                            <x-heroicon-o-x-mark class="w-3.5 h-3.5 mr-1 inline" /> Batal
+                                        </x-ui.button>
                                     </form>
                                 @else
                                     <x-ui.action-button x-data="" @click="$dispatch('open-modal', 'modal-verifikasi-{{ $pembayaran->id }}')" title="Lihat Detail">
@@ -110,7 +110,11 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="credit-card" title="Tidak ada pembayaran" message="Tidak ada data pembayaran yang sesuai dengan filter." :colspan="8" />
+                    <tr>
+                        <td colspan="8">
+                            <x-ui.empty-state icon="credit-card" title="Tidak ada pembayaran" message="Tidak ada data pembayaran yang sesuai dengan filter." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

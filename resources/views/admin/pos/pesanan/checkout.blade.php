@@ -166,12 +166,20 @@
                     </div>
                     <div class="flex justify-between text-xs pt-1 border-t border-slate-200/60 mt-1">
                         <span class="font-bold text-slate-700">Subtotal Item</span>
-                        <span class="font-bold text-slate-800">Rp {{ number_format((!empty($pesanan->jumlah_sebelum_potongan) && $pesanan->jumlah_sebelum_potongan > 0) ? $pesanan->jumlah_sebelum_potongan : ($totalTagihan / 1.05), 0, ',', '.') }}</span>
+                        <span class="font-bold text-slate-800">Rp {{ number_format($pesanan->jumlah_sebelum_potongan, 0, ',', '.') }}</span>
                     </div>
+                    @if($pesanan->biaya_pelayanan > 0)
                     <div class="flex justify-between text-xs pt-1">
-                        <span class="font-bold text-slate-700">Biaya Layanan (5%)</span>
-                        <span class="font-bold text-slate-800">Rp {{ number_format((!empty($pesanan->jumlah_pajak) && $pesanan->jumlah_pajak > 0) ? $pesanan->jumlah_pajak : ($totalTagihan - ($totalTagihan / 1.05)), 0, ',', '.') }}</span>
+                        <span class="font-bold text-slate-700">Biaya Layanan ({{ floatval($pesanan->persentase_biaya_layanan) }}%)</span>
+                        <span class="font-bold text-slate-800">Rp {{ number_format($pesanan->biaya_pelayanan, 0, ',', '.') }}</span>
                     </div>
+                    @endif
+                    @if($pesanan->jumlah_pajak > 0)
+                    <div class="flex justify-between text-xs pt-1">
+                        <span class="font-bold text-slate-700">Pajak ({{ floatval($pesanan->persentase_pajak) }}%)</span>
+                        <span class="font-bold text-slate-800">Rp {{ number_format($pesanan->jumlah_pajak, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
                     <div class="flex justify-between text-sm pt-2 border-t border-slate-200/60">
                         <span class="font-bold text-slate-700">Total</span>
                         <span class="font-black text-base text-[#0D3024]">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</span>

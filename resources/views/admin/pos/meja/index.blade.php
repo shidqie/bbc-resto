@@ -11,10 +11,9 @@
         {{-- PAGE HEADER --}}
         <x-ui.page-header title="Manajemen Meja" subtitle="Kelola data meja restoran, kapasitas, dan pantau statusnya." :breadcrumbs="['Meja', 'Data Meja']">
             <x-slot:actions>
-                <button onclick="openMejaModal()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <x-ui.button variant="primary" icon="plus" onclick="openMejaModal()">
                     Meja Baru
-                </button>
+                </x-ui.button>
             </x-slot:actions>
         </x-ui.page-header>
 
@@ -94,7 +93,11 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="clipboard" title="Belum ada meja terdaftar." message="Tambahkan meja baru menggunakan tombol di atas." :colspan="6" />
+                    <tr>
+                        <td colspan="6">
+                            <x-ui.empty-state icon="clipboard" title="Belum ada meja terdaftar." message="Tambahkan meja baru menggunakan tombol di atas." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>
@@ -122,8 +125,7 @@
                 <input type="hidden" name="_method" id="formMejaMethod" value="POST">
                 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-900 mb-1.5">Nomor Meja <span class="text-red-500">*</span></label>
-                    <input type="text" name="nomor_meja" id="inputNomorMeja" required class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white" placeholder="Contoh: 1, A1, VVIP-1">
+                    <x-ui.input name="nomor_meja" id="inputNomorMeja" label="Nomor Meja *" required placeholder="Contoh: 1, A1, VVIP-1" />
                 </div>
 
                 <div>
@@ -132,8 +134,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-900 mb-1.5">Area</label>
-                    <input type="text" name="area" id="inputArea" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white" placeholder="Contoh: Indoor, Outdoor, VIP">
+                    <x-ui.input name="area" id="inputArea" label="Area" placeholder="Contoh: Indoor, Outdoor, VIP" />
                 </div>
 
                 <div id="statusContainer" class="hidden">
@@ -148,8 +149,8 @@
         </div>
         
         <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/50">
-            <button type="button" onclick="closeMejaModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors">Batal</button>
-            <button type="submit" form="formMeja" class="px-5 py-2.5 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-xl transition-colors shadow-sm">Simpan Meja</button>
+            <x-ui.button type="button" variant="secondary" onclick="closeMejaModal()">Batal</x-ui.button>
+            <x-ui.button type="submit" variant="primary" form="formMeja">Simpan Meja</x-ui.button>
         </div>
     </div>
 </div>
@@ -235,22 +236,22 @@
         </div>
         
         <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/50">
-            <button type="button" onclick="closeQrDrawer()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors">Tutup</button>
+            <x-ui.button type="button" variant="secondary" onclick="closeQrDrawer()">Tutup</x-ui.button>
             
             <form id="formGenerateQr" method="POST" action="" class="hidden">
                 @csrf
-                <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition-colors shadow-sm flex items-center gap-1.5">
-                    <x-heroicon-o-arrow-path class="w-4 h-4" /> Generate QR
-                </button>
+                <x-ui.button type="submit" variant="primary" icon="arrow-path">
+                    Generate QR
+                </x-ui.button>
             </form>
 
             <div id="btnGroupQrActions" class="flex items-center gap-2 hidden">
-                <button type="button" onclick="downloadQrPng()" class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors shadow-sm flex items-center gap-1.5" title="Unduh QR sebagai gambar PNG">
-                    <x-heroicon-o-arrow-down-tray class="w-5 h-5" /> Unduh PNG
-                </button>
-                <a id="btnPrintQr" href="#" target="_blank" class="px-5 py-2.5 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors shadow-sm flex items-center gap-1.5">
-                    <x-heroicon-o-printer class="w-5 h-5" /> Cetak QR
-                </a>
+                <x-ui.button type="button" variant="secondary" icon="arrow-down-tray" onclick="downloadQrPng()" title="Unduh QR sebagai gambar PNG">
+                    Unduh PNG
+                </x-ui.button>
+                <x-ui.button href="#" id="btnPrintQr" target="_blank" variant="primary" icon="printer">
+                    Cetak QR
+                </x-ui.button>
             </div>
         </div>
     </div>

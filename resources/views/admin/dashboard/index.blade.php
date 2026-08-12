@@ -8,14 +8,22 @@
         <x-ui.page-header title="Dashboard" subtitle="Ringkasan performa operasional resto, katering, dan nasi box hari ini." :breadcrumbs="['Dashboard']" />
 
         {{-- ── STAT CARDS ── --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
             <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
-                <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pesanan Hari Ini</span>
-                <span class="text-xl font-bold text-gray-900">{{ $pesananHariIni }}</span>
+                <span class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pesanan Hari Ini</span>
+                <span class="text-lg sm:text-xl font-bold text-gray-900">{{ $pesananHariIni }}</span>
             </div>
             <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
-                <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pendapatan Hari Ini</span>
-                <span class="text-xl font-bold text-gray-900 tabular-nums">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</span>
+                <span class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pendapatan Hari Ini</span>
+                <span class="text-lg sm:text-xl font-bold text-gray-900 tabular-nums">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</span>
+            </div>
+            <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
+                <span class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pesanan Menunggu</span>
+                <span class="text-lg sm:text-xl font-bold text-amber-500">{{ $pesananPending }}</span>
+            </div>
+            <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
+                <span class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Stok Menipis</span>
+                <span class="text-lg sm:text-xl font-bold text-rose-500">{{ $stokMenipis }}</span>
             </div>
         </div>
 
@@ -23,14 +31,17 @@
         <div class="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200 flex flex-col justify-between">
             <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-neutral-100">
                 <div>
-                    <h2 class="font-bold text-neutral-900 text-sm">Tren Pendapatan (7 Hari Terakhir)</h2>
-                    <p class="text-xs text-neutral-400 font-medium">Grafik akumulasi omset harian resto & catering</p>
+                    <h2 class="font-bold text-neutral-900 text-sm flex items-center gap-2">
+                        Tren Pendapatan & Pesanan (7 Hari Terakhir)
+                        <span class="px-2 py-0.5 bg-sky-50 text-sky-600 text-[10px] font-bold rounded-full uppercase tracking-wider">{{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</span>
+                    </h2>
+                    <p class="text-xs text-neutral-400 font-medium mt-1">Grafik akumulasi omset harian serta jumlah pesanan Dine-in, Katering, dan Nasi Box</p>
                 </div>
                 <span class="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-[11px] font-medium rounded border border-neutral-200">
                     Realtime
                 </span>
             </div>
-            <div class="h-48 sm:h-56 w-full relative">
+            <div class="h-64 sm:h-72 w-full relative">
                 <canvas id="incomeChart"></canvas>
             </div>
         </div>
@@ -88,14 +99,18 @@
                             </td>
                             <td class="px-4 py-4 align-middle text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <a href="{{ $p->url }}" title="Detail" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                                        <x-heroicon-o-eye class="w-3 h-3" />
-                                    </a>
+                                    <x-ui.action-button href="{{ $p->url }}" title="Detail">
+                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    </x-ui.action-button>
                                 </div>
                             </td>
                         </x-ui.table.row>
                     @empty
-                        <x-empty-state icon="clock" title="Belum ada transaksi" message="Belum ada transaksi pesanan hari ini." :colspan="6" />
+                        <tr>
+                            <td colspan="6">
+                                <x-ui.empty-state icon="clock" title="Belum ada transaksi" message="Belum ada transaksi pesanan hari ini." />
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>
@@ -110,36 +125,74 @@
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('incomeChart').getContext('2d');
         const labels = {!! json_encode($labels) !!};
-        const data = {!! json_encode($dataPendapatan) !!};
+        const dataPendapatan = {!! json_encode($dataPendapatan) !!};
+        const dataDineIn = {!! json_encode($dataDineIn) !!};
+        const dataCatering = {!! json_encode($dataCatering) !!};
+        const dataNasiBox = {!! json_encode($dataNasiBox) !!};
         
         const gradient = ctx.createLinearGradient(0, 0, 0, 240);
         gradient.addColorStop(0, 'rgba(23, 23, 23, 0.12)');
         gradient.addColorStop(1, 'rgba(23, 23, 23, 0)');
         
         new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: 'Pendapatan (Rp)',
-                    data: data,
-                    borderColor: '#0D3024',
-                    backgroundColor: gradient,
-                    borderWidth: 2,
-                    pointBackgroundColor: '#FFFFFF',
-                    pointBorderColor: '#0D3024',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    fill: true,
-                    tension: 0.35
-                }]
+                datasets: [
+                    {
+                        type: 'line',
+                        label: 'Pendapatan (Rp)',
+                        data: dataPendapatan,
+                        borderColor: '#0D3024',
+                        backgroundColor: '#0D3024',
+                        borderWidth: 1.5,
+                        pointBackgroundColor: '#FFFFFF',
+                        pointBorderColor: '#0D3024',
+                        pointBorderWidth: 1.5,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Dine In',
+                        data: dataDineIn,
+                        backgroundColor: '#3B82F6',
+                        borderRadius: 3,
+                        barThickness: 16,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Katering',
+                        data: dataCatering,
+                        backgroundColor: '#10B981',
+                        borderRadius: 3,
+                        barThickness: 16,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Nasi Box',
+                        data: dataNasiBox,
+                        backgroundColor: '#F59E0B',
+                        borderRadius: 3,
+                        barThickness: 16,
+                        yAxisID: 'y1'
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
+                    legend: { 
+                        display: true, 
+                        position: 'top', 
+                        labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } 
+                    },
                     tooltip: {
                         backgroundColor: '#0D3024',
                         padding: 10,
@@ -147,7 +200,10 @@
                         bodyFont: { size: 13, weight: 'bold' },
                         callbacks: {
                             label: function(context) {
-                                return 'Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                                if (context.dataset.yAxisID === 'y') {
+                                    return context.dataset.label + ': Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                                }
+                                return context.dataset.label + ': ' + context.parsed.y + ' Pesanan';
                             }
                         }
                     }
@@ -155,9 +211,12 @@
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 11 }, color: '#A3A3A3' }
+                        ticks: { font: { size: 10 }, color: '#A3A3A3', maxRotation: 0, minRotation: 0 }
                     },
                     y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
                         grid: { color: '#F5F5F5' },
                         ticks: {
                             font: { size: 11 },
@@ -166,6 +225,20 @@
                                 if(value >= 1000000) return 'Rp ' + (value / 1000000) + ' Jt';
                                 if(value >= 1000) return 'Rp ' + (value / 1000) + ' Rb';
                                 return 'Rp ' + value;
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { display: false },
+                        ticks: {
+                            stepSize: 1,
+                            font: { size: 11 },
+                            color: '#A3A3A3',
+                            callback: function(value) {
+                                return value + ' trx';
                             }
                         }
                     }

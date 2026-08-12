@@ -12,10 +12,9 @@
             :breadcrumbs="['Laporan', 'Penjualan']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('laporan.penjualan.cetak-pdf', request()->all()) }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors shadow-sm">
-                        <x-heroicon-o-document-text class="w-4 h-4 text-rose-500" />
+                    <x-ui.button variant="secondary" icon="document-text" href="{{ route('laporan.penjualan.cetak-pdf', request()->all()) }}" target="_blank">
                         Export PDF
-                    </a>
+                    </x-ui.button>
                 </div>
             </x-slot:actions>
         </x-ui.page-header>
@@ -138,7 +137,7 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="document-text" title="Belum ada data" message="Data akan muncul setelah transaksi tersedia." :colspan="8" />
+                    <x-ui.empty-state icon="document-text" title="Belum ada data" message="Data akan muncul setelah transaksi tersedia." />
                     @endforelse
                 </tbody>
             </x-ui.table>

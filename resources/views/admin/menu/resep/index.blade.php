@@ -199,7 +199,11 @@
                     </x-ui.table.row>
                     @endif
                     @empty
-                    <x-empty-state icon="document-text" title="Belum ada data menu" message="Tambahkan menu terlebih dahulu" :colspan="7" />
+                    <tr>
+                        <td colspan="7">
+                            <x-ui.empty-state icon="document-text" title="Belum ada data menu" message="Tambahkan menu terlebih dahulu" />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

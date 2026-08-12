@@ -164,7 +164,9 @@
                                 @if($pesanan->jadwal_pesanan)
                                 <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
                                     <dt class="text-gray-400 font-light">Kontak</dt>
-                                    @php($lacakKontak = $pesanan->jadwal_pesanan->kontak ?? $pesanan->jadwal_pesanan->nomor_telepon_penerima ?? '')
+                                    @php 
+                                        $lacakKontak = $pesanan->jadwal_pesanan->kontak ?? $pesanan->jadwal_pesanan->nomor_telepon_penerima ?? ''; 
+                                    @endphp
                                     <dd class="font-medium text-gray-800">{{ $lacakKontak ? \App\Support\WhatsAppNumber::formatForDisplay($lacakKontak) : '-' }}</dd>
                                 </div>
                                 <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">

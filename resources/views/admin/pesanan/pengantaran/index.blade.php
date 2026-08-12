@@ -63,15 +63,9 @@
             :breadcrumbs="['Penjualan', $pageTitle]"
         >
             <x-slot:actions>
-                <a
-                    href="{{ route('admin.jadwal.index') }}"
-                    class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
+                <x-ui.button variant="primary" href="{{ route('admin.jadwal.index') }}">
                     Hari Ini
-                </a>
+                </x-ui.button>
             </x-slot:actions>
         </x-ui.page-header>
 
@@ -110,13 +104,14 @@
                     method="GET"
                     class="flex items-center gap-2 w-full flex-wrap"
                 >
-                    <input
-                        type="date"
-                        name="date"
-                        value="{{ $selectedDate }}"
-                        class="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 transition-all bg-white"
-                        onchange="this.form.submit()"
-                    >
+                    <div class="w-full xl:max-w-xs shrink-0">
+                        <x-ui.input
+                            type="date"
+                            name="date"
+                            value="{{ $selectedDate }}"
+                            onchange="this.form.submit()"
+                        />
+                    </div>
 
                     <x-search-input
                         name="search"
@@ -368,26 +363,27 @@
 
                             {{-- AKSI --}}
                             <td class="px-4 py-4 text-right">
-                                <a
+                                <x-ui.action-button
                                     href="{{ (int) $order->jenis_pesanan_id === 2
                                         ? url('/admin/pesanan/catering/' . $order->id)
                                         : url('/admin/pesanan/nasi-box/' . $order->id)
                                     }}"
-                                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900 transition"
                                     title="Lihat Detail Pesanan"
                                 >
                                     <x-heroicon-o-eye class="w-4 h-4" />
-                                    Detail
-                                </a>
+                                </x-ui.action-button>
                             </td>
                         </x-ui.table.row>
                     @empty
-                        <x-empty-state
-                            icon="clock"
-                            title="Belum ada jadwal pengantaran"
-                            message="Tidak terdapat pesanan Katering atau Nasi Box yang dijadwalkan untuk diantar pada tanggal yang dipilih."
-                            :colspan="8"
-                        />
+                        <tr>
+                            <td colspan="9">
+                                <x-ui.empty-state
+                                    icon="clock"
+                                    title="Belum ada jadwal pengantaran"
+                                    message="Tidak terdapat pesanan Katering atau Nasi Box yang dijadwalkan untuk diantar pada tanggal yang dipilih."
+                                />
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

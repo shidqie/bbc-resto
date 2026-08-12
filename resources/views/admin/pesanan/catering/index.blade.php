@@ -131,9 +131,9 @@
                         </td>
                         <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.catering.show', $p->id) }}'})" title="Detail" class="text-gray-500 transition hover:text-gray-900">
+                                <x-ui.action-button @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.catering.show', $p->id) }}'})" title="Detail">
                                     <x-heroicon-o-eye class="w-4 h-4" />
-                                </button>
+                                </x-ui.action-button>
                                 
                                 @php
                                     $buktiPending = $p->pembayaran->firstWhere('status_verifikasi', 'menunggu_verifikasi');
@@ -145,9 +145,9 @@
                                     <form id="form-verif-{{ $buktiPending->id }}" action="{{ route('admin.bukti.verifikasi-dp', $buktiPending->id) }}" method="POST" class="hidden">
                                         @csrf @method('PATCH')
                                     </form>
-                                    <button type="button" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi" class="text-green-600 transition hover:text-green-800">
+                                    <x-ui.action-button type="button" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi" class="text-green-600 hover:text-green-800">
                                         <x-heroicon-o-check-badge class="w-4 h-4" />
-                                    </button>
+                                    </x-ui.action-button>
                                 @endif
 
                                 @if(!in_array($p->status_pesanan_id, [5, 6]))
@@ -164,7 +164,11 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-empty-state icon="clipboard-document-list" title="Tidak ada pesanan katering" message="Tidak ada data pesanan catering." :colspan="10" />
+                    <tr>
+                        <td colspan="9">
+                            <x-ui.empty-state icon="clipboard-document-list" title="Tidak ada pesanan katering" message="Tidak ada data pesanan catering." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

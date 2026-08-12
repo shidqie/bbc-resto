@@ -306,7 +306,7 @@
                 </div>
                 <div>
                     <input x-model="nomorHpInput" type="tel" placeholder="No. WhatsApp (Opsional)"
-                           inputmode="numeric" pattern="[0-9]*" maxlength="15"
+                           inputmode="numeric" pattern="[0-9]*" maxlength="13"
                            oninput="let v = this.value.replace(/[^0-9]/g, ''); if(v.startsWith('62')) v = '0' + v.substring(2); if(v.length > 0 && v[0] !== '0') v = '0' + v; if(v.length > 1 && v[1] !== '8') v = '08' + v.substring(1); nomorHpInput = v; this.value = v"
                            class="w-full h-10 px-3 bg-white border border-neutral-200 rounded-lg text-sm font-medium placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-all">
                 </div>
