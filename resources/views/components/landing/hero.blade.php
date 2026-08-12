@@ -1,4 +1,4 @@
-<section id="beranda" class="relative flex items-center overflow-hidden" style="min-height: calc(100vh - 80px);">
+<section id="beranda" class="relative flex items-center overflow-hidden" style="min-height: calc(100vh - 64px);">
     <img src="{{ asset('images/homepage.webp') }}" alt="Saung Babakan Cinta" class="absolute inset-0 w-full h-full object-cover">
     <div class="absolute inset-0 bg-black/60"></div>
     <div class="relative z-10 max-w-[1280px] mx-auto px-6 py-20 w-full">
