@@ -1,20 +1,20 @@
 {{-- 
-    Halaman: Jadwal Pengantaran
+    Halaman: Jadwal Pengiriman
     Catatan:
-    - Tim pengantaran hanya satu, sehingga tidak ada pemilihan/penugasan kurir.
+    - Tim pengiriman hanya satu, sehingga tidak ada pemilihan/penugasan kurir.
     - Pemilik hanya memantau jadwal dan status.
-    - Tim Pengantaran memperbarui status pengantaran.
+    - Tim Pengantaran memperbarui status pengiriman.
 --}}
 
 @extends('layouts.pos')
 
 @php
-    $isTimPengantaran = (int) Auth::user()->peran_id === 6;
+    $isTimPengiriman = (int) Auth::user()->peran_id === 6;
 
-    $pageTitle = $isTimPengantaran ? 'Pengantaran Saya' : 'Jadwal Pengantaran';
-    $pageSubtitle = $isTimPengantaran
-        ? 'Lihat tugas pengantaran Katering dan Nasi Box serta perbarui status pengantaran.'
-        : 'Pantau jadwal pengantaran pesanan Katering dan Nasi Box.';
+    $pageTitle = $isTimPengiriman ? 'Pengiriman Saya' : 'Jadwal Pengiriman';
+    $pageSubtitle = $isTimPengiriman
+        ? 'Lihat tugas pengiriman Katering dan Nasi Box serta perbarui status pengiriman.'
+        : 'Pantau jadwal pengiriman pesanan Katering dan Nasi Box.';
 
     /*
      * Ringkasan dihitung dari data $orders yang sudah dikirim controller.
@@ -32,21 +32,21 @@
         ? $orders->getCollection()
         : collect($orders);
 
-    $totalPengantaran = method_exists($orders, 'total')
+    $totalPengiriman = method_exists($orders, 'total')
         ? $orders->total()
         : $orderCollection->count();
 
     $siapDikirim = $orderCollection->filter(function ($order) {
-        $status = optional($order->pengantaran)->status_pengantaran_id;
+        $status = optional($order->pengiriman)->status_pengiriman_id;
         return in_array((int) $status, [1, 2], true);
     })->count();
 
-    $dalamPengantaran = $orderCollection->filter(function ($order) {
-        return (int) optional($order->pengantaran)->status_pengantaran_id === 3;
+    $dalamPengiriman = $orderCollection->filter(function ($order) {
+        return (int) optional($order->pengiriman)->status_pengiriman_id === 3;
     })->count();
 
     $selesai = $orderCollection->filter(function ($order) {
-        return (int) optional($order->pengantaran)->status_pengantaran_id === 4;
+        return (int) optional($order->pengiriman)->status_pengiriman_id === 4;
     })->count();
 @endphp
 
@@ -75,9 +75,9 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
                 <p class="text-sm font-medium text-gray-500">
-                    Semua Pengantaran ({{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d M') }})
+                    Semua Pengiriman ({{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d M') }})
                 </p>
-                <p class="text-xl font-bold text-gray-900 mt-1">{{ $totalPengantaran }}</p>
+                <p class="text-xl font-bold text-gray-900 mt-1">{{ $totalPengiriman }}</p>
             </div>
 
             <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
@@ -86,8 +86,8 @@
             </div>
 
             <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
-                <p class="text-sm font-medium text-gray-500">Dalam Pengantaran</p>
-                <p class="text-xl font-bold text-blue-600 mt-1">{{ $dalamPengantaran }}</p>
+                <p class="text-sm font-medium text-gray-500">Dalam Pengiriman</p>
+                <p class="text-xl font-bold text-blue-600 mt-1">{{ $dalamPengiriman }}</p>
             </div>
 
             <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
@@ -120,14 +120,14 @@
                     />
 
                     {{--
-                        Filter status memakai ID status pengantaran.
-                        Pastikan controller memfilter melalui relasi pengantaran.status_pengantaran_id.
+                        Filter status memakai ID status pengiriman.
+                        Pastikan controller memfilter melalui relasi pengiriman.status_pengiriman_id.
                     --}}
                     <x-ui.multi-select
                         name="status"
                         :options="[
                             '2' => 'Siap Dikirim',
-                            '3' => 'Dalam Pengantaran',
+                            '3' => 'Dalam Pengiriman',
                             '4' => 'Selesai',
                             '5' => 'Gagal Dikirim'
                         ]"
@@ -146,7 +146,7 @@
                     <th class="px-4 py-3.5 text-left">Pelanggan</th>
                     <th class="px-4 py-3.5 text-left">Jenis Pesanan</th>
                     <th class="px-4 py-3.5 text-left">Detail Pesanan</th>
-                    <th class="px-4 py-3.5 text-left">Alamat Pengantaran</th>
+                    <th class="px-4 py-3.5 text-left">Alamat Pengiriman</th>
                     <th class="px-4 py-3.5 text-left">Status</th>
                     <th class="px-4 py-3.5 text-right">Aksi</th>
                 </x-ui.table.header>
@@ -155,21 +155,21 @@
                     @forelse($orders as $i => $order)
                         @php
                             $jadwal = $order->jadwal_pesanan;
-                            $pengantaran = $order->pengantaran;
+                            $pengiriman = $order->pengiriman;
 
-                            $statusId = (int) optional($pengantaran)->status_pengantaran_id;
+                            $statusId = (int) optional($pengiriman)->status_pengiriman_id;
 
-                            $tanggalPengantaran = optional($jadwal)->tanggal_pengantaran
+                            $tanggalPengiriman = optional($jadwal)->tanggal_pengiriman
                                 ?? optional($jadwal)->tanggal_acara
                                 ?? $selectedDate;
 
-                            $waktuPengantaran = optional($jadwal)->waktu_pengantaran;
+                            $waktuPengiriman = optional($jadwal)->waktu_pengiriman;
 
                             if (in_array($statusId, [1, 2], true)) {
                                 $statusLabel = 'Siap Dikirim';
                                 $statusClass = 'bg-amber-50 text-amber-800 border-amber-200';
                             } elseif ($statusId === 3) {
-                                $statusLabel = 'Dalam Pengantaran';
+                                $statusLabel = 'Dalam Pengiriman';
                                 $statusClass = 'bg-blue-50 text-blue-800 border-blue-200';
                             } elseif ($statusId === 4) {
                                 $statusLabel = 'Selesai';
@@ -188,7 +188,7 @@
 
                             $namaPelanggan = optional($jadwal)->nama_penerima ?? '-';
                             $teleponPelanggan = optional($jadwal)->nomor_telepon_penerima ?? '-';
-                            $alamatPengantaran = optional($jadwal)->alamat_pengantaran ?? '-';
+                            $alamatPengiriman = optional($jadwal)->alamat_pengiriman ?? '-';
 
                             $jenisPesanan = (int) $order->jenis_pesanan_id === 2
                                 ? 'Katering'
@@ -203,14 +203,14 @@
                             {{-- JADWAL --}}
                             <td class="px-4 py-4 whitespace-nowrap">
                                 <p class="font-semibold text-gray-900 text-sm">
-                                    {{ $tanggalPengantaran
-                                        ? \Carbon\Carbon::parse($tanggalPengantaran)->translatedFormat('d M Y')
+                                    {{ $tanggalPengiriman
+                                        ? \Carbon\Carbon::parse($tanggalPengiriman)->translatedFormat('d M Y')
                                         : '-'
                                     }}
                                 </p>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    {{ $waktuPengantaran
-                                        ? \Carbon\Carbon::parse($waktuPengantaran)->format('H:i')
+                                    {{ $waktuPengiriman
+                                        ? \Carbon\Carbon::parse($waktuPengiriman)->format('H:i')
                                         : 'Jam belum ditentukan'
                                     }}
                                 </p>
@@ -261,7 +261,7 @@
                             {{-- ALAMAT --}}
                             <td class="px-4 py-4 max-w-[280px]">
                                 <p class="text-xs text-gray-700 leading-relaxed">
-                                    {{ $alamatPengantaran }}
+                                    {{ $alamatPengiriman }}
                                 </p>
                             </td>
 
@@ -271,23 +271,23 @@
                                     {{ $statusLabel }}
                                 </span>
 
-                                {{-- Hanya Tim Pengantaran yang dapat memperbarui proses pengantaran --}}
-                                @if($isTimPengantaran && $pengantaran)
+                                {{-- Hanya Tim Pengantaran yang dapat memperbarui proses pengiriman --}}
+                                @if($isTimPengiriman && $pengiriman)
                                     <div class="mt-2 space-y-1.5">
                                         @if(in_array($statusId, [1, 2], true))
                                             <form
-                                                action="{{ route('admin.jadwal.update-pengantaran-status', $pengantaran->id) }}"
+                                                action="{{ route('admin.jadwal.update-pengiriman-status', $pengiriman->id) }}"
                                                 method="POST"
                                             >
                                                 @csrf
                                                 @method('PATCH')
-                                                <input type="hidden" name="status_pengantaran_id" value="3">
+                                                <input type="hidden" name="status_pengiriman_id" value="3">
 
                                                 <button
                                                     type="submit"
                                                     class="w-full inline-flex justify-center items-center rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-800 transition"
                                                 >
-                                                    Mulai Pengantaran
+                                                    Mulai Pengiriman
                                                 </button>
                                             </form>
                                         @elseif($statusId === 3)
@@ -297,7 +297,7 @@
                                                     type="button"
                                                     class="w-full inline-flex justify-center items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition"
                                                 >
-                                                    Selesaikan Pengantaran
+                                                    Selesaikan Pengiriman
                                                 </button>
 
                                                 <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -305,10 +305,10 @@
                                                         <div x-show="showModal" x-transition.opacity class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                                                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
                                                         <div x-show="showModal" x-transition.scale.origin.bottom class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                                                            <form action="{{ route('admin.jadwal.update-pengantaran-status', $pengantaran->id) }}" method="POST" enctype="multipart/form-data">
+                                                            <form action="{{ route('admin.jadwal.update-pengiriman-status', $pengiriman->id) }}" method="POST" enctype="multipart/form-data">
                                                                 @csrf
                                                                 @method('PATCH')
-                                                                <input type="hidden" name="status_pengantaran_id" value="4">
+                                                                <input type="hidden" name="status_pengiriman_id" value="4">
                                                                 
                                                                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                                                                     <div class="sm:flex sm:items-start">
@@ -316,9 +316,9 @@
                                                                             <x-heroicon-o-camera class="h-6 w-6 text-emerald-600" />
                                                                         </div>
                                                                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                                                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Upload Bukti Pengantaran</h3>
+                                                                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Upload Bukti Pengiriman</h3>
                                                                             <div class="mt-2">
-                                                                                <p class="text-sm text-gray-500">Silakan unggah foto bukti pengantaran/penerimaan untuk menyelesaikan pesanan ini.</p>
+                                                                                <p class="text-sm text-gray-500">Silakan unggah foto bukti pengiriman/penerimaan untuk menyelesaikan pesanan ini.</p>
                                                                                 <div class="mt-4">
                                                                                     <input type="file" name="foto_bukti" accept="image/*" required class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
                                                                                 </div>
@@ -341,16 +341,16 @@
                                             </div>
 
                                             <form
-                                                action="{{ route('admin.jadwal.update-pengantaran-status', $pengantaran->id) }}"
+                                                action="{{ route('admin.jadwal.update-pengiriman-status', $pengiriman->id) }}"
                                                 method="POST"
                                             >
                                                 @csrf
                                                 @method('PATCH')
-                                                <input type="hidden" name="status_pengantaran_id" value="5">
+                                                <input type="hidden" name="status_pengiriman_id" value="5">
 
                                                 <button
                                                     type="submit"
-                                                    onclick="return confirm('Tandai pengantaran ini sebagai gagal dikirim?')"
+                                                    onclick="return confirm('Tandai pengiriman ini sebagai gagal dikirim?')"
                                                     class="w-full text-xs font-medium text-red-600 hover:text-red-700"
                                                 >
                                                     Gagal Dikirim
@@ -379,7 +379,7 @@
                             <td colspan="9">
                                 <x-ui.empty-state
                                     icon="clock"
-                                    title="Belum ada jadwal pengantaran"
+                                    title="Belum ada jadwal pengiriman"
                                     message="Tidak terdapat pesanan Katering atau Nasi Box yang dijadwalkan untuk diantar pada tanggal yang dipilih."
                                 />
                             </td>

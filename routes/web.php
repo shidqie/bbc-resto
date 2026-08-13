@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\MejaController;
 use App\Http\Controllers\BahanBakuController;
 use App\Http\Controllers\BuktiPembayaranController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\JadwalPengantaranController;
+use App\Http\Controllers\JadwalPengirimanController;
 use App\Http\Controllers\KategoriMenuController;
 use App\Http\Controllers\KetersediaanMenuController;
 use App\Http\Controllers\LacakPesananController;
@@ -40,6 +40,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
+
+// ─── API Notifikasi ──────────────────────────────────────────────────────────
+Route::get('/notifikasi/unread', [\App\Http\Controllers\NotificationController::class, 'getUnread'])->name('notifikasi.unread');
+Route::post('/notifikasi/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifikasi.read-all');
+Route::post('/notifikasi/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifikasi.read');
+Route::get('/admin/notifikasi', [\App\Http\Controllers\NotificationController::class, 'indexAdmin'])->name('admin.notifikasi.index')->middleware('auth:web');
+Route::get('/pelanggan/notifikasi', [\App\Http\Controllers\NotificationController::class, 'indexPelanggan'])->name('pelanggan.notifikasi.index')->middleware('auth:pelanggan');
 
 // ─── PUBLIK — QR Self-Order (hanya via QR Code meja) ───────────────────────
 Route::get('/qr-scanner', [QrMenuController::class, 'scanner'])->name('qr.scanner');
@@ -212,20 +219,20 @@ Route::middleware('auth')->group(function () {
         Route::patch('/admin/pesanan/nasi-box/{pesanan}/konfirmasi', [PesananNasiBoxController::class, 'konfirmasi'])->name('admin.pesanan.nasibox.konfirmasi');
         Route::patch('/admin/pesanan/nasi-box/{pesanan}/update-status', [PesananNasiBoxController::class, 'updateStatus'])->name('admin.pesanan.nasibox.update-status');
 
-        // Jadwal Pengantaran
-        Route::get('/admin/jadwal-pengantaran', [JadwalPengantaranController::class, 'index'])->name('admin.jadwal-pengantaran.index');
-        Route::patch('/admin/jadwal-pengantaran/{id}/update-status', [JadwalPengantaranController::class, 'updateStatus'])->name('admin.jadwal-pengantaran.update-status');
-        Route::patch('/admin/jadwal-pengantaran/{id}/pengantaran-status', [JadwalPengantaranController::class, 'updatePengantaranStatus'])->name('admin.jadwal-pengantaran.update-pengantaran-status');
+        // Jadwal Pengiriman
+        Route::get('/admin/jadwal-pengiriman', [JadwalPengirimanController::class, 'index'])->name('admin.jadwal-pengiriman.index');
+        Route::patch('/admin/jadwal-pengiriman/{id}/update-status', [JadwalPengirimanController::class, 'updateStatus'])->name('admin.jadwal-pengiriman.update-status');
+        Route::patch('/admin/jadwal-pengiriman/{id}/pengiriman-status', [JadwalPengirimanController::class, 'updatePengirimanStatus'])->name('admin.jadwal-pengiriman.update-pengiriman-status');
     });
 
 
     
     // ─── API LOKASI & JARAK ───
     Route::middleware(['role:Admin,Pengantaran'])->group(function () {
-        Route::get('/admin/jadwal', [JadwalPengantaranController::class, 'index'])->name('admin.jadwal.index');
-        Route::patch('/admin/jadwal/{jenis}/{id}/status', [JadwalPengantaranController::class, 'updateStatus'])->name('admin.jadwal.update-status');
-        Route::patch('/admin/jadwal/{id}/pengantaran-status', [JadwalPengantaranController::class, 'updatePengantaranStatus'])->name('admin.jadwal.update-pengantaran-status');
-        Route::post('/admin/jadwal/{id}/assign-kurir', [JadwalPengantaranController::class, 'assignKurir'])->name('admin.jadwal.assign-kurir');
+        Route::get('/admin/jadwal', [JadwalPengirimanController::class, 'index'])->name('admin.jadwal.index');
+        Route::patch('/admin/jadwal/{jenis}/{id}/status', [JadwalPengirimanController::class, 'updateStatus'])->name('admin.jadwal.update-status');
+        Route::patch('/admin/jadwal/{id}/pengiriman-status', [JadwalPengirimanController::class, 'updatePengirimanStatus'])->name('admin.jadwal.update-pengiriman-status');
+        Route::post('/admin/jadwal/{id}/assign-kurir', [JadwalPengirimanController::class, 'assignKurir'])->name('admin.jadwal.assign-kurir');
     });
 
     // ─── PENGATURAN (Pemilik & Manajer) ───

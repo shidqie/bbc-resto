@@ -38,18 +38,27 @@ class PesananDineInController extends Controller
         }
 
         // ── Filter Periode ─────────────────────────────────────────
-        $period = $request->period ?? 'all';
-        switch ($period) {
-            case 'today':
-                $query->whereDate('dibuat_pada', Carbon::today());
-                break;
-            case 'this_week':
-                $query->whereBetween('dibuat_pada', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-                break;
-            case 'this_month':
-                $query->whereMonth('dibuat_pada', Carbon::now()->month)
-                      ->whereYear('dibuat_pada', Carbon::now()->year);
-                break;
+        if ($request->has('periode') && $request->periode != '') {
+            $now = \Carbon\Carbon::now();
+            switch ($request->periode) {
+                case 'hari_ini':
+                    $query->whereDate('dibuat_pada', $now->toDateString());
+                    break;
+                case 'minggu_ini':
+                    $query->whereBetween('dibuat_pada', [$now->startOfWeek()->toDateTimeString(), $now->endOfWeek()->toDateTimeString()]);
+                    break;
+                case 'bulan_ini':
+                    $query->whereMonth('dibuat_pada', $now->month)->whereYear('dibuat_pada', $now->year);
+                    break;
+                case 'kustom':
+                    if ($request->has('start_date') && $request->start_date != '') {
+                        $query->whereDate('dibuat_pada', '>=', $request->start_date);
+                    }
+                    if ($request->has('end_date') && $request->end_date != '') {
+                        $query->whereDate('dibuat_pada', '<=', $request->end_date);
+                    }
+                    break;
+            }
         }
 
         $pesanans = $query->paginate(10)->withQueryString();
@@ -60,6 +69,6 @@ class PesananDineInController extends Controller
             'selesai'  => Pesanan::where('jenis_pesanan_id', 1)->where('status_pesanan_id', 5)->count(),
         ];
 
-        return view('admin.pesanan.dine-in.index', compact('pesanans', 'stats', 'status', 'period'));
+        return view('admin.pesanan.dine-in.index', compact('pesanans', 'stats', 'status'));
     }
 }

@@ -13,29 +13,30 @@
 
             {{-- 2. CENTER: Nav Links --}}
             <div class="hidden lg:flex items-center justify-center gap-6 xl:gap-8">
-                <a href="{{ route('home') }}#beranda" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Beranda</a>
-                <a href="{{ route('home') }}#tentang" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Tentang</a>
-                <a href="{{ route('home') }}#menu-dinein" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Menu</a>
+                <a href="{{ route('home') }}#beranda" class="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition">Beranda</a>
+                <a href="{{ route('home') }}#tentang" class="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition">Tentang</a>
+                <a href="{{ route('home') }}#menu-dinein" class="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition">Menu</a>
 
                 {{-- Dropdown Layanan --}}
                 <div class="relative" @mouseenter="layanan = true" @mouseleave="layanan = false">
-                    <button @click="layanan = !layanan" class="flex items-center gap-1 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">
+                    <button @click="layanan = !layanan" class="flex items-center gap-1 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition">
                         Layanan
                         <svg class="w-3.5 h-3.5 transition-transform duration-200 opacity-70" :class="layanan ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
 
-                    <div x-show="layanan" x-cloak x-transition class="absolute left-0 top-full mt-2 w-44 rounded-xl bg-white border border-neutral-200/80 shadow-lg py-1.5 overflow-hidden">
-                        <a href="{{ route('home') }}#menu-dinein" class="block px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">Dine in</a>
-                        <a href="{{ route('home') }}#catering" class="block px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">Katering</a>
-                        <a href="{{ route('home') }}#nasi-box" class="block px-4 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition">Nasi Box</a>
+                    <div x-show="layanan" x-cloak x-transition class="absolute left-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-surface border border-neutral-200/80 dark:border-neutral-700 shadow-lg py-1.5 overflow-hidden">
+                        <a href="{{ route('home') }}#menu-dinein" class="block px-4 py-2 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition">Dine in</a>
+                        <a href="{{ route('home') }}#catering" class="block px-4 py-2 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition">Katering</a>
+                        <a href="{{ route('home') }}#nasi-box" class="block px-4 py-2 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition">Nasi Box</a>
+                        <div class="my-1 border-t border-neutral-100 dark:border-neutral-700"></div>
+                        <a href="{{ route('lacak.index') }}" class="block px-4 py-2 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition">Lacak Pesanan</a>
                     </div>
                 </div>
 
-                <a href="{{ route('home') }}#galeri" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Galeri</a>
-                <a href="{{ route('home') }}#kontak" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Kontak</a>
-                <a href="{{ route('lacak.index') }}" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Lacak Pesanan</a>
+                <a href="{{ route('home') }}#galeri" class="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition">Galeri</a>
+                <a href="{{ route('home') }}#kontak" class="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition">Kontak</a>
             </div>
 
             {{-- 3. RIGHT: Actions (Auth & Pesan Sekarang) --}}
@@ -43,6 +44,7 @@
                 @if(Auth::guard('web')->check())
                     <a href="{{ route('dashboard') }}" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Dasbor Admin</a>
                 @elseif(Auth::guard('pelanggan')->check())
+                    <x-ui.notification-dropdown type="external" />
                     <div class="relative" @mouseenter="akun = true" @mouseleave="akun = false">
                         <button @click="akun = !akun" class="flex items-center gap-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">
                             Profil Saya
@@ -67,6 +69,7 @@
                     </div>
                 @endif
 
+                <x-theme-toggle />
             </div>
 
             {{-- Mobile Hamburger Button --}}
@@ -105,6 +108,9 @@
                 <a href="{{ route('home') }}#nasi-box" class="mobile-nav-link block py-2 pl-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors">
                     Nasi Box
                 </a>
+                <a href="{{ route('lacak.index') }}" class="mobile-nav-link block py-2 pl-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors">
+                    Lacak Pesanan
+                </a>
             </div>
 
             <a href="{{ route('home') }}#galeri" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
@@ -112,9 +118,6 @@
             </a>
             <a href="{{ route('home') }}#kontak" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
                 Kontak
-            </a>
-            <a href="{{ route('lacak.index') }}" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800 hover:text-neutral-900 transition-colors">
-                Lacak Pesanan
             </a>
 
             {{-- Auth Section --}}
@@ -148,6 +151,11 @@
                 </div>
             @endif
 
+            {{-- Dark Mode Toggle --}}
+            <div class="pt-3 pb-1 flex items-center justify-between border-t border-neutral-200 mt-2">
+                <span class="text-xs font-medium text-neutral-500">Mode Gelap</span>
+                <x-theme-toggle />
+            </div>
 
         </div>
     </div>

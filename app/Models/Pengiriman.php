@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-class Pengantaran extends BaseModel
+class Pengiriman extends BaseModel
 {
-    protected $table = 'pengantaran';
+    protected $table = 'pengiriman';
 
     protected $guarded = [];
 
@@ -13,9 +13,9 @@ class Pengantaran extends BaseModel
         return $this->belongsTo(Pesanan::class, 'pesanan_id');
     }
 
-    public function status_pengantaran()
+    public function status_pengiriman()
     {
-        return $this->belongsTo(StatusPengantaran::class, 'status_pengantaran_id');
+        return $this->belongsTo(StatusPengiriman::class, 'status_pengiriman_id');
     }
 
     public function ditugaskan_kepada_pengguna()

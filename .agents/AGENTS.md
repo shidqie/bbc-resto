@@ -142,3 +142,52 @@ Standar: border, radius 10–12px, padding 16–20px, background putih.
 Semua halaman harus menggunakan komponen Blade reusable di `resources/views/components/` untuk konsistensi:
 - button, input, select, textarea, search, filter, table, pagination, badge, card, tabs, modal, alert, dropdown action, empty state, loading, breadcrumb.
 </RULE[bbc_resto_ui_design]>
+
+<RULE[drawer_ui_system]>
+---
+name: Drawer UI System — RM BBC
+description: Standar wajib untuk seluruh Drawer / Side Panel Detail pada aplikasi RM BBC.
+---
+
+# 1. Prinsip Utama
+Semua drawer wajib muncul dari sisi kanan, menggunakan overlay transparan, memiliki header tetap, body scrollable, dan footer tetap (jika ada aksi). Dilarang menumpuk banyak card.
+Gunakan pola: Drawer -> Header -> Tabs (opsional) -> Body (Section, Field Grid, List, Timeline) -> Footer.
+
+# 2. Ukuran
+- Desktop: width 50vw, max 820px, min 680px.
+- Mobile: 100vw, 100vh.
+Posisi selalu fixed right-0 top-0.
+
+# 3. Struktur Header & Judul
+Format: "Detail + Nama Data". (Contoh: "Detail Menu", bukan "Lihat Menu").
+Subtitle maksimal 1-2 baris (Contoh: "MN001 • Dine-In").
+Tombol Close "X" di kanan atas (40x40px area). Padding: 20-24px X, 16-18px Y. Border bawah tipis.
+
+# 4. Body & Komponen
+- Body: padding 24px, section gap 32px.
+- Field: LABEL (abu) di atas Value (gelap). Gunakan Grid 2-4 kolom untuk data pendek. Full width untuk data panjang.
+- Harga: "Rp170.000", bukan "170000".
+- Tanggal: "13 Agustus 2026, 14:30".
+- Status Badge: soft colors (success, warning, info, danger, neutral).
+- Item List: Qty | Nama Item -> Nilai (di kanan).
+- Summary: Label di kiri, Nilai di kanan. Total dengan font lebih besar dan tebal.
+
+# 5. Footer
+Fixed di bawah, background putih, border-top, padding 16-24px. Tombol rata kanan: `[ Batal/Tutup ] [ Aksi Utama ]`.
+
+# 6. Komponen Reusable
+Wajib menggunakan (jangan duplikasi kode drawer!):
+- `<x-drawer.drawer>`
+- `<x-drawer.header>`
+- `<x-drawer.tabs>`
+- `<x-drawer.section>`
+- `<x-drawer.field-grid>`
+- `<x-drawer.field>`
+- `<x-drawer.badge>`
+- `<x-drawer.item-list>`
+- `<x-drawer.item>`
+- `<x-drawer.summary>`
+- `<x-drawer.note>`
+- `<x-drawer.timeline>`
+- `<x-drawer.footer>`
+</RULE[drawer_ui_system]>

@@ -29,7 +29,7 @@ class BuktiPembayaranController extends Controller
     /** GET /pesan/bayar/{kodePesanan} */
     public function show($kodePesanan)
     {
-        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran', 'pelanggan'])
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengiriman', 'pembayaran', 'pelanggan'])
             ->where('id_pesanan', $kodePesanan)
             ->first();
 
@@ -135,7 +135,7 @@ class BuktiPembayaranController extends Controller
     /** GET /pesan/invoice/{kodePesanan} */
     public function invoicePdf($kodePesanan)
     {
-        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran'])
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengiriman'])
             ->where('id_pesanan', $kodePesanan)
             ->first();
 

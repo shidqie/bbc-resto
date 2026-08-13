@@ -14,7 +14,7 @@ class PengadaanBahan extends BaseModel
     public function disetujui_oleh_pengguna() { return $this->belongsTo(Pengguna::class, 'disetujui_oleh'); }
     public function status_pengadaan() { return $this->belongsTo(StatusPengadaan::class, 'status_pengadaan_id'); }
     public function detail_pengadaan_bahan() { return $this->hasMany(DetailPengadaanBahan::class, 'pengadaan_bahan_id'); }
-    public function penerimaan_bahan() { return $this->hasMany(PenerimaanBahan::class, 'pengadaan_bahan_id'); }
+    public function penerimaan_bahan() { return $this->hasManyThrough(PenerimaanBahan::class, PurchaseOrder::class, 'pengadaan_bahan_id', 'purchase_order_id'); }
     public function purchase_order() { return $this->hasMany(PurchaseOrder::class, 'pengadaan_bahan_id'); }
 
     /**

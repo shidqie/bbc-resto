@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pengantaran;
+use App\Models\Pengiriman;
 use App\Models\Pesanan;
 use App\Models\Pengguna;
 use Carbon\Carbon;
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-class JadwalPengantaranController extends Controller
+class JadwalPengirimanController extends Controller
 {
     public function index(Request $request)
     {
@@ -43,9 +43,9 @@ class JadwalPengantaranController extends Controller
         $statusFilter = $request->get('status', 'Semua');
         $search = $request->get('search');
 
-        $query = Pesanan::with(['jadwal_pesanan', 'detail_pesanan.menu', 'pengantaran'])
+        $query = Pesanan::with(['jadwal_pesanan', 'detail_pesanan.menu', 'pengiriman'])
             ->whereIn('jenis_pesanan_id', [2, 3])
-            ->whereHas('pengantaran'); // Only show orders that are sent to delivery (Jadwal Pengantaran is a worklist)
+            ->whereHas('pengiriman'); // Only show orders that are sent to delivery (Jadwal Pengiriman is a worklist)
 
         if ($selectedDate) {
             $query->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {
@@ -54,11 +54,11 @@ class JadwalPengantaranController extends Controller
         }
 
         if ($statusFilter !== 'Semua' && $statusFilter !== '' && $statusFilter !== null) {
-            $query->whereHas('pengantaran', function ($q) use ($statusFilter) {
+            $query->whereHas('pengiriman', function ($q) use ($statusFilter) {
                 if ($statusFilter == 2) {
-                    $q->whereIn('status_pengantaran_id', [1, 2]);
+                    $q->whereIn('status_pengiriman_id', [1, 2]);
                 } else {
-                    $q->where('status_pengantaran_id', $statusFilter);
+                    $q->where('status_pengiriman_id', $statusFilter);
                 }
             });
         }
@@ -77,7 +77,7 @@ class JadwalPengantaranController extends Controller
         })->values();
 
         $summaryQuery = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
-            ->whereHas('pengantaran');
+            ->whereHas('pengiriman');
 
         if ($selectedDate) {
             $summaryQuery->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {
@@ -91,10 +91,10 @@ class JadwalPengantaranController extends Controller
 
         $summary = [
             'Semua' => $allSummaryOrders->count(),
-            'baru' => $allSummaryOrders->where('pengantaran.status_pengantaran_id', 1)->count(), // Menunggu Dikirim
-            'diproses' => $allSummaryOrders->whereIn('pengantaran.status_pengantaran_id', [2, 3])->count(), // Dalam Pengiriman
-            'selesai' => $allSummaryOrders->where('pengantaran.status_pengantaran_id', 4)->count(), // Sudah Diterima
-            'dibatalkan' => $allSummaryOrders->where('pengantaran.status_pengantaran_id', 5)->count(),
+            'baru' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 1)->count(), // Menunggu Dikirim
+            'diproses' => $allSummaryOrders->whereIn('pengiriman.status_pengiriman_id', [2, 3])->count(), // Dalam Pengiriman
+            'selesai' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 4)->count(), // Sudah Diterima
+            'dibatalkan' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 5)->count(),
         ];
 
         $kurirs = [];
@@ -102,7 +102,7 @@ class JadwalPengantaranController extends Controller
             $kurirs = Pengguna::where('peran_id', 6)->where('status_aktif', 1)->get();
         }
 
-        return view('admin.pesanan.pengantaran.index', compact(
+        return view('admin.pesanan.pengiriman.index', compact(
             'selectedDate',
             'selectedMonth',
             'startOfMonth',
@@ -123,26 +123,26 @@ class JadwalPengantaranController extends Controller
 
         $order = Pesanan::findOrFail($id);
 
-        // Peta status pesanan → status pengantaran (FR-17)
-        $mapPengantaran = [
+        // Peta status pesanan → status pengiriman (FR-17)
+        $mapPengiriman = [
             3 => 1, // DIPROSES → dijadwalkan
             4 => 2, // SIAP → siap_dikirim
             5 => 4, // SELESAI → diterima
             6 => 5, // DIBATALKAN → gagal_dikirim
         ];
 
-        DB::transaction(function () use ($order, $request, $mapPengantaran) {
+        DB::transaction(function () use ($order, $request, $mapPengiriman) {
             $order->status_pesanan_id = $request->status;
             $order->save();
 
-            // Sinkron status pengantaran bila pesanan punya catatan pengantaran
-            $pengantaran = Pengantaran::where('pesanan_id', $order->id)->first();
-            if ($pengantaran && isset($mapPengantaran[$request->status])) {
-                $update = ['status_pengantaran_id' => $mapPengantaran[$request->status]];
+            // Sinkron status pengiriman bila pesanan punya catatan pengiriman
+            $pengiriman = Pengiriman::where('pesanan_id', $order->id)->first();
+            if ($pengiriman && isset($mapPengiriman[$request->status])) {
+                $update = ['status_pengiriman_id' => $mapPengiriman[$request->status]];
                 if ($request->status == 5) {
                     $update['diterima_pada'] = now();
                 }
-                $pengantaran->update($update);
+                $pengiriman->update($update);
             }
         });
 
@@ -150,54 +150,54 @@ class JadwalPengantaranController extends Controller
     }
 
     /**
-     * Transisi status pengantaran khusus (FR-17): dijadwalkan → siap → perjalanan → diterima.
+     * Transisi status pengiriman khusus (FR-17): dijadwalkan → siap → perjalanan → diterima.
      */
-    public function updatePengantaranStatus(Request $request, $id)
+    public function updatePengirimanStatus(Request $request, $id)
     {
-        $rules = ['status_pengantaran_id' => 'required|integer|min:1|max:5'];
-        if ($request->status_pengantaran_id == 4) {
+        $rules = ['status_pengiriman_id' => 'required|integer|min:1|max:5'];
+        if ($request->status_pengiriman_id == 4) {
             $rules['foto_bukti'] = 'required|image|max:5120'; // max 5MB
         }
         $request->validate($rules);
 
-        $pengantaran = Pengantaran::findOrFail($id);
+        $pengiriman = Pengiriman::findOrFail($id);
 
-        $update = ['status_pengantaran_id' => $request->status_pengantaran_id];
-        if ($request->status_pengantaran_id == 3) {
+        $update = ['status_pengiriman_id' => $request->status_pengiriman_id];
+        if ($request->status_pengiriman_id == 3) {
             $update['berangkat_pada'] = now();
         }
-        if ($request->status_pengantaran_id == 4) {
+        if ($request->status_pengiriman_id == 4) {
             $update['diterima_pada'] = now();
             
             if ($request->hasFile('foto_bukti')) {
-                $path = $request->file('foto_bukti')->store('pengantaran', 'public');
-                $update['foto_bukti_pengantaran'] = $path;
+                $path = $request->file('foto_bukti')->store('pengiriman', 'public');
+                $update['foto_bukti_pengiriman'] = $path;
             }
         }
 
         try {
-            DB::transaction(function () use ($pengantaran, $update, $request) {
+            DB::transaction(function () use ($pengiriman, $update, $request) {
                 // Buatin ketika gagal di kirim mengulang jadwal pengiriman (reset ke 1)
-                if ($request->status_pengantaran_id == 5) {
-                    $update['status_pengantaran_id'] = 1;
+                if ($request->status_pengiriman_id == 5) {
+                    $update['status_pengiriman_id'] = 1;
                 }
 
-                $pengantaran->update($update);
+                $pengiriman->update($update);
 
                 // Sync back to Pesanan
-                if ($request->status_pengantaran_id == 4) { // Diterima -> Selesai
-                    $pengantaran->pesanan->update(['status_pesanan_id' => 5]);
+                if ($request->status_pengiriman_id == 4) { // Diterima -> Selesai
+                    $pengiriman->pesanan->update(['status_pesanan_id' => 5]);
                 }
             });
-            $msg = 'Status pengantaran diperbarui.';
-            if ($request->status_pengantaran_id == 5) {
-                $msg = 'Pengantaran gagal, otomatis dijadwalkan ulang.';
+            $msg = 'Status pengiriman diperbarui.';
+            if ($request->status_pengiriman_id == 5) {
+                $msg = 'Pengiriman gagal, otomatis dijadwalkan ulang.';
             }
             return back()->with('success', $msg);
         } catch (\Exception $e) {
             // Log error and schedule a retry job
-            \Log::error('Gagal memperbarui status pengantaran ID ' . $pengantaran->id . ': ' . $e->getMessage());
-            \App\Jobs\RetryPengantaran::dispatch($pengantaran->id);
+            \Log::error('Gagal memperbarui status pengiriman ID ' . $pengiriman->id . ': ' . $e->getMessage());
+            \App\Jobs\RetryPengiriman::dispatch($pengiriman->id);
             return back()->with('error', 'Gagal memperbarui status, akan dicoba lagi otomatis.');
         }
     }
@@ -208,8 +208,8 @@ class JadwalPengantaranController extends Controller
             'kurir_id' => 'required|exists:pengguna,id',
         ]);
 
-        $pengantaran = Pengantaran::findOrFail($id);
-        $pengantaran->update([
+        $pengiriman = Pengiriman::findOrFail($id);
+        $pengiriman->update([
             'ditugaskan_kepada' => $request->kurir_id,
         ]);
 

@@ -163,7 +163,7 @@ class PurchaseOrderController extends Controller
     {
         $po->load(['pengadaan_bahan', 'pengadaan_bahan.diajukan_oleh_pengguna', 'detail_purchase_order.bahan_baku.satuan']);
 
-        $pdf = Pdf::loadView('pengadaan.purchase-order.print', compact('po'));
+        $pdf = Pdf::loadView('admin.pengadaan.purchase-order.print', compact('po'));
 
         return $pdf->stream('Purchase-Order-' . $po->nomor_po . '.pdf');
     }

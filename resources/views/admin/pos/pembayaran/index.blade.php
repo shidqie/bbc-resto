@@ -154,8 +154,8 @@
                             </div>
                             @if(strtolower($pesanan->metode_pengiriman) === 'delivery' && $pesanan->jadwal_pesanan)
                             <div class="grid grid-cols-3">
-                                <span class="text-gray-500 font-medium">Alamat Pengantaran</span>
-                                <span class="col-span-2 font-bold text-gray-900">{{ $pesanan->jadwal_pesanan->alamat_pengantaran ?? '-' }}</span>
+                                <span class="text-gray-500 font-medium">Alamat Pengiriman</span>
+                                <span class="col-span-2 font-bold text-gray-900">{{ $pesanan->jadwal_pesanan->alamat_pengiriman ?? '-' }}</span>
                             </div>
                             @endif
                             @php

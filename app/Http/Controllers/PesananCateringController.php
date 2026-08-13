@@ -7,7 +7,7 @@ use App\Models\JadwalPesanan;
 use App\Models\Menu;
 use App\Models\Pelanggan;
 use App\Models\Pembayaran;
-use App\Models\Pengantaran;
+use App\Models\Pengiriman;
 use App\Models\Pesanan;
 use App\Services\OrderService;
 use App\Support\WhatsAppNumber;
@@ -69,7 +69,7 @@ class PesananCateringController extends Controller
             $ongkir = 0;
             $ongkir_normal = 0;
             if ($request->metode_pengiriman === 'delivery') {
-                $ongkir = \App\Models\Pengantaran::hitungOngkir((float) $request->jarak_km, $request->jumlah_porsi);
+                $ongkir = \App\Models\Pengiriman::hitungOngkir((float) $request->jarak_km, $request->jumlah_porsi);
                 $jarak_km = (float) $request->jarak_km;
                 $ongkir_normal = $jarak_km > 0 ? (10000 + ($jarak_km * 3000)) : 0;
             }
@@ -106,7 +106,7 @@ class PesananCateringController extends Controller
             'tanggal_acara.required' => 'Tanggal acara wajib diisi.',
             'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-4 sebelum hari pelaksanaan acara.',
             'lokasi_acara.required' => 'Alamat acara wajib diisi.',
-            'metode_pengiriman.required' => 'Metode pengantaran wajib dipilih.',
+            'metode_pengiriman.required' => 'Metode pengiriman wajib dipilih.',
             'jumlah_porsi.required' => 'Jumlah porsi wajib diisi.',
             'jumlah_porsi.min' => 'Jumlah porsi minimal 1.',
         ]);
@@ -158,8 +158,8 @@ class PesananCateringController extends Controller
             JadwalPesanan::create([
                 'pesanan_id' => $pesanan->id,
                 'tanggal_acara' => $tanggal_acara_datetime,
-                'waktu_pengantaran' => $request->jam_pengambilan ?? null,
-                'alamat_pengantaran' => $alamat,
+                'waktu_pengiriman' => $request->jam_pengambilan ?? null,
+                'alamat_pengiriman' => $alamat,
                 'nama_penerima' => $request->nama_pemesan,
                 'nomor_telepon_penerima' => $request->kontak,
             ]);
@@ -184,18 +184,18 @@ class PesananCateringController extends Controller
                 }
             }
 
-            // Pengantaran (jika delivery)
+            // Pengiriman (jika delivery)
             if ($request->metode_pengiriman === 'delivery' && $kalkulasiOngkir) {
-                Pengantaran::create([
-                    'nomor_pengantaran' => 'DO-' . time(),
+                Pengiriman::create([
+                    'nomor_pengiriman' => 'DO-' . time(),
                     'pesanan_id' => $pesanan->id,
-                    'status_pengantaran_id' => 1, // Menunggu Jadwal
-                    'jadwal_pengantaran' => $request->tanggal_acara,
+                    'status_pengiriman_id' => 1, // Menunggu Jadwal
+                    'jadwal_pengiriman' => $request->tanggal_acara,
                     'nama_penerima' => $request->nama_pemesan,
                     'nomor_telepon_penerima' => $request->kontak,
-                    'alamat_pengantaran' => $request->lokasi_acara,
-                    'jarak_pengantaran' => $request->jarak_km,
-                    'biaya_pengantaran' => $ongkir,
+                    'alamat_pengiriman' => $request->lokasi_acara,
+                    'jarak_pengiriman' => $request->jarak_km,
+                    'biaya_pengiriman' => $ongkir,
                     'tarif_per_km' => $kalkulasiOngkir['tarif_per_km'],
                     'jarak_gratis' => $kalkulasiOngkir['jarak_gratis'],
                     'jarak_berbayar' => $kalkulasiOngkir['jarak_berbayar'],
@@ -249,7 +249,31 @@ class PesananCateringController extends Controller
             $query->where('status_pesanan_id', $statusFilter);
         }
 
-        $pesanans = $query->paginate(10);
+        // ── Filter Periode ─────────────────────────────────────────
+        if ($request->has('periode') && $request->periode != '') {
+            $now = \Carbon\Carbon::now();
+            switch ($request->periode) {
+                case 'hari_ini':
+                    $query->whereDate('dibuat_pada', $now->toDateString());
+                    break;
+                case 'minggu_ini':
+                    $query->whereBetween('dibuat_pada', [$now->startOfWeek()->toDateTimeString(), $now->endOfWeek()->toDateTimeString()]);
+                    break;
+                case 'bulan_ini':
+                    $query->whereMonth('dibuat_pada', $now->month)->whereYear('dibuat_pada', $now->year);
+                    break;
+                case 'kustom':
+                    if ($request->has('start_date') && $request->start_date != '') {
+                        $query->whereDate('dibuat_pada', '>=', $request->start_date);
+                    }
+                    if ($request->has('end_date') && $request->end_date != '') {
+                        $query->whereDate('dibuat_pada', '<=', $request->end_date);
+                    }
+                    break;
+            }
+        }
+
+        $pesanans = $query->paginate(10)->withQueryString();
 
         $stats = [
             'baru' => Pesanan::where('jenis_pesanan_id', 2)->where('status_pesanan_id', 1)->count(),
@@ -269,7 +293,7 @@ class PesananCateringController extends Controller
             'detail_pesanan.pilihan_pesanan_catering.komponen_paket',
             'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket',
             'jadwal_pesanan',
-            'pengantaran',
+            'pengiriman',
             'pelanggan',
             'pembayaran',
             'status_pesanan',
@@ -348,7 +372,7 @@ class PesananCateringController extends Controller
     /** Export PDF rincian pesanan */
     public function exportPdf($id)
     {
-        $pesanan = Pesanan::with(['detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering.komponen_paket', 'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket', 'jadwal_pesanan', 'pengantaran'])
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering.komponen_paket', 'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket', 'jadwal_pesanan', 'pengiriman'])
             ->findOrFail($id);
 
         $type = 'catering';
@@ -411,8 +435,8 @@ class PesananCateringController extends Controller
 
             app(OrderService::class)->restoreStockPesanan($pesanan);
 
-            if ($pesanan->pengantaran) {
-                $pesanan->pengantaran->update(['status_pengantaran_id' => 5]); // Gagal / Batal
+            if ($pesanan->pengiriman) {
+                $pesanan->pengiriman->update(['status_pengiriman_id' => 5]); // Gagal / Batal
             }
 
             return back()->with('success', 'Pesanan dibatalkan.');
@@ -425,12 +449,12 @@ class PesananCateringController extends Controller
         
         $pesanan->update(['status_pesanan_id' => $status]);
 
-        // Sinkronisasi dengan Pengantaran (Jika ada jadwal pengantaran)
-        if ($pesanan->pengantaran) {
+        // Sinkronisasi dengan Pengiriman (Jika ada jadwal pengiriman)
+        if ($pesanan->pengiriman) {
             if ($status == 4) { // Siap Dikirim
-                $pesanan->pengantaran->update(['status_pengantaran_id' => 2]); // Siap Dikirim di Pengantaran
+                $pesanan->pengiriman->update(['status_pengiriman_id' => 2]); // Siap Dikirim di Pengiriman
             } elseif ($status == 5) { // Selesai
-                $pesanan->pengantaran->update(['status_pengantaran_id' => 4]); // Selesai/Diterima di Pengantaran
+                $pesanan->pengiriman->update(['status_pengiriman_id' => 4]); // Selesai/Diterima di Pengiriman
             }
         }
 

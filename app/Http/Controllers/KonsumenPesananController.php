@@ -15,7 +15,7 @@ class KonsumenPesananController extends Controller
             ->with([
                 'detail_pesanan.menu',
                 'jadwal_pesanan',
-                'pengantaran',
+                'pengiriman',
                 'status_pesanan',
                 'pembayaran',
             ])
@@ -34,7 +34,7 @@ class KonsumenPesananController extends Controller
             ->with([
                 'detail_pesanan.menu',
                 'jadwal_pesanan',
-                'pengantaran',
+                'pengiriman',
                 'status_pesanan',
                 'pembayaran',
             ])

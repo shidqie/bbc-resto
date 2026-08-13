@@ -22,12 +22,12 @@
         }
 
         $detailPesanan = $pesanan->detail_pesanan->first();
-        $metodeKirim = $pesanan->pengantaran ? 'Delivery' : 'Pickup';
+        $metodeKirim = $pesanan->pengiriman ? 'Delivery' : 'Pickup';
         $konsumen = $pesanan->pelanggan;
         $namaKonsumen = $konsumen->nama ?? $pesanan->jadwal_pesanan->nama_penerima ?? '-';
         $kontakKonsumen = $konsumen->nomor_telepon ?? $pesanan->jadwal_pesanan->nomor_telepon_penerima ?? '';
         $emailKonsumen = $konsumen->email ?? '';
-        $alamatKonsumen = $konsumen->alamat ?? $pesanan->jadwal_pesanan->alamat_pengantaran ?? $pesanan->catatan ?? '-';
+        $alamatKonsumen = $konsumen->alamat ?? $pesanan->jadwal_pesanan->alamat_pengiriman ?? $pesanan->catatan ?? '-';
         $waLink = $kontakKonsumen ? 'https://wa.me/' . preg_replace('/[^0-9]/', '', $kontakKonsumen) : null;
         $jenisBayarLabel = ['uang_muka' => 'Uang Muka (DP)', 'pelunasan' => 'Pelunasan', 'pembayaran_penuh' => 'Pembayaran Penuh'];
         $statusVerifLabel = ['diterima' => 'Diterima', 'menunggu_verifikasi' => 'Menunggu Verifikasi', 'ditolak' => 'Ditolak'];
@@ -121,8 +121,8 @@
                             <div class="grid grid-cols-3"><span class="text-gray-500">Tanggal Acara</span> <span class="col-span-2">{{ $pesanan->jadwal_pesanan?->tanggal_acara ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->translatedFormat('d M Y') : '-' }}</span></div>
                             <div class="grid grid-cols-3"><span class="text-gray-500">Waktu Acara</span> <span class="col-span-2">{{ $pesanan->jadwal_pesanan?->tanggal_acara ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->format('H:i') . ' WIB' : '-' }}</span></div>
                             <div class="grid grid-cols-3"><span class="text-gray-500">Metode Pengiriman</span> <span class="col-span-2 capitalize">{{ $metodeKirim }}</span></div>
-                            @if($pesanan->pengantaran)
-                                <div class="grid grid-cols-3"><span class="text-gray-500">Ongkos Kirim</span> <span class="col-span-2">Rp {{ number_format($pesanan->pengantaran->biaya_pengantaran, 0, ',', '.') }}</span></div>
+                            @if($pesanan->pengiriman)
+                                <div class="grid grid-cols-3"><span class="text-gray-500">Ongkos Kirim</span> <span class="col-span-2">Rp {{ number_format($pesanan->pengiriman->biaya_pengiriman, 0, ',', '.') }}</span></div>
                             @endif
                             <div class="grid grid-cols-3"><span class="text-gray-500">Status Pesanan</span> <span class="col-span-2 font-bold">{{ $pesanan->status_pesanan->nama_status ?? 'Menunggu Konfirmasi' }}</span></div>
                             <div class="grid grid-cols-3"><span class="text-gray-500">Status Bayar</span> <span class="col-span-2 font-bold text-blue-600">{{ $statusBayarLabel }}</span></div>
@@ -252,7 +252,7 @@
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="12">
-                                    <button type="button" onclick="window.confirmDialog({ title: 'Produksi Selesai', name: '{{ $pesanan->id_pesanan }}', message: 'Tandai produksi selesai? Jika metode pengiriman diantar, akan masuk ke Jadwal Pengantaran.', formId: 'form-produksi-selesai-nasibox', confirmText: 'Selesai Produksi', cancelText: 'Batal', type: 'warning' })" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Produksi Selesai', name: '{{ $pesanan->id_pesanan }}', message: 'Tandai produksi selesai? Jika metode pengiriman diantar, akan masuk ke Jadwal Pengiriman.', formId: 'form-produksi-selesai-nasibox', confirmText: 'Selesai Produksi', cancelText: 'Batal', type: 'warning' })" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-cube class="mr-2 w-5 h-5" />Produksi Selesai
                                     </button>
                                 </form>

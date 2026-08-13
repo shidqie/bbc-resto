@@ -6,10 +6,7 @@
 
     {{-- 2. TENTANG --}}
     <x-landing.section id="tentang" title="Tentang Kami">
-        <div class="w-12 h-[1px] bg-secondary mx-auto mb-6"></div>
-        <x-typography.p variant="large" class="text-center max-w-3xl mx-auto">Saung Babakan Cinta menyajikan hidangan khas
-            Sunda dengan cita rasa otentik di Bandung. Kami melayani makan di tempat, catering untuk acara spesial, dan
-            nasi box untuk berbagai kebutuhan.</x-typography.p>
+        <x-typography.p variant="large" class="text-center max-w-3xl mx-auto">Saung Babakan Cinta menghadirkan cita rasa khas Sunda dalam suasana yang hangat, asri, dan penuh kebersamaan.</x-typography.p>
     </x-landing.section>
 
     {{-- 3. LAYANAN --}}
@@ -23,7 +20,7 @@
                     </svg>
                 </div>
                 <x-typography.h3 class="text-primary mb-2">Dine-in</x-typography.h3>
-                <x-typography.p variant="small">Makan di tempat dengan suasana saung yang nyaman.</x-typography.p>
+                <x-typography.p variant="small">Nikmati rasa, nikmati suasananya.</x-typography.p>
             </div>
             <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col text-center">
                 <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
@@ -33,7 +30,7 @@
                     </svg>
                 </div>
                 <x-typography.h3 class="text-primary mb-2">Katering</x-typography.h3>
-                <x-typography.p variant="small">Jamuan lengkap untuk acara spesial Anda.</x-typography.p>
+                <x-typography.p variant="small">Lengkapi momen spesial dengan cita rasa Sunda.</x-typography.p>
             </div>
             <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col text-center">
                 <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
@@ -43,7 +40,7 @@
                     </svg>
                 </div>
                 <x-typography.h3 class="text-primary mb-2">Nasi Box</x-typography.h3>
-                <x-typography.p variant="small">Praktis dan lezat untuk rapat atau acara kantor.</x-typography.p>
+                <x-typography.p variant="small">Praktis dibawa, nikmat disantap.</x-typography.p>
             </div>
         </div>
     </x-landing.section>
@@ -56,7 +53,7 @@
                 onclick="filterMenu('all', this)">Semua</button>
             @foreach ($kategoris as $kat)
                 <button
-                    class="menu-tab px-3 py-1.5 rounded-full text-sm font-bold bg-primary/5 text-primary hover:bg-primary/10"
+                    class="menu-tab px-3 py-1.5 rounded-full text-sm font-bold bg-primary/10 dark:bg-white/5 text-primary dark:text-neutral-300 hover:bg-primary/20 dark:hover:bg-white/10 dark:hover:text-white transition-colors"
                     onclick="filterMenu('kat-{{ $kat->id }}', this)">{{ $kat->nama_kategori }}</button>
             @endforeach
         </div>
@@ -156,4 +153,6 @@
             document.addEventListener('DOMContentLoaded', () => updateDisplay());
         </script>
     @endpush
+
+    <x-landing.menu-modal />
 </x-layouts.landing>

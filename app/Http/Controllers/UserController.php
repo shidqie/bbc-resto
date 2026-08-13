@@ -153,7 +153,7 @@ class UserController extends Controller
             \Illuminate\Support\Facades\DB::table('pengadaan_bahan')->whereIn('pesanan_id', $pesananIds)->delete();
 
             // Anak langsung dari pesanan
-            foreach (['jadwal_pesanan', 'payment_sessions', 'pembayaran', 'pengantaran', 'stok_catering', 'tiket_dapur'] as $tabel) {
+            foreach (['jadwal_pesanan', 'payment_sessions', 'pembayaran', 'pengiriman', 'stok_catering', 'tiket_dapur'] as $tabel) {
                 \Illuminate\Support\Facades\DB::table($tabel)->whereIn('pesanan_id', $pesananIds)->delete();
             }
 
@@ -259,7 +259,7 @@ class UserController extends Controller
             || $user->penerimaanBahan()->exists()
             || $user->mutasiStok()->exists()
             || $user->penyesuaianStok()->exists()
-            || $user->pengantaran()->exists()
+            || $user->pengiriman()->exists()
             || $user->pembayaranDiproses()->exists();
 
         if ($hasTransactions) {

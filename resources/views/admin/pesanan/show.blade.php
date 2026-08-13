@@ -212,7 +212,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Waktu Acara</p>
-                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->waktu_pengantaran ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->waktu_pengantaran)->format('H:i').' WIB' : '-' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->waktu_pengiriman ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->waktu_pengiriman)->format('H:i').' WIB' : '-' }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Jumlah Porsi</p>
@@ -224,11 +224,11 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Metode Pemenuhan</p>
-                        <p class="text-sm font-bold text-gray-900">{{ $pesanan->pengantaran ? 'Diantar' : 'Diambil Sendiri' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $pesanan->pengiriman ? 'Diantar' : 'Diambil Sendiri' }}</p>
                     </div>
                     <div class="md:col-span-2">
                         <p class="text-xs text-gray-500 font-medium">Alamat Acara</p>
-                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->alamat_pengantaran ?? '-' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->alamat_pengiriman ?? '-' }}</p>
                     </div>
                     <div class="md:col-span-4">
                         <p class="text-xs text-gray-500 font-medium">Catatan Acara</p>
@@ -275,7 +275,7 @@
                 </div>
 
                 <div class="border-t border-gray-100 pt-4 mb-6">
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Status Produksi dan Pengantaran</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Status Produksi dan Pengiriman</p>
                     <div class="flex items-center text-xs font-bold gap-2 text-gray-400 flex-wrap">
                         @php
                             $stepsKat = [
@@ -306,7 +306,7 @@
                     <button onclick="window.showToast('info', 'Verifikasi Pembayaran segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Verifikasi Pembayaran</button>
                     <button onclick="window.showToast('info', 'Cetak Daftar Produksi segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Cetak Daftar Produksi</button>
                     <button onclick="window.showToast('info', 'Buat Pengadaan Bahan segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Buat Pengadaan Bahan</button>
-                    <button onclick="window.showToast('info', 'Atur Pengantaran segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Atur Pengantaran</button>
+                    <button onclick="window.showToast('info', 'Atur Pengiriman segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Atur Pengiriman</button>
                     <button onclick="window.showToast('info', 'Batalkan Pesanan segera hadir')" class="px-4 py-2 bg-red-50 text-red-600 font-bold text-sm rounded-lg hover:bg-red-100 shadow-sm">Batalkan Pesanan</button>
                 </div>
             </div>
@@ -335,11 +335,11 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Waktu Dibutuhkan</p>
-                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->waktu_pengantaran ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->waktu_pengantaran)->format('H:i').' WIB' : '-' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->waktu_pengiriman ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->waktu_pengiriman)->format('H:i').' WIB' : '-' }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Metode Pemenuhan</p>
-                        <p class="text-sm font-bold text-gray-900">{{ $pesanan->pengantaran ? 'Diantar' : 'Diambil Sendiri' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $pesanan->pengiriman ? 'Diantar' : 'Diambil Sendiri' }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Nama Penerima</p>
@@ -350,8 +350,8 @@
                         <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->nomor_telepon_penerima ? \App\Support\WhatsAppNumber::formatForDisplay($pesanan->jadwal_pesanan->nomor_telepon_penerima) : '-' }}</p>
                     </div>
                     <div class="md:col-span-2">
-                        <p class="text-xs text-gray-500 font-medium">Alamat Pengantaran</p>
-                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->alamat_pengantaran ?? '-' }}</p>
+                        <p class="text-xs text-gray-500 font-medium">Alamat Pengiriman</p>
+                        <p class="text-sm font-bold text-gray-900">{{ optional($pesanan->jadwal_pesanan)->alamat_pengiriman ?? '-' }}</p>
                     </div>
                     <div class="md:col-span-2">
                         <p class="text-xs text-gray-500 font-medium">Catatan</p>
@@ -389,7 +389,7 @@
                     <button onclick="window.showToast('info', 'Verifikasi DP segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Verifikasi DP</button>
                     <button onclick="window.showToast('info', 'Cetak Daftar Produksi segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Cetak Daftar Produksi</button>
                     <button onclick="window.showToast('info', 'Buat Pengadaan segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Buat Pengadaan</button>
-                    <button onclick="window.showToast('info', 'Atur Pengantaran segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Atur Pengantaran</button>
+                    <button onclick="window.showToast('info', 'Atur Pengiriman segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Atur Pengiriman</button>
                     <button onclick="window.showToast('info', 'Batalkan Pesanan segera hadir')" class="px-4 py-2 bg-red-50 text-red-600 font-bold text-sm rounded-lg hover:bg-red-100 shadow-sm">Batalkan Pesanan</button>
                 </div>
             </div>
@@ -463,10 +463,10 @@
                             $subtotal = $pesanan->detail_pesanan->sum('subtotal');
                             $diskon = $pesanan->jumlah_diskon ?? 0;
                             
-                            // Check pengantaran for Katering/Nasi Box
+                            // Check pengiriman for Katering/Nasi Box
                             $ongkir = 0;
-                            if ($pesanan->pengantaran) {
-                                $ongkir = $pesanan->pengantaran->biaya_pengantaran;
+                            if ($pesanan->pengiriman) {
+                                $ongkir = $pesanan->pengiriman->biaya_pengiriman;
                             }
                         @endphp
                         
@@ -479,7 +479,7 @@
                             <span>- Rp{{ number_format($diskon, 0, ',', '.') }}</span>
                         </div>
                         <div class="flex justify-between items-center text-gray-600 font-medium">
-                            <span>Biaya Pengantaran</span>
+                            <span>Biaya Pengiriman</span>
                             <span>Rp{{ number_format($ongkir, 0, ',', '.') }}</span>
                         </div>
                         

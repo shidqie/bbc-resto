@@ -159,11 +159,8 @@ class LaporanController extends Controller
             }
         }
 
-        // Hanya hitung penjualan yang sudah Lunas (3) atau Selesai (5)
-        $query->where(function($q) {
-            $q->where('status_pembayaran_id', 3)
-              ->orWhere('status_pesanan_id', 5);
-        });
+        // Hanya hitung penjualan yang sudah Lunas (5)
+        $query->where('status_pembayaran_id', 5);
 
         $pesanans = $query->orderByDesc('tanggal_pesanan')->get();
         
@@ -175,7 +172,7 @@ class LaporanController extends Controller
             'totalNasiBox' => $pesanans->where('jenis_pesanan_id', 3)->count(),
         ];
 
-        $pdf = Pdf::loadView('laporan.penjualan.pdf', compact('pesanans', 'stats', 'startDate', 'endDate'));
+        $pdf = Pdf::loadView('admin.laporan.penjualan.pdf', compact('pesanans', 'stats', 'startDate', 'endDate'));
         return $pdf->stream('Laporan_Penjualan.pdf');
     }
 
@@ -381,7 +378,7 @@ class LaporanController extends Controller
             return $stokItems;
         })->flatten(1);
 
-        $pdf = Pdf::loadView('laporan.persediaan.pdf', compact('laporanBahan'));
+        $pdf = Pdf::loadView('admin.laporan.persediaan.pdf', compact('laporanBahan'));
         return $pdf->stream('Laporan_Persediaan.pdf');
     }
 
@@ -516,7 +513,7 @@ class LaporanController extends Controller
 
         $pengadaans = $query->orderByDesc('tanggal_pengadaan')->get();
 
-        $pdf = Pdf::loadView('laporan.pengadaan.pdf', compact('pengadaans', 'startDate', 'endDate'));
+        $pdf = Pdf::loadView('admin.laporan.pengadaan.pdf', compact('pengadaans', 'startDate', 'endDate'));
         return $pdf->stream('Laporan_Pengadaan.pdf');
     }
 

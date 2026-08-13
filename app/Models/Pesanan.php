@@ -60,9 +60,9 @@ class Pesanan extends BaseModel
         return $this->hasMany(TiketDapur::class, 'pesanan_id');
     }
 
-    public function pengantaran()
+    public function pengiriman()
     {
-        return $this->hasOne(Pengantaran::class, 'pesanan_id');
+        return $this->hasOne(Pengiriman::class, 'pesanan_id');
     }
 
     public function pengadaan_bahan()

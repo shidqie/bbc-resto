@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+    <script>
+        // Prevent FOUC: apply dark class before render
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -18,6 +24,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontSize: {
@@ -189,5 +196,16 @@
     </script>
 
     @stack('scripts')
+
+    <script>
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            html.classList.add('theme-transitioning');
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('darkMode', isDark);
+            setTimeout(() => html.classList.remove('theme-transitioning'), 400);
+        }
+    </script>
 </body>
 </html>

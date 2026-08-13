@@ -55,14 +55,14 @@
         @php
         $penjualanItems = [];
         if ($hasRole('Pemilik')) {
-            $penjualanItems[] = ['label' => 'Semua Daftar Pesanan', 'url' => route('admin.pesanan.index'), 'active' => request()->routeIs('admin.pesanan.index')];
+            $penjualanItems[] = ['label' => 'Semua Daftar Pesanan ', 'url' => route('admin.pesanan.index'), 'active' => request()->routeIs('admin.pesanan.index')];
         }
         if ($hasRole('Kasir', 'Pemilik')) {
             $penjualanItems[] = ['label' => 'Daftar Pesanan Dine In', 'url' => route('admin.pesanan.dinein.index'), 'active' => request()->routeIs('admin.pesanan.dinein.*')];
         }
         if ($hasRole('Pemilik')) {
             $penjualanItems[] = ['label' => 'Daftar Pesanan Katering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
-            $penjualanItems[] = ['label' => 'Daftar Pesanan Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
+            $penjualanItems[] = ['label' => 'Daftar Pesanan  Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
         }
 
             
@@ -70,19 +70,19 @@
             @if(count($penjualanItems))
             @include('partials.sidebar-submenu', [
                 'icon' => 'heroicon-o-shopping-cart',
-                'label' => 'Daftar Pesanan',
+                'label' => 'Transaksi Penjualan',
                 'isOpen' => request()->routeIs('pos.dinein.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.pembayaran.*') || request()->routeIs('admin.jadwal.*'),
                 'items' => $penjualanItems,
                 ])
                 @endif
                 
-                {{-- Jadwal Pengantaran --}}
+                {{-- Jadwal Pengiriman --}}
                 @if($hasRole('Pemilik', 'Pengantaran'))
                 @include('partials.sidebar-link', [
                     'route' => 'admin.jadwal.index',
                     'icon' => 'heroicon-o-truck',
-                    'label' => 'Jadwal Pengantaran',
-                    'active' => request()->routeIs('admin.jadwal.*') || request()->routeIs('admin.jadwal-pengantaran.*'),
+                    'label' => 'Jadwal Pengiriman',
+                    'active' => request()->routeIs('admin.jadwal.*') || request()->routeIs('admin.jadwal-pengiriman.*'),
                 ])
                 @endif
                 
@@ -183,21 +183,24 @@
 
     {{-- Footer Actions --}}
     <div class="p-3 border-t border-slate-100/80 shrink-0">
-        <div class="flex items-center justify-between p-2 -mx-2 rounded-xl hover:bg-slate-50 transition-colors duration-200 group/profile">
-            <div class="flex items-center gap-3 overflow-hidden">
+        <div class="flex items-center justify-between p-2 -mx-2 rounded-xl hover:bg-slate-50 transition-colors duration-200 group/profile" :class="!sidebarOpen ? 'justify-center' : ''">
+            
+            {{-- Profil (Hanya tampil saat sidebar terbuka) --}}
+            <div class="flex items-center gap-3 overflow-hidden" x-show="sidebarOpen" x-transition.opacity>
                 <div class="w-9 h-9 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200/50 group-hover/profile:bg-white group-hover/profile:shadow-sm transition-all">
                     {{ strtoupper(substr(auth()->user()->nama ?? 'A', 0, 2)) }}
                 </div>
-                <div x-show="sidebarOpen" class="flex flex-col min-w-0" x-cloak>
+                <div class="flex flex-col min-w-0">
                     <p class="text-sm font-semibold text-slate-800 truncate">{{ auth()->user()->nama ?? 'User' }}</p>
                     <p class="text-[12px] text-slate-500 truncate">{{ auth()->user()->peran->nama_peran ?? 'Admin' }}</p>
                 </div>
             </div>
             
-            <form method="POST" action="{{ route('logout') }}" x-show="sidebarOpen" x-cloak>
+            {{-- Tombol Logout (Tampil penuh saat minimize) --}}
+            <form method="POST" action="{{ route('logout') }}" :class="!sidebarOpen ? 'w-full flex justify-center' : ''">
                 @csrf
-                <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 focus:outline-none border border-transparent hover:border-red-100" title="Logout">
-                    <x-heroicon-o-arrow-right-on-rectangle class="w-5 h-5" />
+                <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 focus:outline-none border border-transparent hover:border-red-100" :class="!sidebarOpen ? 'w-10 h-10 flex items-center justify-center' : ''" title="Logout">
+                    <x-heroicon-o-arrow-right-on-rectangle class="w-6 h-6" x-bind:class="!sidebarOpen ? 'w-6 h-6' : 'w-5 h-5'" />
                 </button>
             </form>
         </div>

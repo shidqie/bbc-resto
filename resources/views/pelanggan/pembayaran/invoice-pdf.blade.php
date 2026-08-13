@@ -273,7 +273,7 @@
 
     {{-- Summary Breakdown --}}
     @php
-        $ongkir = optional($pesanan->pengantaran)->biaya_pengiriman ?? 0;
+        $ongkir = optional($pesanan->pengiriman)->biaya_pengiriman ?? 0;
         $totalTagihan = $pesanan->total_tagihan;
         $dpTerbayar = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
         $sisaTagihan = max(0, $totalTagihan - $dpTerbayar);

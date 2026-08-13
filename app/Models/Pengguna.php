@@ -73,9 +73,9 @@ class Pengguna extends Authenticatable
         return $this->hasMany(PenyesuaianStok::class, 'dibuat_oleh');
     }
 
-    public function pengantaran()
+    public function pengiriman()
     {
-        return $this->hasMany(Pengantaran::class, 'ditugaskan_kepada');
+        return $this->hasMany(Pengiriman::class, 'ditugaskan_kepada');
     }
 
     public function pembayaranDiproses()

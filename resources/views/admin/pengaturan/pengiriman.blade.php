@@ -6,7 +6,7 @@
 <div class="flex-1 bg-gray-50 text-gray-800">
     <div class="w-full p-6 space-y-5" x-data="pengaturanPengiriman()">
         {{-- PAGE HEADER --}}
-        <x-ui.page-header title="Pengaturan Pengiriman" subtitle="Kelola tarif dan ketentuan biaya pengantaran Katering & Nasi Box." :breadcrumbs="['Pengaturan', 'Tarif Pengiriman']">
+        <x-ui.page-header title="Pengaturan Pengiriman" subtitle="Kelola tarif dan ketentuan biaya pengiriman Katering & Nasi Box." :breadcrumbs="['Pengaturan', 'Tarif Pengiriman']">
         </x-ui.page-header>
 
         @if (session('success'))
@@ -55,8 +55,8 @@
                         <div>
                             <div class="flex items-center justify-between mb-4">
                                 <div>
-                                    <h2 class="text-base font-semibold text-gray-900">Aturan Gratis Pengantaran</h2>
-                                    <p class="text-sm text-gray-500 mt-1">Tentukan jarak gratis pengantaran berdasarkan jumlah porsi pesanan.</p>
+                                    <h2 class="text-base font-semibold text-gray-900">Aturan Gratis Pengiriman</h2>
+                                    <p class="text-sm text-gray-500 mt-1">Tentukan jarak gratis pengiriman berdasarkan jumlah porsi pesanan.</p>
                                 </div>
                                 <button type="button" @click="tambahAturan()" class="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
                                     <x-heroicon-o-plus class="w-4 h-4" />

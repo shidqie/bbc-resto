@@ -74,7 +74,7 @@
                     Pantau<br>Pesanan Anda.
                 </h1>
                 <p class="text-white/70 text-xs leading-relaxed max-w-xs">
-                    Masuk untuk memantau status pesanan catering & nasi box, riwayat pembayaran, hingga pengantaran.
+                    Masuk untuk memantau status pesanan catering & nasi box, riwayat pembayaran, hingga pengiriman.
                 </p>
             </div>
 

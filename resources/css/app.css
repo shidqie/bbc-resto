@@ -17,6 +17,23 @@
     --color-success: #16A34A;
     --color-warning: #D97706;
     --color-danger: #DC2626;
+
+    /* Dark theme tokens */
+    --dark-bg: #0f1117;
+    --dark-surface: #1a1d27;
+    --dark-surface-2: #222632;
+    --dark-surface-3: #2a2e3c;
+    --dark-border: #2e3345;
+    --dark-border-subtle: #252938;
+    --dark-text: #f8fafc;
+    --dark-text-secondary: #cbd5e1;
+    --dark-text-muted: #94a3b8;
+    --dark-primary: #d4a843;
+    --dark-primary-soft: rgba(212,168,67,0.12);
+    --dark-accent: #f0c45e;
+    --dark-danger: #f87171;
+    --dark-success: #34d399;
+    --dark-warning: #fbbf24;
   }
 
   html {
@@ -30,3 +47,642 @@
     line-height: 1.55;
   }
 }
+
+/* ============================================
+   DARK THEME SYSTEM
+   ============================================ */
+
+/* Smooth transition for theme change */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* --- ADMIN DARK THEME --- */
+html.dark .admin-shell {
+  background-color: var(--dark-bg) !important;
+  color: var(--dark-text) !important;
+}
+
+/* Sidebar */
+html.dark .admin-shell aside {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-secondary) !important;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.2) !important;
+}
+html.dark .admin-shell aside .border-slate-100\/80,
+html.dark .admin-shell aside .border-slate-100,
+html.dark .admin-shell aside div[class*="border-slate"] {
+  border-color: var(--dark-border) !important;
+}
+html.dark .admin-shell aside span[class*="text-slate-900"],
+html.dark .admin-shell aside span[class*="text-transparent"] {
+  color: var(--dark-text) !important;
+  -webkit-text-fill-color: var(--dark-text) !important;
+}
+html.dark .admin-shell aside a,
+html.dark .admin-shell aside button {
+  color: var(--dark-text-secondary) !important;
+}
+html.dark .admin-shell aside a:hover,
+html.dark .admin-shell aside button:hover {
+  background-color: var(--dark-surface-2) !important;
+  color: var(--dark-text) !important;
+}
+html.dark .admin-shell aside a.bg-blue-50,
+html.dark .admin-shell aside a[class*="bg-blue-50"] {
+  background-color: var(--dark-primary-soft) !important;
+  color: var(--dark-primary) !important;
+}
+html.dark .admin-shell aside a.bg-blue-50 svg,
+html.dark .admin-shell aside a[class*="bg-blue-50"] svg {
+  color: var(--dark-primary) !important;
+}
+html.dark .admin-shell aside .hover\:bg-slate-50:hover {
+  background-color: var(--dark-surface-2) !important;
+}
+
+/* Profile section in sidebar */
+html.dark .admin-shell aside div[class*="bg-slate-100"] {
+  background-color: var(--dark-surface-3) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text) !important;
+}
+html.dark .admin-shell aside p[class*="text-slate-800"] {
+  color: var(--dark-text) !important;
+}
+html.dark .admin-shell aside p[class*="text-slate-500"],
+html.dark .admin-shell aside p[class*="text-slate-400"] {
+  color: var(--dark-text-muted) !important;
+}
+
+/* Active sidebar submenu */
+html.dark .admin-shell aside [class*="bg-slate-50\/50"],
+html.dark .admin-shell aside [class*="bg-slate-50"] {
+  background-color: var(--dark-surface-2) !important;
+}
+html.dark .admin-shell aside a[class*="text-blue-600"] {
+  color: var(--dark-primary) !important;
+}
+
+/* Topbar */
+html.dark .admin-shell header {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text) !important;
+}
+
+/* Main content */
+html.dark .admin-shell main {
+  background-color: var(--dark-bg) !important;
+  color: var(--dark-text) !important;
+}
+
+/* Cards */
+html.dark .admin-shell .bg-white,
+html.dark .admin-shell [class*="bg-white"] {
+  background-color: var(--dark-surface) !important;
+  color: var(--dark-text) !important;
+}
+
+/* Borders */
+html.dark .admin-shell [class*="border-gray-"],
+html.dark .admin-shell [class*="border-slate-"],
+html.dark .admin-shell [class*="border-neutral-"] {
+  border-color: var(--dark-border) !important;
+}
+
+/* Text colors — full range */
+html.dark .admin-shell [class*="text-gray-900"],
+html.dark .admin-shell [class*="text-slate-900"],
+html.dark .admin-shell [class*="text-neutral-900"],
+html.dark .admin-shell [class*="text-gray-800"],
+html.dark .admin-shell [class*="text-slate-800"],
+html.dark .admin-shell [class*="text-neutral-800"],
+html.dark .admin-shell [class*="text-gray-700"],
+html.dark .admin-shell [class*="text-slate-700"],
+html.dark .admin-shell [class*="text-neutral-700"],
+html.dark .admin-shell [class*="text-\[#111827\]"] {
+  color: var(--dark-text) !important;
+}
+html.dark .admin-shell [class*="text-gray-600"],
+html.dark .admin-shell [class*="text-slate-600"],
+html.dark .admin-shell [class*="text-neutral-600"],
+html.dark .admin-shell [class*="text-gray-500"],
+html.dark .admin-shell [class*="text-slate-500"],
+html.dark .admin-shell [class*="text-neutral-500"] {
+  color: var(--dark-text-secondary) !important;
+}
+html.dark .admin-shell [class*="text-gray-400"],
+html.dark .admin-shell [class*="text-slate-400"],
+html.dark .admin-shell [class*="text-neutral-400"],
+html.dark .admin-shell [class*="text-gray-300"],
+html.dark .admin-shell [class*="text-slate-300"],
+html.dark .admin-shell [class*="text-neutral-300"] {
+  color: var(--dark-text-muted) !important;
+}
+
+/* Backgrounds — full range */
+html.dark .admin-shell [class*="bg-gray-50"],
+html.dark .admin-shell [class*="bg-slate-50"],
+html.dark .admin-shell [class*="bg-neutral-50"] {
+  background-color: var(--dark-surface-2) !important;
+}
+html.dark .admin-shell [class*="bg-gray-100"],
+html.dark .admin-shell [class*="bg-slate-100"],
+html.dark .admin-shell [class*="bg-neutral-100"] {
+  background-color: var(--dark-surface-3) !important;
+}
+html.dark .admin-shell [class*="bg-gray-200"],
+html.dark .admin-shell [class*="bg-slate-200"],
+html.dark .admin-shell [class*="bg-neutral-200"] {
+  background-color: var(--dark-border) !important;
+}
+html.dark .admin-shell .bg-\[\#F8FAFC\] {
+  background-color: var(--dark-bg) !important;
+}
+
+/* Tables */
+html.dark .admin-shell table {
+  border-color: var(--dark-border) !important;
+}
+html.dark .admin-shell thead {
+  background-color: var(--dark-surface-2) !important;
+}
+html.dark .admin-shell thead th {
+  color: var(--dark-text-secondary) !important;
+  border-color: var(--dark-border) !important;
+}
+html.dark .admin-shell tbody td {
+  border-color: var(--dark-border-subtle) !important;
+  color: var(--dark-text) !important;
+}
+html.dark .admin-shell tbody tr:hover {
+  background-color: var(--dark-surface-2) !important;
+}
+
+/* Inputs & Selects */
+html.dark .admin-shell input,
+html.dark .admin-shell select,
+html.dark .admin-shell textarea {
+  background-color: var(--dark-surface-2) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text) !important;
+}
+html.dark .admin-shell input::placeholder,
+html.dark .admin-shell textarea::placeholder {
+  color: var(--dark-text-muted) !important;
+}
+html.dark .admin-shell input:focus,
+html.dark .admin-shell select:focus,
+html.dark .admin-shell textarea:focus {
+  border-color: var(--dark-primary) !important;
+  box-shadow: 0 0 0 2px var(--dark-primary-soft) !important;
+}
+
+/* Labels */
+html.dark .admin-shell label {
+  color: var(--dark-text) !important;
+}
+
+/* Links inside admin */
+html.dark .admin-shell a[class*="text-blue-600"],
+html.dark .admin-shell a[class*="text-blue-500"],
+html.dark .admin-shell [class*="text-blue-600"],
+html.dark .admin-shell [class*="text-blue-500"] {
+  color: #60a5fa !important;
+}
+
+/* Ring colors */
+html.dark .admin-shell [class*="ring-gray-"],
+html.dark .admin-shell [class*="ring-slate-"],
+html.dark .admin-shell [class*="ring-neutral-"] {
+  --tw-ring-color: var(--dark-border) !important;
+}
+
+/* Shadows — more subtle in dark */
+html.dark .admin-shell [class*="shadow-sm"],
+html.dark .admin-shell [class*="shadow-xs"] {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
+}
+html.dark .admin-shell [class*="shadow-md"] {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+}
+html.dark .admin-shell [class*="shadow-lg"] {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5) !important;
+}
+
+/* Modals & Drawers */
+html.dark .admin-shell [class*="drawer"],
+html.dark .admin-shell [id*="drawer"],
+html.dark .admin-shell [x-show*="drawer"] {
+  background-color: var(--dark-surface) !important;
+  color: var(--dark-text) !important;
+}
+
+/* Badge overrides — soft glow in dark */
+html.dark .admin-shell [class*="bg-green-50"] { background-color: rgba(34,197,94,0.12) !important; }
+html.dark .admin-shell [class*="bg-green-100"] { background-color: rgba(34,197,94,0.18) !important; }
+html.dark .admin-shell [class*="text-green-600"],
+html.dark .admin-shell [class*="text-green-700"],
+html.dark .admin-shell [class*="text-green-800"] { color: #4ade80 !important; }
+
+html.dark .admin-shell [class*="bg-red-50"] { background-color: rgba(248,113,113,0.12) !important; }
+html.dark .admin-shell [class*="bg-red-100"] { background-color: rgba(248,113,113,0.18) !important; }
+html.dark .admin-shell [class*="text-red-600"],
+html.dark .admin-shell [class*="text-red-700"],
+html.dark .admin-shell [class*="text-red-800"] { color: #f87171 !important; }
+
+html.dark .admin-shell [class*="bg-yellow-50"],
+html.dark .admin-shell [class*="bg-amber-50"] { background-color: rgba(251,191,36,0.12) !important; }
+html.dark .admin-shell [class*="bg-yellow-100"],
+html.dark .admin-shell [class*="bg-amber-100"] { background-color: rgba(251,191,36,0.18) !important; }
+html.dark .admin-shell [class*="text-yellow-600"],
+html.dark .admin-shell [class*="text-yellow-700"],
+html.dark .admin-shell [class*="text-yellow-800"],
+html.dark .admin-shell [class*="text-amber-600"],
+html.dark .admin-shell [class*="text-amber-700"],
+html.dark .admin-shell [class*="text-amber-800"] { color: #fbbf24 !important; }
+
+html.dark .admin-shell [class*="bg-blue-50"] { background-color: rgba(59,130,246,0.12) !important; }
+html.dark .admin-shell [class*="bg-blue-100"] { background-color: rgba(59,130,246,0.18) !important; }
+html.dark .admin-shell [class*="text-blue-600"],
+html.dark .admin-shell [class*="text-blue-700"],
+html.dark .admin-shell [class*="text-blue-800"] { color: #60a5fa !important; }
+
+html.dark .admin-shell [class*="bg-purple-50"],
+html.dark .admin-shell [class*="bg-indigo-50"] { background-color: rgba(139,92,246,0.12) !important; }
+html.dark .admin-shell [class*="text-purple-600"],
+html.dark .admin-shell [class*="text-purple-700"],
+html.dark .admin-shell [class*="text-indigo-600"],
+html.dark .admin-shell [class*="text-indigo-700"] { color: #a78bfa !important; }
+
+html.dark .admin-shell [class*="bg-orange-50"] { background-color: rgba(249,115,22,0.12) !important; }
+html.dark .admin-shell [class*="text-orange-600"],
+html.dark .admin-shell [class*="text-orange-700"] { color: #fb923c !important; }
+
+/* Specific Tailwind bg color overrides */
+html.dark .admin-shell [class*="bg-\[#0D3024\]"] {
+  background-color: var(--dark-primary) !important;
+  color: var(--dark-bg) !important;
+}
+
+/* Breadcrumb */
+html.dark .admin-shell nav[aria-label*="breadcrumb"] a,
+html.dark .admin-shell [class*="breadcrumb"] a {
+  color: var(--dark-text-secondary) !important;
+}
+html.dark .admin-shell nav[aria-label*="breadcrumb"] span,
+html.dark .admin-shell [class*="breadcrumb"] span {
+  color: var(--dark-text-muted) !important;
+}
+
+/* Buttons — primary */
+html.dark .admin-shell button[class*="bg-\[#0D3024\]"],
+html.dark .admin-shell a[class*="bg-\[#0D3024\]"] {
+  background-color: var(--dark-primary) !important;
+  color: var(--dark-bg) !important;
+}
+
+/* Buttons — outline / secondary */
+html.dark .admin-shell button[class*="border-gray-"],
+html.dark .admin-shell button[class*="border-slate-"],
+html.dark .admin-shell button[class*="border-neutral-"] {
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text) !important;
+}
+html.dark .admin-shell button[class*="border-gray-"]:hover,
+html.dark .admin-shell button[class*="border-slate-"]:hover,
+html.dark .admin-shell button[class*="border-neutral-"]:hover {
+  background-color: var(--dark-surface-2) !important;
+}
+
+/* Checkbox & Radio */
+html.dark .admin-shell input[type="checkbox"],
+html.dark .admin-shell input[type="radio"] {
+  background-color: var(--dark-surface-3) !important;
+  border-color: var(--dark-border) !important;
+}
+
+/* Tabs */
+html.dark .admin-shell [role="tab"],
+html.dark .admin-shell [class*="tab-"] {
+  color: var(--dark-text-secondary) !important;
+}
+html.dark .admin-shell [role="tab"][aria-selected="true"],
+html.dark .admin-shell [class*="tab-"][class*="active"] {
+  color: var(--dark-primary) !important;
+  border-color: var(--dark-primary) !important;
+}
+
+/* Dropdown menus */
+html.dark .admin-shell [class*="dropdown"],
+html.dark .admin-shell [x-show][class*="absolute"][class*="bg-white"] {
+  background-color: var(--dark-surface-2) !important;
+  border-color: var(--dark-border) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5) !important;
+}
+
+/* Icon colors */
+html.dark .admin-shell svg[class*="text-gray-"],
+html.dark .admin-shell svg[class*="text-slate-"],
+html.dark .admin-shell svg[class*="text-neutral-"] {
+  color: var(--dark-text-muted) !important;
+}
+
+/* Dividers */
+html.dark .admin-shell [class*="divide-gray-"],
+html.dark .admin-shell [class*="divide-slate-"],
+html.dark .admin-shell [class*="divide-neutral-"] {
+  --tw-divide-color: var(--dark-border) !important;
+}
+html.dark .admin-shell hr {
+  border-color: var(--dark-border) !important;
+}
+
+/* NProgress dark */
+html.dark #nprogress .bar {
+  background: var(--dark-primary) !important;
+}
+html.dark #nprogress .peg {
+  box-shadow: 0 0 10px var(--dark-primary), 0 0 5px var(--dark-primary) !important;
+}
+
+/* SweetAlert2 dark */
+html.dark .swal2-popup {
+  background-color: var(--dark-surface) !important;
+  color: var(--dark-text) !important;
+}
+html.dark .swal2-title {
+  color: var(--dark-text) !important;
+}
+html.dark .swal2-html-container {
+  color: var(--dark-text-secondary) !important;
+}
+
+/* Pagination */
+html.dark .admin-shell nav[aria-label*="Pagination"] span,
+html.dark .admin-shell nav[aria-label*="Pagination"] a {
+  background-color: var(--dark-surface-2) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-secondary) !important;
+}
+html.dark .admin-shell nav[aria-label*="Pagination"] span[aria-current] {
+  background-color: var(--dark-primary) !important;
+  color: var(--dark-bg) !important;
+}
+
+/* Confirm modal */
+html.dark .admin-shell [id*="modal"],
+html.dark .admin-shell [x-show*="modal"] > div[class*="bg-white"] {
+  background-color: var(--dark-surface) !important;
+  color: var(--dark-text) !important;
+}
+
+/* Toast */
+html.dark [id*="toast"] [class*="bg-white"] {
+  background-color: var(--dark-surface) !important;
+  color: var(--dark-text) !important;
+  border-color: var(--dark-border) !important;
+}
+
+/* Tooltip-like things */
+html.dark .admin-shell [class*="bg-gray-900"],
+html.dark .admin-shell [class*="bg-slate-900"] {
+  background-color: var(--dark-surface-3) !important;
+}
+
+/* Scrollbar */
+html.dark .admin-shell ::-webkit-scrollbar-track {
+  background: var(--dark-bg);
+}
+html.dark .admin-shell ::-webkit-scrollbar-thumb {
+  background: var(--dark-border);
+  border-radius: 4px;
+}
+html.dark .admin-shell ::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-text-muted);
+}
+
+/* --- LANDING PAGE DARK THEME --- */
+html.dark body:not(.admin-shell) {
+  background-color: var(--dark-bg) !important;
+  color: var(--dark-text) !important;
+}
+
+/* Landing navbar */
+html.dark #landing-navbar {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+}
+html.dark #landing-navbar a,
+html.dark #landing-navbar button,
+html.dark #landing-navbar span {
+  color: var(--dark-text-secondary) !important;
+}
+html.dark #landing-navbar span[class*="text-neutral-900"] {
+  color: var(--dark-text) !important;
+}
+html.dark #landing-navbar a:hover,
+html.dark #landing-navbar button:hover {
+  color: var(--dark-text) !important;
+}
+html.dark #landing-navbar div[class*="bg-white"] {
+  background-color: var(--dark-surface-2) !important;
+  border-color: var(--dark-border) !important;
+}
+
+/* Landing sections */
+html.dark section[class*="bg-white"],
+html.dark div[class*="bg-surface"] {
+  background-color: var(--dark-surface) !important;
+}
+html.dark [class*="bg-canvas"],
+html.dark [class*="bg-\[#FAFAF7\]"] {
+  background-color: var(--dark-bg) !important;
+}
+
+/* Landing headings */
+html.dark h1, html.dark h2, html.dark h3,
+html.dark h4, html.dark h5, html.dark h6 {
+  color: var(--dark-text) !important;
+}
+
+/* Landing cards */
+html.dark .menu-item {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+}
+html.dark .menu-item:hover {
+  border-color: var(--dark-primary) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+}
+html.dark .menu-item [class*="bg-neutral-50"] {
+  background-color: var(--dark-surface-2) !important;
+}
+html.dark .menu-item h3 {
+  color: var(--dark-text) !important;
+}
+html.dark .menu-item p {
+  color: var(--dark-text-secondary) !important;
+}
+html.dark .menu-item span[class*="text-neutral-900"] {
+  color: var(--dark-text) !important;
+}
+html.dark .menu-item [class*="border-neutral-100"] {
+  border-color: var(--dark-border) !important;
+}
+html.dark .menu-item div[class*="bg-white"] {
+  background-color: var(--dark-surface-3) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-muted) !important;
+}
+
+/* Landing package cards */
+html.dark .group[class*="bg-white"] {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+}
+
+/* Landing text handled natively by Tailwind dark: classes */
+
+/* Keep dark text visible on light/colored buttons in dark mode */
+html.dark body:not(.admin-shell) [class*="bg-primary"] button[class*="text-white"],
+html.dark body:not(.admin-shell) button[class*="bg-primary"]:not([class*="\\/5"]):not([class*="text-white"]),
+html.dark body:not(.admin-shell) a[class*="bg-primary"]:not([class*="\\/5"]):not([class*="text-white"]),
+html.dark body:not(.admin-shell) [class*="bg-primary"] [class*="text-primary"] { color: var(--dark-bg) !important; }
+
+/* Landing pagination & inactive tabs: keep gold text on translucent tint in dark */
+html.dark body:not(.admin-shell) #pagination-controls button,
+html.dark body:not(.admin-shell) .menu-tab:not(.active) { color: var(--dark-primary) !important; }
+html.dark body:not(.admin-shell) #pagination-controls button[class*="bg-primary"] { background-color: var(--dark-primary-soft) !important; }
+html.dark body:not(.admin-shell) #pagination-controls button[class*="bg-primary"][class*="text-white"] { color: var(--dark-bg) !important; background-color: var(--dark-primary) !important; }
+
+/* Landing backgrounds handled by Tailwind */
+
+/* Landing borders */
+html.dark [class*="border-neutral-200"],
+html.dark [class*="border-neutral-100"],
+html.dark [class*="border-primary\/10"] {
+  border-color: var(--dark-border) !important;
+}
+html.dark [class*="border-white\/10"] {
+  border-color: var(--dark-border) !important;
+}
+
+/* Landing footer — already dark bg, just subtle adjust */
+html.dark footer[class*="bg-primary-container"] {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+}
+html.dark footer h3, html.dark footer h4 {
+  color: var(--dark-accent) !important;
+}
+html.dark footer a {
+  color: var(--dark-text-secondary) !important;
+}
+html.dark footer a:hover {
+  color: var(--dark-accent) !important;
+}
+html.dark footer [class*="text-white\/40"] {
+  color: var(--dark-text-muted) !important;
+}
+html.dark footer [class*="text-white\/70"] {
+  color: var(--dark-text-secondary) !important;
+}
+html.dark footer [class*="text-secondary-container"] {
+  color: var(--dark-accent) !important;
+}
+
+/* Landing hero overlay fix */
+html.dark .bg-batik {
+  opacity: 0.3;
+}
+
+/* Landing contact section */
+html.dark .bg-surface[class*="rounded-xl"] {
+  background-color: var(--dark-surface) !important;
+}
+
+/* Menu modal dark */
+html.dark #menuModal [class*="bg-white"] {
+  background-color: var(--dark-surface) !important;
+  color: var(--dark-text) !important;
+}
+html.dark #menuModal [class*="bg-neutral-100"] {
+  background-color: var(--dark-surface-2) !important;
+}
+
+/* Mobile nav menu */
+html.dark #mobile-nav-menu {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+}
+html.dark #mobile-nav-menu a {
+  color: var(--dark-text-secondary) !important;
+}
+
+/* Landing buttons */
+html.dark .menu-tab {
+  color: var(--dark-text-secondary) !important;
+}
+html.dark .menu-tab.active {
+  color: var(--dark-bg) !important;
+}
+
+/* ============================================
+   THEME TOGGLE BUTTON
+   ============================================ */
+.theme-toggle {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  padding: 0 3px;
+}
+.theme-toggle:hover {
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+html.dark .theme-toggle {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-color: #475569;
+}
+html.dark .theme-toggle:hover {
+  box-shadow: 0 0 0 3px rgba(212,168,67,0.2);
+}
+.theme-toggle-knob {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  transform: translateX(0);
+}
+html.dark .theme-toggle-knob {
+  transform: translateX(24px);
+  background: #1e293b;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+.theme-toggle-icon {
+  width: 14px;
+  height: 14px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.theme-toggle .icon-sun { opacity: 1; color: #f59e0b; }
+.theme-toggle .icon-moon { opacity: 0; position: absolute; color: #fbbf24; }
+html.dark .theme-toggle .icon-sun { opacity: 0; transform: rotate(90deg) scale(0); }
+html.dark .theme-toggle .icon-moon { opacity: 1; transform: rotate(0) scale(1); }
+

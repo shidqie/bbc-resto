@@ -184,7 +184,7 @@
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Jam Pengambilan / Pengantaran <span class="text-red-500">*</span></label>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">Jam Pengambilan / Pengiriman <span class="text-red-500">*</span></label>
                                     <input type="time" name="jam_pengambilan" id="jamPengambilan"
                                            value="{{ old('jam_pengambilan') }}"
                                            class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#0D3024] focus:border-[#0D3024] transition bg-white" required>
@@ -199,19 +199,19 @@
                                         </div>
                                             
                                         <div>
-                                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Pengantaran <span class="text-red-500">*</span></label>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Pengiriman <span class="text-red-500">*</span></label>
                                             <textarea name="lokasi_acara" id="alamatDelivery" rows="2"
                                                     class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none bg-white">{{ old('lokasi_acara') }}</textarea>
                                         </div>
                                     </div>
 
                                     {{-- Map Container --}}
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lokasi Pengantaran di Peta <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lokasi Pengiriman di Peta <span class="text-red-500">*</span></label>
                                     <p class="text-xs text-body/60 mb-2">💡 Tip: Cari alamat lewat ikon 🔍 di peta, lalu geser pin ke titik yang tepat.</p>
                                     <div id="map-container" class="rounded-xl overflow-hidden border border-gray-200 shadow-md mb-3 z-0" style="height: 340px; position:relative;">
                                         {{-- Address Card Overlay --}}
                                         <div id="map-address-card">
-                                            <div class="card-label">📍 Lokasi Pengantaran</div>
+                                            <div class="card-label">📍 Lokasi Pengiriman</div>
                                             <div class="card-address" id="cardAlamat">Geser pin ke lokasi kamu...</div>
                                         </div>
 
@@ -369,7 +369,7 @@
                                         <span id="summary-alamat" class="font-semibold text-gray-900 text-right line-clamp-2">-</span>
                                     </div>
                                     <div class="flex justify-between" id="summary-jarak-row" style="display: none;">
-                                        <span class="text-gray-500">Jarak Pengantaran</span>
+                                        <span class="text-gray-500">Jarak Pengiriman</span>
                                         <span id="summary-jarak" class="font-semibold text-gray-900">-</span>
                                     </div>
                                 </div>
@@ -385,7 +385,7 @@
                                     </div>
                                     <div class="flex justify-between items-center">
                                         <div class="flex items-center gap-1.5">
-                                            <span class="text-gray-500 font-medium" id="summary-ongkir-label">Biaya Pengantaran</span>
+                                            <span class="text-gray-500 font-medium" id="summary-ongkir-label">Biaya Pengiriman</span>
                                             <span id="badge-gratis-ongkir" class="hidden px-2 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded text-[10px] font-bold uppercase tracking-wider">Gratis Ongkir</span>
                                         </div>
                                         <div class="text-right">
@@ -418,7 +418,7 @@
                                     <span class="text-blue-800 font-bold">Batas Pelunasan</span>
                                     <span id="summary-batas-pelunasan" class="font-bold text-blue-900">-</span>
                                 </div>
-                                <p class="text-[9px] text-blue-700 leading-relaxed">Pelunasan wajib dilakukan paling lambat H-4 sebelum tanggal pengambilan atau pengantaran pesanan.</p>
+                                <p class="text-[9px] text-blue-700 leading-relaxed">Pelunasan wajib dilakukan paling lambat H-4 sebelum tanggal pengambilan atau pengiriman pesanan.</p>
                             </div>
 
                             <div class="mb-5 p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[10px] text-gray-600 space-y-1.5 leading-relaxed">
@@ -777,9 +777,9 @@
                         document.getElementById('summary-alamat-row').style.display = 'flex';
                         document.getElementById('summary-jarak').textContent = jarakKm ? jarakKm.toFixed(2) + ' km' : '0 km';
                         document.getElementById('summary-alamat').textContent = document.getElementById('alamatDelivery').value || '-';
-                        document.getElementById('summary-ongkir-label').textContent = 'Biaya Pengantaran';
+                        document.getElementById('summary-ongkir-label').textContent = 'Biaya Pengiriman';
                         document.getElementById('summary-metode').textContent = 'Diantar (Delivery)';
-                        document.getElementById('summary-jam-kirim-label').textContent = 'Jam Pengantaran';
+                        document.getElementById('summary-jam-kirim-label').textContent = 'Jam Pengiriman';
                     } else {
                         document.getElementById('summary-jarak-row').style.display = 'none';
                         document.getElementById('summary-alamat-row').style.display = 'none';

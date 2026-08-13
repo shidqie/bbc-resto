@@ -12,6 +12,7 @@
     </div>
 
     <div class="flex items-center gap-3">
-        {{-- Profile dipindahkan ke Sidebar --}}
+        <x-ui.notification-dropdown type="internal" />
+        <x-theme-toggle />
     </div>
 </header>

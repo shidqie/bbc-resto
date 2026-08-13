@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-class StatusPengantaran extends BaseModel
+class StatusPengiriman extends BaseModel
 {
-    protected $table = 'status_pengantaran';
+    protected $table = 'status_pengiriman';
 
     protected $guarded = [];
 

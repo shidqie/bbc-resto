@@ -14,7 +14,7 @@ class LacakPesananController extends Controller
         $jenisPesanan = null;
 
         if ($kodePesanan) {
-            $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengantaran', 'pembayaran', 'pelanggan']);
+            $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengiriman', 'pembayaran', 'pelanggan']);
             
             if (auth('pelanggan')->check()) {
                 // If logged in, they can fuzzy search their own orders

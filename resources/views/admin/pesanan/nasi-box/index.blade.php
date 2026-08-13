@@ -13,21 +13,26 @@
         {{-- Table with integrated toolbar --}}
         <x-ui.data-table :paginator="$pesanans">
             <x-slot:toolbar>
-                <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between w-full">
-                    <form action="{{ route('admin.pesanan.nasibox.index') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
-                        <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari Kode / Pemesan / HP…" width="w-full sm:w-56" />
-                        <input type="hidden" name="status" value="{{ request('status', 'all') }}">
-                    </form>
+                <form action="{{ route('admin.pesanan.nasibox.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
+                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari Kode / Pemesan / HP…" />
                     
-                    <div class="flex items-center gap-1 text-xs font-medium overflow-x-auto no-scrollbar shrink-0">
-                        <span class="text-gray-500 mr-1">Status:</span>
-                        <a href="{{ route('admin.pesanan.nasibox.index', ['status' => 'all']) }}" class="px-3 py-1.5 rounded-lg transition-colors {{ request('status', 'all') === 'all' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Semua</a>
-                        <a href="{{ route('admin.pesanan.nasibox.index', ['status' => 'ditinjau']) }}" class="px-3 py-1.5 rounded-lg transition-colors {{ request('status') === 'ditinjau' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Baru</a>
-                        <a href="{{ route('admin.pesanan.nasibox.index', ['status' => 'terkonfirmasi']) }}" class="px-3 py-1.5 rounded-lg transition-colors {{ request('status') === 'terkonfirmasi' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Terkonfirmasi</a>
-                        <a href="{{ route('admin.pesanan.nasibox.index', ['status' => 'diproses']) }}" class="px-3 py-1.5 rounded-lg transition-colors {{ request('status') === 'diproses' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Diproses</a>
-                        <a href="{{ route('admin.pesanan.nasibox.index', ['status' => 'selesai']) }}" class="px-3 py-1.5 rounded-lg transition-colors {{ request('status') === 'selesai' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100' }}">Selesai</a>
-                    </div>
-                </div>
+                    <x-ui.multi-select name="status" :options="['all' => 'Semua Status', 'ditinjau' => 'Baru', 'terkonfirmasi' => 'Terkonfirmasi', 'diproses' => 'Diproses', 'selesai' => 'Selesai']" :selected="request('status', 'all')" label="Pilih status" type="radio" />
+                    
+                    <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'kustom' => 'Kustom']" :selected="request('periode')" label="Pilih periode" type="radio" />
+                    
+                    <template x-if="new URLSearchParams(window.location.search).get('periode') === 'kustom'">
+                        <div class="flex items-center gap-2">
+                            <x-ui.input type="date" name="start_date" value="{{ request('start_date') }}" />
+                            <span class="text-gray-500 text-sm">s/d</span>
+                            <x-ui.input type="date" name="end_date" value="{{ request('end_date') }}" />
+                            <x-ui.button type="submit" variant="primary">Terapkan</x-ui.button>
+                        </div>
+                    </template>
+
+                    @if(request()->hasAny(['search', 'status', 'periode', 'start_date', 'end_date']))
+                        <x-ui.button href="{{ route('admin.pesanan.nasibox.index') }}" variant="danger" size="sm">Reset</x-ui.button>
+                    @endif
+                </form>
             </x-slot:toolbar>
 
             <x-ui.table class="min-w-[1100px]">

@@ -25,15 +25,15 @@
                     ['key' => 'terkonfirmasi',        'label' => 'Dikonfirmasi Admin',     'desc' => 'Pembayaran/Pesanan telah dikonfirmasi'],
                     ['key' => 'diproses',             'label' => 'Sedang Diproses',        'desc' => 'Dapur sedang menyiapkan hidangan'],
                     ['key' => 'menunggu_pengiriman',  'label' => 'Menunggu Pengiriman',    'desc' => 'Makanan siap untuk dikirim/disajikan'],
-                    ['key' => 'dalam_pengantaran',    'label' => 'Dalam Pengantaran',      'desc' => 'Kurir sedang mengantar pesanan ke lokasi Anda'],
+                    ['key' => 'dalam_pengiriman',    'label' => 'Dalam Pengiriman',      'desc' => 'Kurir sedang mengantar pesanan ke lokasi Anda'],
                     ['key' => 'selesai',              'label' => 'Pesanan Selesai',        'desc' => 'Pesanan berhasil diterima & selesai'],
                 ];
 
                 $statusIdToKey = [1 => 'ditinjau', 2 => 'terkonfirmasi', 3 => 'diproses', 4 => 'menunggu_pengiriman', 5 => 'selesai', 6 => 'dibatalkan'];
                 $statusKey = $statusIdToKey[$pesanan->status_pesanan_id] ?? 'ditinjau';
                 
-                if ($statusKey === 'menunggu_pengiriman' && $pesanan->pengantaran && $pesanan->pengantaran->status_pengantaran_id == 3) {
-                    $statusKey = 'dalam_pengantaran';
+                if ($statusKey === 'menunggu_pengiriman' && $pesanan->pengiriman && $pesanan->pengiriman->status_pengiriman_id == 3) {
+                    $statusKey = 'dalam_pengiriman';
                 }
                 
                 $isCancelled = $statusKey === 'dibatalkan';
@@ -129,10 +129,10 @@
                                     <dt class="text-gray-400 font-light">Tanggal Acara</dt>
                                     <dd class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->translatedFormat('d M Y') }}</dd>
                                 </div>
-                                @if($pesanan->jadwal_pesanan->alamat_pengantaran)
+                                @if($pesanan->jadwal_pesanan->alamat_pengiriman)
                                 <div class="flex justify-between items-start py-2.5 border-b border-gray-100/60">
                                     <dt class="text-gray-400 font-light shrink-0">Alamat / Venue Acara</dt>
-                                    <dd class="font-medium text-gray-800 text-right max-w-[65%] leading-relaxed">{{ $pesanan->jadwal_pesanan->alamat_pengantaran }}</dd>
+                                    <dd class="font-medium text-gray-800 text-right max-w-[65%] leading-relaxed">{{ $pesanan->jadwal_pesanan->alamat_pengiriman }}</dd>
                                 </div>
                                 @endif
                                 @endif
@@ -145,10 +145,10 @@
                                     <span class="text-xs text-gray-400">+ {{ $pesanan->detail_pesanan->count() - 1 }} item lainnya</span>
                                 </div>
                                 @endif
-                                @if($pesanan->pengantaran)
+                                @if($pesanan->pengiriman)
                                 <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
                                     <dt class="text-gray-400 font-light">Metode Pengiriman</dt>
-                                    <dd class="font-medium text-gray-800 capitalize">{{ $pesanan->pengantaran->metode_pengantaran ?? 'Delivery' }}</dd>
+                                    <dd class="font-medium text-gray-800 capitalize">{{ $pesanan->pengiriman->metode_pengiriman ?? 'Delivery' }}</dd>
                                 </div>
                                 @endif
                                 @if($pesanan->pembayaran->isNotEmpty())

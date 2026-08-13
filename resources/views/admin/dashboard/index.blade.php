@@ -27,8 +27,11 @@
             </div>
         </div>
 
-        {{-- ── CHART (Full Width) --}}
-        <div class="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200 flex flex-col justify-between">
+        {{-- ── CONTENT ROW (Chart & Transaksi Sejajar) ── --}}
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            
+            {{-- ── CHART --}}
+            <div class="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200 flex flex-col justify-between overflow-hidden">
             <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-neutral-100">
                 <div>
                     <h2 class="font-bold text-neutral-900 text-sm flex items-center gap-2">
@@ -41,13 +44,13 @@
                     Realtime
                 </span>
             </div>
-            <div class="h-64 sm:h-72 w-full relative">
+            <div class="flex-1 w-full relative min-h-[300px]">
                 <canvas id="incomeChart"></canvas>
             </div>
         </div>
 
-        {{-- ── TRANSAKSI TERBARU (Full Width) --}}
-        <div class="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200">
+            {{-- ── TRANSAKSI TERBARU --}}
+            <div class="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200 overflow-hidden flex flex-col">
             <div class="flex justify-between items-center mb-3 pb-2.5 border-b border-neutral-100">
                 <div>
                     <h3 class="font-bold text-neutral-900 text-sm">Transaksi Terbaru</h3>
@@ -114,6 +117,7 @@
                     @endforelse
                 </tbody>
             </x-ui.table>
+        </div>
         </div>
 
     </div>

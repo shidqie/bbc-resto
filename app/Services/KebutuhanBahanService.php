@@ -55,6 +55,16 @@ class KebutuhanBahanService
     {
         $agregat = collect();
 
+        // 1. Tambahkan resep yang terikat langsung pada menu paket (jika ada)
+        // Berguna untuk bahan baku fixed seperti kemasan, beras, dll. yang tidak masuk ke pilihan komponen.
+        if ($paket->resep_menu()->exists()) {
+            $agregat = $agregat->merge($this->agregasi(
+                $this->resepMenuIds($paket, $jumlahPorsi),
+                $paket->nama_menu
+            ));
+        }
+
+        // 2. Tambahkan resep dari komponen/item paket
         foreach ($paket->item_paket()->with(['menu_terkait', 'opsi.menu'])->get() as $item) {
             if ($item->tipe_item === 'tetap' && $item->menu_id_terkait) {
                 $agregat = $agregat->merge($this->agregasi(
