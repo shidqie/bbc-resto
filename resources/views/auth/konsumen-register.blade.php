@@ -11,27 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontSize: {
-                        xs: ['13px', '1.45'],
-                        sm: ['15px', '1.5'],
-                        base: ['16px', '1.55'],
-                        lg: ['18px', '1.5'],
-                        xl: ['20px', '1.4'],
-                        '2xl': ['24px', '1.3'],
-                        '3xl': ['30px', '1.25'],
-                        '4xl': ['36px', '1.2'],
-                        '5xl': ['48px', '1.15'],
-                        '6xl': ['60px', '1.1'],
-                    },
-                }
-            }
-        }
-    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
