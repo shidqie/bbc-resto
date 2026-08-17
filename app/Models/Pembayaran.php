@@ -16,6 +16,7 @@ class Pembayaran extends BaseModel
         'status_verifikasi',
         'jumlah_tagihan',
         'jumlah_dibayar',
+        'expires_at',
         'tanggal_pembayaran',
         'bukti_pembayaran',
         'diverifikasi_oleh',
@@ -30,6 +31,7 @@ class Pembayaran extends BaseModel
     protected $casts = [
         'jumlah_tagihan' => 'decimal:2',
         'jumlah_dibayar' => 'decimal:2',
+        'expires_at' => 'datetime',
         'tanggal_pembayaran' => 'datetime',
         'tanggal_verifikasi' => 'datetime',
         'dibuat_pada' => 'datetime',

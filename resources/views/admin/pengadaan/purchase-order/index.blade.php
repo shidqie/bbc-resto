@@ -9,6 +9,11 @@
             title="Purchase Order"
             subtitle="Kelola pemesanan bahan baku ke supplier atau toko."
             :breadcrumbs="['Pengadaan', 'Purchase Order']">
+            <x-slot:actions>
+                <x-ui.button variant="primary" icon="plus" href="{{ route('pengadaan.po.create') }}">
+                    Buat Purchase Order
+                </x-ui.button>
+            </x-slot:actions>
         </x-ui.page-header>
 
         <x-ui.alert />

@@ -153,7 +153,7 @@
 {{-- DRAWER: DETAIL PESANAN (SLIDE-IN RIGHT) --}}
 <div id="drawerDetail" class="fixed inset-0 z-[100] hidden">
     <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300" id="drawerDetailOverlay" onclick="closeDetailDrawer()"></div>
-    <div class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300" id="drawerDetailPanel">
+    <div class="absolute right-0 top-0 h-full w-screen md:w-[50vw] md:min-w-[680px] md:max-w-[820px] bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300" id="drawerDetailPanel">
         <div id="drawerDetailContent" class="flex-1 overflow-y-auto">
             <div class="flex items-center justify-center h-full">
                 <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

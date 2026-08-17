@@ -35,8 +35,9 @@ class PaketCateringController extends Controller
     public function create(Request $request)
     {
         $jenis = $request->query('jenis', 'catering');
+        $menus = Menu::where('jenis_menu_id', 1)->where('status_aktif', 1)->get();
 
-        return view('admin.menu.paket.create', compact('jenis'));
+        return view('admin.menu.paket.create', compact('jenis', 'menus'));
     }
 
     public function store(Request $request)
@@ -48,10 +49,13 @@ class PaketCateringController extends Controller
             'deskripsi' => 'nullable|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'komponen' => 'required|array|min:1',
-            'komponen.*.nama_komponen' => 'required|string',
+            'komponen.*.nama_komponen' => 'nullable|string',
+            'komponen.*.menu_id' => 'nullable|exists:menu,id',
             'komponen.*.tipe' => 'required|in:fixed,choice',
             'komponen.*.urutan' => 'required|numeric',
-            'komponen.*.pilihan' => 'nullable|string', // Comma separated string for nama_pilihan
+            'komponen.*.jumlah' => 'required|numeric|min:1',
+            'komponen.*.pilihan' => 'nullable|array', // array of menu_id
+            'komponen.*.pilihan.*' => 'exists:menu,id',
         ]);
 
         $fotoPath = null;
@@ -74,23 +78,32 @@ class PaketCateringController extends Controller
 
         foreach ($request->komponen as $komp) {
             $tipe = $komp['tipe'] === 'choice' ? 'pilihan' : 'tetap';
+            $menuTerkait = $tipe === 'tetap' ? Menu::find($komp['menu_id']) : null;
+            $namaItem = $tipe === 'tetap' && $menuTerkait ? $menuTerkait->nama_menu : ($komp['nama_komponen'] ?? 'Pilihan Menu');
+
             $komponen = ItemPaket::create([
                 'menu_id' => $paket->id,
-                'nama_item' => $komp['nama_komponen'],
+                'menu_id_terkait' => $tipe === 'tetap' ? ($komp['menu_id'] ?? null) : null,
+                'nama_item' => $namaItem,
                 'tipe_item' => $tipe,
+                'jumlah' => $komp['jumlah'] ?? 1,
+                'satuan_sajian' => 'porsi',
                 'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                 'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                 'urutan' => $komp['urutan'],
             ]);
 
-            if ($tipe === 'pilihan' && ! empty($komp['pilihan'])) {
-                $pilihanList = array_map('trim', explode(',', $komp['pilihan']));
+            if ($tipe === 'pilihan' && ! empty($komp['pilihan']) && is_array($komp['pilihan'])) {
                 $urutanPilihan = 1;
-                foreach ($pilihanList as $namaPilihan) {
-                    if (! empty($namaPilihan)) {
+                foreach ($komp['pilihan'] as $pilihanMenuId) {
+                    $pilihanMenu = Menu::find($pilihanMenuId);
+                    if ($pilihanMenu) {
                         PilihanItemPaket::create([
                             'item_paket_id' => $komponen->id,
-                            'nama_pilihan' => $namaPilihan,
+                            'menu_id' => $pilihanMenu->id,
+                            'nama_pilihan' => $pilihanMenu->nama_menu,
+                            'jumlah' => $komp['jumlah'] ?? 1,
+                            'satuan_sajian' => 'porsi',
                             'urutan' => $urutanPilihan++,
                         ]);
                     }
@@ -103,17 +116,35 @@ class PaketCateringController extends Controller
 
     public function show($id)
     {
-        $paketCatering = Menu::with('komponen_paket.opsi')->findOrFail($id);
+        $paketCatering = Menu::with(['komponen_paket.opsi.menu', 'komponen_paket.menu_terkait'])->findOrFail($id);
+        
+        $kebutuhanBahanService = app(\App\Services\KebutuhanBahanService::class);
+        $kebutuhanBahanCollection = $kebutuhanBahanService->kebutuhanMenu($paketCatering, 1);
+        
+        $kebutuhan = [];
+        foreach ($kebutuhanBahanCollection as $item) {
+            $bahan = \App\Models\BahanBaku::with('satuan')->find($item['bahan_baku_id']);
+            if (! $bahan) {
+                continue;
+            }
+            $kebutuhan[] = [
+                'nama_bahan' => $bahan->nama_bahan,
+                'satuan' => ($bahan->satuan->nama_satuan ?? '-'),
+                'total_kebutuhan' => $item['kebutuhan'],
+                'menu_nama' => $item['menu_nama'],
+            ];
+        }
 
-        return view('admin.menu.paket.show', compact('paketCatering'));
+        return view('admin.menu.paket.show', compact('paketCatering', 'kebutuhan'));
     }
 
     public function edit($id)
     {
-        $paketCatering = Menu::with('komponen_paket.opsi')->findOrFail($id);
+        $paketCatering = Menu::with(['komponen_paket.opsi.menu', 'komponen_paket.menu_terkait'])->findOrFail($id);
         $jenis = $paketCatering->jenis_menu_id == 2 ? 'catering' : 'nasi_box';
+        $menus = Menu::where('jenis_menu_id', 1)->where('status_aktif', 1)->get();
 
-        return view('admin.menu.paket.edit', compact('paketCatering', 'jenis'));
+        return view('admin.menu.paket.edit', compact('paketCatering', 'jenis', 'menus'));
     }
 
     public function update(Request $request, $id)
@@ -127,10 +158,13 @@ class PaketCateringController extends Controller
             'deskripsi' => 'nullable|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'komponen' => 'required|array|min:1',
-            'komponen.*.nama_komponen' => 'required|string',
+            'komponen.*.nama_komponen' => 'nullable|string',
+            'komponen.*.menu_id' => 'nullable|exists:menu,id',
             'komponen.*.tipe' => 'required|in:fixed,choice',
             'komponen.*.urutan' => 'required|numeric',
-            'komponen.*.pilihan' => 'nullable|string',
+            'komponen.*.jumlah' => 'required|numeric|min:1',
+            'komponen.*.pilihan' => 'nullable|array',
+            'komponen.*.pilihan.*' => 'exists:menu,id',
         ]);
 
         $jenisId = $request->jenis_paket === 'catering' ? 2 : 3;
@@ -152,23 +186,32 @@ class PaketCateringController extends Controller
 
         foreach ($request->komponen as $komp) {
             $tipe = $komp['tipe'] === 'choice' ? 'pilihan' : 'tetap';
+            $menuTerkait = $tipe === 'tetap' ? Menu::find($komp['menu_id']) : null;
+            $namaItem = $tipe === 'tetap' && $menuTerkait ? $menuTerkait->nama_menu : ($komp['nama_komponen'] ?? 'Pilihan Menu');
+
             $komponen = ItemPaket::create([
                 'menu_id' => $paketCatering->id,
-                'nama_item' => $komp['nama_komponen'],
+                'menu_id_terkait' => $tipe === 'tetap' ? ($komp['menu_id'] ?? null) : null,
+                'nama_item' => $namaItem,
                 'tipe_item' => $tipe,
+                'jumlah' => $komp['jumlah'] ?? 1,
+                'satuan_sajian' => 'porsi',
                 'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                 'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                 'urutan' => $komp['urutan'],
             ]);
 
-            if ($tipe === 'pilihan' && ! empty($komp['pilihan'])) {
-                $pilihanList = array_map('trim', explode(',', $komp['pilihan']));
+            if ($tipe === 'pilihan' && ! empty($komp['pilihan']) && is_array($komp['pilihan'])) {
                 $urutanPilihan = 1;
-                foreach ($pilihanList as $namaPilihan) {
-                    if (! empty($namaPilihan)) {
+                foreach ($komp['pilihan'] as $pilihanMenuId) {
+                    $pilihanMenu = Menu::find($pilihanMenuId);
+                    if ($pilihanMenu) {
                         PilihanItemPaket::create([
                             'item_paket_id' => $komponen->id,
-                            'nama_pilihan' => $namaPilihan,
+                            'menu_id' => $pilihanMenu->id,
+                            'nama_pilihan' => $pilihanMenu->nama_menu,
+                            'jumlah' => $komp['jumlah'] ?? 1,
+                            'satuan_sajian' => 'porsi',
                             'urutan' => $urutanPilihan++,
                         ]);
                     }

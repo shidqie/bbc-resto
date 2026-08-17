@@ -70,11 +70,12 @@ class PengadaanController extends Controller
         $pesanan = null;
         $items = collect();
         $error = null;
-        $jenisCatering = JenisPesanan::where('kode_jenis', 'CAT')->value('id');
+        $jenisCateringId = JenisPesanan::where('kode_jenis', 'CAT')->value('id');
+        $jenisNasiBoxId = JenisPesanan::where('kode_jenis', 'BOX')->value('id');
 
         if ($request->filled('pesanan_id') || $request->filled('kode_pesanan')) {
             $query = Pesanan::with(['detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering'])
-                ->where('jenis_pesanan_id', $jenisCatering)
+                ->whereIn('jenis_pesanan_id', [$jenisCateringId, $jenisNasiBoxId])
                 ->whereNotIn('status_pesanan_id', [1, 6]);
 
             if ($request->filled('pesanan_id')) {
@@ -107,7 +108,7 @@ class PengadaanController extends Controller
             }
         }
 
-        $daftarPesanan = Pesanan::where('jenis_pesanan_id', $jenisCatering)
+        $daftarPesanan = Pesanan::whereIn('jenis_pesanan_id', [$jenisCateringId, $jenisNasiBoxId])
             ->whereNotIn('status_pesanan_id', [1, 6])
             ->orderBy('tanggal_pesanan', 'desc')
             ->get(['id', 'id_pesanan', 'tanggal_pesanan', 'status_pesanan_id']);
@@ -160,9 +161,10 @@ class PengadaanController extends Controller
 
     public function storeCatering(Request $request)
     {
-        $jenisCatering = JenisPesanan::where('kode_jenis', 'CAT')->value('id');
+        $jenisCateringId = JenisPesanan::where('kode_jenis', 'CAT')->value('id');
+        $jenisNasiBoxId = JenisPesanan::where('kode_jenis', 'BOX')->value('id');
         $pesanan = $request->filled('pesanan_id')
-            ? Pesanan::where('jenis_pesanan_id', $jenisCatering)->find($request->pesanan_id)
+            ? Pesanan::whereIn('jenis_pesanan_id', [$jenisCateringId, $jenisNasiBoxId])->find($request->pesanan_id)
             : null;
         abort_unless($pesanan, 422, 'Pesanan katering tidak valid.');
 

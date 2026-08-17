@@ -18,10 +18,13 @@
 
     {{-- Main Trigger Button --}}
     <button @click="if(!sidebarOpen) { sidebarOpen = true; open = true; } else { open = !open; }"
-            class="flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl text-sm transition-all duration-300 focus:outline-none group relative"
-            :class="open ? 'bg-blue-50 text-blue-700 font-semibold shadow-sm' : 'text-slate-600 font-medium hover:text-slate-900 hover:bg-slate-100/80'"
+            class="flex items-center rounded-xl text-sm transition-all duration-300 focus:outline-none group relative"
+            :class="[
+                open ? 'bg-blue-50 text-blue-700 font-semibold shadow-sm' : 'text-slate-600 font-medium hover:text-slate-900 hover:bg-slate-100/80',
+                sidebarOpen ? 'w-full px-3.5 py-2.5 justify-between' : 'w-10 h-10 px-0 py-0 justify-center mx-auto'
+            ]"
             x-bind:title="!sidebarOpen ? '{{ $label }}' : ''">
-        <div class="flex items-center gap-3.5 flex-1 overflow-hidden">
+        <div class="flex items-center overflow-hidden" :class="sidebarOpen ? 'gap-3.5 flex-1' : ''">
             <x-dynamic-component :component="$icon"
                class="w-5 h-5 text-center shrink-0 transition-all duration-300"
                x-bind:class="open ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'" />

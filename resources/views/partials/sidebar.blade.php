@@ -6,7 +6,7 @@
 | Menggunakan Alpine.js untuk toggle open/close dan submenu.
 |--}}
 
-<aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="no-print bg-white border-r border-slate-200/60 text-slate-600 flex flex-col shrink-0 transition-all duration-300 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+<aside :class="sidebarOpen ? 'w-[280px]' : 'w-20'" class="no-print bg-white border-r border-slate-200/60 text-slate-600 flex flex-col shrink-0 transition-all duration-300 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
     @php
         $userRole = auth()->user()->peran->nama_peran ?? '';
         $hasRole = function(...$roles) use ($userRole) {
@@ -16,22 +16,23 @@
     @endphp
 
     {{-- Logo & Toggle --}}
-    <div class="h-16 flex items-center justify-between px-4 border-b border-slate-100/80 shrink-0 transition-all duration-300">
+    <div class="h-16 flex items-center border-b border-slate-100/80 shrink-0 transition-all duration-300" :class="sidebarOpen ? 'justify-between px-4' : 'justify-center px-0'">
         <div class="flex items-center gap-3 overflow-hidden" x-show="sidebarOpen" x-transition:enter="transition delay-100 duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
             <img src="/images/logo-saung.png" alt="Logo" class="h-9 w-auto object-contain drop-shadow-sm shrink-0">
             <span class="font-extrabold text-slate-900 text-sm tracking-tight whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">RM BBC</span>
         </div>
-        <img x-show="!sidebarOpen" src="/images/logo-saung.png" alt="Logo" class="w-8 h-8 object-contain drop-shadow-sm shrink-0 mx-auto" x-cloak>
+        
+        <button x-show="!sidebarOpen" @click="sidebarOpen = true"
+                class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-50 transition-all focus:outline-none shrink-0 border border-transparent shadow-sm shadow-transparent"
+                title="Buka Sidebar" x-cloak>
+            <img src="/images/logo-saung.png" alt="Logo" class="w-8 h-8 object-contain drop-shadow-sm">
+        </button>
+
         <button @click="sidebarOpen = !sidebarOpen"
                 class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all focus:outline-none shrink-0 border border-transparent hover:border-blue-100/50 shadow-sm shadow-transparent hover:shadow-blue-500/5"
                 x-bind:class="sidebarOpen ? '' : 'hidden'"
                 title="Toggle Sidebar">
             <x-heroicon-o-chevron-left class="w-5 h-5" />
-        </button>
-        <button x-show="!sidebarOpen" @click="sidebarOpen = true"
-                class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all focus:outline-none shrink-0 mx-auto mt-1 border border-transparent hover:border-blue-100/50 shadow-sm shadow-transparent hover:shadow-blue-500/5"
-                title="Buka Sidebar" x-cloak>
-            <x-heroicon-o-chevron-right class="text-sm w-5 h-5" />
         </button>
     </div>
 
@@ -86,56 +87,49 @@
                 ])
                 @endif
                 
-                {{-- Menu & Paket --}}
-                @if($hasRole('Admin', 'Manajer', 'Pemilik'))
+                {{-- Data Master --}}
+                @php
+                    $dataMasterItems = [];
+                    if ($hasRole('Admin', 'Manajer', 'Pemilik')) {
+                        $dataMasterItems[] = ['label' => 'Data Menu & Resep', 'url' => route('menu.index'), 'active' => request()->routeIs('menu.*')];
+                        $dataMasterItems[] = ['label' => 'Kategori Menu', 'url' => route('kategori-menu.index'), 'active' => request()->routeIs('kategori-menu.*')];
+                        $dataMasterItems[] = ['label' => 'Data Meja', 'url' => route('meja.index'), 'active' => request()->routeIs('meja.*')];
+                    }
+                    if ($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur')) {
+                        $dataMasterItems[] = ['label' => 'Data Bahan Baku', 'url' => route('bahan-baku.index'), 'active' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*')];
+                    }
+                @endphp
+                @if(count($dataMasterItems))
                 @include('partials.sidebar-submenu', [
-                    'icon' => 'heroicon-o-book-open',
-                    'label' => 'Manajemen Menu',
-                    'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('paket-catering.*'),
-                    'items' => [
-                        ['label' => 'Data Menu', 'url' => route('menu.index'), 'active' => request()->routeIs('menu.*')],
-                        ['label' => 'Kategori Menu', 'url' => route('kategori-menu.index'), 'active' => request()->routeIs('kategori-menu.*')],
-                        ],
-                        ])
-                        @endif
-                        
-                        {{-- Meja --}}
-                        @if($hasRole('Admin', 'Manajer', 'Pemilik'))
-                            @include('partials.sidebar-submenu', [
-                                'icon' => 'heroicon-o-square-3-stack-3d',
-                                'label' => 'Manajemen Meja',
-                                'isOpen' => request()->routeIs('meja.*'),
-                                'items' => [
-                                    ['label' => 'Data Meja', 'url' => route('meja.index'), 'active' => request()->routeIs('meja.*')],
-                                ],
-                            ])
-                        @endif
+                    'icon' => 'heroicon-o-folder',
+                    'label' => 'Data Master',
+                    'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('meja.*') || request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*'),
+                    'items' => $dataMasterItems,
+                ])
+                @endif
 
-{{-- Persediaan --}}
-        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur'))
-        @include('partials.sidebar-submenu', [
-            'icon' => 'heroicon-o-archive-box',
-            'label' => 'Persediaan',
-            'isOpen' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*') || request()->routeIs('stok-operasional.*') || request()->routeIs('stok-catering.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('penyesuaian-stok.*'),
-            'items' => [
-                ['label' => 'Data Bahan Baku', 'url' => route('bahan-baku.index'), 'active' => request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*')],
-                ['label' => 'Stok Dine In & Nasi Box', 'url' => route('stok-operasional.index'), 'active' => request()->routeIs('stok-operasional.*')],
-                ['label' => 'Stok Catering', 'url' => route('stok-catering.index'), 'active' => request()->routeIs('stok-catering.*')],
-                ['label' => 'Penyesuaian Stok', 'url' => route('penyesuaian-stok.index'), 'active' => request()->routeIs('penyesuaian-stok.*')],
-            ],
-        ])
-        @endif
+                {{-- Persediaan --}}
+                @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur'))
+                @include('partials.sidebar-submenu', [
+                    'icon' => 'heroicon-o-archive-box',
+                    'label' => 'Persediaan',
+                    'isOpen' => request()->routeIs('stok-operasional.*') || request()->routeIs('stok-catering.*') || request()->routeIs('penyesuaian-stok.*'),
+                    'items' => [
+                        ['label' => 'Stok Operasional', 'url' => route('stok-operasional.index'), 'active' => request()->routeIs('stok-operasional.*')],
+                        ['label' => 'Stok Catering', 'url' => route('stok-catering.index'), 'active' => request()->routeIs('stok-catering.*')],
+                        ['label' => 'Penyesuaian Stok', 'url' => route('penyesuaian-stok.index'), 'active' => request()->routeIs('penyesuaian-stok.*')],
+                    ],
+                ])
+                @endif
 
      {{-- Pengadaan --}}
                         @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur'))
                             @include('partials.sidebar-submenu', [
                                 'icon' => 'heroicon-o-shopping-bag',
                                 'label' => 'Pengadaan',
-                                'isOpen' => request()->routeIs('pengadaan.*'),
+                                'isOpen' => request()->routeIs('pengadaan.po.*'),
                                 'items' => [
-                                    ['label' => 'Semua Permintaan', 'url' => route('pengadaan.permintaan.index'), 'active' => request()->routeIs('pengadaan.permintaan.*')],
                                     ['label' => 'Purchase Order', 'url' => route('pengadaan.po.index'), 'active' => request()->routeIs('pengadaan.po.*')],
-                                    ['label' => 'Penerimaan Bahan Baku', 'url' => route('pengadaan.penerimaan.index'), 'active' => request()->routeIs('pengadaan.penerimaan.*')],
                                 ],
                             ])
                         @endif
@@ -200,7 +194,7 @@
             <form method="POST" action="{{ route('logout') }}" :class="!sidebarOpen ? 'w-full flex justify-center' : ''">
                 @csrf
                 <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 focus:outline-none border border-transparent hover:border-red-100" :class="!sidebarOpen ? 'w-10 h-10 flex items-center justify-center' : ''" title="Logout">
-                    <x-heroicon-o-arrow-right-on-rectangle class="w-6 h-6" x-bind:class="!sidebarOpen ? 'w-6 h-6' : 'w-5 h-5'" />
+                    <x-heroicon-o-arrow-right-on-rectangle class="w-5 h-5" />
                 </button>
             </form>
         </div>

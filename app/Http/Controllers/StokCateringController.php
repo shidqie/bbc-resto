@@ -14,6 +14,40 @@ class StokCateringController extends Controller
      */
     public function index(Request $request)
     {
+        $tab = $request->query('tab', 'stok');
+        
+        $kategoris = KategoriBahanBaku::all();
+
+        if ($tab === 'riwayat') {
+            $riwayatQuery = \App\Models\MutasiStok::with(['bahan_baku', 'bahan_baku.satuan'])
+                ->where('jenis_persediaan', 'catering')
+                ->where('jenis_mutasi_stok_id', 2) // Keluar
+                ->orderBy('tanggal_mutasi', 'desc');
+
+            if ($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $riwayatQuery->where(function($q) use ($search) {
+                    $q->whereHas('bahan_baku', function($q) use ($search) {
+                        $q->where('nama_bahan', 'like', "%{$search}%");
+                    })->orWhere('referensi_id', 'like', "%{$search}%")
+                      ->orWhere('catatan', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->has('jenis_penggunaan') && $request->jenis_penggunaan != '') {
+                if ($request->jenis_penggunaan == 'Catering') {
+                    $riwayatQuery->where('catatan', 'like', '%Catering%');
+                } elseif ($request->jenis_penggunaan == 'Penyesuaian') {
+                    $riwayatQuery->whereNotNull('detail_penyesuaian_stok_id')
+                                 ->orWhere('catatan', 'like', '%Penyesuaian%');
+                }
+            }
+
+            $riwayats = $riwayatQuery->paginate(50)->withQueryString();
+            
+            return view('admin.persediaan.stok-catering.index', compact('tab', 'riwayats', 'kategoris'));
+        }
+
         $query = BahanBaku::with(['kategori_bahan_baku', 'satuan', 'stok_catering_balance'])
             ->join('stok_bahan', function ($join) {
                 $join->on('bahan_baku.id', '=', 'stok_bahan.bahan_baku_id')
@@ -44,8 +78,6 @@ class StokCateringController extends Controller
 
         $bahanBakus = $query->paginate(15)->withQueryString();
 
-        $kategoris = KategoriBahanBaku::all();
-
         $stats = [
             'total_bahan' => BahanBaku::count(),
             'total_aman' => StokBahan::catering()->whereColumn('jumlah_stok', '>', 'stok_minimal')->count(),
@@ -54,6 +86,6 @@ class StokCateringController extends Controller
             'total_habis' => StokBahan::catering()->where('jumlah_stok', '<=', 0)->count(),
         ];
 
-        return view('admin.persediaan.stok-catering.index', compact('bahanBakus', 'kategoris', 'stats'));
+        return view('admin.persediaan.stok-catering.index', compact('tab', 'bahanBakus', 'kategoris', 'stats'));
     }
 }

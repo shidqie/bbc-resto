@@ -43,7 +43,6 @@ class MenuEditTest extends TestCase
             'id' => 1,
             'jenis_menu_id' => 1,
             'kategori_menu_id' => 1,
-            'kode_menu' => 'MNU001',
             'nama_menu' => 'Ayam Bakar Madu',
             'deskripsi' => 'Ayam bakar dengan saus madu',
             'harga_jual' => 25000,
@@ -54,7 +53,6 @@ class MenuEditTest extends TestCase
             'id' => 2,
             'jenis_menu_id' => 2,
             'kategori_menu_id' => 2,
-            'kode_menu' => 'PKT001',
             'nama_menu' => 'Katering Paket A',
             'deskripsi' => 'Paket prasmanan',
             'harga_jual' => 50000,
@@ -143,13 +141,15 @@ class MenuEditTest extends TestCase
                     'nama_komponen' => 'Menu Utama',
                     'tipe' => 'choice',
                     'urutan' => 1,
-                    'pilihan' => 'Ayam Bakar, Ayam Goreng',
+                    'jumlah' => 1,
+                    'pilihan' => [1, 2], // array of menu ids
                 ],
                 [
                     'nama_komponen' => 'Minuman',
                     'tipe' => 'fixed',
                     'urutan' => 2,
-                    'pilihan' => '',
+                    'jumlah' => 1,
+                    'pilihan' => [1], // array of menu ids
                 ],
             ],
         ]);

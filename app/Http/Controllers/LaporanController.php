@@ -73,11 +73,8 @@ class LaporanController extends Controller
             }
         }
 
-        // Hanya hitung penjualan yang sudah Lunas (3) atau Selesai (5)
-        $query->where(function($q) {
-            $q->where('status_pembayaran_id', 3)
-              ->orWhere('status_pesanan_id', 5);
-        });
+        // Hanya hitung penjualan yang sudah Lunas (5)
+        $query->where('status_pembayaran_id', 5);
 
         $pesanansAll = $query->orderByDesc('tanggal_pesanan')->get();
         

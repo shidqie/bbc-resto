@@ -30,11 +30,24 @@ class PesananDineInController extends Controller
             'terkonfirmasi' => 2,
             'diproses' => 3,
             'selesai' => 5,
+            'dibatalkan' => 6,
             default => null,
         };
 
         if ($statusFilter !== null) {
             $query->where('status_pesanan_id', $statusFilter);
+        }
+
+        // ── Filter Status Pembayaran ────────────────────────────────
+        $statusPembayaran = $request->status_pembayaran ?? 'all';
+        $pembayaranFilter = match ($statusPembayaran) {
+            'belum_bayar' => 3, // Menunggu Pelunasan
+            'lunas' => 5,
+            default => null,
+        };
+
+        if ($pembayaranFilter !== null) {
+            $query->where('status_pembayaran_id', $pembayaranFilter);
         }
 
         // ── Filter Periode ─────────────────────────────────────────

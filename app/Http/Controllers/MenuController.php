@@ -14,9 +14,18 @@ use Illuminate\Support\Facades\Storage;
 
 class MenuController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, \App\Services\KebutuhanBahanService $kebutuhanBahanService)
     {
-        $query = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'jenis_menu', 'komponen_paket.opsi']);
+        $query = Menu::with([
+            'kategori_menu', 
+            'resep_menu.bahan_baku.satuan', 
+            'resep_menu.satuan', 
+            'jenis_menu', 
+            'komponen_paket.opsi.menu.resep_menu',
+            'komponen_paket.opsi.menu.kategori_menu',
+            'komponen_paket.menu_terkait.resep_menu',
+            'komponen_paket.menu_terkait.kategori_menu'
+        ]);
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -61,7 +70,7 @@ class MenuController extends Controller
         ];
 
         $stokBahan = StokBahan::harian()->pluck('jumlah_stok', 'bahan_baku_id');
-        $menus->getCollection()->transform(function ($menu) use ($stokBahan) {
+        $menus->getCollection()->transform(function ($menu) use ($stokBahan, $kebutuhanBahanService) {
             $porsi = null;
             if ($menu->resep_menu->isNotEmpty()) {
                 foreach ($menu->resep_menu as $resep) {
@@ -73,12 +82,39 @@ class MenuController extends Controller
             }
             $menu->setAttribute('porsi_tersedia', $porsi);
 
+            // Compute aggregations for Paket
+            if (in_array($menu->jenis_menu_id, [2, 3])) {
+                $kebutuhan = $kebutuhanBahanService->kebutuhanMenu($menu, 1);
+                $menu->setAttribute('kebutuhan_paket', $kebutuhan);
+                
+                // Set recipe status for components
+                $komponenStatus = [];
+                foreach ($menu->komponen_paket as $komp) {
+                    if ($komp->tipe_item === 'tetap' && $komp->menu_terkait) {
+                        $komponenStatus[$komp->id] = $komp->menu_terkait->resep_menu->isNotEmpty() ? 'Lengkap' : 'Belum Lengkap';
+                    } elseif ($komp->tipe_item === 'pilihan') {
+                        $status = 'Lengkap';
+                        foreach ($komp->opsi as $opsi) {
+                            if ($opsi->menu && $opsi->menu->resep_menu->isEmpty()) {
+                                $status = 'Belum Lengkap';
+                                break;
+                            }
+                        }
+                        $komponenStatus[$komp->id] = $status;
+                    } else {
+                        $komponenStatus[$komp->id] = 'Belum Lengkap';
+                    }
+                }
+                $menu->setAttribute('status_resep_komponen', $komponenStatus);
+            }
+
             return $menu;
         });
 
         $satuans = \App\Models\Satuan::all();
+        $allMenusData = Menu::with('kategori_menu', 'resep_menu.bahan_baku.satuan')->get();
 
-        return view('admin.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'satuans', 'stats', 'jenisId'));
+        return view('admin.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'satuans', 'stats', 'jenisId', 'allMenusData'));
     }
 
     public function create()
@@ -161,25 +197,42 @@ class MenuController extends Controller
 
             if ($request->has('komponen') && is_array($request->komponen)) {
                 foreach ($request->komponen as $komp) {
-                    if (empty($komp['nama_komponen'])) continue;
                     $tipe = (isset($komp['tipe']) && $komp['tipe'] === 'choice') ? 'pilihan' : 'tetap';
+                    
+                    // Validation: if "tetap", menu_id is required. if "choice", nama_komponen is required.
+                    if ($tipe === 'tetap' && empty($komp['menu_id'])) continue;
+                    if ($tipe === 'pilihan' && empty($komp['nama_komponen'])) continue;
+
+                    $menuTerkait = null;
+                    $namaItem = $komp['nama_komponen'] ?? '';
+
+                    if ($tipe === 'tetap') {
+                        $menuTerkait = Menu::find($komp['menu_id']);
+                        if ($menuTerkait && empty($namaItem)) {
+                            $namaItem = $menuTerkait->nama_menu;
+                        }
+                    }
+
                     $komponen = \App\Models\ItemPaket::create([
                         'menu_id' => $menu->id,
-                        'nama_item' => $komp['nama_komponen'],
+                        'nama_item' => $namaItem,
                         'tipe_item' => $tipe,
+                        'menu_id_terkait' => $tipe === 'tetap' ? $komp['menu_id'] : null,
+                        'jumlah' => $komp['jumlah'] ?? 1,
                         'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                         'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                         'urutan' => $komp['urutan'] ?? 1,
                     ]);
 
-                    if ($tipe === 'pilihan' && ! empty($komp['pilihan'])) {
-                        $pilihanList = array_map('trim', explode(',', $komp['pilihan']));
+                    if ($tipe === 'pilihan' && !empty($komp['pilihan']) && is_array($komp['pilihan'])) {
                         $urutanPilihan = 1;
-                        foreach ($pilihanList as $namaPilihan) {
-                            if (! empty($namaPilihan)) {
+                        foreach ($komp['pilihan'] as $pilihanMenuId) {
+                            $menuOpsi = Menu::find($pilihanMenuId);
+                            if ($menuOpsi) {
                                 \App\Models\PilihanItemPaket::create([
                                     'item_paket_id' => $komponen->id,
-                                    'nama_pilihan' => $namaPilihan,
+                                    'menu_id' => $pilihanMenuId,
+                                    'nama_pilihan' => $menuOpsi->nama_menu,
                                     'urutan' => $urutanPilihan++,
                                 ]);
                             }
@@ -277,25 +330,41 @@ class MenuController extends Controller
             $menu->komponen_paket()->delete(); // Always clear existing components
             if ($request->has('komponen') && is_array($request->komponen)) {
                 foreach ($request->komponen as $komp) {
-                    if (empty($komp['nama_komponen'])) continue;
                     $tipe = (isset($komp['tipe']) && $komp['tipe'] === 'choice') ? 'pilihan' : 'tetap';
+                    
+                    if ($tipe === 'tetap' && empty($komp['menu_id'])) continue;
+                    if ($tipe === 'pilihan' && empty($komp['nama_komponen'])) continue;
+
+                    $menuTerkait = null;
+                    $namaItem = $komp['nama_komponen'] ?? '';
+
+                    if ($tipe === 'tetap') {
+                        $menuTerkait = Menu::find($komp['menu_id']);
+                        if ($menuTerkait && empty($namaItem)) {
+                            $namaItem = $menuTerkait->nama_menu;
+                        }
+                    }
+
                     $komponen = \App\Models\ItemPaket::create([
                         'menu_id' => $menu->id,
-                        'nama_item' => $komp['nama_komponen'],
+                        'nama_item' => $namaItem,
                         'tipe_item' => $tipe,
+                        'menu_id_terkait' => $tipe === 'tetap' ? $komp['menu_id'] : null,
+                        'jumlah' => $komp['jumlah'] ?? 1,
                         'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                         'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
                         'urutan' => $komp['urutan'] ?? 1,
                     ]);
 
-                    if ($tipe === 'pilihan' && ! empty($komp['pilihan'])) {
-                        $pilihanList = array_map('trim', explode(',', $komp['pilihan']));
+                    if ($tipe === 'pilihan' && !empty($komp['pilihan']) && is_array($komp['pilihan'])) {
                         $urutanPilihan = 1;
-                        foreach ($pilihanList as $namaPilihan) {
-                            if (! empty($namaPilihan)) {
+                        foreach ($komp['pilihan'] as $pilihanMenuId) {
+                            $menuOpsi = Menu::find($pilihanMenuId);
+                            if ($menuOpsi) {
                                 \App\Models\PilihanItemPaket::create([
                                     'item_paket_id' => $komponen->id,
-                                    'nama_pilihan' => $namaPilihan,
+                                    'menu_id' => $pilihanMenuId,
+                                    'nama_pilihan' => $menuOpsi->nama_menu,
                                     'urutan' => $urutanPilihan++,
                                 ]);
                             }

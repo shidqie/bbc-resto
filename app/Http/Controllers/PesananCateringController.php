@@ -202,6 +202,32 @@ class PesananCateringController extends Controller
                 ]);
             }
 
+            // Buat sesi pembayaran DP 15 menit
+            $nominalDp = round($totalTagihan * 0.5); // Catering DP 50%
+            Pembayaran::create([
+                'kode_pembayaran' => 'PAY-' . strtoupper(uniqid()),
+                'pesanan_id' => $pesanan->id,
+                'jenis_pembayaran' => 'uang_muka',
+                'metode_pembayaran' => null, // Belum dipilih
+                'jumlah_dibayar' => $nominalDp,
+                'jumlah_tagihan' => $nominalDp,
+                'status_verifikasi' => 'belum_dibayar',
+                'expires_at' => now()->addMinutes(15),
+            ]);
+
+            // Kirim notifikasi ke admin
+            $admins = \App\Models\Pengguna::whereHas('peran', function ($q) {
+                $q->whereIn('nama_peran', ['Pemilik', 'Admin', 'Manajer', 'Kasir']);
+            })->get();
+            
+            if ($admins->count() > 0) {
+                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\PesananBaru(
+                    $pesanan, 
+                    "Pesanan Katering Baru - Invoice {$pesanan->id_pesanan}", 
+                    route('admin.pesanan.catering.index')
+                ));
+            }
+
             return $pesanan;
         });
 
@@ -242,11 +268,27 @@ class PesananCateringController extends Controller
             'terkonfirmasi' => 2,
             'diproses' => 3,
             'selesai' => 5,
+            'dibatalkan' => 6,
             default => null,
         };
 
         if ($statusFilter !== null) {
             $query->where('status_pesanan_id', $statusFilter);
+        }
+
+        // ── Filter Status Pembayaran ────────────────────────────────
+        $statusPembayaran = $request->status_pembayaran ?? 'all';
+        $pembayaranFilter = match ($statusPembayaran) {
+            'menunggu_dp' => 1,
+            'verifikasi_dp' => 2,
+            'menunggu_pelunasan' => 3,
+            'verifikasi_lunas' => 4,
+            'lunas' => 5,
+            default => null,
+        };
+
+        if ($pembayaranFilter !== null) {
+            $query->where('status_pembayaran_id', $pembayaranFilter);
         }
 
         // ── Filter Periode ─────────────────────────────────────────
@@ -349,9 +391,10 @@ class PesananCateringController extends Controller
     }
 
     /** Verifikasi bukti pembayaran yang diunggah pelanggan */
-    public function verifikasiDp(Request $request, $buktiId)
+    public function verifikasiPembayaran(Request $request, $buktiId)
     {
         $pembayaran = Pembayaran::findOrFail($buktiId);
+        $pesanan = Pesanan::findOrFail($pembayaran->pesanan_id);
 
         $request->validate([
             'catatan_admin' => 'nullable|string|max:255',
@@ -366,7 +409,25 @@ class PesananCateringController extends Controller
                 : 'Diverifikasi oleh admin',
         ]);
 
-        return back()->with('success', 'Bukti pembayaran #'.$pembayaran->nomor_pembayaran.' berhasil diverifikasi.');
+        if ($pembayaran->jenis_pembayaran === 'uang_muka') {
+            // Set batas pelunasan H-4 dari tanggal acara
+            $batasPelunasan = null;
+            if ($pesanan->jadwal_pesanan && $pesanan->jadwal_pesanan->tanggal_acara) {
+                $batasPelunasan = \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->subDays(4)->endOfDay();
+            }
+
+            $pesanan->update([
+                'status_pembayaran_id' => 3, // Menunggu Pelunasan
+                'status_pesanan_id' => 2, // Dikonfirmasi
+                'batas_pelunasan' => $batasPelunasan
+            ]);
+        } else {
+            $pesanan->update([
+                'status_pembayaran_id' => 5, // Lunas
+            ]);
+        }
+
+        return back()->with('success', 'Bukti pembayaran #'.$pembayaran->kode_pembayaran.' berhasil diverifikasi.');
     }
 
     /** Export PDF rincian pesanan */
@@ -420,10 +481,14 @@ class PesananCateringController extends Controller
             }
         }
 
-        // Validasi syarat DP (Untuk masuk ke status 2 atau 3)
-        // status_pembayaran_id >= 3 berarti DP sudah diverifikasi (Menunggu Pelunasan / Lunas)
-        if (in_array($status, [2, 3]) && !in_array($pesanan->status_pembayaran_id, [3, 4, 5])) {
+        // Validasi syarat DP (Untuk masuk ke status Dikonfirmasi)
+        if ($status === 2 && !in_array($pesanan->status_pembayaran_id, [3, 4, 5])) {
             return back()->with('error', 'Status tidak bisa diubah karena pembayaran DP belum diverifikasi.');
+        }
+
+        // Validasi syarat LUNAS (Untuk masuk ke dapur / Sedang Diproses)
+        if ($status === 3 && $pesanan->status_pembayaran_id !== 5) {
+            return back()->with('error', 'Pesanan hanya bisa masuk ke dapur setelah LUNAS. Verifikasi pelunasan terlebih dahulu.');
         }
 
         if ($status == 6) {
@@ -444,7 +509,11 @@ class PesananCateringController extends Controller
 
         // Jika status berpindah ke Sedang Diproses (ID 3) dan belum pernah dipotong stok
         if ($status == 3 && $pesanan->status_pesanan_id < 3) {
-            app(OrderService::class)->potongStokPesanan($pesanan);
+            try {
+                app(OrderService::class)->potongStokPesanan($pesanan);
+            } catch (\RuntimeException $e) {
+                return back()->with('error', 'Gagal memproses pesanan: ' . $e->getMessage() . ' Silakan tambah stok bahan terlebih dahulu.');
+            }
         }
         
         $pesanan->update(['status_pesanan_id' => $status]);
@@ -459,5 +528,34 @@ class PesananCateringController extends Controller
         }
 
         return back()->with('success', 'Status pesanan berhasil diperbarui.');
+    }
+
+    /** Tolak bukti pembayaran yang diunggah pelanggan */
+    public function tolakPembayaran(Request $request, $buktiId)
+    {
+        $pembayaran = Pembayaran::findOrFail($buktiId);
+        $pesanan    = Pesanan::findOrFail($pembayaran->pesanan_id);
+
+        $request->validate([
+            'catatan_admin' => 'nullable|string|max:500',
+        ]);
+
+        $pembayaran->update([
+            'status_verifikasi'   => 'ditolak',
+            'diverifikasi_oleh'   => Auth::id(),
+            'tanggal_verifikasi'  => now(),
+            'catatan_verifikasi'  => $request->filled('catatan_admin')
+                ? $request->catatan_admin
+                : 'Bukti ditolak oleh admin',
+        ]);
+
+        // Kembalikan status pembayaran ke status sebelumnya
+        if ($pembayaran->jenis_pembayaran === 'uang_muka') {
+            $pesanan->update(['status_pembayaran_id' => 1]); // Kembali ke Menunggu DP
+        } else {
+            $pesanan->update(['status_pembayaran_id' => 3]); // Kembali ke Menunggu Pelunasan
+        }
+
+        return back()->with('error', 'Bukti pembayaran #'.$pembayaran->kode_pembayaran.' ditolak.');
     }
 }

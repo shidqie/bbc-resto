@@ -7,24 +7,15 @@
     'hint' => null,
 ])
 
-@props([
-    'name' => 'nomor_telepon',
-    'label' => 'Nomor WhatsApp',
-    'value' => '',
-    'required' => false,
-    'placeholder' => '08xxxxxxxxxx',
-    'hint' => null,
-])
-
 @php
     $error = $errors->first($name);
     $initial = old($name, $value);
 @endphp
 
 <div class="w-full">
-    <label for="{{ $name }}" class="block text-xs font-bold text-gray-700 mb-1">
+    <label for="{{ $name }}" class="block text-xs font-bold text-body mb-1">
         {{ $label }}
-        @if($required)<span class="text-red-500">*</span>@endif
+        @if($required)<span class="text-danger">*</span>@endif
     </label>
 
     <input
@@ -38,14 +29,14 @@
         value="{{ $initial }}"
         placeholder="{{ $placeholder }}"
         @if($required) required @endif
-        class="w-full px-3.5 py-2 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none {{ $error ? 'border-red-300' : 'border-gray-200' }}">
+        class="w-full px-3.5 py-2.5 bg-surface border rounded-xl text-sm font-medium text-body placeholder-body/30 transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none {{ $error ? 'border-danger' : 'border-primary/10' }}">
 
     @if($hint)
-        <p class="text-[11px] text-gray-400 font-medium mt-1">{{ $hint }}</p>
+        <p class="text-[11px] text-body/50 font-medium mt-1">{{ $hint }}</p>
     @endif
 
     @if($error)
-        <p class="text-xs text-red-500 font-medium mt-1.5 flex items-center gap-1">
+        <p class="text-xs text-danger font-medium mt-1.5 flex items-center gap-1">
             <x-heroicon-o-exclamation-circle class="w-3.5 h-3.5" /> {{ $error }}
         </p>
     @endif

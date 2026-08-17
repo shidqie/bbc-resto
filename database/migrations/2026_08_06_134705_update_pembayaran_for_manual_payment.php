@@ -58,31 +58,36 @@ return new class extends Migration
             'tanggal_pembayaran' => DB::raw('dibayar_pada')
         ]);
 
-        // Drop foreign keys using raw queries to safely ignore missing keys
-        try { DB::statement("ALTER TABLE pembayaran DROP FOREIGN KEY pembayaran_metode_pembayaran_id_foreign"); } catch (\Exception $e) {}
-        try { DB::statement("ALTER TABLE pembayaran DROP FOREIGN KEY pembayaran_status_pembayaran_id_foreign"); } catch (\Exception $e) {}
-        try { DB::statement("ALTER TABLE pembayaran DROP FOREIGN KEY pembayaran_jenis_pembayaran_id_foreign"); } catch (\Exception $e) {}
-        try { DB::statement("ALTER TABLE pembayaran DROP FOREIGN KEY pembayaran_diproses_oleh_foreign"); } catch (\Exception $e) {}
+        // Drop foreign keys using Schema Builder
+        Schema::table('pembayaran', function (Blueprint $table) {
+            try { $table->dropIndex('pembayaran_auto_verified_status_pembayaran_id_index'); } catch (\Exception $e) {}
+            try { $table->dropForeign(['metode_pembayaran_id']); } catch (\Exception $e) {}
+            try { $table->dropForeign(['status_pembayaran_id']); } catch (\Exception $e) {}
+            try { $table->dropForeign(['jenis_pembayaran_id']); } catch (\Exception $e) {}
+            try { $table->dropForeign(['diproses_oleh']); } catch (\Exception $e) {}
+        });
 
         // Drop old columns
-        Schema::table('pembayaran', function (Blueprint $table) {
-            $table->dropColumn([
-                'metode_pembayaran_id', 
-                'status_pembayaran_id', 
-                'jenis_pembayaran_id', 
-                'diproses_oleh',
-                'dibayar_pada',
-                
-                // Midtrans fields
-                'midtrans_order_id',
-                'midtrans_transaction_id',
-                'qr_code_url',
-                'expired_at',
-                'response_midtrans',
-                'webhook_data',
-                'auto_verified',
-                'nomor_referensi'
-            ]);
+        Schema::withoutForeignKeyConstraints(function () {
+            Schema::table('pembayaran', function (Blueprint $table) {
+                $table->dropColumn([
+                    'metode_pembayaran_id', 
+                    'status_pembayaran_id', 
+                    'jenis_pembayaran_id', 
+                    'diproses_oleh',
+                    'dibayar_pada',
+                    
+                    // Midtrans fields
+                    'midtrans_order_id',
+                    'midtrans_transaction_id',
+                    'qr_code_url',
+                    'expired_at',
+                    'response_midtrans',
+                    'webhook_data',
+                    'auto_verified',
+                    'nomor_referensi'
+                ]);
+            });
         });
     }
 

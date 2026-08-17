@@ -5,14 +5,14 @@
         <div class="max-w-5xl mx-auto px-4 lg:px-8">
 
             {{-- Header --}}
-            <div class="text-center mb-10">
-                <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            <div class="text-center mb-12">
+                <div class="w-14 h-14 bg-white shadow-sm border border-gray-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
+                    <svg class="w-7 h-7 -rotate-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Lacak Pesanan</h1>
-                <p class="text-gray-500 text-sm">Masukkan nomor pesanan Anda untuk melihat status terkini</p>
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Lacak Pesanan</h1>
+                <p class="text-gray-500 text-sm max-w-md mx-auto leading-relaxed">Masukkan kode pesanan Anda untuk memantau status secara langsung.</p>
             </div>
 
             {{-- Search Form --}}
@@ -113,21 +113,21 @@
             <div class="mb-12 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-10">
 
                 {{-- Header Status --}}
-                <div class="text-center pb-8 border-b border-gray-200/60 mb-10">
-                    <span class="inline-block px-3.5 py-1 bg-amber-50 text-amber-800 font-['Anonymous_Pro'] text-xs font-bold uppercase tracking-widest rounded-full mb-3 border border-amber-200/50">
+                <div class="text-center pb-8 border-b border-gray-100 mb-10">
+                    <span class="inline-block px-3 py-1 bg-gray-50 text-gray-500 font-['Anonymous_Pro'] text-[11px] font-bold uppercase tracking-widest rounded-full mb-4 border border-gray-200/60">
                         {{ $jenisPesanan }}
                     </span>
 
-                    <div class="flex items-center justify-center gap-2 mb-4" x-data="{ copied: false }">
-                        <h2 class="text-2xl sm:text-4xl font-serif text-gray-900 tracking-wide font-normal break-all">{{ $pesanan->id_pesanan }}</h2>
+                    <div class="flex items-center justify-center gap-2 mb-5" x-data="{ copied: false }">
+                        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight break-all">{{ $pesanan->id_pesanan }}</h2>
                         <button
                             type="button"
                             @click="navigator.clipboard.writeText('{{ $pesanan->id_pesanan }}'); copied = true; setTimeout(() => copied = false, 1500)"
-                            class="text-gray-300 hover:text-gray-500 transition-colors shrink-0"
+                            class="text-gray-400 hover:text-emerald-600 transition-colors shrink-0 bg-gray-50 hover:bg-emerald-50 p-1.5 rounded-lg"
                             aria-label="Salin nomor pesanan"
                         >
-                            <svg x-show="!copied" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                            <svg x-show="copied" x-cloak class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            <svg x-show="copied" x-cloak class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         </button>
                     </div>
 
@@ -157,46 +157,46 @@
                             <h3 class="font-['Anonymous_Pro'] text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Informasi Pesanan</h3>
 
                             <dl class="space-y-4 text-sm text-gray-600">
-                                <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
+                                <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                                     <dt class="text-gray-400 font-light">Atas Nama</dt>
                                     <dd class="font-medium text-gray-800 text-base">{{ optional($pesanan->pelanggan)->nama ?? $pesanan->jadwal_pesanan->nama_penerima ?? 'Tamu' }}</dd>
                                 </div>
                                 @if($pesanan->jadwal_pesanan)
-                                <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
+                                <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                                     <dt class="text-gray-400 font-light">Kontak</dt>
                                     @php 
                                         $lacakKontak = $pesanan->jadwal_pesanan->kontak ?? $pesanan->jadwal_pesanan->nomor_telepon_penerima ?? ''; 
                                     @endphp
                                     <dd class="font-medium text-gray-800">{{ $lacakKontak ? \App\Support\WhatsAppNumber::formatForDisplay($lacakKontak) : '-' }}</dd>
                                 </div>
-                                <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
+                                <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                                     <dt class="text-gray-400 font-light">Tanggal Acara</dt>
                                     <dd class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->translatedFormat('d M Y') }}</dd>
                                 </div>
                                 @if($pesanan->jadwal_pesanan->alamat_pengiriman)
-                                <div class="flex justify-between items-start py-2.5 border-b border-gray-100/60">
-                                    <dt class="text-gray-400 font-light shrink-0">Alamat / Venue Acara</dt>
+                                <div class="flex justify-between items-start py-2.5 border-b border-gray-50">
+                                    <dt class="text-gray-400 font-light shrink-0">Alamat Acara</dt>
                                     <dd class="font-medium text-gray-800 text-right max-w-[65%] leading-relaxed">{{ $pesanan->jadwal_pesanan->alamat_pengiriman }}</dd>
                                 </div>
                                 @endif
                                 @endif
-                                <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
+                                <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                                     <dt class="text-gray-400 font-light">Paket</dt>
                                     <dd class="font-medium text-gray-800 text-right">{{ $pesanan->detail_pesanan->first()->menu->nama_menu ?? '-' }} &times; {{ $pesanan->detail_pesanan->first()->jumlah ?? '-' }} Porsi</dd>
                                 </div>
                                 @if($pesanan->detail_pesanan->count() > 1)
-                                <div class="flex justify-end -mt-2 pb-2.5 border-b border-gray-100/60">
-                                    <span class="text-xs text-gray-400">+ {{ $pesanan->detail_pesanan->count() - 1 }} item lainnya</span>
+                                <div class="flex justify-end -mt-2 pb-2.5 border-b border-gray-50">
+                                    <span class="text-[11px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">+ {{ $pesanan->detail_pesanan->count() - 1 }} item lainnya</span>
                                 </div>
                                 @endif
                                 @if($pesanan->pengiriman)
-                                <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
+                                <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                                     <dt class="text-gray-400 font-light">Metode Pengiriman</dt>
                                     <dd class="font-medium text-gray-800 capitalize">{{ $pesanan->pengiriman->metode_pengiriman ?? 'Delivery' }}</dd>
                                 </div>
                                 @endif
                                 @if($pesanan->pembayaran->isNotEmpty())
-                                <div class="flex justify-between items-center py-2.5 border-b border-gray-100/60">
+                                <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                                     <dt class="text-gray-400 font-light">Metode Pembayaran</dt>
                                     <dd class="font-medium text-gray-800">{{ $pesanan->pembayaran->first()->metode_pembayaran ?? '-' }}</dd>
                                 </div>
@@ -205,28 +205,28 @@
                         </div>
 
                         {{-- Total & Payment Box --}}
-                        <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-5 space-y-3">
-                            <div class="flex justify-between items-center text-sm">
+                        <div class="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
+                            <div class="flex justify-between items-center text-sm mb-1">
                                 <span class="text-gray-500">Total Tagihan</span>
-                                <span class="font-semibold text-gray-900 text-lg">Rp {{ number_format($total, 0, ',', '.') }}</span>
+                                <span class="font-bold text-gray-900 text-lg">Rp {{ number_format($total, 0, ',', '.') }}</span>
                             </div>
 
                             @if($statusBayarKey === 'lunas')
-                            <div class="flex justify-between items-center text-sm text-emerald-600 pt-3 border-t border-gray-200/60 font-bold">
+                            <div class="flex justify-between items-center text-sm text-emerald-600 pt-4 border-t border-gray-100 font-bold mt-3">
                                 <span>Telah Dibayar (LUNAS)</span>
                                 <span class="text-xl">Rp {{ number_format($total, 0, ',', '.') }}</span>
                             </div>
                             @elseif($dpTerbayar > 0)
-                            <div class="flex justify-between items-center text-sm text-emerald-600">
+                            <div class="flex justify-between items-center text-sm text-emerald-600 mt-2 mb-3">
                                 <span>DP Terbayar</span>
-                                <span class="font-medium">- Rp {{ number_format($dpTerbayar, 0, ',', '.') }}</span>
+                                <span class="font-semibold">- Rp {{ number_format($dpTerbayar, 0, ',', '.') }}</span>
                             </div>
-                            <div class="flex justify-between items-center pt-3 border-t border-gray-200/60 text-rose-600 font-bold">
+                            <div class="flex justify-between items-center pt-4 border-t border-gray-100 text-rose-600 font-bold">
                                 <span>Sisa Pelunasan</span>
                                 <span class="text-xl">Rp {{ number_format($total - $dpTerbayar, 0, ',', '.') }}</span>
                             </div>
                             @else
-                            <div class="flex justify-between items-center pt-3 border-t border-gray-200/60 text-amber-600 font-bold">
+                            <div class="flex justify-between items-center pt-4 border-t border-gray-100 text-amber-600 font-bold mt-3">
                                 <span>Belum Ada Pembayaran</span>
                                 <span class="text-xl">Rp {{ number_format($total, 0, ',', '.') }}</span>
                             </div>
@@ -236,20 +236,20 @@
                         {{-- Action Buttons --}}
                         <div class="space-y-3 pt-2">
                             @if(in_array($statusBayarKey, ['belum_bayar', 'dp_terbayar']) && !$isCancelled)
-                                <a href="{{ route('pesanan.bayar', $pesanan->id_pesanan) }}" class="w-full flex items-center justify-center gap-2 bg-[#3B82F6] hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-xl text-xs tracking-widest uppercase transition-all shadow-md shadow-blue-500/20 active:scale-[0.99]">
+                                <a href="{{ route('pesanan.bayar', $pesanan->id_pesanan) }}" class="w-full flex items-center justify-center gap-2 bg-[#3B82F6] hover:bg-blue-600 text-white font-semibold py-3.5 px-6 rounded-xl text-[13px] transition-all shadow-sm shadow-blue-500/20 active:scale-[0.99]">
                                     <span>{{ $statusBayarKey === 'dp_terbayar' ? 'Lanjutkan Pelunasan' : 'Bayar Sekarang' }}</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                                 </a>
                             @endif
 
                             @if($jenisPesanan !== 'Dine In')
-                                <a href="{{ route('pesanan.invoice', $pesanan->id_pesanan) }}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/60 font-bold py-3.5 px-6 rounded-xl text-xs tracking-widest uppercase transition-all">
+                                <a href="{{ route('pesanan.invoice', $pesanan->id_pesanan) }}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold py-3.5 px-6 rounded-xl text-[13px] transition-all border border-emerald-100">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 16l5 5 5-5M12 3v12"/></svg>
                                     <span>Unduh Bukti Pesanan</span>
                                 </a>
                             @endif
 
-                            <a href="{{ route('lacak.index') }}" class="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-700 font-bold py-3.5 px-6 rounded-xl text-xs tracking-widest uppercase transition-all">
+                            <a href="{{ route('lacak.index') }}" class="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-700 font-semibold py-3.5 px-6 rounded-xl text-[13px] transition-all border border-gray-100">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                 <span>Cari Pesanan Lain</span>
                             </a>

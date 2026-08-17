@@ -9,41 +9,40 @@
         <x-typography.p variant="large" class="text-center max-w-3xl mx-auto">Saung Babakan Cinta menghadirkan cita rasa khas Sunda dalam suasana yang hangat, asri, dan penuh kebersamaan.</x-typography.p>
     </x-landing.section>
 
-    {{-- 3. LAYANAN --}}
-    <x-landing.section title="Layanan Kami" bgImage="{{ asset('images/saungbabakan.webp') }}">
-        <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col text-center">
-                <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <svg class="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                    </svg>
-                </div>
-                <x-typography.h3 class="text-primary mb-2">Dine-in</x-typography.h3>
-                <x-typography.p variant="small">Nikmati rasa, nikmati suasananya.</x-typography.p>
+{{-- 3. LAYANAN --}}
+<x-landing.section title="Layanan Kami">
+    <div class="relative -mx-6 md:-mx-10 rounded-lg overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ asset('images/saungbabakan.webp') }}');"></div>
+        <div class="absolute inset-0 bg-black/60"></div>
+
+        <div class="relative z-10 grid md:grid-cols-3 gap-10 max-w-4xl mx-auto px-6 py-16">
+            <div class="flex flex-col items-center text-center">
+                <svg class="w-6 h-6 text-white mb-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+                </svg>
+                <x-typography.h3 class="!text-white mb-2 font-light tracking-wide">Dine-in</x-typography.h3>
+                <x-typography.p variant="small" class="!text-white/70">Nikmati rasa, nikmati suasananya.</x-typography.p>
             </div>
-            <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col text-center">
-                <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <svg class="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                </div>
-                <x-typography.h3 class="text-primary mb-2">Katering</x-typography.h3>
-                <x-typography.p variant="small">Lengkapi momen spesial dengan cita rasa Sunda.</x-typography.p>
+            <div class="flex flex-col items-center text-center">
+                <svg class="w-6 h-6 text-white mb-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <x-typography.h3 class="!text-white mb-2 font-light tracking-wide">Katering</x-typography.h3>
+                <x-typography.p variant="small" class="!text-white/70">Lengkapi momen spesial dengan cita rasa Sunda.</x-typography.p>
             </div>
-            <div class="bg-surface rounded-xl border border-primary/10 p-6 flex flex-col text-center">
-                <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <svg class="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                </div>
-                <x-typography.h3 class="text-primary mb-2">Nasi Box</x-typography.h3>
-                <x-typography.p variant="small">Praktis dibawa, nikmat disantap.</x-typography.p>
+            <div class="flex flex-col items-center text-center">
+                <svg class="w-6 h-6 text-white mb-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <x-typography.h3 class="!text-white mb-2 font-light tracking-wide">Nasi Box</x-typography.h3>
+                <x-typography.p variant="small" class="!text-white/70">Praktis dibawa, nikmat disantap.</x-typography.p>
             </div>
         </div>
-    </x-landing.section>
+    </div>
+</x-landing.section>
 
     {{-- 4. MENU DINE-IN --}}
     <x-landing.section id="menu-dinein" title="Menu" subtitle="Beragam hidangan Sunda siap memanjakan selera Anda.">
@@ -82,7 +81,7 @@
     </x-landing.section>
 
     {{-- 6. PAKET NASI BOX --}}
-    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Minimal 10 box. Pemesanan min. H-4. DP 25%." bgBatik="true">
+    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Minimal 20 box. Pemesanan min. H-4. DP 25%." bgBatik="true">
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             @forelse($paketNasiBox as $paket)
                 <x-landing.package-card :paket="$paket" type="nasi_box" />

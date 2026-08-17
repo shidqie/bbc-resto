@@ -14,7 +14,7 @@ class StorePesananNasiBoxRequest extends FormRequest
 
     public function rules(): array
     {
-        $minDate = Carbon::today()->addDays(2)->format('Y-m-d');
+        $minDate = Carbon::today()->addDays(4)->format('Y-m-d');
 
         return [
             'nama_pemesan' => ['required', 'string', 'max:255'],
@@ -37,7 +37,7 @@ class StorePesananNasiBoxRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'tanggal_acara.after_or_equal' => 'Pesanan nasi box maksimal H-2 sebelum acara.',
+            'tanggal_acara.after_or_equal' => 'Pesanan nasi box minimal H-4 sebelum acara.',
             'jumlah_box.min' => 'Minimal order 10 box.',
             'paket_id.exists' => 'Paket Nasi Box tidak valid.',
             'komponen.required' => 'Pilihan menu komponen wajib diisi lengkap.',

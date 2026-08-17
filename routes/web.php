@@ -65,16 +65,15 @@ Route::post('/pesan/catering/preview', [PesananCateringController::class, 'previ
 Route::get('/pesan/nasi-box', [PesananNasiBoxController::class, 'create'])->name('pesan.nasibox');
 Route::post('/pesan/nasi-box', [PesananNasiBoxController::class, 'store'])->name('pesan.nasibox.store');
 Route::post('/pesan/nasi-box/preview', [PesananNasiBoxController::class, 'preview'])->name('pesan.nasibox.preview');
+Route::get('/pesan/nasi-box/cek-kapasitas', [PesananNasiBoxController::class, 'checkCapacity'])->name('pesan.nasibox.cek_kapasitas');
 
 // ─── PUBLIK — Bayar & Status ─────────────────────────────────────────────────
-Route::get('/pesan/bayar', [BuktiPembayaranController::class, 'cari'])->name('pesanan.bayar.cari');
-Route::get('/pesan/bayar/status/{kodePesanan}', [BuktiPembayaranController::class, 'statusJson'])->name('pesanan.bayar.status');
-Route::get('/pesan/bayar/{kodePesanan}', [BuktiPembayaranController::class, 'show'])->name('pesanan.bayar');
-Route::post('/pesan/bukti', [BuktiPembayaranController::class, 'store'])->name('pesanan.bukti.store');
-
-
-
-Route::get('/pesan/invoice/{kodePesanan}', [BuktiPembayaranController::class, 'invoicePdf'])->name('pesanan.invoice');
+    Route::get('/pesan/bayar', [BuktiPembayaranController::class, 'cari'])->name('pesanan.cari');
+    Route::get('/pesan/bayar/{kodePesanan}', [BuktiPembayaranController::class, 'show'])->name('pesanan.bayar');
+    Route::get('/pesan/bayar/status/{kodePesanan}', [BuktiPembayaranController::class, 'statusJson'])->name('pesanan.status_json');
+    Route::post('/pesan/bukti', [BuktiPembayaranController::class, 'store'])->name('pesanan.upload_bukti');
+    Route::post('/pesan/bayar/{kodePesanan}/mulai-pelunasan', [BuktiPembayaranController::class, 'mulaiSesiPelunasan'])->name('pesanan.mulai_pelunasan');
+    Route::get('/pesan/invoice/{kodePesanan}', [BuktiPembayaranController::class, 'invoicePdf'])->name('pesanan.invoice');
 
 // Legacy redirect agar link lama tidak broken
 Route::get('/pesan-catering', function () {
@@ -117,18 +116,22 @@ Route::middleware('auth')->group(function () {
         Route::get('pengadaan/permintaan/{pengadaan}', [\App\Http\Controllers\PengadaanController::class, 'show'])->name('pengadaan.permintaan.show');
         
         Route::get('pengadaan/po', [\App\Http\Controllers\PurchaseOrderController::class, 'index'])->name('pengadaan.po.index');
+        Route::get('pengadaan/po/create', [\App\Http\Controllers\PurchaseOrderController::class, 'create'])->name('pengadaan.po.create');
+        Route::post('pengadaan/po/store', [\App\Http\Controllers\PurchaseOrderController::class, 'storeUnified'])->name('pengadaan.po.store-unified');
+        
         Route::get('pengadaan/po/{po}/print', [\App\Http\Controllers\PurchaseOrderController::class, 'print'])->name('pengadaan.po.print');
         Route::post('pengadaan/po/{po}/batal', [\App\Http\Controllers\PurchaseOrderController::class, 'cancel'])->name('pengadaan.po.cancel');
         Route::get('pengadaan/po/{po}', [\App\Http\Controllers\PurchaseOrderController::class, 'show'])->name('pengadaan.po.show');
-
-        Route::get('pengadaan/permintaan/{pengadaan}/po/create', [\App\Http\Controllers\PurchaseOrderController::class, 'create'])->name('pengadaan.po.create');
-        Route::post('pengadaan/permintaan/{pengadaan}/po', [\App\Http\Controllers\PurchaseOrderController::class, 'store'])->name('pengadaan.po.store');
-        Route::post('pengadaan/permintaan/{pengadaan}/po/baru', [\App\Http\Controllers\PurchaseOrderController::class, 'store'])->name('pengadaan.po.store-baru');
-
+        Route::post('pengadaan/po/{po}/terima', [\App\Http\Controllers\PurchaseOrderController::class, 'terimaBarang'])->name('pengadaan.po.terima');
+        
+        // Penerimaan Bahan
         Route::get('pengadaan/penerimaan', [\App\Http\Controllers\PenerimaanBahanController::class, 'index'])->name('pengadaan.penerimaan.index');
-        Route::get('pengadaan/penerimaan/po/{po}/create', [\App\Http\Controllers\PenerimaanBahanController::class, 'create'])->name('pengadaan.penerimaan.create');
+        Route::get('pengadaan/po/{po}/terima-barang', [\App\Http\Controllers\PenerimaanBahanController::class, 'create'])->name('pengadaan.penerimaan.create');
+        Route::post('pengadaan/po/{po}/terima-barang', [\App\Http\Controllers\PenerimaanBahanController::class, 'store'])->name('pengadaan.penerimaan.store');
         Route::get('pengadaan/penerimaan/{penerimaan}', [\App\Http\Controllers\PenerimaanBahanController::class, 'show'])->name('pengadaan.penerimaan.show');
-        Route::post('pengadaan/penerimaan/po/{po}', [\App\Http\Controllers\PenerimaanBahanController::class, 'store'])->name('pengadaan.penerimaan.store');
+        Route::post('pengadaan/penerimaan/{penerimaan}/batal', [\App\Http\Controllers\PenerimaanBahanController::class, 'cancel'])->name('pengadaan.penerimaan.cancel');
+
+
         Route::get('bahan-baku/{id}/drawer', [BahanBakuController::class, 'drawer'])->name('bahan-baku.drawer');
         Route::resource('bahan-baku', BahanBakuController::class);
         
@@ -211,13 +214,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/pesanan/catering/{pesanan}/pdf', [PesananCateringController::class, 'exportPdf'])->name('admin.pesanan.catering.pdf');
         Route::patch('/admin/pesanan/catering/{pesanan}/konfirmasi', [PesananCateringController::class, 'konfirmasi'])->name('admin.pesanan.catering.konfirmasi');
         Route::patch('/admin/pesanan/catering/{pesanan}/update-status', [PesananCateringController::class, 'updateStatus'])->name('admin.pesanan.catering.update-status');
-        Route::patch('/admin/bukti/{buktiId}/verifikasi-dp', [PesananCateringController::class, 'verifikasiDp'])->name('admin.bukti.verifikasi-dp');
+        Route::patch('/admin/bukti/{buktiId}/verifikasi-pembayaran', [PesananCateringController::class, 'verifikasiPembayaran'])->name('admin.bukti.verifikasi-pembayaran');
+        Route::patch('/admin/bukti/{buktiId}/tolak-pembayaran', [PesananCateringController::class, 'tolakPembayaran'])->name('admin.bukti.tolak-pembayaran');
 
         // Pesanan Nasi Box
         Route::get('/admin/pesanan/nasi-box', [PesananNasiBoxController::class, 'index'])->name('admin.pesanan.nasibox.index');
         Route::get('/admin/pesanan/nasi-box/{pesanan}/pdf', [PesananNasiBoxController::class, 'exportPdf'])->name('admin.pesanan.nasibox.pdf');
         Route::patch('/admin/pesanan/nasi-box/{pesanan}/konfirmasi', [PesananNasiBoxController::class, 'konfirmasi'])->name('admin.pesanan.nasibox.konfirmasi');
         Route::patch('/admin/pesanan/nasi-box/{pesanan}/update-status', [PesananNasiBoxController::class, 'updateStatus'])->name('admin.pesanan.nasibox.update-status');
+        Route::patch('/admin/bukti/{buktiId}/verifikasi-pembayaran-nasibox', [PesananNasiBoxController::class, 'verifikasiPembayaran'])->name('admin.bukti.nasibox.verifikasi-pembayaran');
+        Route::patch('/admin/bukti/{buktiId}/tolak-pembayaran-nasibox', [PesananNasiBoxController::class, 'tolakPembayaran'])->name('admin.bukti.nasibox.tolak-pembayaran');
 
         // Jadwal Pengiriman
         Route::get('/admin/jadwal-pengiriman', [JadwalPengirimanController::class, 'index'])->name('admin.jadwal-pengiriman.index');
@@ -271,7 +277,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pos/dinein/qr-codes', [DineInController::class, 'printQrMeja'])->name('pos.dinein.print-qr');
     });
 
-    Route::middleware(['role:Admin,Kasir,Pemilik,Manajer'])->group(function () {
+    Route::middleware(['role:Admin,Kasir,Pemilik,Manajer,Pelayan'])->group(function () {
         // Dine-In Table Management (view + table status + checker meja & penyajian)
         Route::get('/pos/dinein', [DineInController::class, 'index'])->name('pos.dinein.index');
         Route::get('/pos/dinein/table-status', [DineInController::class, 'tableStatusApi'])->name('pos.dinein.table-status');

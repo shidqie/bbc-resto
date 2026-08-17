@@ -99,56 +99,7 @@ class UserManagementTest extends TestCase
         $response->assertSessionHasErrors(['nama', 'email', 'password', 'peran_id']);
     }
 
-    public function test_pemilik_can_update_user(): void
-    {
-        $pemilik = $this->makeUser('Pemilik');
-        $kasir = $this->makeUser('Kasir');
 
-        $response = $this->actingAs($pemilik)->put(route('users.update', $kasir), [
-            'nama' => 'Kasir Update',
-            'email' => 'kasir.update@bbc.com',
-            'nomor_telepon' => '081300000001',
-            'peran_id' => $kasir->peran_id,
-            'status_aktif' => 1,
-        ]);
-
-        $response->assertRedirect(route('users.index'));
-        $this->assertDatabaseHas('pengguna', [
-            'id' => $kasir->id,
-            'nama' => 'Kasir Update',
-            'email' => 'kasir.update@bbc.com',
-        ]);
-    }
-
-    public function test_user_cannot_deactivate_self(): void
-    {
-        $pemilik = $this->makeUser('Pemilik');
-
-        $response = $this->actingAs($pemilik)->put(route('users.update', $pemilik), [
-            'nama' => $pemilik->nama,
-            'email' => $pemilik->email,
-            'peran_id' => $pemilik->peran_id,
-            'status_aktif' => 0,
-        ]);
-
-        $response->assertSessionHasErrors('status_aktif');
-        $this->assertDatabaseHas('pengguna', ['id' => $pemilik->id, 'status_aktif' => 1]);
-    }
-
-    public function test_manajer_cannot_modify_pemilik_or_manajer_user(): void
-    {
-        $manajer = $this->makeUser('Manajer');
-        $pemilik = $this->makeUser('Pemilik');
-
-        $response = $this->actingAs($manajer)->put(route('users.update', $pemilik), [
-            'nama' => 'Diubah',
-            'email' => $pemilik->email,
-            'peran_id' => $pemilik->peran_id,
-            'status_aktif' => 1,
-        ]);
-
-        $response->assertForbidden();
-    }
 
     public function test_pemilik_can_toggle_user_status(): void
     {

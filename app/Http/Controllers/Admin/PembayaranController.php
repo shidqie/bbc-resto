@@ -62,7 +62,11 @@ class PembayaranController extends Controller
 
             if ($pembayaran->pesanan && $pembayaran->pesanan->status_pesanan_id != 5) {
                 if ($pembayaran->pesanan->jenis_pesanan_id == 1) {
-                    app(\App\Services\OrderService::class)->potongStokPesanan($pembayaran->pesanan);
+                    try {
+                        app(\App\Services\OrderService::class)->potongStokPesanan($pembayaran->pesanan);
+                    } catch (\RuntimeException $e) {
+                        return back()->with('error', 'Gagal memproses pesanan: ' . $e->getMessage() . ' Silakan tambah stok bahan terlebih dahulu.');
+                    }
                     $pembayaran->pesanan->update(['status_pesanan_id' => 5]);
                     if ($pembayaran->pesanan->meja) {
                         $pembayaran->pesanan->meja->update(['status_meja_id' => 1]);

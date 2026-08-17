@@ -8,11 +8,46 @@
         @page { size: 80mm auto; margin: 0; }
         body { 
             font-family: 'Courier New', Courier, monospace; 
-            width: 270px; 
-            margin: 0 auto; 
-            padding: 8px 4px; 
-            font-size: 11px; 
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
             color: #000;
+        }
+        .preview-toolbar {
+            background: #1f2937;
+            color: white;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: sans-serif;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .preview-toolbar button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .preview-toolbar button.btn-cancel {
+            background: #ef4444;
+        }
+        .receipt-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 24px;
+        }
+        .receipt-content {
+            background: white;
+            width: 270px;
+            padding: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            font-size: 11px;
             line-height: 1.25;
             letter-spacing: -0.2px;
         }
@@ -20,16 +55,33 @@
         .text-right { text-align: right; }
         .divider { border-bottom: 1px dashed #000; margin: 6px 0; }
         .section-spacer { margin-top: 24px; padding-top: 12px; }
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; max-width: 270px; border-collapse: collapse; table-layout: fixed; }
         td { padding: 1px 0; vertical-align: top; font-size: 11px; }
         .item-name { word-break: break-word; }
+        
         @media print {
-            body { width: 100%; padding: 0; margin: 0; }
+            body { background: white; width: 270px !important; max-width: 270px !important; margin: 0 auto !important; padding: 0 !important; }
+            .preview-toolbar { display: none !important; }
+            .receipt-wrapper { padding: 0 !important; display: block !important; margin: 0 auto !important; }
+            .receipt-content { width: 270px !important; max-width: 270px !important; padding: 0 !important; box-shadow: none !important; margin: 0 auto !important; }
             .no-print { display: none !important; }
         }
     </style>
 </head>
 <body>
+
+    <div class="preview-toolbar no-print">
+        <div>
+            <strong>Pratinjau Cetak</strong> - Checker
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn-cancel" onclick="window.close()">Tutup</button>
+            <button onclick="window.print()">🖨️ Cetak</button>
+        </div>
+    </div>
+
+    <div class="receipt-wrapper">
+        <div class="receipt-content">
 
     {{-- ═════════════════ BAGIAN 1: CHECKER MEJA ═════════════════ --}}
     <div class="text-center" style="margin-bottom: 8px;">
@@ -162,6 +214,10 @@
     
     <div class="divider"></div>
 
+        </div>
+    </div>
+
+    @if(request('auto_print') == '1')
     <script>
         window.onload = function() {
             setTimeout(function() {
@@ -169,5 +225,6 @@
             }, 300);
         };
     </script>
+    @endif
 </body>
 </html>

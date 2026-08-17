@@ -254,16 +254,19 @@ class KebutuhanBahanService
             }
         }
 
-        // 2. Jika semua cukup, baru lakukan pemotongan
+        // 2. Jika semua cukup, baru lakukan pemotongan menggunakan StockService
+        $stockService = app(\App\Services\StockService::class);
         foreach ($kebutuhan as $item) {
-            $stokModel = StokBahan::where('bahan_baku_id', $item['bahan_baku_id'])
-                ->where('jenis_persediaan', $jenisPersediaan)
-                ->first();
-                
-            if ($stokModel) {
-                $stokModel->jumlah_stok -= $item['kebutuhan'];
-                $stokModel->save();
-            }
+            $stockService->deductStock(
+                $item['bahan_baku_id'],
+                $item['kebutuhan'],
+                'Pemakaian ' . ($pesanan->jenis_pesanan->nama_jenis_pesanan ?? 'Pesanan') . ' #' . $pesanan->id_pesanan,
+                2, // Keluar
+                auth()->id() ?? 1,
+                ['detail_pesanan_id' => null], // Atau sesuaikan dengan referensi
+                false, // allowNegative = false
+                $jenisPersediaan
+            );
         }
 
         return true;

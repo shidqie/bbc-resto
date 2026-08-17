@@ -27,7 +27,9 @@
                 <form action="{{ route('admin.pesanan.dinein.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama Pemesan…" />
                     
-                    <x-ui.multi-select name="status" :options="['all' => 'Semua Status', 'ditinjau' => 'Baru', 'terkonfirmasi' => 'Terkonfirmasi', 'diproses' => 'Diproses', 'selesai' => 'Selesai']" :selected="request('status', 'all')" label="Pilih status" type="radio" />
+                    <x-ui.multi-select name="status" :options="['all' => 'Semua Status', 'ditinjau' => 'Baru', 'terkonfirmasi' => 'Terkonfirmasi', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status', 'all')" label="Pilih status" type="radio" />
+                    
+                    <x-ui.multi-select name="status_pembayaran" :options="['all' => 'Semua Pembayaran', 'belum_bayar' => 'Belum Bayar', 'lunas' => 'Lunas']" :selected="request('status_pembayaran', 'all')" label="Pilih pembayaran" type="radio" />
                     
                     <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'kustom' => 'Kustom']" :selected="request('periode')" label="Pilih periode" type="radio" />
                     
@@ -40,7 +42,7 @@
                         </div>
                     </template>
 
-                    @if(request()->hasAny(['search', 'status', 'periode', 'start_date', 'end_date']))
+                    @if(request()->hasAny(['search', 'status', 'status_pembayaran', 'periode', 'start_date', 'end_date']))
                         <x-ui.button href="{{ route('admin.pesanan.dinein.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </form>

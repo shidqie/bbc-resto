@@ -125,7 +125,11 @@
                         </td>
                     </x-ui.table.row>
                     @empty
-                    <x-ui.empty-state icon="document-text" title="Belum ada data" message="Data akan muncul setelah transaksi tersedia." />
+                    <tr>
+                        <td colspan="7">
+                            <x-ui.empty-state icon="document-text" title="Belum ada data" message="Data akan muncul setelah transaksi tersedia." />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>

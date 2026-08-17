@@ -19,11 +19,11 @@
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .divider { border-bottom: 1px dashed #000; margin: 6px 0; }
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; max-width: 270px; border-collapse: collapse; table-layout: fixed; }
         td { padding: 1px 0; vertical-align: top; font-size: 11px; }
         .item-name { word-break: break-word; }
         @media print {
-            body { width: 100%; padding: 0; margin: 0; }
+            body { width: 72mm; padding: 0; margin: 0; }
             .no-print { display: none !important; }
         }
     </style>

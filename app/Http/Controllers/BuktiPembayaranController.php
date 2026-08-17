@@ -105,18 +105,39 @@ class BuktiPembayaranController extends Controller
             return back()->with('error', 'Tagihan untuk pembayaran ini sudah lunas.');
         }
 
-        $path = $request->file('file_bukti')->store('bukti-pembayaran', 'public');
-
         $jenisBayar = $request->jenis_pembayaran === 'pelunasan' ? 'pelunasan' : 'uang_muka';
 
-        Pembayaran::create([
-            'kode_pembayaran' => 'PAY-'.date('YmdHis').'-'.rand(100, 999),
-            'pesanan_id' => $pesanan->id,
+        $pembayaran = Pembayaran::where('pesanan_id', $pesanan->id)
+            ->where('jenis_pembayaran', $jenisBayar)
+            ->where('status_verifikasi', 'belum_dibayar')
+            ->latest()
+            ->first();
+
+        if (!$pembayaran) {
+            if ($jenisBayar === 'pelunasan') {
+                $pembayaran = Pembayaran::create([
+                    'kode_pembayaran' => 'PAY-' . strtoupper(uniqid()),
+                    'pesanan_id' => $pesanan->id,
+                    'jenis_pembayaran' => 'pelunasan',
+                    'metode_pembayaran' => 'transfer_bank',
+                    'jumlah_dibayar' => $jumlahBayar,
+                    'jumlah_tagihan' => $jumlahBayar,
+                    'status_verifikasi' => 'belum_dibayar',
+                ]);
+            } else {
+                return back()->with('error', 'Sesi pembayaran tidak ditemukan atau sudah kedaluwarsa.');
+            }
+        }
+
+        if ($pembayaran->expires_at && $pembayaran->expires_at < now()) {
+            return back()->with('error', 'Sesi pembayaran telah berakhir. Pesanan tidak dapat dilanjutkan atau Anda harus membuat sesi baru.');
+        }
+
+        $path = $request->file('file_bukti')->store('bukti-pembayaran', 'public');
+
+        $pembayaran->update([
             'metode_pembayaran' => 'transfer_bank',
             'status_verifikasi' => 'menunggu_verifikasi',
-            'jenis_pembayaran' => $jenisBayar,
-            'jumlah_tagihan' => $jumlahBayar,
-            'jumlah_dibayar' => $jumlahBayar,
             'tanggal_pembayaran' => now(),
             'bukti_pembayaran' => $path,
             'catatan' => 'Bukti diunggah oleh pemesan',
@@ -130,6 +151,50 @@ class BuktiPembayaranController extends Controller
 
         return redirect()->route('pesanan.bayar', $pesanan->id_pesanan)
             ->with('success', 'Bukti pembayaran berhasil dikirim! Kami akan memverifikasi dalam 1×24 jam.');
+    }
+
+    /** POST /pesan/bayar/{kodePesanan}/mulai-pelunasan */
+    public function mulaiSesiPelunasan(Request $request, $kodePesanan)
+    {
+        $pesanan = Pesanan::where('id_pesanan', $kodePesanan)->first();
+        abort_unless($pesanan, 404, 'Pesanan tidak ditemukan.');
+
+        // Pastikan belum kedaluwarsa H-3
+        if ($pesanan->batas_pelunasan && $pesanan->batas_pelunasan < now()) {
+            return back()->with('error', 'Batas waktu pelunasan telah berakhir. Silakan hubungi admin.');
+        }
+
+        // Cek apakah ada sesi pelunasan yang masih aktif
+        $aktif = Pembayaran::where('pesanan_id', $pesanan->id)
+            ->where('jenis_pembayaran', 'pelunasan')
+            ->where('status_verifikasi', 'belum_dibayar')
+            ->where('expires_at', '>', now())
+            ->exists();
+
+        if ($aktif) {
+            return back()->with('error', 'Anda masih memiliki sesi pelunasan yang aktif.');
+        }
+
+        $total = (float) $pesanan->total_tagihan;
+        $dpSudahBayar = (float) $pesanan->pembayaran()->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+        $sisaBayar = max(0, $total - $dpSudahBayar);
+
+        if ($sisaBayar <= 0) {
+            return back()->with('error', 'Pesanan sudah lunas.');
+        }
+
+        Pembayaran::create([
+            'kode_pembayaran' => 'PAY-' . strtoupper(uniqid()),
+            'pesanan_id' => $pesanan->id,
+            'jenis_pembayaran' => 'pelunasan',
+            'metode_pembayaran' => null,
+            'jumlah_dibayar' => $sisaBayar,
+            'jumlah_tagihan' => $sisaBayar,
+            'status_verifikasi' => 'belum_dibayar',
+            'expires_at' => now()->addMinutes(15),
+        ]);
+
+        return redirect()->route('pesanan.bayar', $pesanan->id_pesanan)->with('success', 'Sesi pelunasan dimulai, selesaikan dalam 15 menit.');
     }
 
     /** GET /pesan/invoice/{kodePesanan} */

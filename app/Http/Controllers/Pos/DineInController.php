@@ -369,17 +369,9 @@ class DineInController extends Controller
             }
 
             // Deduct stok bahan baku
-            $kebutuhanService = app(\App\Services\KebutuhanBahanService::class);
+            $orderService = app(\App\Services\OrderService::class);
             $pesanan->load('detail_pesanan.menu');
-            $stokCukup = $kebutuhanService->deductBahanPesanan($pesanan, 'harian');
-
-            if (!$stokCukup) {
-                DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Pesanan gagal diproses karena stok bahan baku harian tidak mencukupi.'
-                ], 400);
-            }
+            $orderService->potongStokPesanan($pesanan);
 
             // Update status meja menjadi terisi
             $meja = Meja::find($request->meja_id);

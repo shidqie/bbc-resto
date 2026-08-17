@@ -37,6 +37,18 @@
                 </div>
             @endif
 
+            @if($pesanan->status_pesanan_id === 6 && $pesanan->alasan_batal)
+                <div class="bg-red-50 border border-red-200 p-4 rounded-lg flex items-start gap-3">
+                    <svg class="w-5 h-5 text-red-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h4 class="text-sm font-bold text-red-900">Pesanan Dibatalkan</h4>
+                        <p class="text-[13px] text-red-700 mt-1">{{ $pesanan->alasan_batal }}</p>
+                    </div>
+                </div>
+            @endif
+
             @if(session('kekurangan_stok'))
                 <div class="bg-red-50 border border-red-200 p-6 rounded-lg shadow-sm">
                     <h3 class="text-lg font-bold text-red-800 mb-2">Konfirmasi Gagal: Stok Bahan Kurang!</h3>
@@ -120,70 +132,7 @@
                 </div>
             </div>
 
-            @if($isAdminOrPemilik)
-            {{-- ── TABEL ANALISIS STOK BAHAN BAKU CATERING INI ── --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 mb-4 gap-2">
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <x-heroicon-o-cube class="w-5 h-5 text-emerald-700" />
-                                Rincian & Analisis Stok Bahan Baku Katering Ini
-                            </h3>
-                            <p class="text-sm text-gray-500 font-medium mt-1">Kebutuhan resep untuk {{ $detailPesanan->jumlah ?? 0 }} porsi pesanan catering ini</p>
-                        </div>
-                        @if($isAdminOrPemilik)
-                        @if(!in_array($pesanan->status_pesanan_id, [1, 6]))
-                        <a href="{{ route('pengadaan.catering.create', ['pesanan_id' => $pesanan->id]) }}" class="inline-flex items-center gap-2 bg-[#0D3024] hover:bg-[#0a1f17] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">
-                            <x-heroicon-o-plus class="w-4 h-4" />
-                            Buat Pengadaan Katering
-                        </a>
-                        @endif
-                        @endif
-                    </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm border-collapse">
-                            <thead>
-                                <tr class="bg-gray-50 text-gray-500 text-sm uppercase tracking-wider border-b">
-                                    <th class="px-4 py-3 font-semibold">Bahan Baku</th>
-                                    <th class="px-4 py-3 font-semibold">Stok Resto Saat Ini</th>
-                                    <th class="px-4 py-3 font-semibold">Total Kebutuhan Acara</th>
-                                    <th class="px-4 py-3 font-semibold">Status Ketersediaan</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @forelse($kebutuhanBahan as $item)
-                                    @php $kurang = max(0, $item['total_kebutuhan'] - $item['stok_sekarang']); @endphp
-                                    <tr class="hover:bg-gray-50/50">
-                                        <td class="px-4 py-3 font-bold text-gray-900">{{ $item['nama_bahan'] }}</td>
-                                        <td class="px-4 py-3 font-medium text-gray-700">{{ number_format($item['stok_sekarang'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
-                                        <td class="px-4 py-3 font-bold text-blue-700">{{ number_format($item['total_kebutuhan'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
-                                        <td class="px-4 py-3">
-                                            @if($kurang > 0)
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
-                                                    Kurang {{ number_format($kurang, 2, ',', '.') }} {{ $item['satuan'] }}
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                    ✓ Stok Cukup
-                                                </span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">
-                                            Belum ada resep bahan baku yang terdaftar pada menu paket terpilih.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            @endif
 
             @if($isAdminOrPemilik)
             {{-- Info Pembayaran (Full Width) --}}
@@ -192,43 +141,111 @@
                     <h3 class="text-lg font-semibold mb-4 border-b pb-2">Informasi Pembayaran</h3>
 
                     @if($pesanan->pembayaran->isEmpty())
-                        <p class="text-sm text-gray-500 italic">Belum ada pembayaran yang diunggah pelanggan.</p>
+                        <div class="flex flex-col items-center py-8 text-gray-400">
+                            <x-heroicon-o-banknotes class="w-10 h-10 mb-2 opacity-40" />
+                            <p class="text-sm italic">Belum ada pembayaran yang diunggah pelanggan.</p>
+                        </div>
                     @else
-                        <div class="overflow-x-auto mb-6">
-                            <table class="w-full text-sm text-left border-collapse border border-gray-200">
-                                <thead class="bg-gray-50 text-gray-500 uppercase">
-                                    <tr>
-                                        <th class="px-4 py-3 border border-gray-200 font-semibold">Jenis</th>
-                                        <th class="px-4 py-3 border border-gray-200 font-semibold text-right">Nominal</th>
-                                        <th class="px-4 py-3 border border-gray-200 font-semibold text-center">Status</th>
-                                        <th class="px-4 py-3 border border-gray-200 font-semibold text-center">Bukti</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($pesanan->pembayaran as $pemb)
-                                        <tr>
-                                            <td class="px-4 py-3 border border-gray-200 font-medium">
-                                                {{ $jenisBayarLabel[$pemb->jenis_pembayaran] ?? ucwords(str_replace('_', ' ', $pemb->jenis_pembayaran ?? '')) }}
-                                            </td>
-                                            <td class="px-4 py-3 border border-gray-200 text-right font-semibold">
-                                                Rp {{ number_format($pemb->jumlah_dibayar, 0, ',', '.') }}
-                                            </td>
-                                            <td class="px-4 py-3 border border-gray-200 text-center">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusVerifColor[$pemb->status_verifikasi] ?? 'bg-gray-100 text-gray-700' }}">
-                                                    {{ $statusVerifLabel[$pemb->status_verifikasi] ?? ucwords(str_replace('_', ' ', $pemb->status_verifikasi ?? '-')) }}
+                        @php
+                            $jenisPesanan = $pesanan->jenis_pesanan->kode_jenis ?? 'CAT';
+                            $routeVerif = $jenisPesanan === 'BOX' ? 'admin.bukti.nasibox.verifikasi-pembayaran' : 'admin.bukti.verifikasi-pembayaran';
+                            $routeTolak = $jenisPesanan === 'BOX' ? 'admin.bukti.nasibox.tolak-pembayaran' : 'admin.bukti.tolak-pembayaran';
+                        @endphp
+                        <div class="space-y-4">
+                            @foreach($pesanan->pembayaran as $pemb)
+                                @php
+                                    $cardBg  = $statusVerifCard[$pemb->status_verifikasi] ?? 'bg-gray-50/40 border-gray-200/60';
+                                    $isPending = $pemb->status_verifikasi === 'menunggu_verifikasi';
+                                @endphp
+                                <div class="rounded-xl border p-4 {{ $cardBg }}">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        {{-- Info Pembayaran --}}
+                                        <div class="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                                            <div>
+                                                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">Jenis</p>
+                                                <p class="font-bold text-gray-900">{{ $jenisBayarLabel[$pemb->jenis_pembayaran] ?? ucwords(str_replace('_',' ',$pemb->jenis_pembayaran ?? '')) }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">Nominal</p>
+                                                <p class="font-bold text-gray-900">Rp {{ number_format($pemb->jumlah_dibayar, 0, ',', '.') }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">Tanggal</p>
+                                                <p class="font-medium text-gray-700">{{ \Carbon\Carbon::parse($pemb->tanggal_pembayaran)->translatedFormat('d M Y, H:i') }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">Status</p>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold {{ $statusVerifColor[$pemb->status_verifikasi] ?? 'bg-gray-100 text-gray-700' }}">
+                                                    {{ $statusVerifLabel[$pemb->status_verifikasi] ?? '-' }}
                                                 </span>
-                                            </td>
-                                            <td class="px-4 py-3 border border-gray-200 text-center">
-                                                @if($pemb->bukti_pembayaran && $pemb->bukti_pembayaran !== 'midtrans_online')
-                                                    <a href="{{ asset('storage/' . $pemb->bukti_pembayaran) }}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline">Lihat Bukti</a>
-                                                @else
-                                                    <span class="text-gray-400 italic">Otomatis</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                            </div>
+                                        </div>
+
+                                        {{-- Aksi: Lihat Bukti + Setujui/Tolak --}}
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            @if($pemb->bukti_pembayaran && $pemb->bukti_pembayaran !== 'midtrans_online')
+                                                <button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'bukti-{{ $pemb->id }}')"
+                                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+                                                    <x-heroicon-o-eye class="w-4 h-4" /> Lihat Bukti
+                                                </button>
+
+                                                <x-modal name="bukti-{{ $pemb->id }}" maxWidth="md">
+                                                    <div class="p-4">
+                                                        <div class="flex justify-between items-center mb-4 border-b pb-2">
+                                                            <h3 class="text-lg font-bold text-gray-900">Bukti Pembayaran</h3>
+                                                            <button x-on:click="$dispatch('close-modal', 'bukti-{{ $pemb->id }}')" class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 p-1 rounded-md transition-colors">
+                                                                <x-heroicon-o-x-mark class="w-5 h-5" />
+                                                            </button>
+                                                        </div>
+                                                        <div class="flex justify-center bg-gray-50 rounded-lg overflow-hidden border p-2">
+                                                            @if(Str::endsWith(strtolower($pemb->bukti_pembayaran), '.pdf'))
+                                                                <iframe src="{{ asset('storage/' . $pemb->bukti_pembayaran) }}" class="w-full h-96 rounded"></iframe>
+                                                            @else
+                                                                <img src="{{ asset('storage/' . $pemb->bukti_pembayaran) }}" alt="Bukti" class="max-w-full max-h-[70vh] object-contain rounded">
+                                                            @endif
+                                                        </div>
+                                                        <div class="mt-4 flex justify-between items-center">
+                                                            <p class="text-xs text-gray-500">Diupload: {{ \Carbon\Carbon::parse($pemb->tanggal_pembayaran)->translatedFormat('d M Y, H:i') }}</p>
+                                                            <a href="{{ asset('storage/' . $pemb->bukti_pembayaran) }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 hover:underline font-semibold flex items-center gap-1">
+                                                                Buka Penuh <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </x-modal>
+                                            @endif
+
+                                            @if($isAdminOrPemilik && $isPending)
+                                                <form id="form-verif-{{ $pemb->id }}" action="{{ route($routeVerif, $pemb->id) }}" method="POST" class="hidden">
+                                                    @csrf @method('PATCH')
+                                                </form>
+                                                <x-ui.action-button type="button"
+                                                    onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: '{{ $pemb->kode_pembayaran }}', message: 'Setujui bukti pembayaran ini? Status pesanan akan diperbarui secara otomatis.', formId: 'form-verif-{{ $pemb->id }}', confirmText: 'Setujui', cancelText: 'Batal' })"
+                                                    title="Setujui"
+                                                    class="text-green-600 hover:text-green-800">
+                                                    <x-heroicon-o-check-circle class="w-5 h-5" />
+                                                </x-ui.action-button>
+
+                                                <form id="form-tolak-{{ $pemb->id }}" action="{{ route($routeTolak, $pemb->id) }}" method="POST" class="hidden">
+                                                    @csrf @method('PATCH')
+                                                    <input type="hidden" name="catatan_admin" id="catatan-tolak-{{ $pemb->id }}" value="">
+                                                </form>
+                                                <x-ui.action-button type="button"
+                                                    onclick="window.confirmDialog({ title: 'Tolak Bukti Pembayaran', name: '{{ $pemb->kode_pembayaran }}', message: 'Tolak bukti pembayaran ini? Pelanggan akan diminta mengunggah ulang.', formId: 'form-tolak-{{ $pemb->id }}', confirmText: 'Tolak', cancelText: 'Batal', type: 'danger' })"
+                                                    title="Tolak"
+                                                    class="text-red-500 hover:text-red-700">
+                                                    <x-heroicon-o-x-circle class="w-5 h-5" />
+                                                </x-ui.action-button>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    @if($pemb->catatan_verifikasi)
+                                        <p class="mt-2 text-xs text-gray-500 italic border-t border-gray-200/60 pt-2">
+                                            <span class="font-semibold">Catatan:</span> {{ $pemb->catatan_verifikasi }}
+                                        </p>
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
                     @endif
 

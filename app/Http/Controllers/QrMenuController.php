@@ -109,7 +109,7 @@ class QrMenuController extends Controller
         try {
             DB::beginTransaction();
 
-            $staffId = 1; // Self-order by customer → gunakan default system staff
+            $staffId = null; // Self-order by customer → tidak ada pelayan_id
 
             $pesanan = $this->dineInService->createOrder(
                 $request->meja_id,
@@ -119,8 +119,16 @@ class QrMenuController extends Controller
                 $staffId
             );
 
-            DB::commit();
+            // Kirim notifikasi ke kasir/manajer/pemilik (peran 1, 2, 3)
+            $meja = \App\Models\Meja::find($request->meja_id);
+            $pesananNorm = \App\Models\Pesanan::where('id_pesanan', $pesanan->kode_pesanan)->first();
+            if ($pesananNorm && $meja) {
+                $users = \App\Models\Pengguna::whereIn('peran_id', [1, 2, 3])->get();
+                $pesananMessage = "Ada pesanan baru dari QR Code (Meja: {$meja->nomor_meja}). Pemesan: {$request->nama_konsumen}";
+                \Illuminate\Support\Facades\Notification::send($users, new \App\Notifications\PesananBaru($pesananNorm, $pesananMessage, route('pos.dinein.index')));
+            }
 
+            DB::commit();
             return response()->json([
                 'success' => true,
                 'message' => 'Pesanan berhasil dikirim. Anda dapat melihat detail pesanan atau melakukan pembayaran kasir.',

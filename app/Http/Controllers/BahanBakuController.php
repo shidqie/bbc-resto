@@ -287,8 +287,19 @@ class BahanBakuController extends Controller
             return redirect()->route('bahan-baku.index')->with('success', 'Bahan baku sedang digunakan, hanya dapat dinonaktifkan.');
         }
 
-        $bahanBaku->delete();
-
-        return redirect()->route('bahan-baku.index')->with('success', 'Bahan baku berhasil dihapus.');
+        try {
+            // Hapus stok lama yang mungkin tertinggal (stok_bahan_baku)
+            DB::table('stok_bahan_baku')->where('bahan_baku_id', $id)->delete();
+            
+            $bahanBaku->delete();
+            return redirect()->route('bahan-baku.index')->with('success', 'Bahan baku berhasil dihapus.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Error 23000 is Integrity constraint violation
+            if ($e->getCode() == '23000') {
+                $bahanBaku->update(['status_aktif' => false]);
+                return redirect()->route('bahan-baku.index')->with('success', 'Bahan baku sedang digunakan oleh data lain, sehingga hanya dinonaktifkan.');
+            }
+            return redirect()->route('bahan-baku.index')->with('error', 'Terjadi kesalahan saat menghapus bahan baku.');
+        }
     }
 }

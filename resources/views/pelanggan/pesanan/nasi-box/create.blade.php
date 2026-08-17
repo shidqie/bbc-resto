@@ -1,881 +1,293 @@
 <x-layouts.landing>
     <x-slot:title>Pesan Nasi Box — Saung Babakan Cinta</x-slot:title>
+    <x-slot:description>Form pemesanan nasi box Saung Babakan Cinta — minimal 20 box, pemesanan H-4 sebelum acara.</x-slot:description>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <style>
-        /* Custom Geocoder Search Bar (Google Maps Style) */
-        .leaflet-top.leaflet-right {
-            top: 10px !important;
-            right: 10px !important;
-            left: 10px !important;
-            display: flex !important;
-            justify-content: center !important;
-            pointer-events: none !important;
-            z-index: 1000 !important;
-        }
-        .leaflet-control-geocoder {
-            pointer-events: auto !important;
-            width: 90% !important;
-            max-width: 360px !important;
-            margin: 0 !important;
-            border-radius: 12px !important;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.12) !important;
-            border: 1px solid #E5E7EB !important;
-            background: white !important;
-            overflow: hidden !important;
-        }
-        .leaflet-control-geocoder-form {
-            display: flex !important;
-            align-items: center !important;
-            width: 100% !important;
-        }
-        .leaflet-control-geocoder-form input {
-            border: none !important;
-            padding: 8px 12px !important;
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            width: 100% !important;
-            background: transparent !important;
-            color: #111827 !important;
-            outline: none !important;
-        }
-        .leaflet-control-geocoder-form input:focus {
-            outline: none !important;
-            box-shadow: none !important;
-        }
-        .leaflet-control-geocoder-icon {
-            background-color: transparent !important;
-            border-radius: 0 !important;
-            width: 36px !important;
-            height: 36px !important;
-            background-size: 18px 18px !important;
-            opacity: 0.6;
-            flex-shrink: 0;
-        }
-        .leaflet-tooltip.address-tooltip, .leaflet-tooltip.resto-tooltip {
-            background: white;
-            color: #111827;
-            font-weight: 600;
-            font-size: 12px;
-            border: 1px solid #F3F4F6;
-            border-radius: 8px;
-            padding: 6px 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        .leaflet-tooltip.address-tooltip::before, .leaflet-tooltip.resto-tooltip::before {
-            border-top-color: white;
-        }
-        #map-container { position: relative; }
-        #map-address-card {
-            position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: white;
-            border-radius: 12px;
-            padding: 10px 16px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-            min-width: 260px;
-            max-width: 88%;
-            text-align: center;
-            pointer-events: none;
-            border: 1px solid #E5E7EB;
-        }
-        #map-address-card .card-label {
-            font-size: 10px;
-            color: #6B7280;
-            font-weight: 700;
-            margin-bottom: 2px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        #map-address-card .card-address {
-            font-size: 12px;
-            font-weight: 700;
-            color: #111827;
-            line-height: 1.4;
-        }
-    </style>
-    <section class="py-16 bg-white min-h-screen">
-        <div class="max-w-7xl mx-auto px-4">
+    @include('pelanggan.pesanan.partials._map-styles')
 
-            {{-- Header --}}
-            <div class="flex items-center justify-between mb-10">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Form Pemesanan Nasi Box</h1>
-                    <p class="text-gray-500 text-sm">Minimal 10 Box · Pesan minimal H-4 sebelum acara (DP 25%)</p>
+    @php
+        $orderConfig = [
+            'type' => 'nasibox',
+            'formId' => 'nasiBoxForm',
+            'minPorsi' => 20,
+            'dpPersen' => 25,
+            'batasHari' => 3,
+            'satuanLabel' => 'Box',
+            'qtyField' => 'jumlah_box',
+            'previewUrl' => route('pesan.nasibox.preview'),
+            'komponenUrl' => route('pesan.catering.komponen', ':id'),
+            'hasGratisOngkir' => false,
+            'minWarning' => 'Minimal order 20 box.',
+        ];
+
+        $summaryConfig = [
+            'jenisLabel'  => 'Nasi Box',
+            'satuanLabel' => 'Box',
+            'dpPersen'    => 25,
+            'batasTeks'   => 'Pelunasan dilakukan paling lambat H-3 sebelum hari acara.',
+            'syarat'      => [
+                'Pemesanan dilakukan minimal H-4 sebelum hari pelaksanaan acara.',
+                'Dikenakan pembayaran uang muka (DP) sebesar 25%.',
+                'Jika membatalkan pesanan, dikenakan potongan biaya 25% dari DP atau total yang telah dibayarkan.',
+            ],
+            'hasGratisOngkir' => false,
+        ];
+    @endphp
+
+    <section class="py-10 lg:py-14 bg-canvas min-h-screen bg-batik">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {{-- HEADER BANNER --}}
+            <div class="bg-surface border border-primary/10 rounded-2xl shadow-sm p-5 sm:p-7 mb-6 relative overflow-hidden">
+                <div class="absolute inset-y-0 left-0 w-1 bg-primary"></div>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative">
+                    <div>
+                        <nav class="flex items-center gap-1.5 text-[11px] font-semibold text-body/50 mb-2">
+                            <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Beranda</a>
+                            <span>/</span><span>Layanan</span><span>/</span>
+                            <span class="text-primary">Nasi Box</span>
+                        </nav>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-primary">Form Pemesanan Nasi Box</h1>
+                        <p class="text-sm text-body/70 mt-1.5">Minimal 20 box &middot; Pemesanan minimal H-4 sebelum acara &middot; DP 25%</p>
+                    </div>
+                    <div class="flex items-center gap-2 self-start">
+                        <div class="flex items-center gap-0.5 p-0.5 rounded-xl bg-primary/5 border border-primary/10 text-[10px] font-semibold">
+                            <a href="?layout=a" class="px-2.5 py-1.5 rounded-lg transition-colors {{ request('layout') !== 'b' ? 'bg-primary text-white' : 'text-body/60 hover:text-primary' }}">Layout 1</a>
+                            <a href="?layout=b" class="px-2.5 py-1.5 rounded-lg transition-colors {{ request('layout') === 'b' ? 'bg-primary text-white' : 'text-body/60 hover:text-primary' }}">Layout 2</a>
+                        </div>
+                        <a href="{{ url('/') }}" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-primary/10 text-body text-sm font-medium hover:bg-primary/5 hover:text-primary transition-colors">
+                            <i class="ph ph-x-circle"></i>
+                            Batalkan Pesan
+                        </a>
+                    </div>
                 </div>
-                <a href="{{ url('/') }}" class="text-gray-500 hover:text-gray-700 text-sm font-medium flex items-center gap-1">
-                    <x-heroicon-o-x-mark class="w-4 h-4" />
-                    Batalkan Pesan
-                </a>
+            </div>
+
+            {{-- STEPPER PROGRESS --}}
+            <div class="bg-surface border border-primary/10 rounded-2xl shadow-sm p-4 sm:p-5 mb-6">
+                <div class="relative">
+                    <div class="absolute left-10 right-10 top-[15px] h-0.5 bg-primary/10 hidden sm:block"></div>
+                    <div class="relative grid grid-cols-5 gap-1">
+                        @foreach([1 => 'Data Pemesan', 2 => 'Detail Acara', 3 => 'Pilih Paket', 4 => 'Pilih Menu', 5 => 'Pembayaran'] as $n => $stepLabel)
+                            <div class="step-item flex flex-col items-center gap-1.5" data-step="{{ $n }}">
+                                <div class="step-dot w-8 h-8 rounded-full border-2 border-primary/20 bg-surface flex items-center justify-center text-[13px] font-bold text-body/40 transition-all duration-300">
+                                    <span class="step-num">{{ $n }}</span>
+                                    <i class="ph-bold ph-check step-check hidden"></i>
+                                </div>
+                                <span class="step-label text-[10px] sm:text-[11px] font-semibold text-body/50 leading-tight text-center">{{ $stepLabel }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                <p id="stepper-hint" class="text-center text-xs text-body/60 mt-3 font-medium"></p>
             </div>
 
             @if($errors->any())
-                <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6">
-                    <ul class="list-disc list-inside text-sm space-y-1">
-                        @foreach($errors->all() as $err)
-                            <li>{{ $err }}</li>
-                        @endforeach
+                <div class="bg-danger/5 border border-danger/20 text-danger rounded-2xl p-4 mb-6">
+                    <div class="flex items-center gap-1.5 font-bold text-xs mb-1"><i class="ph-bold ph-warning-circle"></i> Periksa kembali isian Anda</div>
+                    <ul class="list-disc list-inside text-xs space-y-1">
+                        @foreach($errors->all() as $err) <li>{{ $err }}</li> @endforeach
                     </ul>
                 </div>
             @endif
 
             <form id="nasiBoxForm" method="POST" action="{{ route('pesan.nasibox.store') }}">
                 @csrf
-                <div class="grid lg:grid-cols-3 gap-12 items-start">
-                    
-                    {{-- LEFT COLUMN: Form Input --}}
-                    <div class="lg:col-span-2 divide-y divide-gray-100">
-                        
+                <div class="grid lg:grid-cols-3 gap-6 items-start">
+
+                    {{-- LEFT COLUMN: FORM --}}
+                    <div class="lg:col-span-2 space-y-6">
+
                         {{-- SECTION 1: Data Pemesan --}}
-                        <div class="pb-6">
-                            <h2 class="text-base font-bold text-gray-900 mb-4">1. Data Pemesan</h2>
+                        <section class="bg-surface border border-primary/10 rounded-2xl shadow-sm p-5 sm:p-6">
+                            <div class="flex items-start gap-3 mb-5">
+                                <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-[13px] font-bold shrink-0">1</span>
+                                <div>
+                                    <h2 class="text-sm font-bold text-body">Data Pemesan</h2>
+                                    <p class="text-[11px] text-body/60 mt-0.5">Siapa yang memesan dan nomor yang bisa dihubungi.</p>
+                                </div>
+                            </div>
                             <div class="grid md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Pemesan / Instansi <span class="text-red-500">*</span></label>
-                                    <input type="text" name="nama_pemesan" value="{{ old('nama_pemesan', optional(auth('pelanggan')->user())->nama ?? '') }}"
-                                           class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none bg-white" required>
+                                    <label for="nama_pemesan" class="block text-xs font-bold text-body mb-1">Nama Pemesan / Instansi <span class="text-danger">*</span></label>
+                                    <input type="text" id="nama_pemesan" name="nama_pemesan" value="{{ old('nama_pemesan', optional(auth('pelanggan')->user())->nama ?? '') }}"
+                                           placeholder="Contoh: PT Sejahtera / Andi"
+                                           class="w-full border border-primary/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-body placeholder-body/30 transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface" required>
                                 </div>
                                 <div>
                                     <x-input-wa name="kontak" label="Nomor Telepon / WhatsApp" :value="optional(auth('pelanggan')->user())->nomor_telepon ?? ''" :required="true" />
                                 </div>
                             </div>
-                        </div>
+                        </section>
 
                         {{-- SECTION 2: Detail Acara --}}
-                        <div class="py-6">
-                            <h2 class="text-base font-bold text-gray-900 mb-3">2. Detail Acara</h2>
-                            <div class="grid md:grid-cols-2 gap-4 items-start">
+                        <section class="bg-surface border border-primary/10 rounded-2xl shadow-sm p-5 sm:p-6">
+                            <div class="flex items-start gap-3 mb-5">
+                                <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-[13px] font-bold shrink-0">2</span>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Tanggal Acara <span class="text-red-500">*</span></label>
-                                    <input type="date" name="tanggal_acara" id="tanggalAcara"
-                                           min="{{ \Carbon\Carbon::today()->addDays(2)->format('Y-m-d') }}"
-                                           value="{{ old('tanggal_acara') }}"
-                                           class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#0D3024] focus:border-[#0D3024] transition bg-white" required>
-                                    <p id="tanggal-warning" class="text-red-500 text-xs mt-1 hidden">Pemesanan Nasi Box minimal H-2 sebelum acara.</p>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Jam Acara <span class="text-red-500">*</span></label>
-                                    <input type="time" name="jam_acara" id="jamAcara"
-                                           value="{{ old('jam_acara') }}"
-                                           class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#0D3024] focus:border-[#0D3024] transition bg-white" required>
-                                </div>
-                                <div class="md:col-span-2">
-                                    <x-ui.input-qty id="jumlahPorsi" name="jumlah_porsi" label="Jumlah Porsi" :value="old('jumlah_porsi', 20)" :required="true" min="20" />
-                                    <p id="jumlah-warning" class="text-red-500 text-xs mt-1 hidden">Minimal order 20 porsi.</p>
-                                </div>
-                                
-                                <div class="md:col-span-2 mt-2 border-t border-gray-100 pt-3">
-                                    <label class="block text-xs font-bold text-gray-700 mb-2">Metode Pengiriman <span class="text-red-500">*</span></label>
-                                    <div class="flex gap-4 mb-3">
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="radio" name="metode_pengiriman" value="pickup" class="metode-radio w-4 h-4 text-[#0D3024] focus:ring-[#0D3024]/20" checked>
-                                            <span class="text-xs font-medium text-gray-900">Diambil (Pickup)</span>
-                                        </label>
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="radio" name="metode_pengiriman" value="delivery" class="metode-radio w-4 h-4 text-[#0D3024] focus:ring-[#0D3024]/20">
-                                            <span class="text-xs font-medium text-gray-900">Diantar (Delivery)</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="md:col-span-2">
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">Jam Pengambilan / Pengiriman <span class="text-red-500">*</span></label>
-                                    <input type="time" name="jam_pengambilan" id="jamPengambilan"
-                                           value="{{ old('jam_pengambilan') }}"
-                                           class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#0D3024] focus:border-[#0D3024] transition bg-white" required>
-                                </div>
-
-                                <div id="deliverySection" class="md:col-span-2 hidden mt-2">
-                                    <div class="mb-3 space-y-3">
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Venue / Gedung (Opsional)</label>
-                                            <input type="text" name="alamat_venue" value="{{ old('alamat_venue') }}" placeholder="Contoh: Gedung Sabuga / Aula Serbaguna"
-                                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none bg-white">
-                                        </div>
-                                            
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Pengiriman <span class="text-red-500">*</span></label>
-                                            <textarea name="lokasi_acara" id="alamatDelivery" rows="2"
-                                                    class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none bg-white">{{ old('lokasi_acara') }}</textarea>
-                                        </div>
-                                    </div>
-
-                                    {{-- Map Container --}}
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Lokasi Pengiriman di Peta <span class="text-red-500">*</span></label>
-                                    <p class="text-xs text-body/60 mb-2">💡 Tip: Cari alamat lewat ikon 🔍 di peta, lalu geser pin ke titik yang tepat.</p>
-                                    <div id="map-container" class="rounded-xl overflow-hidden border border-gray-200 shadow-md mb-3 z-0" style="height: 340px; position:relative;">
-                                        {{-- Address Card Overlay --}}
-                                        <div id="map-address-card">
-                                            <div class="card-label">📍 Lokasi Pengiriman</div>
-                                            <div class="card-address" id="cardAlamat">Geser pin ke lokasi kamu...</div>
-                                        </div>
-
-                                        <div id="map" class="w-full h-full z-0 relative"></div>
-                                        
-                                        <div id="map-center-marker">
-                                            <x-heroicon-s-map-pin class="w-10 h-10 text-[#0D3024]" />
-                                            <div class="marker-shadow"></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <input type="hidden" name="latitude" id="inputLat" value="{{ old('latitude', auth()->user()->latitude ?? '') }}">
-                                    <input type="hidden" name="longitude" id="inputLng" value="{{ old('longitude', auth()->user()->longitude ?? '') }}">
-                                    <input type="hidden" name="jarak_km" id="inputJarak">
-
-                                    <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600">
-                                            <x-heroicon-o-truck class="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                            <p class="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-0.5">Jarak & Ongkir</p>
-                                            <p class="text-xs font-bold text-gray-800" id="textJarak">– km</p>
-                                        </div>
-                                    </div>
-                                    <p id="jarakWarning" class="text-red-500 text-xs mt-2 hidden"></p>
+                                    <h2 class="text-sm font-bold text-body">Detail Acara</h2>
+                                    <p class="text-[11px] text-body/60 mt-0.5">Waktu pelaksanaan, jumlah pesanan, dan cara pengambilan/pengiriman.</p>
                                 </div>
                             </div>
-                        </div>
+                            <div class="grid md:grid-cols-2 gap-4 items-start">
+                                <div>
+                                    <label for="tanggalAcara" class="block text-xs font-bold text-body mb-1">Tanggal Acara <span class="text-danger">*</span></label>
+                                    <input type="date" id="tanggalAcara" name="tanggal_acara"
+                                           min="{{ \Carbon\Carbon::today()->addDays(4)->format('Y-m-d') }}"
+                                           value="{{ old('tanggal_acara') }}"
+                                           class="w-full border border-primary/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface" required>
+                                    <p id="tanggal-warning" class="text-danger text-xs mt-1 hidden">Pemesanan Nasi Box minimal H-4 sebelum acara.</p>
+                                </div>
+                                <div>
+                                    <label for="jamAcara" class="block text-xs font-bold text-body mb-1">Jam Acara <span class="text-danger">*</span></label>
+                                    <input type="time" id="jamAcara" name="jam_acara"
+                                           value="{{ old('jam_acara') }}"
+                                           class="w-full border border-primary/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface" required>
+                                </div>
 
-                        {{-- SECTION 3: Pilih Paket Nasi Box --}}
-                        <div class="py-6">
-                            <h2 class="text-base font-bold text-gray-900 mb-3">3. Pilih Paket Nasi Box</h2>
+                                <div class="md:col-span-2">
+                                    <x-ui.input-qty id="jumlahBox" name="jumlah_box" label="Jumlah Box" :value="old('jumlah_box', 20)" :required="true" min="20" stepper />
+                                    <p class="text-[11px] text-body/50 font-medium mt-1.5 flex items-center gap-1"><i class="ph ph-info"></i> Minimal pemesanan 20 box.</p>
+                                    <p id="jumlah-warning" class="text-danger text-xs mt-1 hidden">Minimal order 20 box.</p>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-body mb-2">Metode Pengiriman <span class="text-danger">*</span></label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <label class="metode-card flex items-center gap-2.5 border border-primary bg-primary/5 rounded-xl px-4 py-3 cursor-pointer transition-all duration-200">
+                                            <input type="radio" name="metode_pengiriman" value="pickup" class="sr-only metode-radio" checked>
+                                            <span class="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0"><i class="ph-bold ph-storefront"></i></span>
+                                            <span>
+                                                <span class="block text-sm font-bold text-body">Diambil (Pickup)</span>
+                                                <span class="block text-[11px] text-body/60 font-medium">Ambil sendiri di rumah makan</span>
+                                            </span>
+                                        </label>
+                                        <label class="metode-card flex items-center gap-2.5 border border-primary/10 bg-surface rounded-xl px-4 py-3 cursor-pointer transition-all duration-200">
+                                            <input type="radio" name="metode_pengiriman" value="delivery" class="sr-only metode-radio">
+                                            <span class="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0"><i class="ph-bold ph-truck"></i></span>
+                                            <span>
+                                                <span class="block text-sm font-bold text-body">Diantar (Delivery)</span>
+                                                <span class="block text-[11px] text-body/60 font-medium">Kirim ke lokasi acara</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label for="jamPengambilan" class="block text-xs font-bold text-body mb-1">Jam Pengambilan / Pengiriman <span class="text-danger">*</span></label>
+                                    <input type="time" id="jamPengambilan" name="jam_pengambilan"
+                                           value="{{ old('jam_pengambilan') }}"
+                                           class="w-full border border-primary/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface" required>
+                                </div>
+
+                                @include('pelanggan.pesanan.partials._delivery-map')
+                            </div>
+                        </section>
+
+                        {{-- SECTION 3: Pilih Paket --}}
+                        <section class="bg-surface border border-primary/10 rounded-2xl shadow-sm p-5 sm:p-6">
+                            <div class="flex items-start justify-between gap-3 mb-5">
+                                <div class="flex items-start gap-3">
+                                    <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-[13px] font-bold shrink-0">3</span>
+                                    <div>
+                                        <h2 class="text-sm font-bold text-body">Pilih Paket Nasi Box</h2>
+                                        <p class="text-[11px] text-body/60 mt-0.5">Pilih salah satu paket yang sesuai kebutuhan acara Anda.</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full bg-primary/10 text-primary shrink-0">Pilih 1</span>
+                            </div>
                             <div class="grid md:grid-cols-2 gap-4">
                                 @foreach($pakets as $paket)
-                                    <label class="paket-card cursor-pointer border rounded-2xl p-4 transition-all duration-200 hover:border-[#0D3024] hover:shadow-xs border-gray-200 bg-white relative flex flex-col justify-between"
+                                    <label class="paket-card cursor-pointer border rounded-2xl p-4 transition-all duration-200 hover:border-primary hover:shadow-sm border-primary/10 bg-surface relative flex flex-col"
                                            data-paket-id="{{ $paket->id }}" data-harga="{{ $paket->harga_jual }}">
                                         <input type="radio" name="paket_id" value="{{ $paket->id }}" class="sr-only paket-radio" {{ old('paket_id') == $paket->id ? 'checked' : '' }} required>
                                         <div>
                                             @if($paket->foto)
                                                 <img src="{{ Storage::url($paket->foto) }}" alt="{{ $paket->nama_menu }}" class="w-full h-36 object-cover rounded-xl mb-3">
                                             @else
-                                                <div class="w-full h-36 rounded-xl bg-gray-100 flex items-center justify-center mb-3 text-gray-300">
+                                                <div class="w-full h-36 rounded-xl bg-primary/[0.03] flex items-center justify-center mb-3 text-primary/30">
                                                     <i class="ph ph-package text-3xl"></i>
                                                 </div>
                                             @endif
                                             <div class="mb-2">
-                                                <h3 class="text-sm font-bold text-gray-900 leading-tight mb-1">{{ $paket->nama_menu }}</h3>
-                                                <span class="text-xs font-bold text-[#0D3024]">Rp {{ number_format($paket->harga_jual, 0, ',', '.') }} <span class="text-[11px] font-normal text-gray-500">/box</span></span>
+                                                <h3 class="text-sm font-bold text-body leading-tight mb-1">{{ $paket->nama_menu }}</h3>
+                                                <span class="text-xs font-bold text-primary">Rp {{ number_format($paket->harga_jual, 0, ',', '.') }} <span class="text-[11px] font-normal text-body/50">/box</span></span>
                                             </div>
-                                            <p class="text-gray-500 text-xs line-clamp-2 mb-3">{{ $paket->deskripsi }}</p>
-                                            <ul class="text-xs text-gray-600 space-y-1 mb-3">
+                                            <p class="text-body/60 text-xs line-clamp-2 mb-3">{{ $paket->deskripsi }}</p>
+                                            <ul class="text-xs text-body/70 space-y-1 mb-3">
                                                 @foreach($paket->komponen_paket->sortBy('urutan') as $komp)
                                                     <li class="flex items-center gap-1.5">
-                                                        <span class="w-1.5 h-1.5 rounded-full {{ $komp->tipe_komponen === 'tetap' ? 'bg-[#0D3024]' : 'bg-amber-500' }} flex-shrink-0"></span>
+                                                        <span class="w-1.5 h-1.5 rounded-full {{ $komp->tipe_komponen === 'tetap' ? 'bg-primary' : 'bg-warning' }} flex-shrink-0"></span>
                                                         <span>{{ $komp->nama_komponen }}
-                                                            @if($komp->tipe_komponen === 'pilihan')<span class="text-amber-600 text-[11px] font-medium">(pilih 1)</span>@endif
+                                                            @if($komp->tipe_komponen === 'pilihan')<span class="text-warning text-[11px] font-medium">(pilih 1)</span>@endif
                                                         </span>
                                                     </li>
                                                 @endforeach
                                             </ul>
                                         </div>
                                         <div class="mt-auto pt-2">
-                                            <div class="text-[11px] font-bold bg-[#0D3024] text-white px-2.5 py-1 rounded-full w-max opacity-0 selected-indicator transition-opacity">✓ Dipilih</div>
+                                            <div class="text-[11px] font-bold bg-primary text-white px-2.5 py-1 rounded-full w-max opacity-0 selected-indicator transition-opacity">✓ Dipilih</div>
                                         </div>
                                     </label>
                                 @endforeach
                             </div>
-                        </div>
+                        </section>
 
                         {{-- SECTION 4: Pilih Menu --}}
-                        <div id="sec-komponen" class="py-6 hidden">
-                            <h2 class="text-base font-bold text-gray-900 mb-3">4. Pilih Item Menu</h2>
-                            <div id="komponen-container" class="space-y-4 mb-4"></div>
-                            
-                            <div class="mt-4 pt-4 border-t border-gray-100">
-                                <label class="block text-xs font-bold text-gray-700 mb-1.5">Catatan Tambahan</label>
-                                <textarea name="catatan" rows="2"
-                                          class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none bg-white">{{ old('catatan') }}</textarea>
+                        <section id="sec-komponen" class="bg-surface border border-primary/10 rounded-2xl shadow-sm p-5 sm:p-6 hidden">
+                            <div class="flex items-start gap-3 mb-5">
+                                <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-[13px] font-bold shrink-0">4</span>
+                                <div>
+                                    <h2 class="text-sm font-bold text-body">Pilih Item Menu</h2>
+                                    <p class="text-[11px] text-body/60 mt-0.5">Sesuaikan pilihan menu dari paket yang Anda pilih.</p>
+                                </div>
                             </div>
-                        </div>
+                            <div id="komponen-container" class="space-y-4"></div>
+                            <div class="mt-4 pt-4 border-t border-primary/10">
+                                <label for="catatan" class="block text-xs font-bold text-body mb-1.5">Catatan Tambahan</label>
+                                <textarea id="catatan" name="catatan" rows="2" placeholder="Contoh: Kurangi pedas, tambahkan sambal terpisah, dsb."
+                                          class="w-full border border-primary/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-body placeholder-body/30 transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface">{{ old('catatan') }}</textarea>
+                            </div>
+                        </section>
 
                         {{-- SECTION 5: Pembayaran --}}
-                        <div class="py-6">
-                            <h2 class="text-base font-bold text-gray-900 mb-3">5. Pembayaran</h2>
+                        <section class="bg-surface border border-primary/10 rounded-2xl shadow-sm p-5 sm:p-6">
+                            <div class="flex items-start gap-3 mb-5">
+                                <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-[13px] font-bold shrink-0">5</span>
+                                <div>
+                                    <h2 class="text-sm font-bold text-body">Pembayaran</h2>
+                                    <p class="text-[11px] text-body/60 mt-0.5">Pilih skema pembayaran yang Anda inginkan.</p>
+                                </div>
+                            </div>
                             <div class="flex flex-col sm:flex-row gap-3">
-                                <label class="flex-1 flex items-center gap-3 border border-[#0D3024] bg-[#0D3024]/5 rounded-xl px-3.5 py-2.5 cursor-pointer transition-all duration-200">
-                                    <input type="radio" name="opsi_pembayaran" value="dp" checked class="w-4 h-4 text-[#0D3024] focus:ring-[#0D3024]/20" onchange="updatePaymentLabel(this.value)">
+                                <label class="flex-1 flex items-center gap-3 border border-primary bg-primary/5 rounded-xl px-4 py-3 cursor-pointer transition-all duration-200">
+                                    <input type="radio" name="opsi_pembayaran" value="dp" checked class="w-4 h-4 text-primary focus:ring-primary/20" onchange="updatePaymentLabel(this.value)">
                                     <div>
-                                        <p class="text-xs font-bold text-gray-900">Bayar DP (25%)</p>
-                                        <p class="text-[11px] text-gray-500 font-medium">Sisa dibayar H-2 sebelum acara</p>
+                                        <p class="text-sm font-bold text-body">Bayar DP (25%)</p>
+                                        <p class="text-[11px] text-body/60 font-medium">Sisa dibayar maksimal H-3 sebelum acara</p>
                                     </div>
                                 </label>
-                                <label class="flex-1 flex items-center gap-3 border border-gray-200 bg-white rounded-xl px-3.5 py-2.5 cursor-pointer hover:border-[#0D3024]/30 transition-all duration-200">
-                                    <input type="radio" name="opsi_pembayaran" value="lunas" class="w-4 h-4 text-[#0D3024] focus:ring-[#0D3024]/20" onchange="updatePaymentLabel(this.value)">
+                                <label class="flex-1 flex items-center gap-3 border border-primary/10 bg-surface rounded-xl px-4 py-3 cursor-pointer hover:border-primary/40 transition-all duration-200">
+                                    <input type="radio" name="opsi_pembayaran" value="lunas" class="w-4 h-4 text-primary focus:ring-primary/20" onchange="updatePaymentLabel(this.value)">
                                     <div>
-                                        <p class="text-xs font-bold text-gray-900">Bayar Lunas (100%)</p>
-                                        <p class="text-[11px] text-gray-500 font-medium">Selesaikan pembayaran sekaligus</p>
+                                        <p class="text-sm font-bold text-body">Bayar Lunas (100%)</p>
+                                        <p class="text-[11px] text-body/60 font-medium">Selesaikan pembayaran sekaligus</p>
                                     </div>
                                 </label>
                             </div>
-                        </div>
-                    </div> {{-- END LEFT COLUMN --}}
+                        </section>
+                    </div>
 
-                    {{-- RIGHT COLUMN: Ringkasan & Submit (Sticky) --}}
+                    {{-- RIGHT COLUMN: RINGKASAN (STICKY) --}}
                     <div class="lg:col-span-1 sticky top-28">
-                        {{-- SECTION 4: Ringkasan & Submit --}}
-                        <div class="bg-white border border-gray-200 rounded-xl shadow-xs flex flex-col max-h-[calc(100vh-8rem)]">
-                            <div class="p-5 overflow-y-auto custom-scrollbar flex-1">
-                            <h2 class="text-sm font-bold text-gray-900 mb-1">
-                                Ringkasan Pesanan
-                            </h2>
-                            <p class="text-[11px] text-gray-500 mb-4 pb-3 border-b border-gray-100">Periksa kembali detail pesanan sebelum melanjutkan pembayaran.</p>
-                            
-                            {{-- DETAIL PESANAN --}}
-                            <div class="mb-4">
-                                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Detail Pesanan</h3>
-                                <div class="space-y-1.5 text-xs">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">Jenis Pesanan</span>
-                                        <span class="font-semibold text-gray-900">Nasi Box</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">Menu</span>
-                                        <span id="summary-paket" class="font-semibold text-gray-900 text-right max-w-[140px] truncate">-</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">Jumlah Pesanan</span>
-                                        <span id="summary-porsi" class="font-semibold text-gray-900">0 Box</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">Tanggal Acara</span>
-                                        <span id="summary-tgl-acara" class="font-semibold text-gray-900">-</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">Jam Acara</span>
-                                        <span id="summary-jam-acara" class="font-semibold text-gray-900">-</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- PENERIMAAN PESANAN --}}
-                            <div class="mb-4 pt-3 border-t border-gray-100">
-                                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">PENGIRIMAN PESANAN</h3>
-                                <div class="space-y-1.5 text-xs">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">Metode Pengiriman</span>
-                                        <span id="summary-metode" class="font-semibold text-gray-900">Diambil (Pickup)</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500" id="summary-jam-kirim-label">Jam Ambil</span>
-                                        <span id="summary-jam-kirim" class="font-semibold text-gray-900">-</span>
-                                    </div>
-                                    <div class="flex justify-between" id="summary-alamat-row" style="display: none;">
-                                        <span class="text-gray-500 whitespace-nowrap mr-4">Alamat</span>
-                                        <span id="summary-alamat" class="font-semibold text-gray-900 text-right line-clamp-2">-</span>
-                                    </div>
-                                    <div class="flex justify-between" id="summary-jarak-row" style="display: none;">
-                                        <span class="text-gray-500">Jarak Pengiriman</span>
-                                        <span id="summary-jarak" class="font-semibold text-gray-900">-</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- RINCIAN PEMBAYARAN --}}
-                            <div class="mb-4 pt-3 border-t border-gray-100">
-                                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Rincian Pembayaran</h3>
-                                <div class="space-y-1.5 text-xs mb-3">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-500 font-medium">Subtotal Menu</span>
-                                        <span id="subtotal-menu" class="font-bold text-gray-900">Rp 0</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-500 font-medium" id="summary-ongkir-label">Biaya Pengiriman</span>
-                                        <span id="summary-ongkir" class="font-bold text-gray-900">Rp 0</span>
-                                    </div>
-                                </div>
-                                <div class="border-t border-gray-100 border-dashed pt-2 flex justify-between items-center text-xs">
-                                    <span class="font-bold text-gray-900">Total Tagihan</span>
-                                    <span id="total-tagihan" class="font-bold text-gray-900 text-sm">Rp 0</span>
-                                </div>
-                            </div>
-
-                            {{-- DP DAN SISA --}}
-                            <div class="mb-4">
-                                <div class="flex justify-between items-center text-xs bg-amber-50 rounded-t-xl p-3 border border-amber-200/60 border-b-0">
-                                    <span id="label-payment" class="text-amber-900 font-bold">DP Pembayaran <span class="text-amber-700/70 text-[10px] font-normal">(25%)</span></span>
-                                    <span id="dp-amount" class="font-bold text-amber-700 text-sm">Rp 0</span>
-                                </div>
-                                <div id="sisa-pelunasan-container" class="flex justify-between items-center text-xs bg-gray-50 rounded-b-xl p-3 border border-gray-200/60">
-                                    <span class="text-gray-600 font-bold">Sisa Pelunasan</span>
-                                    <span id="summary-sisa-pelunasan" class="font-bold text-gray-800">Rp 0</span>
-                                </div>
-                            </div>
-                            
-                            {{-- BATAS WAKTU --}}
-                            <div class="mb-4 p-3 bg-blue-50/50 border border-blue-100 rounded-xl">
-                                <div class="flex justify-between items-center text-xs mb-1">
-                                    <span class="text-blue-800 font-bold">Batas Pelunasan</span>
-                                    <span id="summary-batas-pelunasan" class="font-bold text-blue-900">-</span>
-                                </div>
-                                <p class="text-[9px] text-blue-700 leading-relaxed">Pelunasan dilakukan paling lambat H-3 sebelum hari acara.</p>
-                            </div>
-
-                            <div class="mb-5 p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[10px] text-gray-600 space-y-1.5 leading-relaxed">
-                                <p class="font-bold text-gray-800 mb-1.5">Syarat & Ketentuan Nasi Box:</p>
-                                <ul class="list-disc pl-3 space-y-1 text-[9px]">
-                                    <li>Pemesanan dilakukan minimal H-4 sebelum hari pelaksanaan acara.</li>
-                                    <li>Dikenakan pembayaran uang muka (DP) sebesar 25%.</li>
-                                    <li>Jika membatalkan pesanan, dikenakan potongan biaya 25% dari DP atau total yang telah dibayarkan.</li>
-                                </ul>
-                            </div>
-
-                            </div>
-                            
-                            {{-- STICKY SUBMIT BUTTON --}}
-                            <div class="p-5 border-t border-gray-100 bg-white rounded-b-xl shrink-0">
-                                <button type="submit" id="submitBtn"
-                                        class="w-full bg-[#0D3024] hover:bg-[#1a4a35] text-white font-semibold text-xs py-2.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]">
-                                    Lanjut Pembayaran
-                                </button>
-                            </div>
-                        </div>
-                    </div> {{-- END RIGHT COLUMN --}}
-                </div> {{-- END GRID --}}
-
+                        @include('pelanggan.pesanan.partials._summary', ['config' => $summaryConfig])
+                    </div>
+                </div>
             </form>
         </div>
     </section>
 
     @push('scripts')
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-    <script>
-        const minDate = "{{ \Carbon\Carbon::today()->addDays(4)->format('Y-m-d') }}";
-        let hargaMenu = 0;
-        let selectedPaketId = null;
-        let metodePengiriman = 'pickup';
-        let jarakKm = 0;
+        @include('pelanggan.pesanan.partials._order-script', ['config' => $orderConfig])
 
-        // Peta & Jarak
-        const bbcLat = -6.8244057;
-        const bbcLng = 107.5289353;
-        let map, marker, restoMarker;
-
-        function initMap() {
-            if(map) return;
-            // Initialize Map
-            map = L.map('map', {
-                zoomControl: false // Disable default zoom control
-            }).setView([bbcLat, bbcLng], 14);
-
-            // Add Zoom Control to Bottom Left
-            L.control.zoom({
-                position: 'bottomleft'
-            }).addTo(map);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-
-            const restoIcon = L.divIcon({
-                html: '<div class="w-8 h-8 bg-white border border-gray-200 shadow-sm rounded-full flex items-center justify-center text-gray-600"><i class="ph ph-storefront text-lg"></i></div>',
-                className: '',
-                iconSize: [32, 32],
-                iconAnchor: [16, 16],
-                tooltipAnchor: [0, -20]
-            });
-            const userIcon = L.divIcon({
-                html: '<div class="w-8 h-8 bg-primary shadow-md shadow-primary/30 rounded-full flex items-center justify-center text-white"><i class="ph-bold ph-map-pin text-lg"></i></div>',
-                className: '',
-                iconSize: [32, 32],
-                iconAnchor: [16, 16],
-                tooltipAnchor: [0, -20]
-            });
-
-            restoMarker = L.marker([bbcLat, bbcLng], {icon: restoIcon}).addTo(map);
-            restoMarker.bindTooltip("Saung Babakan Cinta", {permanent: true, direction: 'top', offset: [0, -10], className: 'resto-tooltip'}).openTooltip();
-
-            let initLat = document.getElementById('inputLat').value || bbcLat;
-            let initLng = document.getElementById('inputLng').value || bbcLng;
-            marker = L.marker([initLat, initLng], {icon: userIcon, draggable: true}).addTo(map);
-            marker.bindTooltip("Alamatmu di sini", {permanent: true, direction: 'top', offset: [0, -10], className: 'address-tooltip'}).openTooltip();
-
-            marker.on('dragend', function(e) {
-                const pos = marker.getLatLng();
-                document.getElementById('inputLat').value = pos.lat;
-                document.getElementById('inputLng').value = pos.lng;
-                hitungJarakOSRM(bbcLat, bbcLng, pos.lat, pos.lng);
-                updateAlamatText(pos.lat, pos.lng);
-            });
-
-            if (document.getElementById('inputLat').value) {
-                map.setView([initLat, initLng], 14);
-                hitungJarakOSRM(bbcLat, bbcLng, initLat, initLng);
-            } else {
-                // Coba dapatkan lokasi pengguna saat ini (GPS) secara otomatis
-                locateUser(false);
-            }
-
-            // Add Search Control (Geocoder)
-            const geocoder = L.Control.geocoder({
-                defaultMarkGeocode: false,
-                placeholder: 'Cari lokasi atau alamat...',
-                collapsed: false,
-                position: 'topright'
-            }).addTo(map);
-
-            geocoder.on('markgeocode', function(e) {
-                const bbox = e.geocode.bbox;
-                const poly = L.polygon([
-                    bbox.getSouthEast(),
-                    bbox.getNorthEast(),
-                    bbox.getNorthWest(),
-                    bbox.getSouthWest()
-                ]);
-                map.fitBounds(poly.getBounds());
-                
-                marker.setLatLng(e.geocode.center);
-                
-                const pos = marker.getLatLng();
-                document.getElementById('inputLat').value = pos.lat;
-                document.getElementById('inputLng').value = pos.lng;
-                hitungJarakOSRM(bbcLat, bbcLng, pos.lat, pos.lng);
-                
-                // Update card text
-                if (e.geocode.name) {
-                    document.getElementById('cardAlamat').textContent = e.geocode.name;
-                    document.getElementById('alamatDelivery').value = e.geocode.name;
-                }
-            })
-            .addTo(map);
-        }
-
-        function locateUser(showAlert = true) {
-            if (showAlert) document.getElementById('cardAlamat').textContent = "Mencari lokasi GPS...";
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    
-                    marker.setLatLng([userLat, userLng]);
-                    map.setView([userLat, userLng], 15);
-                    
-                    document.getElementById('inputLat').value = userLat;
-                    document.getElementById('inputLng').value = userLng;
-                    
-                    hitungJarakOSRM(bbcLat, bbcLng, userLat, userLng);
-                    updateAlamatText(userLat, userLng);
-                }, function(error) {
-                    console.log("Geolocation error:", error);
-                    if (showAlert) {
-                        window.showToast('error', "Gagal mendeteksi lokasi. Pastikan izin lokasi (GPS) diaktifkan di browser.");
-                        document.getElementById('cardAlamat').textContent = "Geser pin ke lokasi kamu...";
-                    }
-                }, { enableHighAccuracy: true });
-            } else if (showAlert) {
-                window.showToast('error', "Browser Anda tidak mendukung fitur lokasi GPS.");
-            }
-        }
-
-        async function updateAlamatText(lat, lng) {
-            document.getElementById('cardAlamat').textContent = "Mencari alamat...";
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                const data = await res.json();
-                if(data && data.display_name) {
-                    const shortAddr = data.display_name.split(',').slice(0, 3).join(',');
-                    document.getElementById('cardAlamat').textContent = shortAddr;
-                    if(!document.getElementById('alamatDelivery').value) {
-                         document.getElementById('alamatDelivery').value = data.display_name;
-                    }
-                } else {
-                    document.getElementById('cardAlamat').textContent = "Lokasi ditandai";
-                }
-            } catch(e) {
-                document.getElementById('cardAlamat').textContent = "Lokasi ditandai";
-            }
-        }
-
-        async function hitungJarakOSRM(lat1, lng1, lat2, lng2) {
-            try {
-                const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=false`);
-                const data = await res.json();
-                if(data.routes && data.routes.length > 0) {
-                    jarakKm = data.routes[0].distance / 1000;
-                    document.getElementById('inputJarak').value = jarakKm.toFixed(2);
-                    document.getElementById('textJarak').textContent = jarakKm.toFixed(2) + ' km';
-                    
-                    document.getElementById('jarakWarning').classList.add('hidden');
-                    document.getElementById('submitBtn').disabled = false;
-                    hitungTotalPreview(); // Update ongkir via ajax
-                }
-            } catch(e) {
-                console.error("OSRM Error", e);
-            }
-        }
-
-        document.querySelectorAll('.metode-radio').forEach(r => {
-            r.addEventListener('change', (e) => {
-                metodePengiriman = e.target.value;
-                if(metodePengiriman === 'delivery') {
-                    document.getElementById('deliverySection').classList.remove('hidden');
-                    document.getElementById('alamatDelivery').required = true;
-                    document.getElementById('alamatDelivery').name = 'lokasi_acara';
-                    setTimeout(initMap, 200);
-                } else {
-                    document.getElementById('deliverySection').classList.add('hidden');
-                    document.getElementById('alamatDelivery').required = false;
-                    document.getElementById('alamatDelivery').name = '';
-                }
-                hitungTotalPreview();
-            });
-        });
-
-        // Pilih Paket
-        document.querySelectorAll('.paket-card').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('.paket-card').forEach(c => {
-                    c.classList.remove('border-[#0D3024]', 'bg-[#0D3024]/5', 'ring-1', 'ring-[#0D3024]');
-                    c.classList.add('border-gray-200', 'bg-white');
-                    c.querySelector('.selected-indicator').style.opacity = '0';
-                });
-                card.classList.add('border-[#0D3024]', 'bg-[#0D3024]/5', 'ring-1', 'ring-[#0D3024]');
-                card.classList.remove('border-gray-200', 'bg-white');
-                card.querySelector('.selected-indicator').style.opacity = '1';
-                card.querySelector('.paket-radio').checked = true;
-                
-                selectedPaketId = card.dataset.paketId;
-                hargaMenu = parseInt(card.dataset.harga);
-                
-                // Update Paket summary name
-                const pName = card.querySelector('div h3') ? card.querySelector('div h3').textContent : 'Menu Terpilih';
-                document.getElementById('summary-paket').textContent = pName;
-                
-                loadKomponen(selectedPaketId);
-                hitungTotalPreview();
-            });
-        });
-
-        async function loadKomponen(paketId) {
-            const sec = document.getElementById('sec-komponen');
-            const container = document.getElementById('komponen-container');
-            sec.classList.remove('hidden');
-            container.innerHTML = '<p class="text-gray-500 text-xs font-medium">Memuat komponen menu...</p>';
-
-            const res = await fetch(`/pesan/catering/komponen/${paketId}`);
-            const komponens = await res.json();
-
-            container.innerHTML = '';
-            komponens.forEach(komp => {
-                const div = document.createElement('div');
-                div.className = 'border border-gray-200/80 rounded-xl p-3.5 bg-gray-50/50';
-                
-                if (komp.tipe === 'fixed') {
-                    div.innerHTML = `
-                        <p class="text-xs font-bold text-gray-800 mb-2">${komp.nama_komponen}</p>
-                        <div class="flex flex-wrap gap-2">
-                            ${komp.opsi.map(o => `
-                                <div class="flex items-center gap-1.5 px-3 py-1 bg-[#0D3024]/10 text-[#0D3024] text-xs rounded-lg font-semibold">
-                                    ${o.menu.foto ? `<img src="/storage/${o.menu.foto}" alt="${o.menu.nama}" class="w-4 h-4 rounded-full object-cover">` : ''}
-                                    <span>${o.menu.nama} ✓</span>
-                                </div>
-                            `).join('')}
-                        </div>`;
-                } else {
-                    div.innerHTML = `
-                        <p class="text-xs font-bold text-gray-800 mb-2">${komp.nama_komponen} <span class="text-amber-600 font-medium text-[11px]">(pilih 1)</span></p>
-                        <div class="flex flex-wrap gap-2">
-                            ${komp.opsi.map(o => `
-                                <label class="cursor-pointer group relative">
-                                    <input type="radio" name="komponen[${komp.id}]" value="${o.menu.id}" class="opacity-0 absolute w-0 h-0 peer" required>
-                                    <div class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 bg-white rounded-xl font-medium text-gray-800 text-xs peer-checked:bg-[#0D3024] peer-checked:border-[#0D3024] peer-checked:text-white transition-all duration-200 group-hover:border-[#0D3024]/50">
-                                        ${o.menu.foto ? `<img src="/storage/${o.menu.foto}" alt="${o.menu.nama}" class="w-4 h-4 rounded-full object-cover">` : ''}
-                                        <span>${o.menu.nama}</span>
-                                    </div>
-                                </label>`).join('')}
-                        </div>`;
-                }
-                container.appendChild(div);
-            });
-        }
-
-        function formatRp(n) {
-            return 'Rp ' + Math.round(n || 0).toLocaleString('id-ID');
-        }
-
-        let currentTotal = 0;
-        let currentDp = 0;
-
-        function updatePaymentLabel(val) {
-            const label = document.getElementById('label-payment');
-            const amount = document.getElementById('dp-amount');
-            if(val === 'lunas') {
-                label.innerHTML = 'Bayar Lunas <span class="text-amber-700/70 text-[11px] font-normal">(100%)</span>';
-                amount.textContent = formatRp(currentTotal);
-            } else {
-                label.innerHTML = 'DP Pembayaran <span class="text-amber-700/70 text-[11px] font-normal">(25%)</span>';
-                amount.textContent = formatRp(currentDp);
-            }
-            
-            // update styling borders
-            document.querySelectorAll('input[name="opsi_pembayaran"]').forEach(el => {
-                const parent = el.closest('label');
-                if(el.checked) {
-                    parent.classList.add('border-[#0D3024]', 'bg-[#0D3024]/5');
-                    parent.classList.remove('border-gray-200', 'bg-white');
-                } else {
-                    parent.classList.remove('border-[#0D3024]', 'bg-[#0D3024]/5');
-                    parent.classList.add('border-gray-200', 'bg-white');
-                }
-            });
-        }
-
-        async function hitungTotalPreview() {
-            const porsi = parseInt(document.getElementById('jumlahBox').value) || 0;
-            const subtotalMenu = hargaMenu * porsi;
-
-            document.getElementById('subtotal-menu').textContent = formatRp(subtotalMenu);
-            document.getElementById('summary-porsi').textContent = porsi > 0 ? porsi + ' Box' : '0 Box';
-            
-            // Format Dates & Times for summary
-            const tglAcara = document.getElementById('tanggalAcara').value;
-            if(tglAcara) {
-                const dateObj = new Date(tglAcara);
-                document.getElementById('summary-tgl-acara').textContent = dateObj.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-                
-                // Calculate Batas Pelunasan (H-3 for Nasi Box)
-                const batas = new Date(dateObj);
-                batas.setDate(batas.getDate() - 3);
-                document.getElementById('summary-batas-pelunasan').textContent = batas.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-            }
-            document.getElementById('summary-jam-acara').textContent = document.getElementById('jamAcara').value || '-';
-            
-            document.getElementById('summary-jam-kirim').textContent = document.getElementById('jamPengambilan').value || '-';
-
-            if(!selectedPaketId) return;
-
-            try {
-                const res = await fetch("{{ route('pesan.nasibox.preview') }}", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({
-                        paket_id: selectedPaketId,
-                        jumlah_box: porsi,
-                        metode_pengiriman: metodePengiriman,
-                        jarak_km: jarakKm
-                    })
-                });
-                const data = await res.json();
-                
-                if(res.ok) {
-                    if (metodePengiriman === 'delivery') {
-                        document.getElementById('summary-jarak-row').style.display = 'flex';
-                        document.getElementById('summary-alamat-row').style.display = 'flex';
-                        document.getElementById('summary-jarak').textContent = jarakKm ? jarakKm.toFixed(2) + ' km' : '0 km';
-                        document.getElementById('summary-alamat').textContent = document.getElementById('alamatDelivery').value || '-';
-                        document.getElementById('summary-ongkir-label').textContent = 'Biaya Pengiriman';
-                        document.getElementById('summary-metode').textContent = 'Diantar (Delivery)';
-                        document.getElementById('summary-ongkir').textContent = formatRp(data.ongkir || 0);
-                        document.getElementById('summary-jam-kirim-label').textContent = 'Jam Pengiriman';
-                    } else {
-                        document.getElementById('summary-jarak-row').style.display = 'none';
-                        document.getElementById('summary-alamat-row').style.display = 'none';
-                        document.getElementById('summary-ongkir-label').textContent = 'Metode';
-                        document.getElementById('summary-ongkir').textContent = 'Diambil';
-                        document.getElementById('summary-metode').textContent = 'Diambil (Pickup)';
-                        document.getElementById('summary-jam-kirim-label').textContent = 'Jam Ambil';
-                    }
-                    
-                    document.getElementById('total-tagihan').textContent = formatRp(data.total);
-                    currentTotal = data.total;
-                    currentDp = data.dp;
-                    
-                    document.getElementById('summary-sisa-pelunasan').textContent = formatRp(data.total - data.dp);
-                    
-                    const opsiBayar = document.querySelector('input[name="opsi_pembayaran"]:checked').value;
-                    updatePaymentLabel(opsiBayar);
-                    if(opsiBayar === 'lunas') {
-                         document.getElementById('sisa-pelunasan-container').style.display = 'none';
-                         document.getElementById('submitBtn').textContent = 'Bayar Lunas ' + formatRp(data.total);
-                    } else {
-                         document.getElementById('sisa-pelunasan-container').style.display = 'flex';
-                         document.getElementById('submitBtn').textContent = 'Bayar DP ' + formatRp(data.dp);
-                    }
-                    
-                    checkFormValidity();
-                } else {
-                    window.showToast('error', data.error || "Gagal menghitung tagihan.");
-                    document.getElementById('submitBtn').disabled = true;
-                }
-            } catch(e) {
-                console.error(e);
-            }
-        }
-
-        document.getElementById('jumlahBox').addEventListener('input', function() {
-            const warn = document.getElementById('jumlah-warning');
-            const jumlah = parseInt(this.value);
-            if (jumlah < 10) {
-                warn.classList.remove('hidden');
-                warn.textContent = "Minimal order 10 box.";
-            } else if (metodePengiriman === 'delivery' && jumlah < 25) {
-                warn.classList.remove('hidden');
-                warn.textContent = "Minimal order 25 box untuk Delivery. Ubah ke Pickup.";
-            } else {
-                warn.classList.add('hidden');
-            }
-            hitungTotalPreview();
-        });
-
-        // Validasi tanggal
-        document.getElementById('tanggalAcara').addEventListener('change', function() {
-            const warn = document.getElementById('tanggal-warning');
-            if (this.value < minDate) {
-                warn.classList.remove('hidden');
-            } else {
-                warn.classList.add('hidden');
-            }
-            hitungTotalPreview();
-        });
-
-        // Add event listeners to update summary on input
-        document.getElementById('jamAcara').addEventListener('input', hitungTotalPreview);
-        document.getElementById('jamPengambilan').addEventListener('input', hitungTotalPreview);
-        document.getElementById('alamatDelivery').addEventListener('input', hitungTotalPreview);
-        document.querySelectorAll('input[name="opsi_pembayaran"]').forEach(el => el.addEventListener('change', hitungTotalPreview));
-
-        function checkFormValidity() {
-            const form = document.getElementById('nasiBoxForm');
-            const submitBtn = document.getElementById('submitBtn');
-            
-            let isValid = form.checkValidity();
-            
-            const porsi = parseInt(document.getElementById('jumlahBox').value) || 0;
-            const metodePengiriman = document.querySelector('input[name="metode_pengiriman"]:checked').value;
-
-            if(porsi < 10) isValid = false;
-            if(metodePengiriman === 'delivery' && porsi < 25) isValid = false;
-            if(!selectedPaketId) isValid = false;
-
-            if (metodePengiriman === 'delivery') {
-                const alamat = document.getElementById('alamatDelivery').value;
-                if (!alamat || alamat.trim() === '') isValid = false;
-            }
-
-            submitBtn.disabled = !isValid;
-        }
-
-        document.querySelectorAll('#nasiBoxForm input, #nasiBoxForm select, #nasiBoxForm textarea').forEach(el => {
-            el.addEventListener('input', checkFormValidity);
-            el.addEventListener('change', checkFormValidity);
-        });
-
-        // Auto-select paket dari URL parameter
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const paketId = urlParams.get('paket_id');
-            if (paketId) {
-                const paketCard = document.querySelector(`.paket-card[data-paket-id="${paketId}"]`);
-                if (paketCard) {
-                    paketCard.click();
-                }
-            }
-        });
-    </script>
     @endpush
 </x-layouts.landing>

@@ -7,15 +7,28 @@
         notifications: [],
         unreadCount: 0,
         loading: false,
+        initialized: false,
         
         fetchNotifications() {
             this.loading = true;
             fetch('/notifikasi/unread?type={{ $type }}')
                 .then(res => res.json())
                 .then(data => {
+                    if (this.initialized && data.unread_count > this.unreadCount) {
+                        if (typeof window.showToast === 'function') {
+                            const newNotif = data.notifications[0];
+                            if (newNotif) {
+                                window.showToast('info', newNotif.data.title + ' - ' + newNotif.data.message);
+                            } else {
+                                window.showToast('info', 'Ada notifikasi pesanan baru!');
+                            }
+                        }
+                    }
+                    
                     this.notifications = data.notifications;
                     this.unreadCount = data.unread_count;
                     this.loading = false;
+                    this.initialized = true;
                 });
         },
         
@@ -43,7 +56,7 @@
             });
         }
     }" 
-    x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 30000)" 
+    x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 10000)" 
     class="relative">
     
     <button @click="showNotifications = !showNotifications; if(showNotifications && unreadCount > 0) fetchNotifications()"

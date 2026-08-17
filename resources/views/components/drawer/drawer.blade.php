@@ -8,7 +8,8 @@
      @open-{{ $id }}.window="show = true"
      @close-{{ $id }}.window="show = false"
      x-cloak
-     class="fixed inset-0 z-50 overflow-hidden"
+     :class="sidebarOpen ? 'left-[280px]' : 'left-20'"
+     class="fixed inset-y-0 right-0 z-[60] overflow-hidden transition-all duration-300"
      aria-labelledby="slide-over-title" 
      role="dialog" 
      aria-modal="true"

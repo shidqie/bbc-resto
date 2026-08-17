@@ -61,6 +61,7 @@ function posSystemData() {
     catatanVoidInput: '',
     showCetakStrukModal: false,
     showSavePrintModal: false,
+    showSuccessModal: false,
     cetakStrukTargetId: null,
     pendingCheckoutAction: false,
     checkoutTargetMeja: null,
@@ -216,6 +217,7 @@ function posSystemData() {
     rightPanelMode: 'cart', // 'cart' or 'receipt'
     receiptTab: 'all', // 'all', 'dapur', 'meja'
     showSavePrintModal: false,
+    showSuccessModal: false,
     savedPesananId: null,
     savedPesananObject: null,
     activePrintEmbed: 'gabungan',
@@ -242,6 +244,10 @@ function posSystemData() {
 
     printSilentIframe(url) {
       if (!url) return;
+      // Add cache buster
+      const separator = url.includes('?') ? '&' : '?';
+      const noCacheUrl = url + separator + '_t=' + new Date().getTime();
+
       let iframe = document.getElementById('posPrintIframe');
       if (!iframe) {
         iframe = document.createElement('iframe');
@@ -249,13 +255,14 @@ function posSystemData() {
         iframe.style.position = 'fixed';
         iframe.style.right = '0';
         iframe.style.bottom = '0';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
+        iframe.style.width = '270px'; // Set width to typical receipt width just in case
+        iframe.style.height = '100px';
         iframe.style.border = '0';
         iframe.style.visibility = 'hidden';
+        iframe.style.zIndex = '-9999';
         document.body.appendChild(iframe);
       }
-      iframe.src = url;
+      iframe.src = noCacheUrl;
       iframe.onload = function() {
         setTimeout(() => {
           try {
@@ -446,8 +453,7 @@ function posSystemData() {
 
             // Print Struk untuk aksi Simpan
             if (action === 'simpan') {
-              this.openCetakStrukModal(data.pesanan_id, action, this.selectedTable);
-              setTimeout(() => this.executePrintSelection(), 200);
+              this.showSuccessModal = true;
             } else if (action === 'bayar') {
               window.location.href = `/pos/dinein/meja/${this.selectedTable}/checkout`;
             }
@@ -539,6 +545,18 @@ function posSystemData() {
                                     }, 15000);
                                 }
                             });
+                            try {
+                                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                                const osc = ctx.createOscillator();
+                                const gainNode = ctx.createGain();
+                                osc.type = 'sine';
+                                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                                gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+                                osc.connect(gainNode);
+                                gainNode.connect(ctx.destination);
+                                osc.start();
+                                osc.stop(ctx.currentTime + 0.2);
+                            } catch(e) {}
                             
                             Swal.mixin({
                                 toast: true,
@@ -1214,7 +1232,9 @@ document.addEventListener('alpine:init', () => {
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
         @forelse($mejas as $m)
           @php
-            $qrTargetUrl = !empty(trim($m->qr_token)) ? route('qr.menu', ['token' => trim($m->qr_token)]) : route('qr.menu.no-token');
+            $appUrl = rtrim(config('app.url'), '/');
+            $path = !empty(trim($m->qr_token)) ? '/qr-menu/' . trim($m->qr_token) : '/qr-menu';
+            $qrTargetUrl = $appUrl . $path;
             $logoUrl = asset('images/logo-saung.png');
             $cleanNomorMeja = trim(preg_replace('/^meja\s*/i', '', $m->nomor_meja));
           @endphp
@@ -2029,6 +2049,46 @@ document.addEventListener('alpine:init', () => {
           Print Kitchen
         </a>
       </div>
+    </div>
+  </div>
+
+  {{-- ── MODAL PESANAN BERHASIL (SUCCESS MODAL) ── --}}
+  <div x-show="showSuccessModal" x-cloak x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" style="display: none;">
+    <div class="relative z-10 w-full max-w-[480px] bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center mx-4"
+         @click.outside="showSuccessModal = false"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-90"
+         x-transition:enter-end="opacity-100 scale-100">
+        
+        <button type="button" @click="showSuccessModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <x-heroicon-o-x-mark class="w-6 h-6" />
+        </button>
+
+        <div class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500 mb-5 relative">
+            <div class="absolute inset-0 rounded-full border border-emerald-200 animate-ping opacity-50"></div>
+            <x-heroicon-s-check class="w-10 h-10" />
+        </div>
+
+        <h2 class="text-2xl font-bold text-slate-800 mb-1">Pesanan Berhasil!</h2>
+        <p class="text-xs text-slate-500 mb-4 font-medium uppercase tracking-wider">Nomor Pesanan</p>
+        
+        <div class="text-lg font-bold text-slate-800 tracking-wide mb-3" x-text="savedPesananObject ? (savedPesananObject.id_pesanan || ('DIN-' + savedPesananObject.id)) : '-'">
+        </div>
+        
+        <div class="text-3xl font-black text-[#0D3024] mb-8" x-text="savedPesananObject ? ('Rp ' + formatPrice(savedPesananObject.total_tagihan)) : 'Rp 0'">
+        </div>
+
+        <div class="w-full space-y-3">
+            <button @click="window.open('/pos/dinein/pesanan/' + savedPesananId + '/print-gabungan', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-[#0D3024] text-white rounded-xl font-bold text-sm hover:bg-[#0a241b] transition flex justify-center items-center gap-2 shadow-sm">
+                <x-heroicon-o-printer class="w-5 h-5 text-emerald-400" /> Cetak Struk
+            </button>
+            <button @click="window.open('/pos/dinein/pesanan/' + savedPesananId + '/print-dapur', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-emerald-50 border border-emerald-200 text-[#0D3024] rounded-xl font-bold text-sm hover:bg-emerald-100 transition flex justify-center items-center gap-2 shadow-sm">
+                <x-heroicon-o-printer class="w-5 h-5 text-[#0D3024]" /> Cetak Struk Dapur
+            </button>
+            <button @click="showSuccessModal = false; resetCartPanel()" class="w-full py-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold text-sm transition flex justify-center items-center">
+                Pesanan Baru
+            </button>
+        </div>
     </div>
   </div>
 

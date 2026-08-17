@@ -1,5 +1,5 @@
 <x-landing.section id="galeri" title="Galeri">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-primary/10">
         @foreach([
             asset('images/fasad_rumah_kayu.webp'),
             asset('images/pemandangan_malam.webp'),
@@ -7,8 +7,8 @@
             asset('images/saungbabakan.webp'),
             asset('images/homepage.webp')
         ] as $img)
-            <div class="rounded-lg overflow-hidden aspect-square">
-                <img src="{{ $img }}" alt="Galeri" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+            <div class="overflow-hidden aspect-square bg-canvas">
+                <img src="{{ $img }}" alt="Galeri" class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500">
             </div>
         @endforeach
     </div>

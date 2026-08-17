@@ -18,20 +18,16 @@ class NasiBoxOrderTest extends TestCase
 
     private function seedReferences(): void
     {
-        $statuses = [1 => 'MENUNGGU', 2 => 'DIKONFIRMASI', 3 => 'DIPROSES', 4 => 'SIAP', 5 => 'SELESAI', 6 => 'DIBATALKAN'];
-        foreach ($statuses as $id => $kode) {
-            StatusPesanan::create(['id' => $id, 'kode_status' => $kode, 'nama_status' => $kode]);
-        }
-
-        JenisPesanan::create(['id' => 3, 'kode_jenis' => 'NASI_BOX', 'nama_jenis' => 'Nasi Box']);
-        JenisMenu::create(['id' => 1, 'kode_jenis' => 'PAKET', 'nama_jenis' => 'Paket']);
+        // StatusPesanan is seeded by migrations
+        JenisPesanan::firstOrCreate(['id' => 3], ['kode_jenis' => 'NASI_BOX', 'nama_jenis' => 'Nasi Box']);
+        JenisMenu::firstOrCreate(['id' => 1], ['kode_jenis' => 'PAKET', 'nama_jenis' => 'Paket']);
     }
 
     private function makePaket(): Menu
     {
         return Menu::create([
             'jenis_menu_id' => 1,
-            'kode_menu' => 'NBX-HEMAT',
+            'id_menu' => 'NBX-HEMAT',
             'nama_menu' => 'Nasi Box Hemat',
             'harga_jual' => 17_000,
             'status_aktif' => true,
@@ -46,22 +42,25 @@ class NasiBoxOrderTest extends TestCase
         $response = $this->post(route('pesan.nasibox.store'), [
             'nama_pemesan' => 'Budi Santoso',
             'kontak' => '081234567890',
-            'tanggal_acara' => now()->addDays(3)->format('Y-m-d'),
+            'tanggal_acara' => now()->addDays(5)->format('Y-m-d'),
             'lokasi_acara' => 'Jl. Raya Sukabumi No. 1',
-            'metode_pengiriman' => 'pickup',
+            'metode_pengiriman' => 'delivery',
             'paket_id' => $paket->id,
             'jumlah_box' => 10,
             'opsi_pembayaran' => 'dp',
             'catatan' => '',
         ]);
 
+        if (session()->has('errors')) {
+            dump(session('errors')->getBag('default')->getMessages());
+        }
         $response->assertSessionHasNoErrors();
         $response->assertRedirect();
 
         $pesanan = Pesanan::where('jenis_pesanan_id', 3)->first();
         $this->assertNotNull($pesanan);
         $this->assertEquals(10 * 17_000, (float) $pesanan->total_tagihan);
-        $this->assertSame('Jl. Raya Sukabumi No. 1', $pesanan->jadwal_pesanan->alamat_pengantaran);
+        $this->assertSame('Jl. Raya Sukabumi No. 1', $pesanan->jadwal_pesanan->alamat_pengiriman);
         $this->assertSame('Nasi Box Hemat', $pesanan->detail_pesanan->first()->menu->nama_menu);
     }
 
@@ -73,8 +72,8 @@ class NasiBoxOrderTest extends TestCase
         $response = $this->post(route('pesan.nasibox.store'), [
             'nama_pemesan' => 'Budi Santoso',
             'kontak' => '081234567890',
-            'tanggal_acara' => now()->addDays(3)->format('Y-m-d'),
-            'metode_pengiriman' => 'pickup',
+            'tanggal_acara' => now()->addDays(5)->format('Y-m-d'),
+            'metode_pengiriman' => 'delivery',
             'paket_id' => $paket->id,
             'jumlah_box' => 10,
             'opsi_pembayaran' => 'dp',

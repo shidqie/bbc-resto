@@ -22,3 +22,9 @@ Schedule::command('stok:check-menipis')
 Schedule::command('pesanan:auto-cancel')
     ->daily()
     ->description('Batalkan pesanan yang belum lunas melewati batas hari pelunasan');
+
+// Cek kedaluwarsa sesi pembayaran (DP 15 menit, Pelunasan H-3)
+Schedule::command('payments:expire')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->description('Batalkan sesi pembayaran yang sudah kedaluwarsa');

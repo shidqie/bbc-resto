@@ -134,9 +134,9 @@
         const dataCatering = {!! json_encode($dataCatering) !!};
         const dataNasiBox = {!! json_encode($dataNasiBox) !!};
         
-        const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-        gradient.addColorStop(0, 'rgba(23, 23, 23, 0.12)');
-        gradient.addColorStop(1, 'rgba(23, 23, 23, 0)');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
         
         new Chart(ctx, {
             type: 'bar',
@@ -147,15 +147,15 @@
                         type: 'line',
                         label: 'Pendapatan (Rp)',
                         data: dataPendapatan,
-                        borderColor: '#0D3024',
-                        backgroundColor: '#0D3024',
-                        borderWidth: 1.5,
+                        borderColor: '#3B82F6',
+                        backgroundColor: gradient,
+                        borderWidth: 2.5,
                         pointBackgroundColor: '#FFFFFF',
-                        pointBorderColor: '#0D3024',
-                        pointBorderWidth: 1.5,
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                        fill: false,
+                        pointBorderColor: '#3B82F6',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
                         tension: 0.4,
                         yAxisID: 'y'
                     },
@@ -163,27 +163,27 @@
                         type: 'bar',
                         label: 'Dine In',
                         data: dataDineIn,
-                        backgroundColor: '#3B82F6',
-                        borderRadius: 3,
-                        barThickness: 16,
+                        backgroundColor: '#8B5CF6',
+                        borderRadius: 4,
+                        barThickness: 24,
                         yAxisID: 'y1'
                     },
                     {
                         type: 'bar',
                         label: 'Katering',
                         data: dataCatering,
-                        backgroundColor: '#10B981',
-                        borderRadius: 3,
-                        barThickness: 16,
+                        backgroundColor: '#16A34A',
+                        borderRadius: 4,
+                        barThickness: 24,
                         yAxisID: 'y1'
                     },
                     {
                         type: 'bar',
                         label: 'Nasi Box',
                         data: dataNasiBox,
-                        backgroundColor: '#F59E0B',
-                        borderRadius: 3,
-                        barThickness: 16,
+                        backgroundColor: '#D97706',
+                        borderRadius: 4,
+                        barThickness: 24,
                         yAxisID: 'y1'
                     }
                 ]
@@ -214,17 +214,19 @@
                 },
                 scales: {
                     x: {
+                        stacked: true,
                         grid: { display: false },
                         ticks: { font: { size: 10 }, color: '#A3A3A3', maxRotation: 0, minRotation: 0 }
                     },
                     y: {
+                        beginAtZero: true,
                         type: 'linear',
                         display: true,
                         position: 'left',
-                        grid: { color: '#F5F5F5' },
+                        grid: { color: '#F3F4F6' },
                         ticks: {
                             font: { size: 11 },
-                            color: '#A3A3A3',
+                            color: '#6B7280',
                             callback: function(value) {
                                 if(value >= 1000000) return 'Rp ' + (value / 1000000) + ' Jt';
                                 if(value >= 1000) return 'Rp ' + (value / 1000) + ' Rb';
@@ -233,6 +235,8 @@
                         }
                     },
                     y1: {
+                        beginAtZero: true,
+                        stacked: true,
                         type: 'linear',
                         display: true,
                         position: 'right',
@@ -240,7 +244,7 @@
                         ticks: {
                             stepSize: 1,
                             font: { size: 11 },
-                            color: '#A3A3A3',
+                            color: '#6B7280',
                             callback: function(value) {
                                 return value + ' trx';
                             }

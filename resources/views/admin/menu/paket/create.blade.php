@@ -67,7 +67,7 @@
 
                 {{-- Komponen Paket --}}
                 <div class="space-y-4 pt-2">
-                    @include('admin.menu.paket.partials.komponen-builder', ['existingKomponen' => []])
+                    @include('admin.menu.paket.partials.komponen-builder', ['existingKomponen' => [], 'menus' => $menus])
                 </div>
 
                 <div class="pt-4 border-t border-gray-100 flex justify-end gap-2">

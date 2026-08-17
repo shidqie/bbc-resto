@@ -36,32 +36,25 @@ class StockAuditTest extends TestCase
 
     private function seedReferences(): void
     {
-        $statuses = [1 => 'MENUNGGU', 2 => 'DIKONFIRMASI', 3 => 'DIPROSES', 4 => 'SIAP', 5 => 'SELESAI', 6 => 'DIBATALKAN'];
-        foreach ($statuses as $id => $kode) {
-            StatusPesanan::create(['id' => $id, 'kode_status' => $kode, 'nama_status' => $kode]);
-        }
+        // StatusPesanan & StatusPembayaran are populated by migrations.
 
-        StatusPembayaran::create(['id' => 1, 'kode_status' => 'MENUNGGU', 'nama_status' => 'Menunggu Pembayaran']);
-        StatusPembayaran::create(['id' => 2, 'kode_status' => 'SEBAGIAN', 'nama_status' => 'Dibayar Sebagian']);
-        StatusPembayaran::create(['id' => 3, 'kode_status' => 'LUNAS', 'nama_status' => 'Lunas']);
+        JenisPembayaran::updateOrCreate(['id' => 1], ['kode_jenis' => 'PENUH', 'nama_jenis' => 'Pembayaran Penuh']);
+        JenisPembayaran::updateOrCreate(['id' => 2], ['kode_jenis' => 'UANG_MUKA', 'nama_jenis' => 'Uang Muka']);
+        JenisPembayaran::updateOrCreate(['id' => 3], ['kode_jenis' => 'PELUNASAN', 'nama_jenis' => 'Pelunasan']);
 
-        JenisPembayaran::create(['id' => 1, 'kode_jenis' => 'PENUH', 'nama_jenis' => 'Pembayaran Penuh']);
-        JenisPembayaran::create(['id' => 2, 'kode_jenis' => 'UANG_MUKA', 'nama_jenis' => 'Uang Muka']);
-        JenisPembayaran::create(['id' => 3, 'kode_jenis' => 'PELUNASAN', 'nama_jenis' => 'Pelunasan']);
+        JenisPesanan::updateOrCreate(['id' => 1], ['kode_jenis' => 'DINE_IN', 'nama_jenis' => 'Dine In / Takeaway']);
+        JenisMenu::updateOrCreate(['id' => 1], ['kode_jenis' => 'MAKANAN', 'nama_jenis' => 'Makanan']);
 
-        JenisPesanan::create(['id' => 1, 'kode_jenis' => 'DINE_IN', 'nama_jenis' => 'Dine In / Takeaway']);
-        JenisMenu::create(['id' => 1, 'kode_jenis' => 'MAKANAN', 'nama_jenis' => 'Makanan']);
-
-        JenisMutasiStok::create(['id' => 1, 'kode_jenis' => 'MASUK', 'nama_jenis' => 'Masuk', 'arah_stok' => 'MASUK']);
-        JenisMutasiStok::create(['id' => 2, 'kode_jenis' => 'KELUAR', 'nama_jenis' => 'Keluar', 'arah_stok' => 'KELUAR']);
+        JenisMutasiStok::updateOrCreate(['id' => 1], ['kode_jenis' => 'MASUK', 'nama_jenis' => 'Masuk', 'arah_stok' => 'MASUK']);
+        JenisMutasiStok::updateOrCreate(['id' => 2], ['kode_jenis' => 'KELUAR', 'nama_jenis' => 'Keluar', 'arah_stok' => 'KELUAR']);
 
         $statusPengadaan = [1 => 'MENUNGGU', 2 => 'DISETUJUI', 3 => 'DITOLAK', 4 => 'SELESAI'];
         foreach ($statusPengadaan as $id => $kode) {
-            StatusPengadaan::create(['id' => $id, 'kode_status' => $kode, 'nama_status' => $kode]);
+            StatusPengadaan::updateOrCreate(['id' => $id], ['kode_status' => $kode, 'nama_status' => $kode]);
         }
 
-        $satuan = Satuan::create(['id' => 1, 'nama_satuan' => 'Gram', 'singkatan' => 'g']);
-        $kategori = KategoriBahanBaku::create(['id' => 1, 'nama_kategori' => 'Bumbu']);
+        $satuan = Satuan::updateOrCreate(['id' => 1], ['nama_satuan' => 'Gram', 'singkatan' => 'g']);
+        $kategori = KategoriBahanBaku::updateOrCreate(['id' => 1], ['nama_kategori' => 'Bumbu']);
 
         $peran = Peran::create(['id' => 1, 'nama_peran' => 'Pemilik']);
         Pengguna::create([
@@ -76,7 +69,7 @@ class StockAuditTest extends TestCase
             'id' => 1,
             'kategori_bahan_baku_id' => $kategori->id,
             'satuan_id' => $satuan->id,
-            'kode_bahan' => 'BERAS',
+            'id_bahan_baku' => 'BERAS',
             'nama_bahan' => 'Beras',
             'stok_minimal' => 10,
             'status_aktif' => true,
@@ -104,7 +97,7 @@ class StockAuditTest extends TestCase
         return Menu::create([
             'id' => 1,
             'jenis_menu_id' => 1,
-            'kode_menu' => 'MNU001',
+            'id_menu' => 'MNU001',
             'nama_menu' => 'Nasi Liwet',
             'harga_jual' => 17_000,
             'status_aktif' => true,
@@ -153,7 +146,7 @@ class StockAuditTest extends TestCase
         $this->makeResep();
 
         $pesanan = Pesanan::create([
-            'nomor_pesanan' => 'DIN-0001',
+            'id_pesanan' => 'P-001',
             'tanggal_pesanan' => now(),
             'jenis_pesanan_id' => 1,
             'status_pesanan_id' => 1,
@@ -201,16 +194,25 @@ class StockAuditTest extends TestCase
     {
         $this->seedReferences();
 
-        $pengadaan = PengadaanBahan::create([
-            'nomor_pengadaan' => 'PO-0001',
+        $pengadaan_awal = \App\Models\PengadaanBahan::create([
+            'id_pengadaan' => 'REQ-001',
             'diajukan_oleh' => 1,
             'status_pengadaan_id' => 2,
             'jenis_pengadaan' => 'harian',
             'tanggal_pengadaan' => now(),
         ]);
 
-        DetailPengadaanBahan::create([
-            'pengadaan_bahan_id' => $pengadaan->id,
+        $pengadaan = \App\Models\PurchaseOrder::create([
+            'nomor_po' => 'PO-001',
+            'pengadaan_bahan_id' => $pengadaan_awal->id,
+            'supplier' => 'PT Test Supplier',
+            'tanggal_po' => now(),
+            'status' => 'dikirim',
+            'dibuat_oleh' => 1,
+        ]);
+
+        $detail_pengadaan = \App\Models\DetailPengadaanBahan::create([
+            'pengadaan_bahan_id' => $pengadaan_awal->id,
             'bahan_baku_id' => 1,
             'jumlah_dipesan' => 100,
             'satuan_id' => 1,
@@ -218,12 +220,26 @@ class StockAuditTest extends TestCase
             'subtotal' => 1_000_000,
         ]);
 
-        $this->actingAs(Pengguna::find(1))
-            ->post(route('pengadaan.proses-terima', $pengadaan->id), [
+        $detail_po = \App\Models\DetailPurchaseOrder::create([
+            'purchase_order_id' => $pengadaan->id,
+            'detail_pengadaan_bahan_id' => $detail_pengadaan->id,
+            'bahan_baku_id' => 1,
+            'jumlah_dipesan' => 100,
+            'satuan_id' => 1,
+        ]);
+
+        $response = $this->actingAs(Pengguna::find(1))
+            ->post(route('pengadaan.po.terima', $pengadaan->id), [
                 'catatan' => 'terima PO',
-                'jumlah_aktual' => [1 => 100],
-                'harga_aktual' => [1 => 10_500],
+                'terima' => [1 => 100],
+                'kondisi' => [1 => 'Baik'],
             ]);
+
+        if (session()->has('errors')) {
+            dump(session('errors')->getBag('default')->getMessages());
+        }
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
 
         // Stok bertambah dari 500 → 600
         $this->assertEquals(600, (float) StokBahan::where('bahan_baku_id', 1)->where('jenis_persediaan', StokBahan::JENIS_HARIAN)->value('jumlah_stok'));

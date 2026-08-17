@@ -40,35 +40,32 @@ class RoleAccessTest extends TestCase
 
     private function seedReferences(): void
     {
-        $statuses = [1 => 'MENUNGGU', 2 => 'DIKONFIRMASI', 3 => 'DIPROSES', 4 => 'SIAP', 5 => 'SELESAI', 6 => 'DIBATALKAN'];
-        foreach ($statuses as $id => $kode) {
-            StatusPesanan::create(['id' => $id, 'kode_status' => $kode, 'nama_status' => $kode]);
-        }
+        // StatusPesanan is populated by migrations.
 
-        JenisPesanan::create(['id' => 1, 'kode_jenis' => 'DINE_IN', 'nama_jenis' => 'Dine In / Takeaway']);
-        JenisPesanan::create(['id' => 2, 'kode_jenis' => 'CAT', 'nama_jenis' => 'Catering']);
-        JenisPesanan::create(['id' => 3, 'kode_jenis' => 'BOX', 'nama_jenis' => 'Nasi Box']);
+        JenisPesanan::updateOrCreate(['id' => 1], ['kode_jenis' => 'DINE_IN', 'nama_jenis' => 'Dine In / Takeaway']);
+        JenisPesanan::updateOrCreate(['id' => 2], ['kode_jenis' => 'CAT', 'nama_jenis' => 'Catering']);
+        JenisPesanan::updateOrCreate(['id' => 3], ['kode_jenis' => 'BOX', 'nama_jenis' => 'Nasi Box']);
 
-        JenisMenu::create(['id' => 1, 'kode_jenis' => 'MAKANAN', 'nama_jenis' => 'Makanan']);
+        JenisMenu::updateOrCreate(['id' => 1], ['kode_jenis' => 'MAKANAN', 'nama_jenis' => 'Makanan']);
 
-        StatusTiketDapur::create(['id' => 1, 'kode_status' => 'MENUNGGU', 'nama_status' => 'Menunggu']);
-        StatusTiketDapur::create(['id' => 2, 'kode_status' => 'DIPROSES', 'nama_status' => 'Diproses']);
-        StatusTiketDapur::create(['id' => 3, 'kode_status' => 'SELESAI', 'nama_status' => 'Selesai']);
+        StatusTiketDapur::updateOrCreate(['id' => 1], ['kode_status' => 'MENUNGGU', 'nama_status' => 'Menunggu']);
+        StatusTiketDapur::updateOrCreate(['id' => 2], ['kode_status' => 'DIPROSES', 'nama_status' => 'Diproses']);
+        StatusTiketDapur::updateOrCreate(['id' => 3], ['kode_status' => 'SELESAI', 'nama_status' => 'Selesai']);
 
-        StatusMeja::create(['id' => 1, 'kode_status' => 'TERSEDIA', 'nama_status' => 'Tersedia']);
-        StatusMeja::create(['id' => 2, 'kode_status' => 'TERISI', 'nama_status' => 'Terisi']);
+        StatusMeja::updateOrCreate(['id' => 1], ['kode_status' => 'TERSEDIA', 'nama_status' => 'Tersedia']);
+        StatusMeja::updateOrCreate(['id' => 2], ['kode_status' => 'TERISI', 'nama_status' => 'Terisi']);
     }
 
     private function makeDineInOrder(): array
     {
         $meja = Meja::create(['id' => 1, 'kode_meja' => 'MJ-001', 'nomor_meja' => 'Meja 01', 'kapasitas' => 4, 'status_meja_id' => 1]);
-        $menu = Menu::create([
-            'id' => 1, 'jenis_menu_id' => 1, 'kode_menu' => 'MNU001',
-            'nama_menu' => 'Nasi Liwet', 'harga_jual' => 17_000, 'status_aktif' => true,
-        ]);
+        $menu = Menu::updateOrCreate(
+            ['id' => 1],
+            ['jenis_menu_id' => 1, 'nama_menu' => 'Nasi Liwet', 'harga_jual' => 17_000, 'status_aktif' => true]
+        );
 
         $pesanan = Pesanan::create([
-            'nomor_pesanan' => 'DIN-20260802-2001',
+            'id_pesanan' => 'DIN-20260802-2001',
             'tanggal_pesanan' => now(),
             'jenis_pesanan_id' => 1,
             'meja_id' => $meja->id,
@@ -110,7 +107,7 @@ class RoleAccessTest extends TestCase
         $response = $this->actingAs($users['pelayan'])->get(route('pos.dinein.index'));
 
         $response->assertOk();
-        $response->assertSee('List Pesanan Dine In', false);
+        $response->assertSee('Daftar Pesanan Dine In', false);
     }
 
     public function test_pelayan_dapat_toggle_status_sajian(): void

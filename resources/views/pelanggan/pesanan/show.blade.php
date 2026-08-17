@@ -105,6 +105,30 @@
                     @endif
                 </div>
 
+                @if(!$isCancelled && in_array($pesanan->jenis_pesanan_id, [2, 3]))
+                <div class="mb-10 w-full max-w-3xl mx-auto hidden md:block">
+                    <div class="relative flex justify-between items-center w-full">
+                        <div class="absolute inset-0 top-1/2 -translate-y-1/2 h-0.5 bg-gray-200 z-0"></div>
+                        <div class="absolute inset-0 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-500 z-0 transition-all duration-500" style="width: {{ ($currentStatusIndex / (count($timeline) - 1)) * 100 }}%"></div>
+                        
+                        @foreach($timeline as $index => $step)
+                            <div class="relative z-10 flex flex-col items-center group">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 {{ $index <= $currentStatusIndex ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white border-gray-300 text-gray-400' }} transition-colors">
+                                    @if($index < $currentStatusIndex)
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    @else
+                                        {{ $index + 1 }}
+                                    @endif
+                                </div>
+                                <span class="absolute top-8 w-28 text-center text-[10px] font-bold uppercase tracking-wider {{ $index <= $currentStatusIndex ? 'text-gray-900' : 'text-gray-400' }}">
+                                    {{ $step['label'] }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
                 <div class="flex justify-center items-start w-full">
 
                     {{-- Center Column: Info & Billing --}}
@@ -191,14 +215,117 @@
 
                         {{-- Action Buttons --}}
                         <div class="space-y-3 pt-2">
-                            @if(in_array($statusBayarKey, ['belum_bayar', 'dp_terbayar']) && !$isCancelled)
-                                <a href="{{ route('pesanan.bayar', $pesanan->id_pesanan) }}" class="w-full flex items-center justify-center gap-2 bg-[#3B82F6] hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-xl text-xs tracking-widest uppercase transition-all shadow-md shadow-blue-500/20 active:scale-[0.99]">
-                                    <span>{{ $statusBayarKey === 'dp_terbayar' ? 'Lanjutkan Pelunasan' : 'Bayar Sekarang' }}</span>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                                </a>
+
+                            {{-- Ditolak: perlu upload ulang --}}
+                            @if($statusBayarKey === 'ditolak')
+                                <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm">
+                                    <p class="font-bold text-red-700 mb-1">⚠ Bukti Pembayaran Ditolak</p>
+                                    <p class="text-red-600">{{ $terakhirBayar?->catatan_verifikasi ?? 'Silakan unggah ulang bukti pembayaran Anda.' }}</p>
+                                </div>
                             @endif
 
+                            {{-- Menunggu verifikasi: jangan bisa upload lagi --}}
+                            @if($statusBayarKey === 'menunggu_verifikasi')
+                                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-center">
+                                    <p class="font-bold text-blue-700 mb-1">⏳ Menunggu Verifikasi Admin</p>
+                                    <p class="text-blue-600">Bukti pembayaran Anda sedang kami periksa. Biasanya dalam 1×24 jam.</p>
+                                </div>
 
+                            {{-- Belum bayar / ditolak: tampilkan form upload DP --}}
+                            @elseif(in_array($statusBayarKey, ['belum_bayar', 'ditolak']) && !$isCancelled && $dpTerbayar == 0)
+                                @php
+                                    $dpPersen = $pesanan->jenis_pesanan_id == 3 ? 25 : 50;
+                                    $nominalDp = round($total * $dpPersen / 100);
+                                    $sesiDp = $pesanan->pembayaran()->where('jenis_pembayaran', 'uang_muka')->where('status_verifikasi', 'belum_dibayar')->latest()->first();
+                                @endphp
+                                <div class="bg-white border border-gray-200 rounded-xl p-4 space-y-3" 
+                                     x-data="countdownTimer('{{ $sesiDp ? $sesiDp->expires_at : '' }}')">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm font-bold text-gray-900">Unggah Bukti DP ({{ $dpPersen }}%)</p>
+                                        <span class="text-sm font-bold text-blue-700">Rp {{ number_format($nominalDp, 0, ',', '.') }}</span>
+                                    </div>
+                                    @if($sesiDp && $sesiDp->expires_at)
+                                    <div class="bg-amber-50 text-amber-800 p-3 rounded-lg text-xs flex justify-between items-center font-medium border border-amber-200/60">
+                                        <span>Selesaikan pembayaran dalam <span x-text="timeLeft" class="font-bold font-mono text-sm ml-1"></span></span>
+                                        <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 mb-2">Pesanan otomatis dibatalkan apabila pembayaran DP tidak dilakukan sampai waktu berakhir.</p>
+                                    @endif
+
+                                    <form action="{{ route('pesanan.upload_bukti') }}" method="POST" enctype="multipart/form-data" class="space-y-2">
+                                        @csrf
+                                        <input type="hidden" name="kode_pesanan" value="{{ $pesanan->id_pesanan }}">
+                                        <input type="hidden" name="jenis_pembayaran" value="dp">
+                                        <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                            <svg class="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                            <span class="text-xs text-gray-500">Klik untuk pilih bukti transfer (JPG/PNG/PDF, maks 1MB)</span>
+                                            <input type="file" name="file_bukti" accept=".jpg,.jpeg,.png,.pdf" class="hidden" required>
+                                        </label>
+                                        <button type="submit" x-bind:disabled="isExpired" x-bind:class="isExpired ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600 active:scale-[0.99] shadow-md shadow-blue-500/20'" class="w-full flex items-center justify-center gap-2 bg-[#3B82F6] text-white font-bold py-3 px-6 rounded-xl text-xs tracking-widest uppercase transition-all">
+                                            Kirim Bukti DP
+                                        </button>
+                                    </form>
+                                </div>
+
+                            {{-- DP sudah terbayar / ditolak & perlu lunasi: upload pelunasan --}}
+                            @elseif(in_array($statusBayarKey, ['dp_terbayar', 'ditolak']) && $dpTerbayar > 0 && !$isCancelled)
+                                @php 
+                                    $sisaBayar = max(0, $total - $dpTerbayar); 
+                                    $sesiPelunasan = $pesanan->pembayaran()->where('jenis_pembayaran', 'pelunasan')->where('status_verifikasi', 'belum_dibayar')->where('expires_at', '>', now())->latest()->first();
+                                    $lewatBatas = $pesanan->batas_pelunasan && $pesanan->batas_pelunasan < now();
+                                @endphp
+                                <div class="bg-white border border-gray-200 rounded-xl p-4 space-y-3"
+                                     @if($sesiPelunasan) x-data="countdownTimer('{{ $sesiPelunasan->expires_at }}')" @endif>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <p class="text-sm font-bold text-gray-900">Pelunasan Tagihan</p>
+                                        <span class="text-sm font-bold text-rose-600">Rp {{ number_format($sisaBayar, 0, ',', '.') }}</span>
+                                    </div>
+                                    
+                                    @if($pesanan->batas_pelunasan)
+                                    <div class="bg-gray-50 text-gray-600 p-3 rounded-lg text-xs mb-3 border border-gray-200/60">
+                                        <p class="font-bold text-gray-800 mb-1">Batas pelunasan: {{ \Carbon\Carbon::parse($pesanan->batas_pelunasan)->translatedFormat('d F Y, \p\u\k\u\l H:i') }}</p>
+                                        <p>Pelunasan dilakukan paling lambat H-3 sebelum tanggal acara.</p>
+                                    </div>
+                                    @endif
+
+                                    @if($lewatBatas)
+                                        <div class="bg-red-50 text-red-700 p-3 rounded-lg text-xs font-bold border border-red-200">
+                                            Batas waktu pelunasan telah terlewati. Silakan hubungi admin restoran.
+                                        </div>
+                                    @elseif($sesiPelunasan)
+                                        <div class="bg-amber-50 text-amber-800 p-3 rounded-lg text-xs flex justify-between items-center font-medium border border-amber-200/60 mb-2">
+                                            <span>Selesaikan pembayaran dalam <span x-text="timeLeft" class="font-bold font-mono text-sm ml-1"></span></span>
+                                            <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        </div>
+                                        <form action="{{ route('pesanan.upload_bukti') }}" method="POST" enctype="multipart/form-data" class="space-y-2">
+                                            @csrf
+                                            <input type="hidden" name="kode_pesanan" value="{{ $pesanan->id_pesanan }}">
+                                            <input type="hidden" name="jenis_pembayaran" value="pelunasan">
+                                            <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                                <svg class="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                                <span class="text-xs text-gray-500">Klik untuk pilih bukti transfer (JPG/PNG/PDF)</span>
+                                                <input type="file" name="file_bukti" accept=".jpg,.jpeg,.png,.pdf" class="hidden" required>
+                                            </label>
+                                            <button type="submit" x-bind:disabled="isExpired" x-bind:class="isExpired ? 'opacity-50 cursor-not-allowed' : 'hover:bg-rose-700 active:scale-[0.99] shadow-md shadow-rose-500/20'" class="w-full flex items-center justify-center gap-2 bg-rose-600 text-white font-bold py-3 px-6 rounded-xl text-xs tracking-widest uppercase transition-all">
+                                                Kirim Bukti Pelunasan
+                                            </button>
+                                        </form>
+                                    @else
+                                        <form action="{{ route('pesanan.mulai_pelunasan', $pesanan->id_pesanan) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl text-xs tracking-widest uppercase transition-all shadow-md active:scale-[0.99]">
+                                                Mulai Sesi Pelunasan
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+
+                            @if($statusBayarKey === 'lunas' || $statusKey === 'selesai')
+                                <a href="{{ route('pesanan.invoice', $pesanan->id_pesanan) }}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl text-xs tracking-widest uppercase transition-all shadow-md shadow-emerald-500/20 active:scale-[0.99]">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    <span>Unduh Bukti Pesanan (PDF)</span>
+                                </a>
+                            @endif
 
                         </div>
                     </div>
@@ -210,4 +337,45 @@
 
         </div>
     </section>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('countdownTimer', (expiresAtString) => ({
+                expiresAt: null,
+                timeLeft: '00:00',
+                isExpired: false,
+                interval: null,
+
+                init() {
+                    if (!expiresAtString) return;
+                    
+                    this.expiresAt = new Date(expiresAtString).getTime();
+                    this.updateTimer();
+                    this.interval = setInterval(() => this.updateTimer(), 1000);
+                },
+
+                updateTimer() {
+                    const now = new Date().getTime();
+                    const distance = this.expiresAt - now;
+
+                    if (distance < 0) {
+                        this.timeLeft = '00:00';
+                        this.isExpired = true;
+                        clearInterval(this.interval);
+                        
+                        // Automatically reload the page after 2 seconds when expired to fetch updated status
+                        setTimeout(() => window.location.reload(), 2000);
+                        return;
+                    }
+
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    this.timeLeft = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }));
+        });
+    </script>
+    @endpush
 </x-layouts.landing>
