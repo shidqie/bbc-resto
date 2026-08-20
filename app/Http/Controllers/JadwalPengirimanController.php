@@ -20,14 +20,21 @@ class JadwalPengirimanController extends Controller
         $startOfMonth = Carbon::parse($selectedMonth.'-01')->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
+        $user = auth()->user();
+        $isTimPengantaran = $user && ($user->hasRole('Pengantaran') || $user->hasRole('Tim Pengantaran') || (int)$user->peran_id === 6);
+
         // Cari semua pesanan catering dan nasibox yang ada jadwalnya dalam bulan tersebut
-        $ordersInMonth = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
+        $ordersInMonthQuery = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
             ->whereHas('jadwal_pesanan', function ($query) use ($startOfMonth, $endOfMonth) {
                 $query->whereBetween('tanggal_acara', [$startOfMonth, $endOfMonth]);
             })
-            ->whereNotIn('status_pesanan_id', [6]) // 6 = Dibatalkan
-            ->with('jadwal_pesanan')
-            ->get();
+            ->whereNotIn('status_pesanan_id', [6]); // 6 = Dibatalkan
+
+        if ($isTimPengantaran) {
+            $ordersInMonthQuery->whereIn('status_pesanan_id', [4, 5]); // Tim Pengantaran hanya melihat pesanan Siap Dikirim (4) / Selesai (5)
+        }
+
+        $ordersInMonth = $ordersInMonthQuery->with('jadwal_pesanan')->get();
 
         $orderDates = [];
         foreach ($ordersInMonth as $order) {
@@ -46,6 +53,10 @@ class JadwalPengirimanController extends Controller
         $query = Pesanan::with(['jadwal_pesanan', 'detail_pesanan.menu', 'pengiriman'])
             ->whereIn('jenis_pesanan_id', [2, 3])
             ->whereHas('pengiriman'); // Only show orders that are sent to delivery (Jadwal Pengiriman is a worklist)
+
+        if ($isTimPengantaran) {
+            $query->whereIn('status_pesanan_id', [4, 5]);
+        }
 
         if ($selectedDate) {
             $query->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {
@@ -78,6 +89,10 @@ class JadwalPengirimanController extends Controller
 
         $summaryQuery = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
             ->whereHas('pengiriman');
+
+        if ($isTimPengantaran) {
+            $summaryQuery->whereIn('status_pesanan_id', [4, 5]);
+        }
 
         if ($selectedDate) {
             $summaryQuery->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {

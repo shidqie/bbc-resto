@@ -21,7 +21,7 @@ class AturanPengiriman extends Model
     protected $casts = [
         'minimal_porsi' => 'integer',
         'maksimal_porsi' => 'integer',
-        'kilometer_gratis' => 'decimal:2',
+        'kilometer_gratis' => 'float',
         'status_aktif' => 'boolean',
     ];
 }

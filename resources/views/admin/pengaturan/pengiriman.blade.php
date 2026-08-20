@@ -28,93 +28,123 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
-            {{-- Form Pengaturan --}}
-            <div class="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm shadow-gray-100/50">
+            {{-- Form Pengaturan (Dua Card & Dua Form Terpisah) --}}
+            <div class="lg:col-span-2 space-y-6">
+                
+                {{-- CARD 1: Tarif Pengiriman --}}
                 <form action="{{ route('admin.pengaturan.pengiriman.update') }}" method="POST">
                     @csrf
-                    
-                    <div class="space-y-8">
-                        {{-- Tarif Dasar --}}
+                    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm shadow-gray-100/50 space-y-4">
                         <div>
                             <h2 class="text-base font-semibold text-gray-900">Tarif Pengiriman</h2>
-                            <p class="text-sm text-gray-500 mt-1 mb-4">Tarif dasar flat (rata) dan tarif tambahan per kilometer.</p>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
-                                <div>
-                                    <x-ui.input type="number" name="tarif_dasar" label="Tarif Dasar/Flat (Rp)" x-model.number="tarifDasar" :error="$errors->first('tarif_dasar')" />
+                            <p class="text-sm text-gray-500 mt-1">Tarif dasar flat (rata) dan tarif tambahan per kilometer.</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1.5">Tarif Dasar / Flat (Rp)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3.5 top-2 text-xs text-gray-400 font-bold">Rp</span>
+                                    <input type="hidden" name="tarif_dasar" :value="tarifDasar">
+                                    <input type="text" inputmode="numeric"
+                                           :value="formatRupiah(tarifDasar)"
+                                           @input="onInputTarifDasar($event)"
+                                           placeholder="0"
+                                           class="w-full text-right pl-10 pr-3.5 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm font-bold text-gray-900 shadow-2xs outline-none">
                                 </div>
-                                <div>
-                                    <x-ui.input type="number" name="tarif_per_km" label="Tarif Tambahan per Kilometer (Rp)" x-model.number="tarifPerKm" :error="$errors->first('tarif_per_km')" />
+                                @error('tarif_dasar') <p class="text-xs text-red-600 font-medium mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1.5">Tarif Tambahan per Kilometer (Rp)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3.5 top-2 text-xs text-gray-400 font-bold">Rp</span>
+                                    <input type="hidden" name="tarif_per_km" :value="tarifPerKm">
+                                    <input type="text" inputmode="numeric"
+                                           :value="formatRupiah(tarifPerKm)"
+                                           @input="onInputTarifPerKm($event)"
+                                           placeholder="0"
+                                           class="w-full text-right pl-10 pr-3.5 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm font-bold text-gray-900 shadow-2xs outline-none">
                                 </div>
+                                @error('tarif_per_km') <p class="text-xs text-red-600 font-medium mt-1">{{ $message }}</p> @enderror
                             </div>
                         </div>
 
-                        <hr class="border-gray-50">
-
-                        {{-- Aturan Gratis Ongkir --}}
-                        <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h2 class="text-base font-semibold text-gray-900">Aturan Gratis Pengiriman</h2>
-                                    <p class="text-sm text-gray-500 mt-1">Tentukan jarak gratis pengiriman berdasarkan jumlah porsi pesanan.</p>
-                                </div>
-                                <button type="button" @click="tambahAturan()" class="text-sm font-medium text-primary hover:text-primary flex items-center gap-1 bg-primary-soft px-3 py-1.5 rounded-lg transition-colors">
-                                    <x-heroicon-o-plus class="w-4 h-4" />
-                                    <span>Tambah Aturan</span>
-                                </button>
-                            </div>
-
-                            <div class="border border-gray-200 rounded-xl overflow-hidden">
-                                <table class="w-full text-left text-sm">
-                                    <thead class="bg-gray-50 border-b border-gray-200 text-gray-500">
-                                        <tr>
-                                            <th class="px-4 py-3 font-semibold">Jumlah Porsi Minimum</th>
-                                            <th class="px-4 py-3 font-semibold">Jumlah Porsi Maksimum</th>
-                                            <th class="px-4 py-3 font-semibold">Jarak Gratis</th>
-                                            <th class="px-4 py-3 w-12"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100 bg-white">
-                                        <template x-for="(item, index) in aturan" :key="index">
-                                            <tr>
-                                                <td class="px-4 py-3">
-                                                    <input type="hidden" :name="`aturan[${index}][id]`" x-model="item.id">
-                                                    <input type="number" x-bind:name="`aturan[${index}][minimal_porsi]`" x-model.number="item.minimal_porsi" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors" required>
-                                                </td>
-                                                <td class="px-4 py-3">
-                                                    <input type="number" x-bind:name="`aturan[${index}][maksimal_porsi]`" x-model="item.maksimal_porsi" placeholder="Tidak terbatas" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors">
-                                                </td>
-                                                <td class="px-4 py-3">
-                                                    <div class="flex items-center gap-2">
-                                                        <input type="number" step="0.01" x-bind:name="`aturan[${index}][kilometer_gratis]`" x-model.number="item.kilometer_gratis" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors" required>
-                                                        <span class="text-gray-500 font-medium">km</span>
-                                                    </div>
-                                                </td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <button type="button" @click="hapusAturan(index)" class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
-                                                        <x-heroicon-o-trash class="w-4 h-4" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                        <tr x-show="aturan.length === 0">
-                                            <td colspan="4" class="px-4 py-8 text-center text-gray-500">
-                                                Belum ada aturan pengiriman yang dikonfigurasi.
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="pt-2 flex justify-end">
+                            <x-ui.button type="submit" variant="primary">
+                                <x-heroicon-o-document-check class="w-4 h-4 mr-1" />
+                                Simpan Tarif Pengiriman
+                            </x-ui.button>
                         </div>
-                    </div>
-
-                    <div class="mt-8 flex justify-end">
-                        <x-ui.button type="submit" variant="primary">
-                            <x-heroicon-o-document-check class="w-4 h-4 mr-1" />
-                            Simpan Perubahan
-                        </x-ui.button>
                     </div>
                 </form>
+
+                {{-- CARD 2: Aturan Gratis Pengiriman --}}
+                <form action="{{ route('admin.pengaturan.pengiriman.update') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="simpan_aturan" value="1">
+                    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm shadow-gray-100/50 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-base font-semibold text-gray-900">Aturan Gratis Pengiriman</h2>
+                                <p class="text-sm text-gray-500 mt-1">Tentukan jarak gratis pengiriman berdasarkan jumlah porsi pesanan.</p>
+                            </div>
+                            <button type="button" @click="tambahAturan()" class="text-sm font-medium text-primary hover:text-primary flex items-center gap-1 bg-primary-soft px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0">
+                                <x-heroicon-o-plus class="w-4 h-4" />
+                                <span>Tambah Aturan</span>
+                            </button>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-xl overflow-hidden">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 border-b border-gray-200 text-gray-500">
+                                    <tr>
+                                        <th class="px-4 py-3 font-semibold">Jumlah Porsi Minimum</th>
+                                        <th class="px-4 py-3 font-semibold">Jumlah Porsi Maksimum</th>
+                                        <th class="px-4 py-3 font-semibold">Jarak Gratis</th>
+                                        <th class="px-4 py-3 w-12"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 bg-white">
+                                    <template x-for="(item, index) in aturan" :key="index">
+                                        <tr>
+                                            <td class="px-4 py-3">
+                                                <input type="hidden" :name="`aturan[${index}][id]`" x-model="item.id">
+                                                <input type="number" x-bind:name="`aturan[${index}][minimal_porsi]`" x-model.number="item.minimal_porsi" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors" required>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <input type="number" x-bind:name="`aturan[${index}][maksimal_porsi]`" x-model="item.maksimal_porsi" placeholder="Tidak terbatas" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors">
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <div class="flex items-center gap-2">
+                                                    <input type="number" step="any" x-bind:name="`aturan[${index}][kilometer_gratis]`" x-model.number="item.kilometer_gratis" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors" required>
+                                                    <span class="text-gray-500 font-medium">km</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <button type="button" @click="hapusAturan(index)" class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <tr x-show="aturan.length === 0">
+                                        <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                                            Belum ada aturan pengiriman yang dikonfigurasi.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pt-2 flex justify-end">
+                            <x-ui.button type="submit" variant="primary">
+                                <x-heroicon-o-document-check class="w-4 h-4 mr-1" />
+                                Simpan Aturan Gratis
+                            </x-ui.button>
+                        </div>
+                    </div>
+                </form>
+
             </div>
 
             {{-- Simulasi Tagihan --}}
@@ -207,7 +237,7 @@
                                                 porsi ke atas
                                             @endif
                                         </span>
-                                        <span class="font-semibold text-green-600">Gratis {{ $a->kilometer_gratis }} Km</span>
+                                        <span class="font-semibold text-green-600">Gratis {{ (float) $a->kilometer_gratis }} Km</span>
                                     </li>
                                     @endforeach
                                 </ul>
@@ -242,14 +272,14 @@
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse min-w-full">
                     <thead>
                         <tr class="bg-white border-b border-gray-100 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                            <th class="px-6 py-4">Tanggal</th>
-                            <th class="px-6 py-4">Pengaturan</th>
-                            <th class="px-6 py-4">Sebelumnya</th>
-                            <th class="px-6 py-4">Menjadi</th>
-                            <th class="px-6 py-4">Diubah Oleh</th>
+                            <th class="px-6 py-4 whitespace-nowrap">Tanggal</th>
+                            <th class="px-6 py-4 whitespace-nowrap">Pengaturan</th>
+                            <th class="px-6 py-4 whitespace-nowrap">Sebelumnya</th>
+                            <th class="px-6 py-4 whitespace-nowrap">Menjadi</th>
+                            <th class="px-6 py-4 whitespace-nowrap">Diubah Oleh</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-sm">
@@ -309,6 +339,20 @@
             tarifDasar: {{ old('tarif_dasar', $pengaturan->tarif_dasar ?? 0) }},
             tarifPerKm: {{ old('tarif_per_km', $pengaturan->tarif_per_km ?? 0) }},
             aturan: @json($aturan ?? []),
+            formatRupiah(val) {
+                if (val === null || val === undefined || val === '') return '0';
+                return Number(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            },
+            onInputTarifDasar(e) {
+                let cleaned = e.target.value.replace(/[^0-9]/g, '');
+                this.tarifDasar = cleaned ? parseInt(cleaned, 10) : 0;
+                e.target.value = this.formatRupiah(this.tarifDasar);
+            },
+            onInputTarifPerKm(e) {
+                let cleaned = e.target.value.replace(/[^0-9]/g, '');
+                this.tarifPerKm = cleaned ? parseInt(cleaned, 10) : 0;
+                e.target.value = this.formatRupiah(this.tarifPerKm);
+            },
             simulasiJarak: 10,
             simulasiPorsi: 50,
             tambahAturan() {

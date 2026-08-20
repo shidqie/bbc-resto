@@ -55,7 +55,9 @@
         {{-- Penjualan --}}
         @php
         $penjualanItems = [];
-        if ($hasRole('Admin', 'Manajer', 'Pemilik', 'Kasir', 'Dapur', 'Tim Dapur')) {
+        if ($userRole === 'Kasir') {
+            $penjualanItems[] = ['label' => 'Pesanan Dine-In', 'url' => route('admin.pesanan.dinein.index'), 'active' => request()->routeIs('admin.pesanan.dinein.*') || request()->routeIs('pos.dinein.*')];
+        } elseif ($hasRole('Admin', 'Pemilik', 'Dapur', 'Tim Dapur')) {
             $penjualanItems[] = ['label' => 'Pesanan Dine-In', 'url' => route('admin.pesanan.dinein.index'), 'active' => request()->routeIs('admin.pesanan.dinein.*') || request()->routeIs('pos.dinein.*')];
             $penjualanItems[] = ['label' => 'Pesanan Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
             $penjualanItems[] = ['label' => 'Pesanan Katering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
