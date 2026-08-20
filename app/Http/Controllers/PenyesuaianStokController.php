@@ -52,6 +52,16 @@ class PenyesuaianStokController extends Controller
 
     public function store(Request $request)
     {
+        // Normalize single field input to array if passed as scalar
+        if ($request->has('bahan_baku_id') && !is_array($request->bahan_baku_id)) {
+            $request->merge([
+                'bahan_baku_id' => [$request->bahan_baku_id],
+                'jenis_persediaan' => [$request->jenis_persediaan ?? 'harian'],
+                'jumlah_fisik' => [$request->jumlah_fisik],
+                'catatan_item' => [$request->catatan ?? null],
+            ]);
+        }
+
         $request->validate([
             'alasan' => 'required|string',
             'bahan_baku_id' => 'required|array|min:1',
@@ -72,13 +82,13 @@ class PenyesuaianStokController extends Controller
                 'tanggal_penyesuaian' => now(),
                 'dibuat_oleh' => Auth::id(),
                 'alasan' => $request->alasan,
+                'catatan' => $request->catatan ?? null,
                 'status_penyesuaian' => 'DISETUJUI', // auto approve
             ]);
 
             $stockService = app(StockService::class);
 
             foreach ($request->bahan_baku_id as $idx => $bahanId) {
-                // Skip baris yang tidak diisi jumlah fisiknya (tidak ada perubahan)
                 $jumlahFisikRaw = $request->jumlah_fisik[$idx] ?? '';
                 if ($jumlahFisikRaw === '' || $jumlahFisikRaw === null) {
                     continue;
@@ -95,10 +105,6 @@ class PenyesuaianStokController extends Controller
                 $jumlahFisik  = (float) $jumlahFisikRaw;
                 $selisih      = $jumlahFisik - $jumlahSistem;
 
-                if (abs($selisih) < 0.0001) {
-                    continue;
-                }
-
                 $detail = DetailPenyesuaianStok::create([
                     'penyesuaian_stok_id' => $penyesuaian->id,
                     'bahan_baku_id'       => $bahanId,
@@ -107,14 +113,14 @@ class PenyesuaianStokController extends Controller
                     'jumlah_fisik'        => $jumlahFisik,
                     'jumlah_selisih'      => $selisih,
                     'satuan_id'           => $bahan->satuan_id,
-                    'catatan'             => $request->catatan_item[$idx] ?? null,
+                    'catatan'             => $request->catatan_item[$idx] ?? $request->catatan ?? null,
                 ]);
 
                 // Update saldo + buat mutasi penyesuaian secara atomic (kartu stok).
                 $stockService->adjustStock(
                     $bahanId,
                     (float) $jumlahFisik,
-                    "Penyesuaian Stok: {$nomorPenyesuaian} | {$request->alasan}",
+                    "Penyesuaian Stok: {$request->alasan}",
                     null,
                     Auth::id(),
                     ['detail_penyesuaian_stok_id' => $detail->id],

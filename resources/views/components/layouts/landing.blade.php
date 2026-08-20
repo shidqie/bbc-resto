@@ -29,26 +29,32 @@
                         'Anonymous_Pro': ['Anonymous Pro', 'monospace'],
                     },
                     fontSize: {
-                        xs: ['13px', '1.45'],
-                        sm: ['15px', '1.5'],
-                        base: ['16px', '1.55'],
-                        lg: ['18px', '1.5'],
-                        xl: ['20px', '1.4'],
-                        '2xl': ['24px', '1.3'],
-                        '3xl': ['30px', '1.25'],
-                        '4xl': ['36px', '1.2'],
-                        '5xl': ['48px', '1.15'],
-                        '6xl': ['60px', '1.1'],
+                        xs: ['11px', '1.45'],
+                        sm: ['13px', '1.5'],
+                        base: ['14px', '1.55'],
+                        lg: ['16px', '1.5'],
+                        xl: ['18px', '1.4'],
+                        '2xl': ['21px', '1.3'],
+                        '3xl': ['26px', '1.25'],
+                        '4xl': ['32px', '1.2'],
+                        '5xl': ['40px', '1.15'],
+                        '6xl': ['48px', '1.1'],
                     },
                     colors: {
-                        primary: 'var(--color-primary)',
-                        'primary-container': 'var(--color-primary-container)',
-                        secondary: 'var(--color-secondary)',
-                        'secondary-container': 'var(--color-secondary-container)',
-                        accent: 'var(--color-accent)',
-                        canvas: 'var(--color-canvas)',
-                        surface: 'var(--color-surface)',
-                        body: 'var(--color-body)',
+                        primary: {
+                            DEFAULT: 'rgb(var(--color-primary-rgb) / <alpha-value>)',
+                            container: 'rgb(var(--color-primary-container-rgb) / <alpha-value>)',
+                            soft: 'rgb(var(--color-primary-soft-rgb) / <alpha-value>)',
+                        },
+                        secondary: {
+                            DEFAULT: 'rgb(var(--color-secondary-rgb) / <alpha-value>)',
+                            container: 'rgb(var(--color-secondary-container-rgb) / <alpha-value>)',
+                            soft: 'rgb(var(--color-secondary-soft-rgb) / <alpha-value>)',
+                        },
+                        accent: 'rgb(var(--color-accent-rgb) / <alpha-value>)',
+                        canvas: 'rgb(var(--color-canvas-rgb) / <alpha-value>)',
+                        surface: 'rgb(var(--color-surface-rgb) / <alpha-value>)',
+                        body: 'rgb(var(--color-body-rgb) / <alpha-value>)',
                         success: 'var(--color-success)',
                         warning: 'var(--color-warning)',
                         danger: 'var(--color-danger)',
@@ -60,26 +66,50 @@
     <style>
         :root {
             --color-primary: #0D3024;
+            --color-primary-rgb: 13 48 36;
             --color-primary-container: #0a2219;
+            --color-primary-container-rgb: 10 34 25;
+            --color-primary-soft: #E8F0EC;
+            --color-primary-soft-rgb: 232 240 236;
             --color-secondary: #B8860B;
+            --color-secondary-rgb: 184 134 11;
             --color-secondary-container: #d4a843;
+            --color-secondary-container-rgb: 212 168 67;
+            --color-secondary-soft: #F5F1E6;
+            --color-secondary-soft-rgb: 245 241 230;
             --color-accent: #D4A843;
+            --color-accent-rgb: 212 168 67;
             --color-canvas: #FAFAF7;
+            --color-canvas-rgb: 250 250 247;
             --color-surface: #FFFFFF;
-            --color-body: #3D3D3D;
+            --color-surface-rgb: 255 255 255;
+            --color-body: #111827;
+            --color-body-rgb: 17 24 39;
             --color-success: #16A34A;
             --color-warning: #D97706;
             --color-danger: #DC2626;
         }
         html.dark {
             --color-primary: #d4a843;
-            --color-primary-container: rgba(212,168,67,0.12);
+            --color-primary-rgb: 212 168 67;
+            --color-primary-container: #2a2e3c;
+            --color-primary-container-rgb: 42 46 60;
+            --color-primary-soft: rgba(212,168,67,0.12);
+            --color-primary-soft-rgb: 42 46 60;
             --color-secondary: #f0c45e;
-            --color-secondary-container: #d4a843;
+            --color-secondary-rgb: 240 196 94;
+            --color-secondary-container: #B8860B;
+            --color-secondary-container-rgb: 184 134 11;
+            --color-secondary-soft: rgba(212,168,67,0.1);
+            --color-secondary-soft-rgb: 34 38 50;
             --color-accent: #f0c45e;
+            --color-accent-rgb: 240 196 94;
             --color-canvas: #0f1117;
+            --color-canvas-rgb: 15 17 23;
             --color-surface: #1a1d27;
-            --color-body: #9ca3b4;
+            --color-surface-rgb: 26 29 39;
+            --color-body: #cbd5e1;
+            --color-body-rgb: 203 213 225;
             --color-success: #34d399;
             --color-warning: #fbbf24;
             --color-danger: #f87171;
@@ -87,7 +117,6 @@
     </style>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
         body { font-family: 'Outfit', sans-serif; background-color: var(--color-canvas); color: var(--color-body); }

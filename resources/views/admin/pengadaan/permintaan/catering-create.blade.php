@@ -51,7 +51,7 @@
                             @foreach($daftarPesanan as $dp)
                             <a href="{{ route('pengadaan.catering.create', ['pesanan_id' => $dp->id]) }}" class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 hover:bg-emerald-50 hover:border-emerald-300 px-3 py-2 transition-colors">
                                 <span class="font-mono font-bold text-gray-800 text-xs">{{ $dp->id_pesanan }}</span>
-                                <span class="text-[11px] text-gray-400">{{ \Carbon\Carbon::parse($dp->tanggal_pesanan)->format('d M Y') }}</span>
+                                <span class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($dp->tanggal_pesanan)->format('d M Y') }}</span>
                             </a>
                             @endforeach
                         </div>

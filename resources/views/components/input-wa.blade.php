@@ -32,7 +32,7 @@
         class="w-full px-3.5 py-2.5 bg-surface border rounded-xl text-sm font-medium text-body placeholder-body/30 transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none {{ $error ? 'border-danger' : 'border-primary/10' }}">
 
     @if($hint)
-        <p class="text-[11px] text-body/50 font-medium mt-1">{{ $hint }}</p>
+        <p class="text-xs text-body/50 font-medium mt-1">{{ $hint }}</p>
     @endif
 
     @if($error)

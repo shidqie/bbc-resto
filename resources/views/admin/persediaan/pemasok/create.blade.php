@@ -34,7 +34,7 @@
                         <x-ui.textarea name="alamat" label="Alamat Lengkap" rows="3" :value="old('alamat')" />
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="checkbox" name="status_aktif" id="status_aktif" value="1" checked class="w-4 h-4 text-[#3B82F6] rounded border-gray-300">
+                        <input type="checkbox" name="status_aktif" id="status_aktif" value="1" checked class="w-4 h-4 text-primary rounded border-gray-300">
                         <label for="status_aktif" class="text-sm font-medium text-gray-700">Pemasok Aktif</label>
                     </div>
                 </div>

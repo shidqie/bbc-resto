@@ -25,9 +25,9 @@
         <div x-data="{ tab: 'informasi' }">
             {{-- Tab Navigation --}}
             <div class="flex gap-4 border-b border-gray-200 mb-6">
-                <button @click="tab = 'informasi'" :class="tab == 'informasi' ? 'border-[#0D3024] text-[#0D3024]' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 border-b-2 font-bold text-sm transition-colors">Informasi Paket</button>
-                <button @click="tab = 'menu'" :class="tab == 'menu' ? 'border-[#0D3024] text-[#0D3024]' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 border-b-2 font-bold text-sm transition-colors">Daftar Menu Paket</button>
-                <button @click="tab = 'bahan'" :class="tab == 'bahan' ? 'border-[#0D3024] text-[#0D3024]' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 border-b-2 font-bold text-sm transition-colors">Kebutuhan Bahan Baku</button>
+                <button @click="tab = 'informasi'" :class="tab == 'informasi' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 border-b-2 font-bold text-sm transition-colors">Informasi Paket</button>
+                <button @click="tab = 'menu'" :class="tab == 'menu' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 border-b-2 font-bold text-sm transition-colors">Daftar Menu Paket</button>
+                <button @click="tab = 'bahan'" :class="tab == 'bahan' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-4 py-3 border-b-2 font-bold text-sm transition-colors">Kebutuhan Bahan Baku</button>
             </div>
 
             {{-- TAB 1: Informasi Paket --}}
@@ -40,7 +40,7 @@
                                 @if($paketCatering->jenis_menu_id == 3)
                                     <span class="bg-purple-100 text-purple-900 border border-purple-200 px-3 py-1 rounded-full text-xs font-extrabold">Nasi Box</span>
                                 @else
-                                    <span class="bg-blue-100 text-blue-900 border border-blue-200 px-3 py-1 rounded-full text-xs font-extrabold">Katering</span>
+                                    <span class="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-xs font-extrabold">Katering</span>
                                 @endif
                             </div>
 
@@ -51,7 +51,7 @@
 
                             <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-1">
                                 <span class="text-xs font-extrabold uppercase text-gray-400 tracking-wider">Harga per Porsi / Box</span>
-                                <div class="text-xl font-black text-[#0D3024]">Rp {{ number_format($paketCatering->harga_jual, 0, ',', '.') }}</div>
+                                <div class="text-xl font-black text-primary">Rp {{ number_format($paketCatering->harga_jual, 0, ',', '.') }}</div>
                             </div>
 
                             <div class="flex items-center justify-between pt-2 border-t border-gray-100">
@@ -162,7 +162,7 @@
                                         <td class="px-4 py-3 text-center text-gray-500">{{ $idx + 1 }}</td>
                                         <td class="px-4 py-3 font-bold text-gray-800">{{ $bhn['nama_bahan'] }}</td>
                                         <td class="px-4 py-3 text-right">
-                                            <span class="font-black text-[#0D3024]">{{ $bhn['total_kebutuhan'] }}</span>
+                                            <span class="font-black text-primary">{{ $bhn['total_kebutuhan'] }}</span>
                                             <span class="text-xs font-bold text-gray-500 ml-1">{{ $bhn['satuan'] }}</span>
                                         </td>
                                         <td class="px-4 py-3 text-xs text-gray-500">

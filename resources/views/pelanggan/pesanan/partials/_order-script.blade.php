@@ -39,14 +39,7 @@
         }).addTo(map);
 
         const restoIcon = L.divIcon({
-            html: '<div class="w-8 h-8 bg-white border border-primary/10 shadow-sm rounded-full flex items-center justify-center text-primary"><i class="ph ph-storefront text-lg"></i></div>',
-            className: '',
-            iconSize: [32, 32],
-            iconAnchor: [16, 16],
-            tooltipAnchor: [0, -20]
-        });
-        const userIcon = L.divIcon({
-            html: '<div class="w-8 h-8 bg-primary shadow-md shadow-primary/30 rounded-full flex items-center justify-center text-white"><i class="ph-bold ph-map-pin text-lg"></i></div>',
+            html: '<div class="w-8 h-8 bg-white border border-primary/10 shadow-sm rounded-full flex items-center justify-center text-primary"><i class="ph-bold ph-storefront text-lg"></i></div>',
             className: '',
             iconSize: [32, 32],
             iconAnchor: [16, 16],
@@ -58,53 +51,36 @@
 
         let initLat = document.getElementById('inputLat').value || bbcLat;
         let initLng = document.getElementById('inputLng').value || bbcLng;
-        marker = L.marker([initLat, initLng], { icon: userIcon, draggable: true }).addTo(map);
-        marker.bindTooltip("Alamatmu di sini", { permanent: true, direction: 'top', offset: [0, -10], className: 'address-tooltip' }).openTooltip();
-
-        marker.on('dragend', function () {
-            const pos = marker.getLatLng();
-            document.getElementById('inputLat').value = pos.lat;
-            document.getElementById('inputLng').value = pos.lng;
-            hitungJarakOSRM(bbcLat, bbcLng, pos.lat, pos.lng);
-            updateAlamatText(pos.lat, pos.lng);
-        });
 
         if (document.getElementById('inputLat').value) {
-            map.setView([initLat, initLng], 14);
+            map.setView([initLat, initLng], 15);
             hitungJarakOSRM(bbcLat, bbcLng, initLat, initLng);
         } else {
             locateUser(false);
         }
 
-        const geocoder = L.Control.geocoder({
-            defaultMarkGeocode: false,
-            placeholder: 'Cari lokasi atau alamat...',
-            collapsed: false,
-            position: 'topright'
-        }).addTo(map);
-
-        geocoder.on('markgeocode', function (e) {
-            const bbox = e.geocode.bbox;
-            const poly = L.polygon([
-                bbox.getSouthEast(),
-                bbox.getNorthEast(),
-                bbox.getNorthWest(),
-                bbox.getSouthWest()
-            ]);
-            map.fitBounds(poly.getBounds());
-
-            marker.setLatLng(e.geocode.center);
-
-            const pos = marker.getLatLng();
-            document.getElementById('inputLat').value = pos.lat;
-            document.getElementById('inputLng').value = pos.lng;
-            hitungJarakOSRM(bbcLat, bbcLng, pos.lat, pos.lng);
-
-            if (e.geocode.name) {
-                document.getElementById('cardAlamat').textContent = e.geocode.name;
-                document.getElementById('alamatDelivery').value = e.geocode.name;
-            }
+        // Handle Map Drag for Fixed Center Pin
+        map.on('move', function () {
+            const centerMarker = document.getElementById('center-marker');
+            if (centerMarker) centerMarker.style.transform = 'translate(-50%, -60%)';
         });
+
+        let moveTimeout;
+        map.on('moveend', function () {
+            const centerMarker = document.getElementById('center-marker');
+            if (centerMarker) centerMarker.style.transform = 'translate(-50%, -50%)';
+
+            clearTimeout(moveTimeout);
+            moveTimeout = setTimeout(() => {
+                const center = map.getCenter();
+                document.getElementById('inputLat').value = center.lat;
+                document.getElementById('inputLng').value = center.lng;
+                hitungJarakOSRM(bbcLat, bbcLng, center.lat, center.lng);
+                updateAlamatText(center.lat, center.lng);
+            }, 500);
+        });
+
+        setupMapSearch();
     }
 
     function locateUser(showAlert = true) {
@@ -114,22 +90,76 @@
             navigator.geolocation.getCurrentPosition(function (position) {
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
-
-                marker.setLatLng([userLat, userLng]);
                 map.setView([userLat, userLng], 15);
-
-                document.getElementById('inputLat').value = userLat;
-                document.getElementById('inputLng').value = userLng;
-
-                hitungJarakOSRM(bbcLat, bbcLng, userLat, userLng);
-                updateAlamatText(userLat, userLng);
             }, function () {
                 console.log("Geolocation error");
-                document.getElementById('cardAlamat').textContent = "Geser pin ke lokasi kamu...";
+                document.getElementById('cardAlamat').textContent = "Geser peta untuk menentukan lokasi...";
+                if (showAlert) notifyError("Tidak bisa mengakses lokasi. Silakan cek izin browser Anda.");
             }, { enableHighAccuracy: true });
         } else {
-            document.getElementById('cardAlamat').textContent = "Geser pin ke lokasi kamu...";
+            document.getElementById('cardAlamat').textContent = "Geser peta untuk menentukan lokasi...";
+            if (showAlert) notifyError("Browser Anda tidak mendukung fitur lokasi GPS.");
         }
+    }
+
+    function setupMapSearch() {
+        const input = document.getElementById('map-search-input');
+        const btn = document.getElementById('map-search-btn');
+        const resultsBox = document.getElementById('map-search-results');
+
+        if (!input || !btn || !resultsBox) return;
+
+        const doSearch = async () => {
+            const query = input.value.trim();
+            if (query.length < 3) {
+                resultsBox.classList.add('hidden');
+                return;
+            }
+
+            try {
+                btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i>';
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=id`);
+                const data = await res.json();
+                
+                resultsBox.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 hover:bg-primary/5 cursor-pointer text-sm text-body transition-colors';
+                        div.innerHTML = `<div class="font-bold text-primary mb-0.5 truncate">${item.display_name.split(',')[0]}</div>
+                                         <div class="text-xs text-body/60 truncate">${item.display_name}</div>`;
+                        div.onclick = () => {
+                            map.setView([item.lat, item.lon], 16);
+                            input.value = item.display_name.split(',')[0];
+                            resultsBox.classList.add('hidden');
+                        };
+                        resultsBox.appendChild(div);
+                    });
+                    resultsBox.classList.remove('hidden');
+                } else {
+                    resultsBox.innerHTML = '<div class="p-3 text-sm text-body/60 text-center">Tidak ditemukan.</div>';
+                    resultsBox.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error("Search Error", e);
+            } finally {
+                btn.textContent = 'Cari';
+            }
+        };
+
+        btn.addEventListener('click', doSearch);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                doSearch();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !btn.contains(e.target) && !resultsBox.contains(e.target)) {
+                resultsBox.classList.add('hidden');
+            }
+        });
     }
 
     async function updateAlamatText(lat, lng) {
@@ -242,27 +272,48 @@
 
                 if (komp.tipe === 'fixed') {
                     div.innerHTML = `
-                        <p class="text-xs font-bold text-body mb-2">${komp.nama_komponen}</p>
-                        <div class="flex flex-wrap gap-2">
-                            ${komp.opsi.map(o => `
-                                <div class="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary text-xs rounded-lg font-semibold">
-                                    ${o.menu.foto ? `<img src="/storage/${o.menu.foto}" alt="${o.menu.nama}" class="w-4 h-4 rounded-full object-cover">` : ''}
-                                    <span>${o.menu.nama} ✓</span>
-                                </div>
-                            `).join('')}
+                        <p class="text-xs font-bold text-body mb-3">${komp.nama_komponen}</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            ${komp.opsi.map(o => {
+                                const imgHtml = o.menu.foto 
+                                    ? '<img src="/storage/' + o.menu.foto + '" alt="' + o.menu.nama + '" class="w-full aspect-[4/3] object-cover">'
+                                    : '<div class="w-full aspect-[4/3] bg-canvas flex items-center justify-center text-body/20"><i class="ph-light ph-image text-4xl"></i></div>';
+                                
+                                return `
+                                <div class="flex flex-col bg-surface rounded-xl border border-primary/20 overflow-hidden relative shadow-sm ring-1 ring-primary/10">
+                                    <div class="absolute top-2.5 right-2.5 bg-primary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center z-10 shadow-sm ring-2 ring-white">
+                                        <i class="ph-bold ph-check"></i>
+                                    </div>
+                                    ${imgHtml}
+                                    <div class="p-3 bg-primary/5 border-t border-primary/10">
+                                        <span class="block text-sm font-bold text-primary truncate">${o.menu.nama}</span>
+                                    </div>
+                                </div>`;
+                            }).join('')}
                         </div>`;
                 } else {
                     div.innerHTML = `
-                        <p class="text-xs font-bold text-body mb-2">${komp.nama_komponen} <span class="text-warning font-medium text-[11px]">(pilih 1)</span></p>
-                        <div class="flex flex-wrap gap-2">
-                            ${komp.opsi.map(o => `
+                        <p class="text-xs font-bold text-body mb-3">${komp.nama_komponen} <span class="text-warning font-medium text-xs">(pilih 1)</span></p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            ${komp.opsi.map(o => {
+                                const imgHtml = o.menu.foto 
+                                    ? '<img src="/storage/' + o.menu.foto + '" alt="' + o.menu.nama + '" class="w-full aspect-[4/3] object-cover group-hover:opacity-90 transition-opacity">'
+                                    : '<div class="w-full aspect-[4/3] bg-canvas flex items-center justify-center text-body/20"><i class="ph-light ph-image text-4xl"></i></div>';
+                                
+                                return `
                                 <label class="cursor-pointer group relative">
                                     <input type="radio" name="komponen[${komp.id}]" value="${o.menu.id}" class="opacity-0 absolute w-0 h-0 peer" required>
-                                    <div class="flex items-center gap-1.5 px-3 py-1.5 border border-primary/10 bg-surface rounded-xl font-medium text-body text-xs peer-checked:bg-primary peer-checked:border-primary peer-checked:text-white transition-all duration-200 group-hover:border-primary/50">
-                                        ${o.menu.foto ? `<img src="/storage/${o.menu.foto}" alt="${o.menu.nama}" class="w-4 h-4 rounded-full object-cover">` : ''}
-                                        <span>${o.menu.nama}</span>
+                                    <div class="flex flex-col bg-surface rounded-xl border border-primary/10 overflow-hidden peer-checked:border-primary peer-checked:ring-1 peer-checked:ring-primary transition-all duration-200 group-hover:border-primary/50 shadow-sm relative">
+                                        <div class="absolute top-2.5 right-2.5 w-5 h-5 rounded-full border-2 border-white/50 bg-black/20 flex items-center justify-center opacity-0 peer-checked:opacity-100 peer-checked:border-white peer-checked:bg-primary transition-all z-10 shadow-sm backdrop-blur-sm">
+                                            <i class="ph-bold ph-check text-white text-[10px]"></i>
+                                        </div>
+                                        ${imgHtml}
+                                        <div class="p-3 border-t border-primary/5 peer-checked:bg-primary/5 transition-colors">
+                                            <span class="block text-sm font-bold text-body peer-checked:text-primary truncate">${o.menu.nama}</span>
+                                        </div>
                                     </div>
-                                </label>`).join('')}
+                                </label>`;
+                            }).join('')}
                         </div>`;
                 }
                 container.appendChild(div);
@@ -399,10 +450,10 @@
 
                 if (opsiBayar === 'lunas') {
                     document.getElementById('sisa-pelunasan-container').style.display = 'none';
-                    document.getElementById('submitBtn').textContent = 'Bayar Lunas ' + formatRp(data.total);
+                    document.getElementById('submitBtn').textContent = 'Bayar';
                 } else {
                     document.getElementById('sisa-pelunasan-container').style.display = 'flex';
-                    document.getElementById('submitBtn').textContent = 'Bayar DP ' + formatRp(data.dp);
+                    document.getElementById('submitBtn').textContent = 'Bayar';
                 }
 
                 checkFormValidity();
@@ -494,8 +545,10 @@
         if (i === 3) return selectedPaketId !== null;
         if (i === 4) {
             if (selectedPaketId === null) return false;
-            const reqs = document.querySelectorAll('#komponen-container input[required]');
-            return reqs.length === 0 || Array.from(reqs).every(r => r.checked);
+            const reqs = document.querySelectorAll('#komponen-container input[type="radio"][required]');
+            if (reqs.length === 0) return true;
+            const names = [...new Set(Array.from(reqs).map(r => r.name))];
+            return names.every(name => document.querySelector(`input[name="${name}"]:checked`));
         }
         if (i === 5) {
             const opsi = document.querySelector('input[name="opsi_pembayaran"]:checked');
@@ -533,6 +586,7 @@
 
             if (dot) {
                 dot.classList.toggle('bg-primary', n <= current);
+                dot.classList.toggle('bg-surface', n > current); // Fix conflict
                 dot.classList.toggle('border-primary', n <= current);
                 dot.classList.toggle('text-white', n <= current);
                 dot.classList.toggle('ring-4', n === current);

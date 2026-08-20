@@ -301,7 +301,7 @@ function closeMejaModal() {
 }
 
 function openQrDrawer(id, nomor_meja, kode_meja, kapasitas, qr_token, area) {
-    const appUrl = '{{ env("APP_URL") }}';
+    const appUrl = '{{ \App\Helpers\IdCodeGenerator::getLanBaseUrl() }}';
     
     // Set Detail Data
     const cleanNomor = nomor_meja.replace(/^meja\s*/i, '');
@@ -380,7 +380,7 @@ function downloadQrPng() {
         link.href = img.src;
         link.click();
     } else {
-        alert('QR Code belum siap. Coba buka drawer meja terlebih dahulu.');
+        window.showToast('warning', 'QR Code belum siap. Coba buka drawer meja terlebih dahulu.');
     }
 }
 

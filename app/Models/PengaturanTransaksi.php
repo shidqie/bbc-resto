@@ -16,6 +16,7 @@ class PengaturanTransaksi extends Model
         'persentase_pajak',
         'layanan_aktif',
         'persentase_layanan',
+        'nominal_layanan',
         'diperbarui_oleh',
     ];
 
@@ -24,6 +25,7 @@ class PengaturanTransaksi extends Model
         'layanan_aktif' => 'boolean',
         'persentase_pajak' => 'decimal:2',
         'persentase_layanan' => 'decimal:2',
+        'nominal_layanan' => 'decimal:2',
     ];
 
     public function diperbaruiOleh()

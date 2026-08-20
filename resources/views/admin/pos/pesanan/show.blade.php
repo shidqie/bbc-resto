@@ -77,7 +77,7 @@
                             <tfoot>
                                 <tr class="border-t-2 border-gray-100 bg-gray-50/80 print-bg">
                                     <td colspan="3" class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs tracking-wider">Total Harga:</td>
-                                    <td class="px-6 py-4 font-bold text-[#3B82F6] text-lg text-right">
+                                    <td class="px-6 py-4 font-bold text-primary text-lg text-right">
                                         Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}
                                     </td>
                                 </tr>
@@ -105,7 +105,7 @@
                         </div>
                         <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200">
                             <span class="text-sm font-medium text-gray-500">Pelanggan</span>
-                            <span class="text-xs font-bold text-[#3B82F6]">{{ $pesanan->nama_pelanggan ?? 'Walk-in Customer' }}</span>
+                            <span class="text-xs font-bold text-primary">{{ $pesanan->nama_pelanggan ?? 'Walk-in Customer' }}</span>
                         </div>
                         <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200">
                             <span class="text-sm font-medium text-gray-500">Kasir</span>
@@ -119,15 +119,15 @@
                         <div class="mt-4 pt-2">
                             <div class="text-sm font-medium text-gray-500 mb-2">Status Pembayaran:</div>
                             @if($pesanan->status_pembayaran == 'lunas')
-                                <div class="bg-green-50 text-[#16A34A] px-3 py-2 rounded-xl border border-green-200 text-center font-extrabold text-xs flex items-center justify-center gap-2 print-bg">
-                                    <x-heroicon-o-check-circle class="w-4 h-4 inline-block shrink-0 text-[#16A34A]" /> LUNAS
+                                <div class="bg-green-50 text-success px-3 py-2 rounded-xl border border-green-200 text-center font-extrabold text-xs flex items-center justify-center gap-2 print-bg">
+                                    <x-heroicon-o-check-circle class="w-4 h-4 inline-block shrink-0 text-success" /> LUNAS
                                 </div>
                             @elseif($pesanan->status_pembayaran == 'dp')
-                                <div class="bg-blue-50 text-[#3B82F6] px-3 py-2 rounded-xl border border-blue-200 text-center font-extrabold text-xs print-bg">
+                                <div class="bg-primary-soft text-primary px-3 py-2 rounded-xl border border-primary/20 text-center font-extrabold text-xs print-bg">
                                     DP DIBAYARKAN
                                 </div>
                             @else
-                                <div class="bg-red-50 text-[#DC2626] px-3 py-2 rounded-xl border border-red-200 text-center font-extrabold text-xs print-bg">
+                                <div class="bg-red-50 text-danger px-3 py-2 rounded-xl border border-red-200 text-center font-extrabold text-xs print-bg">
                                     BELUM BAYAR
                                 </div>
                             @endif
@@ -144,7 +144,7 @@
                             <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-sm print-bg">
                                 <div class="flex justify-between mb-1">
                                     <span class="font-bold text-gray-900 uppercase text-xs">{{ optional($pembayaran->metode_pembayaran)->nama_metode ?? 'CASH' }}</span>
-                                    <span class="text-[#16A34A] font-bold">Rp {{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</span>
+                                    <span class="text-success font-bold">Rp {{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</span>
                                 </div>
                                 <div class="text-xs text-gray-500">
                                     {{ \Carbon\Carbon::parse($pembayaran->dibayar_pada)->format('d M Y H:i') }} ({{ optional($pembayaran->jenis_pembayaran)->nama_jenis ?? 'Pembayaran Penuh' }})

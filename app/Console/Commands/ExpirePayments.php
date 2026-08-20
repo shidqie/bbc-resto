@@ -63,16 +63,16 @@ class ExpirePayments extends Command
                 $this->info("Sesi pelunasan untuk Pesanan ID {$pelunasan->pesanan_id} kedaluwarsa.");
             }
 
-            // 3. Batas Pelunasan H-4 Terlewati -> Perlu Tinjauan Pemilik
+            // 3. Batas Pelunasan H-4 Terlewati -> Dibatalkan
             $pastDeadlinePesanan = Pesanan::where('status_pembayaran_id', 3) // Menunggu Pelunasan
                 ->whereNotNull('batas_pelunasan')
                 ->where('batas_pelunasan', '<', now())
-                ->where('status_pesanan_id', '!=', 7) // Belum ditinjau
+                ->where('status_pesanan_id', '!=', 6)
                 ->get();
 
             foreach ($pastDeadlinePesanan as $pesanan) {
-                $pesanan->update(['status_pesanan_id' => 7]); // Perlu Tinjauan Pemilik
-                $this->info("Pesanan {$pesanan->id_pesanan} diubah menjadi Perlu Tinjauan Pemilik (Batas H-4 lewat).");
+                $pesanan->update(['status_pesanan_id' => 6, 'alasan_batal' => 'Dibatalkan oleh sistem (Batas H-4 lewat)']);
+                $this->info("Pesanan {$pesanan->id_pesanan} dibatalkan otomatis (Batas H-4 lewat).");
             }
         });
 

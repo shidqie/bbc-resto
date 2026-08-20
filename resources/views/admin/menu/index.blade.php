@@ -45,9 +45,26 @@
                     <x-ui.button variant="secondary" icon="plus" onclick="openKategoriModal()" id="btnAddKategori" class="hidden">
                         Kategori Baru
                     </x-ui.button>
-                    <x-ui.button variant="primary" icon="plus" onclick="openMenuModal()" id="btnAddMenu">
-                        Menu Baru
-                    </x-ui.button>
+                    
+                    <div class="relative" x-data="{ open: false }">
+                        <x-ui.button variant="primary" icon="plus" @click="open = !open" id="btnAddMenu">
+                            Tambah Menu
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1 transition-transform" :class="open ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </x-ui.button>
+
+                        <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+                            <button @click="open = false; openMenuModal('dinein')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                Menu Dine-In
+                            </button>
+                            <button @click="open = false; openMenuModal('paket')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                                Paket
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </x-slot:actions>
         </x-ui.page-header>
@@ -56,6 +73,9 @@
 
         {{-- TABS --}}
         <x-ui.tab-list>
+            <x-ui.tab href="{{ route('menu.index', ['jenis_menu_id' => 'all']) }}" :active="$jenisId === 'all'">
+                Semua Menu
+            </x-ui.tab>
             <x-ui.tab href="{{ route('menu.index', ['jenis_menu_id' => 1]) }}" :active="$jenisId == 1">
                 Menu Dine In
             </x-ui.tab>
@@ -70,14 +90,14 @@
         {{-- Menu Table --}}
         <x-ui.data-table :paginator="$menus">
             <x-slot:toolbar>
-                <form action="{{ route('menu.index') }}" method="GET" class="w-full flex items-center gap-3">
-                    <input type="hidden" name="jenis_menu_id" value="{{ request('jenis_menu_id') }}">
+                <form action="{{ route('menu.index') }}" method="GET" class="w-full flex flex-wrap items-center gap-3">
+                    <input type="hidden" name="jenis_menu_id" value="{{ request('jenis_menu_id', '1') }}">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode…" width="w-full sm:w-72" />
-                    <select name="filter_resep" onchange="this.form.submit()" class="h-10 px-3 text-sm border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white transition-all text-gray-700">
-                        <option value="">Resep Menu</option>
-                        <option value="ada" {{ request('filter_resep') == 'ada' ? 'selected' : '' }}>Sudah Ada Resep</option>
-                        <option value="belum" {{ request('filter_resep') == 'belum' ? 'selected' : '' }}>Belum Ada Resep</option>
-                    </select>
+                    <x-ui.multi-select name="kategori_id" :options="$allKategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori_id')" label="Kategori" type="radio" />
+                    <x-ui.multi-select name="filter_resep" :options="['ada' => 'Sudah Ada Resep', 'belum' => 'Belum Ada Resep']" :selected="request('filter_resep')" label="Resep Menu" type="radio" />
+                    @if(request()->hasAny(['search', 'kategori_id', 'filter_resep']))
+                        <x-ui.button href="{{ route('menu.index', ['jenis_menu_id' => request('jenis_menu_id', '1')]) }}" variant="danger" size="sm">Reset</x-ui.button>
+                    @endif
                 </form>
             </x-slot:toolbar>
 
@@ -120,7 +140,7 @@
                                     /porsi
                                 @endif
                             </td>
-                            @if($jenisId != 1)
+                            @if($jenisId != 1 && $jenisId !== 'all')
                                 <td class="px-4 py-3 text-sm text-gray-700">
                                     @if($menu->komponen_paket && $menu->komponen_paket->count() > 0)
                                         <span class="font-semibold text-gray-900">{{ $menu->komponen_paket->count() }}</span>
@@ -146,7 +166,7 @@
                         </x-ui.table.row>
                         @empty
                         <tr>
-                            <td colspan="{{ $jenisId != 1 ? 7 : 6 }}">
+                            <td colspan="{{ $jenisId != 1 && $jenisId !== 'all' ? 7 : 6 }}">
                                 <x-ui.empty-state icon="archive-box" title="Belum ada menu" message="Tambahkan menu untuk mulai melayani pelanggan." />
                             </td>
                         </tr>
@@ -259,9 +279,22 @@
         </div>
 
         {{-- Form Body --}}
-        <form id="formMenu" action="{{ route('menu.store') }}" method="POST" enctype="multipart/form-data" class="flex-1 overflow-y-auto flex flex-col justify-between">
+        <form id="formMenu" action="{{ route('menu.store') }}" method="POST" enctype="multipart/form-data" novalidate class="flex-1 overflow-y-auto flex flex-col justify-between">
             @csrf
             <div id="formMenuMethod"></div>
+            
+            @if ($errors->any())
+            <div class="px-5 mt-4">
+                <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                    <strong class="font-bold">Gagal menyimpan!</strong>
+                    <ul class="list-disc pl-5 mt-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+            @endif
             
             {{-- Tab: Informasi --}}
             <div id="tabContentInformasi" class="px-5 py-5">
@@ -273,12 +306,12 @@
                         <x-ui.textarea name="nama" id="mnNama" label="Nama Menu *" rows="2" required placeholder="Contoh: Ayam Bakar Madu" />
                     </div>
 
+
+
                     {{-- Komponen Paket Section (Hanya untuk Catering & Nasi Box) --}}
-                    @if($jenisId != 1)
-                    <div class="border border-gray-100 bg-gray-50/50 p-4 rounded-xl space-y-4">
-                        @include('admin.menu.paket.partials.komponen-builder', ['existingKomponen' => []])
+                    <div id="komponenPaketContainerEdit" class="hidden border border-gray-100 bg-gray-50/50 p-4 rounded-xl space-y-4">
+                        @include('admin.menu.paket.partials.komponen-builder', ['existingKomponen' => [], 'menus' => $masterMenus ?? []])
                     </div>
-                    @endif
 
                     {{-- Layanan + Kategori --}}
                     <div class="grid grid-cols-2 gap-3">
@@ -335,6 +368,11 @@
                             <div class="text-xs text-gray-500 mb-1.5">Nama Menu</div>
                             <div class="text-xl font-bold text-gray-900" id="viewNamaMenu">-</div>
                         </div>
+
+                        <div id="komponenPaketContainerView" class="hidden border-t border-gray-100 pt-4 space-y-2">
+                            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Item / Komponen Paket</div>
+                            <div id="viewKomponenList"></div>
+                        </div>
                         <div class="grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
                             <div>
                                 <div class="text-xs text-gray-500 mb-1.5">Layanan</div>
@@ -362,7 +400,7 @@
                     </div>
                     <div class="border border-gray-200 rounded-xl bg-white p-5">
                         <div class="font-semibold text-gray-900 mb-3">Foto Menu</div>
-                        <div class="rounded-xl overflow-hidden bg-gray-50 aspect-square md:aspect-auto md:h-[280px] flex items-center justify-center">
+                        <div class="rounded-xl overflow-hidden bg-gray-50 aspect-square w-full max-w-sm mx-auto flex items-center justify-center border border-gray-100">
                             <img id="viewFotoMenu" src="" class="w-full h-full object-cover hidden" alt="Foto">
                             <span id="viewFotoPlaceholder" class="text-gray-400 text-sm">Tidak ada foto</span>
                         </div>
@@ -373,53 +411,126 @@
             
             {{-- Tab: Resep --}}
             <div id="tabContentResep" class="px-5 py-5 space-y-4 hidden">
+                <div id="resepAlertNewMenu" class="hidden bg-amber-50 text-amber-800 p-4 rounded-lg text-sm border border-amber-200">
+                    <div class="font-semibold mb-1">Menu Belum Disimpan</div>
+                    Silakan isi <strong>Informasi Menu</strong> terlebih dahulu dan klik <strong>Simpan</strong>. Resep hanya dapat ditambahkan setelah menu berhasil dibuat.
+                </div>
+                
                 <div id="resepInputArea" class="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-3">
-                    <p class="text-xs text-gray-500">Masukkan bahan baku yang dibutuhkan untuk 1 porsi menu ini.</p>
-                    <div class="flex gap-2 items-start">
-                        <div class="flex-1">
-                            <select id="inputBahanBaku" onchange="document.getElementById('inputSatuan').value = this.options[this.selectedIndex].getAttribute('data-satuan_id') || ''" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded bg-white outline-none">
-                                <option value="" data-satuan_id="" data-nama="">Pilih Bahan</option>
-                                @foreach($bahanBakus ?? [] as $bb)
-                                <option value="{{ $bb->id }}" data-satuan_id="{{ $bb->satuan_id }}" data-nama="{{ $bb->nama_bahan }}">{{ $bb->nama_bahan }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="w-48 flex items-center border border-gray-200 rounded overflow-hidden bg-white">
-                            <input type="number" step="0.01" id="inputJumlah" placeholder="Jumlah" class="w-16 px-2 py-1.5 text-xs outline-none bg-transparent">
-                            <div class="w-px h-5 bg-gray-200"></div>
-                            <select id="inputSatuan" class="flex-1 px-1 py-1.5 text-xs text-gray-500 bg-transparent outline-none cursor-pointer text-center border-0 focus:ring-0">
-                                <option value="">Satuan</option>
-                                @foreach($satuans ?? [] as $st)
-                                <option value="{{ $st->id }}">{{ $st->singkatan ?? $st->nama_satuan }}</option>
-                                @endforeach
-                            </select>
-                            <button type="button" onclick="toggleSatuanBaruForm()" class="w-7 h-full min-h-[32px] flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-600 border-l border-gray-200 transition-colors" title="Tambah Satuan Baru">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            </button>
-                        </div>
-                        <div>
-                            <button type="button" onclick="handleAddResep()" class="inline-flex items-center justify-center h-8 px-3 text-xs font-semibold bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors">
-                                Tambah
-                            </button>
-                        </div>
+                    <div id="resepMenuContextInfo" class="hidden mb-3 pb-3 border-b border-gray-200">
+                        <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Resep Untuk Menu:</p>
+                        <p class="text-sm font-bold text-gray-900" id="resepMenuContextName">-</p>
                     </div>
-                    
-                    {{-- Form Tambah Satuan Baru (Inline) --}}
-                    <div id="satuanBaruForm" class="hidden mt-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
-                        <div class="flex gap-2 items-end">
-                            <div class="flex-1">
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Nama Satuan</label>
-                                <input type="text" id="inputNamaSatuanBaru" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded outline-none" placeholder="Contoh: Ikat">
-                            </div>
-                            <div class="w-24">
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Singkatan</label>
-                                <input type="text" id="inputSingkatanSatuanBaru" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded outline-none" placeholder="Contoh: ikt">
-                            </div>
-                            <button type="button" onclick="simpanSatuanBaru()" class="px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                                Simpan Satuan
+                    <p class="text-xs text-gray-500">Masukkan bahan baku yang dibutuhkan untuk 1 porsi menu ini.</p>
+                    <div class="flex gap-2.5 items-center" x-data="{
+                        open: false,
+                        search: '',
+                        selectedId: '',
+                        selectedNama: '',
+                        selectedKode: '',
+                        selectedSatuanId: '',
+                        selectedSatuanText: '',
+                        items: bahanBakusData,
+                        get filtered() {
+                            if (!this.search) return this.items;
+                            let q = this.search.toLowerCase();
+                            return this.items.filter(i => 
+                                (i.nama_bahan && i.nama_bahan.toLowerCase().includes(q)) || 
+                                (i.id_bahan_baku && i.id_bahan_baku.toLowerCase().includes(q))
+                            );
+                        },
+                        select(item) {
+                            this.selectedId = item.id;
+                            this.selectedNama = item.nama_bahan;
+                            this.selectedKode = item.id_bahan_baku || '';
+                            this.selectedSatuanId = item.satuan_id || '';
+                            this.selectedSatuanText = item.satuan ? (item.satuan.singkatan || item.satuan.nama_satuan) : 'pcs';
+                            this.search = item.nama_bahan;
+                            this.open = false;
+                            
+                            document.getElementById('inputBahanBaku').value = item.id;
+                            document.getElementById('inputSatuan').value = item.satuan_id || '';
+                            document.getElementById('inputSatuanTextDisplay').innerText = this.selectedSatuanText;
+                        },
+                        resetSelection() {
+                            this.selectedId = '';
+                            this.selectedNama = '';
+                            this.selectedKode = '';
+                            this.selectedSatuanId = '';
+                            this.selectedSatuanText = '';
+                            this.search = '';
+                            document.getElementById('inputBahanBaku').value = '';
+                            document.getElementById('inputSatuan').value = '';
+                            document.getElementById('inputJumlah').value = '';
+                            document.getElementById('inputSatuanTextDisplay').innerText = '-';
+                        }
+                    }" @click.outside="open = false" @reset-resep-input.window="resetSelection()" @edit-resep-input.window="
+                        let bId = $event.detail.bahanId;
+                        let item = items.find(i => i.id == bId);
+                        if (item) select(item);
+                        document.getElementById('inputJumlah').value = $event.detail.jumlah;
+                    ">
+                        
+                        {{-- Searchable Custom Dropdown --}}
+                        <div class="relative flex-1">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+
+                            <input type="text"
+                                   x-model="search"
+                                   @focus="open = true"
+                                   @click="open = true"
+                                   @input="open = true"
+                                   placeholder="Cari & pilih bahan baku..."
+                                   class="w-full h-10 rounded-xl border border-gray-200 bg-white text-xs pl-10 pr-9 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium shadow-2xs text-gray-800">
+                            
+                            <input type="hidden" id="inputBahanBaku" value="">
+
+                            <button type="button" @click="open = !open" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
-                            <button type="button" onclick="toggleSatuanBaruForm()" class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
-                                Batal
+
+                            {{-- Floating Dropdown Card --}}
+                            <div x-show="open"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="opacity-0 transform scale-95"
+                                 x-transition:enter-end="opacity-100 transform scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="opacity-100 transform scale-100"
+                                 x-transition:leave-end="opacity-0 transform scale-95"
+                                 class="absolute left-0 z-50 mt-1.5 w-full min-w-[280px] bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto divide-y divide-gray-50"
+                                 style="display: none;">
+                                <template x-for="item in filtered" :key="item.id">
+                                    <div @click="select(item)" class="px-4 py-2.5 hover:bg-emerald-50/70 cursor-pointer flex items-center justify-between transition-colors">
+                                        <div>
+                                            <p class="text-xs font-semibold text-gray-800" x-text="item.nama_bahan"></p>
+                                            <p class="text-[10px] text-gray-400 font-medium" x-text="item.id_bahan_baku || ''"></p>
+                                        </div>
+                                        <span class="text-[10px] px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium" x-text="item.satuan ? (item.satuan.singkatan || item.satuan.nama_satuan) : 'pcs'"></span>
+                                    </div>
+                                </template>
+                                <div x-show="filtered.length === 0" class="px-4 py-3 text-xs text-gray-400 text-center">
+                                    Bahan baku tidak ditemukan
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Jumlah Input & Satuan Display --}}
+                        <div class="w-48 h-10 flex items-center border border-gray-200 rounded-xl bg-white shadow-2xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-hidden px-3">
+                            <input type="number" min="0" step="any" id="inputJumlah" placeholder="Jumlah" 
+                                   oninput="if(this.value < 0) this.value = ''" 
+                                   class="w-24 py-2 text-xs font-semibold text-gray-900 outline-none bg-transparent placeholder-gray-400 border-none focus:outline-none focus:ring-0">
+                            <input type="hidden" id="inputSatuan" value="">
+                            <span id="inputSatuanTextDisplay" class="text-[10px] font-bold text-gray-500 uppercase tracking-wider pl-2 border-l border-gray-200 truncate">
+                                -
+                            </span>
+                        </div>
+
+                        {{-- Tambah Button --}}
+                        <div>
+                            <button type="button" onclick="handleAddResepCustom()" class="h-10 px-4 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-gray-800 active:scale-98 transition-all shadow-2xs flex items-center gap-1">
+                                + Tambah
                             </button>
                         </div>
                     </div>
@@ -450,7 +561,16 @@
 
             {{-- Tab: Resep Menu Paket --}}
             <div id="tabContentDaftarMenuPaket" class="px-5 py-5 space-y-4 hidden">
-                <div>
+                
+                {{-- Mode Read-Only (Tree / Hierarchy Resep Menu Paket) --}}
+                <div id="paketResepViewOnlyMode" class="hidden space-y-4">
+                    <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 space-y-4" id="paketTreeViewContainer">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                {{-- Mode Edit (Tabel Aksi Edit/Tambah Resep) --}}
+                <div id="paketResepEditModeTable">
                     <h4 class="text-sm font-semibold text-gray-900 mb-1">Daftar Resep Menu Paket</h4>
                     <p class="text-xs text-gray-500 mb-3">Daftar menu yang termasuk dalam paket ini beserta status resepnya.</p>
                     <div class="overflow-x-auto rounded-lg border border-gray-200">
@@ -459,8 +579,6 @@
                                 <tr>
                                     <th class="px-4 py-3">No</th>
                                     <th class="px-4 py-3">Nama Menu</th>
-                                    <th class="px-4 py-3">Kategori</th>
-                                    <th class="px-4 py-3">Tipe</th>
                                     <th class="px-4 py-3 text-center">Status Resep</th>
                                     <th class="px-4 py-3 text-center">Aksi</th>
                                 </tr>
@@ -471,6 +589,7 @@
                     </div>
                     <div id="daftarMenuPaketEmpty" class="hidden text-center py-6 text-gray-400 text-sm">Belum ada menu di paket ini.</div>
                 </div>
+
             </div>
 
             {{-- Footer --}}
@@ -563,11 +682,71 @@ function closeDeleteModal() {
     document.getElementById('formHapus').action = '';
 }
 
+function deleteResep(menuId) {
+    if (confirm('Apakah Anda yakin ingin menghapus resep untuk menu ini? Semua bahan baku yang tersimpan akan dihapus.')) {
+        fetch(`${BASE_URL}/menu/${menuId}/resep`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  window.location.reload();
+              } else {
+                  alert(data.message || 'Gagal menghapus resep');
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert('Terjadi kesalahan sistem saat menghubungi server.');
+          });
+    }
+}
+
+function createMenuForOption(opsiId, namaPilihan) {
+    if (confirm(`Menu "${namaPilihan}" belum ada di daftar menu sistem. Apakah Anda ingin membuatnya secara otomatis sekarang agar bisa ditambahkan resepnya?`)) {
+        fetch(`${BASE_URL}/menu/create-from-option`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ opsi_id: opsiId, nama_menu: namaPilihan })
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                // Setelah dibuat, buka modal resep untuk menu baru ini
+                window.location.reload();
+            } else {
+                alert(data.message || 'Gagal membuat menu otomatis.');
+            }
+        }).catch(err => {
+            console.error(err);
+            alert('Terjadi kesalahan sistem saat menghubungi server.');
+        });
+    }
+}
+
 // ═══ MENU DRAWER ═══
 function openMenuModal(menuId = null, isView = false, defaultTab = 'informasi') {
     let menu = null;
+    let defaultJenis = 1;
+
+    if (menuId === 'dinein') {
+        defaultJenis = 1;
+        menuId = null;
+    } else if (menuId === 'paket') {
+        defaultJenis = 3; // Default to Nasi Box for Paket
+        menuId = null;
+    }
+
     if (menuId) {
         menu = menusData.find(m => m.id == menuId);
+        if (!menu) {
+            menu = allMenusData.find(m => m.id == menuId);
+        }
     }
 
     const drawer = document.getElementById('drawerMenu');
@@ -586,7 +765,7 @@ function openMenuModal(menuId = null, isView = false, defaultTab = 'informasi') 
     const menuNama = menu?.nama_menu ?? menu?.nama ?? '';
     document.getElementById('menuModalSubtitle').textContent = menu ? (menuKode + (menuNama ? ' - ' + menuNama : '')) : 'Isi informasi menu';
 
-    const jenisVal = menu ? (menu.jenis_menu_id ?? 1) : 1;
+    const jenisVal = menu ? (menu.jenis_menu_id ?? 1) : defaultJenis;
     document.getElementById('mnNama').value = menu ? (menu.nama_menu ?? menu.nama ?? '') : '';
     document.getElementById('mnJenis').value = jenisVal;
     
@@ -668,97 +847,220 @@ function openMenuModal(menuId = null, isView = false, defaultTab = 'informasi') 
     }
     
     checkResepEmptyState();
+    
+    const resepAlert = document.getElementById('resepAlertNewMenu');
+    const resepInputArea = document.getElementById('resepInputArea');
+    const resepAksiHeader = document.getElementById('resepAksiHeader');
+    const resepContext = document.getElementById('resepMenuContextInfo');
+    
     if (isView) {
-        document.getElementById('resepInputArea').classList.add('hidden');
-        document.getElementById('resepAksiHeader').style.display = 'none';
+        if (resepAlert) resepAlert.classList.add('hidden');
+        if (resepInputArea) resepInputArea.classList.add('hidden');
+        if (resepAksiHeader) resepAksiHeader.style.display = 'none';
+        if (resepContext) resepContext.classList.add('hidden');
     } else {
-        document.getElementById('resepInputArea').classList.remove('hidden');
-        document.getElementById('resepAksiHeader').style.display = '';
+        if (!menu) {
+            // New Menu
+            if (resepAlert) resepAlert.classList.remove('hidden');
+            if (resepInputArea) resepInputArea.classList.add('hidden');
+            if (resepAksiHeader) resepAksiHeader.style.display = 'none';
+            if (resepContext) resepContext.classList.add('hidden');
+        } else {
+            // Edit Menu
+            if (resepAlert) resepAlert.classList.add('hidden');
+            if (resepInputArea) resepInputArea.classList.remove('hidden');
+            if (resepAksiHeader) resepAksiHeader.style.display = '';
+            if (resepContext) {
+                resepContext.classList.remove('hidden');
+                document.getElementById('resepMenuContextName').textContent = (menuKode ? menuKode + ' - ' : '') + menuNama;
+            }
+        }
     }
 
-    const isPaket = jenisVal == 2 || jenisVal == 3;
+    const isPaket = jenisVal == 2 || jenisVal == 3 || (menu && menu.komponen_paket && menu.komponen_paket.length > 0);
     const btnResep = document.getElementById('tabBtnResep');
     const btnDaftarMenuPaket = document.getElementById('tabBtnDaftarMenuPaket');
+    const komponenContainerEdit = document.getElementById('komponenPaketContainerEdit');
+    const komponenContainerView = document.getElementById('komponenPaketContainerView');
 
     if (isPaket) {
+        const btnInformasi = document.getElementById('tabBtnInformasi');
         btnResep.classList.add('hidden');
         btnDaftarMenuPaket.classList.remove('hidden');
+        btnInformasi.textContent = 'Informasi Paket';
+        btnDaftarMenuPaket.textContent = 'Resep Menu';
+        if (komponenContainerEdit) komponenContainerEdit.classList.remove('hidden');
+        if (komponenContainerView) komponenContainerView.classList.remove('hidden');
 
-        // Populate Daftar Menu Paket
-        const daftarContainer = document.getElementById('daftarMenuPaketContainer');
-        const daftarEmpty = document.getElementById('daftarMenuPaketEmpty');
-        daftarContainer.innerHTML = '';
-        
-        if (menu && menu.komponen_paket && menu.komponen_paket.length > 0) {
+        const viewModeContainer = document.getElementById('paketResepViewOnlyMode');
+        const editModeContainer = document.getElementById('paketResepEditModeTable');
+
+        if (isView) {
+            if (viewModeContainer) viewModeContainer.classList.remove('hidden');
+            if (editModeContainer) editModeContainer.classList.add('hidden');
+            renderPaketResepTree(menu);
+        } else {
+            if (viewModeContainer) viewModeContainer.classList.add('hidden');
+            if (editModeContainer) editModeContainer.classList.remove('hidden');
+
+            // Populate Daftar Menu Paket (Edit Mode Table)
+            const daftarContainer = document.getElementById('daftarMenuPaketContainer');
+            const daftarEmpty = document.getElementById('daftarMenuPaketEmpty');
+            daftarContainer.innerHTML = '';
+            
+            if (menu && menu.komponen_paket && menu.komponen_paket.length > 0) {
             daftarEmpty.classList.add('hidden');
             let no = 1;
             menu.komponen_paket.forEach(komp => {
-                    const statusResep = (menu.status_resep_komponen && menu.status_resep_komponen[komp.id]) || 'Belum Lengkap';
-                    const statusClass = statusResep === 'Lengkap' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
-                    const isTetap = komp.tipe_item === 'tetap';
-                    
+                const isTetap = komp.tipe_item === 'tetap' || komp.tipe_item === 'wajib';
+                
+                if (isTetap) {
+                    let targetMenuId = null;
                     let namaMenu = komp.nama_item;
                     let kategori = '-';
-                    let tipeText = isTetap ? 'Wajib' : 'Pilihan';
-                    let aksiHtml = '-';
                     
-                    let targetMenuId = null;
-
-                    if (isTetap) {
-                        if (komp.menu_terkait) {
-                            namaMenu = komp.menu_terkait.nama_menu || komp.nama_item;
-                            kategori = komp.menu_terkait.kategori_menu ? komp.menu_terkait.kategori_menu.nama_kategori : '-';
-                            targetMenuId = komp.menu_terkait.id;
-                        } else {
-                            // Fallback for old data without menu_terkait
-                            const found = allMenusData.find(m => m.nama_menu === komp.nama_item || m.nama === komp.nama_item);
-                            if (found) targetMenuId = found.id;
-                        }
+                    if (komp.menu_terkait) {
+                        namaMenu = komp.menu_terkait.nama_menu || komp.nama_item;
+                        kategori = komp.menu_terkait.kategori_menu ? komp.menu_terkait.kategori_menu.nama_kategori : '-';
+                        targetMenuId = komp.menu_terkait.id;
                     } else {
-                        // For Pilihan, we can use the first option's recipe as a representative, or just link to it
-                        if (komp.opsi && komp.opsi.length > 0) {
-                            targetMenuId = komp.opsi[0].menu_id;
-                            // Fallback for old data where opsi.menu_id is null
-                            if (!targetMenuId) {
-                                const found = allMenusData.find(m => m.nama_menu === komp.opsi[0].nama_pilihan || m.nama === komp.opsi[0].nama_pilihan);
-                                if (found) targetMenuId = found.id;
-                            }
-                        }
+                        const found = allMenusData.find(m => m.nama_menu === komp.nama_item || m.nama === komp.nama_item);
+                        if (found) targetMenuId = found.id;
                     }
 
+                    let statusResep = 'Belum Lengkap';
                     if (targetMenuId) {
-                        aksiHtml = `
-                            <button type="button" onclick="openResepDetailModal(${targetMenuId})" class="text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                                Lihat Resep
-                            </button>
-                        `;
+                        const found = allMenusData.find(m => m.id === targetMenuId);
+                        if (found && found.resep_menu && found.resep_menu.length > 0) {
+                            statusResep = 'Lengkap';
+                        }
+                    }
+                    const statusClass = statusResep === 'Lengkap' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+
+                    let aksiHtml = '-';
+                    if (targetMenuId) {
+                        if (statusResep === 'Lengkap') {
+                            aksiHtml = `
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" onclick="openMenuModal(${targetMenuId}, false, 'resep')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                        Edit Resep
+                                    </button>
+                                    <button type="button" onclick="deleteResep(${targetMenuId})" class="text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        Hapus Resep
+                                    </button>
+                                </div>
+                            `;
+                        } else {
+                            aksiHtml = `
+                                <button type="button" onclick="openMenuModal(${targetMenuId}, false, 'resep')" class="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+                                    Tambahkan Resep
+                                </button>
+                            `;
+                        }
                     }
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td class="px-4 py-3 text-gray-500">${no++}</td>
-                        <td class="px-4 py-3 font-medium text-gray-900">${namaMenu}</td>
-                        <td class="px-4 py-3 text-gray-600">${kategori}</td>
-                        <td class="px-4 py-3 text-gray-600">${tipeText}</td>
+                        <td class="px-4 py-3 font-medium text-gray-900">${namaMenu} <span class="text-xs text-gray-400 font-normal ml-1">(Wajib)</span></td>
                         <td class="px-4 py-3 text-center">
                             <span class="px-2 py-1 rounded text-xs font-medium ${statusClass}">${statusResep}</span>
                         </td>
                         <td class="px-4 py-3 text-center">${aksiHtml}</td>
                     `;
                     daftarContainer.appendChild(row);
-                });
+                } else {
+                    if (komp.opsi && komp.opsi.length > 0) {
+                        komp.opsi.forEach(opsi => {
+                            let targetMenuId = opsi.menu_id;
+                            let namaMenu = opsi.nama_pilihan;
+                            let kategori = '-';
+                            if (opsi.menu) {
+                                namaMenu = opsi.menu.nama_menu || opsi.nama_pilihan;
+                                kategori = opsi.menu.kategori_menu ? opsi.menu.kategori_menu.nama_kategori : '-';
+                            } else if (!targetMenuId) {
+                                // Fallback for old data where opsi.menu_id is null
+                                const found = allMenusData.find(m => m.nama_menu === opsi.nama_pilihan || m.nama === opsi.nama_pilihan);
+                                if (found) targetMenuId = found.id;
+                            }
+                            
+                            let statusResep = 'Belum Lengkap';
+                            if (targetMenuId) {
+                                const found = allMenusData.find(m => m.id === targetMenuId);
+                                if (found && found.resep_menu && found.resep_menu.length > 0) {
+                                    statusResep = 'Lengkap';
+                                }
+                            }
+                            const statusClass = statusResep === 'Lengkap' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+
+                            let aksiHtml = '-';
+                            if (targetMenuId) {
+                                if (statusResep === 'Lengkap') {
+                                    aksiHtml = `
+                                        <div class="flex items-center justify-center gap-2">
+                                            <button type="button" onclick="openMenuModal(${targetMenuId}, false, 'resep')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                                Edit Resep
+                                            </button>
+                                            <button type="button" onclick="deleteResep(${targetMenuId})" class="text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                Hapus Resep
+                                            </button>
+                                        </div>
+                                    `;
+                                } else {
+                                    aksiHtml = `
+                                        <button type="button" onclick="openMenuModal(${targetMenuId}, false, 'resep')" class="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+                                            Tambahkan Resep
+                                        </button>
+                                    `;
+                                }
+                            } else {
+                                // For options that don't have a menu yet
+                                aksiHtml = `
+                                    <button type="button" onclick="createMenuForOption(${opsi.id}, '${namaMenu.replace(/'/g, "\\'")}')" class="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-xs font-medium inline-flex items-center gap-1.5 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+                                        Tambahkan Resep
+                                    </button>
+                                `;
+                            }
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="px-4 py-3 text-gray-500">${no++}</td>
+                                <td class="px-4 py-3 font-medium text-gray-900">${namaMenu} <span class="text-xs text-gray-400 font-normal ml-1">(${komp.nama_item})</span></td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 rounded text-xs font-medium ${statusClass}">${statusResep}</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">${aksiHtml}</td>
+                            `;
+                            daftarContainer.appendChild(row);
+                        });
+                    }
+                }
+            });
             } else {
                 daftarEmpty.classList.remove('hidden');
             }
+        }
     } else {
+        const btnInformasi = document.getElementById('tabBtnInformasi');
         btnResep.classList.remove('hidden');
         btnDaftarMenuPaket.classList.add('hidden');
+        btnInformasi.textContent = 'Informasi Menu';
+        btnResep.textContent = 'Resep Menu';
+        if (komponenContainerEdit) komponenContainerEdit.classList.add('hidden');
+        if (komponenContainerView) komponenContainerView.classList.add('hidden');
     }
 
     // Reset komponen builder (Alpine)
     window.dispatchEvent(new CustomEvent('set-readonly', { detail: isView }));
     window.dispatchEvent(new CustomEvent('set-komponens', { detail: (menu && menu.komponen_paket) ? menu.komponen_paket : [] }));
+    renderKomponenViewList((menu && menu.komponen_paket) ? menu.komponen_paket : []);
 
     drawer.classList.remove('hidden');
     drawer.style.display = 'flex';
@@ -768,6 +1070,166 @@ function openMenuModal(menuId = null, isView = false, defaultTab = 'informasi') 
         overlay.classList.remove('opacity-0');
         panel.classList.remove('translate-x-full');
     });
+}
+
+function renderKomponenViewList(komponenList) {
+    const container = document.getElementById('viewKomponenList');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!komponenList || komponenList.length === 0) {
+        container.innerHTML = '<div class="text-xs text-gray-400 italic py-1">Belum ada item paket.</div>';
+        return;
+    }
+
+    let html = '<div class="space-y-3 py-1">';
+    komponenList.forEach((komp, idx) => {
+        const namaKelompok = komp.nama_item || komp.nama_komponen || (komp.menu_terkait ? komp.menu_terkait.nama_menu : 'Kelompok ' + (idx + 1));
+        const opsiList = komp.opsi || komp.pilihan || komp.pilihan_item_paket || [];
+        
+        let opsiText = '';
+        if (opsiList && opsiList.length > 0) {
+            opsiText = opsiList.map(o => o.nama_pilihan || (o.menu ? o.menu.nama_menu : '') || o.nama || '').filter(Boolean).join(', ');
+        }
+
+        html += `
+            <div class="space-y-0.5">
+                <div class="font-bold text-sm text-gray-900">${namaKelompok}</div>
+                ${opsiText ? `<div class="text-xs text-gray-500 font-medium">• ${opsiText}</div>` : ''}
+            </div>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function renderPaketResepTree(menu) {
+    const container = document.getElementById('paketTreeViewContainer');
+    if (!container) return;
+
+    const menuNama = menu ? (menu.nama_menu || menu.nama || 'Paket') : 'Paket';
+    const isBancakan = menuNama.toLowerCase().includes('bancakan');
+    const subtitleText = isBancakan 
+        ? 'Komposisi resep bahan baku per porsi paket (5 Porsi)' 
+        : 'Komposisi resep bahan baku per porsi menu paket';
+
+    let html = `
+        <div class="space-y-5 font-sans">
+            {{-- Minimalist Header --}}
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-base tracking-tight">${menuNama} ${isBancakan ? '<span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 ml-2">Porsi 5 Orang</span>' : ''}</h3>
+                    <p class="text-xs text-gray-400 font-medium">${subtitleText}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+                    ${menu && menu.komponen_paket ? menu.komponen_paket.length : 0} Item Menu
+                </span>
+            </div>
+
+            {{-- Minimalist List --}}
+            <div class="space-y-3">
+    `;
+
+    let menuCount = 0;
+    if (menu && menu.komponen_paket && menu.komponen_paket.length > 0) {
+        menu.komponen_paket.forEach((komp) => {
+            const isTetap = komp.tipe_item === 'tetap' || komp.tipe_item === 'wajib';
+
+            let renderNode = (targetMenuId, namaItem, categoryBadge) => {
+                menuCount++;
+                let foundMenu = null;
+                if (targetMenuId) {
+                    foundMenu = allMenusData.find(m => m.id === targetMenuId);
+                } else {
+                    foundMenu = allMenusData.find(m => m.nama_menu === namaItem || m.nama === namaItem);
+                }
+
+                let resepList = foundMenu ? (foundMenu.resep_menu || []) : [];
+                let hasResep = resepList.length > 0;
+
+                let nodeHtml = `
+                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-2xs space-y-2.5">
+                        {{-- Menu Header --}}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full ${hasResep ? 'bg-emerald-500' : 'bg-amber-400'} shrink-0"></span>
+                                <span class="font-bold text-gray-900 text-sm">${namaItem}</span>
+                                <span class="text-xs text-gray-400 font-normal">(${categoryBadge})</span>
+                            </div>
+                            <span class="text-[11px] font-semibold ${hasResep ? 'text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60' : 'text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60'}">
+                                ${hasResep ? 'Resep Ada' : 'Belum Ada Resep'}
+                            </span>
+                        </div>
+                `;
+
+                if (hasResep) {
+                    nodeHtml += `
+                        <div class="pt-2 border-t border-gray-50">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 pl-3 border-l-2 border-gray-100">
+                    `;
+                    resepList.forEach(r => {
+                        let namaBahan = r.bahan_baku ? (r.bahan_baku.nama_bahan || r.bahan_baku.nama) : 'Bahan Baku';
+                        let satStr = '';
+                        if (r.satuan && (r.satuan.singkatan || r.satuan.nama_satuan)) {
+                            satStr = r.satuan.singkatan || r.satuan.nama_satuan;
+                        } else if (r.bahan_baku && r.bahan_baku.satuan && (r.bahan_baku.satuan.singkatan || r.bahan_baku.satuan.nama_satuan)) {
+                            satStr = r.bahan_baku.satuan.singkatan || r.bahan_baku.satuan.nama_satuan;
+                        }
+                        let jumlah = r.jumlah_kebutuhan || r.jumlah || 0;
+                        let formattedJumlah = parseFloat(jumlah).toLocaleString('id-ID');
+
+                        nodeHtml += `
+                            <div class="flex items-center justify-between py-0.5 text-xs">
+                                <span class="text-gray-600 font-medium flex items-center gap-1.5">
+                                    <span class="text-gray-300">•</span>
+                                    ${namaBahan}
+                                </span>
+                                <span class="font-bold text-gray-900">${formattedJumlah} ${satStr}</span>
+                            </div>
+                        `;
+                    });
+                    nodeHtml += `
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    nodeHtml += `
+                        <div class="pl-3 border-l-2 border-amber-100 pt-1">
+                            <span class="text-xs text-amber-500 font-medium italic">Belum ada rincian bahan baku</span>
+                        </div>
+                    `;
+                }
+
+                nodeHtml += `</div>`;
+                return nodeHtml;
+            };
+
+            if (isTetap) {
+                let targetMenuId = komp.menu_terkait ? komp.menu_terkait.id : null;
+                let namaMenu = komp.menu_terkait ? (komp.menu_terkait.nama_menu || komp.nama_item) : komp.nama_item;
+                let kat = komp.menu_terkait && komp.menu_terkait.kategori_menu ? komp.menu_terkait.kategori_menu.nama_kategori : 'Wajib';
+                html += renderNode(targetMenuId, namaMenu, kat);
+            } else if (komp.opsi && komp.opsi.length > 0) {
+                komp.opsi.forEach(opsi => {
+                    let targetMenuId = opsi.menu_id;
+                    let namaMenu = opsi.menu ? (opsi.menu.nama_menu || opsi.nama_pilihan) : opsi.nama_pilihan;
+                    let kat = opsi.menu && opsi.menu.kategori_menu ? opsi.menu.kategori_menu.nama_kategori : 'Pilihan';
+                    html += renderNode(targetMenuId, namaMenu, kat);
+                });
+            }
+        });
+    }
+
+    if (menuCount === 0) {
+        html += `<div class="text-center py-6 text-gray-400 text-sm">Belum ada menu dalam paket ini.</div>`;
+    }
+
+    html += `
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
 }
 
 function switchMenuTab(tabId) {
@@ -823,7 +1285,7 @@ function openResepDetailModal(menuId) {
             row.innerHTML = `
                 <td class="px-5 py-3 text-gray-500">${no++}</td>
                 <td class="px-5 py-3 font-medium text-gray-900">${namaBahan}</td>
-                <td class="px-5 py-3 font-medium text-gray-900 text-right">${r.jumlah_kebutuhan || r.jumlah || 0}</td>
+                <td class="px-5 py-3 font-medium text-gray-900 text-right">${fmtJml(r.jumlah_kebutuhan || r.jumlah || 0)}</td>
                 <td class="px-5 py-3 text-gray-500">${satuanStr}</td>
             `;
             tbody.appendChild(row);
@@ -867,7 +1329,7 @@ function checkResepEmptyState() {
     }
 }
 
-function handleAddResep() {
+function handleAddResepCustom() {
     const sel = document.getElementById('inputBahanBaku');
     const jml = document.getElementById('inputJumlah');
     const sat = document.getElementById('inputSatuan');
@@ -875,24 +1337,40 @@ function handleAddResep() {
     const jumlah = jml.value;
     const satuanId = sat.value;
     
-    if (!bahanId || !jumlah || !satuanId) return;
+    if (!bahanId) {
+        alert('Silakan pilih bahan baku terlebih dahulu.');
+        return;
+    }
+    if (!jumlah || parseFloat(jumlah) <= 0) {
+        alert('Jumlah kebutuhan bahan harus berupa angka positif (lebih dari 0).');
+        return;
+    }
     
-    const satuanText = sat.options[sat.selectedIndex].text;
+    const bb = bahanBakusData.find(b => b.id == bahanId);
+    let satuanText = bb && bb.satuan ? (bb.satuan.singkatan || bb.satuan.nama_satuan) : 'pcs';
     
     addResepRow(bahanId, jumlah, satuanId, satuanText, false);
     
-    sel.value = '';
-    jml.value = '';
-    sat.value = '';
+    window.dispatchEvent(new CustomEvent('reset-resep-input'));
+}
+
+function handleAddResep() {
+    handleAddResepCustom();
 }
 
 function editResepRow(btn, bahanId, jumlah, satuanId) {
-    const sel = document.getElementById('inputBahanBaku');
-    sel.value = bahanId;
-    document.getElementById('inputJumlah').value = jumlah;
-    document.getElementById('inputSatuan').value = satuanId || '';
+    window.dispatchEvent(new CustomEvent('edit-resep-input', { detail: { bahanId: bahanId, jumlah: jumlah } }));
     btn.closest('tr').remove();
     checkResepEmptyState();
+}
+
+// Format jumlah: hilangkan trailing zeros (500.000 → 500, 0.500 → 0,5)
+function fmtJml(v) {
+    let n = parseFloat(v);
+    if (isNaN(n)) return '0';
+    // Format ke max 3 desimal, lalu buang trailing zeros
+    let s = n.toFixed(3).replace(/\.?0+$/, '');
+    return s.replace('.', ',');
 }
 
 function addResepRow(bahanId, jumlah, satuanId = null, satuanText = null, isView = false) {
@@ -920,7 +1398,7 @@ function addResepRow(bahanId, jumlah, satuanId = null, satuanText = null, isView
         <td class="px-5 py-3 font-medium text-gray-900">${namaBahan}
             ${!isView ? `<input type="hidden" name="bahan_baku_id[]" value="${bahanId}">` : ''}
         </td>
-        <td class="px-5 py-3 font-medium text-gray-900 text-right">${jumlah}
+        <td class="px-5 py-3 font-medium text-gray-900 text-right">${fmtJml(jumlah)}
             ${!isView ? `<input type="hidden" name="jumlah_kebutuhan[]" value="${jumlah}">` : ''}
         </td>
         <td class="px-5 py-3 text-gray-500">${satuanText}
@@ -1047,5 +1525,8 @@ function closeKategoriModal() {
         drawer.style.display = '';
     }, 300);
 }
+
+// ═══ MULTI-TAB FORM VALIDATION HANDLER ═══
+// Removed: using novalidate on form to rely on Laravel validation instead
 </script>
 @endsection

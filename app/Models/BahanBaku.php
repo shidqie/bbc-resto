@@ -61,6 +61,11 @@ class BahanBaku extends BaseModel
         return $this->hasOne(StokBahan::class, 'bahan_baku_id')->where('jenis_persediaan', StokBahan::JENIS_CATERING);
     }
 
+    public function stok_catering()
+    {
+        return $this->hasOne(StokBahan::class, 'bahan_baku_id')->where('jenis_persediaan', StokBahan::JENIS_CATERING);
+    }
+
     public function getTotalStokAttribute()
     {
         $harian = $this->stok_harian ? (float) $this->stok_harian->jumlah_stok : 0;
@@ -73,14 +78,16 @@ class BahanBaku extends BaseModel
         return $this->hasMany(StokBahan::class, 'bahan_baku_id');
     }
 
-    public function getStokHarianAttribute(): float
+    public function getStokHarianValAttribute(): float
     {
-        return (float) ($this->stok_harian?->jumlah_stok ?? 0);
+        $relation = $this->getRelationValue('stok_harian');
+        return (float) ($relation?->jumlah_stok ?? 0);
     }
 
-    public function getStokCateringAttribute(): float
+    public function getStokCateringValAttribute(): float
     {
-        return (float) ($this->stok_catering_balance?->jumlah_stok ?? 0);
+        $relation = $this->getRelationValue('stok_catering_balance');
+        return (float) ($relation?->jumlah_stok ?? 0);
     }
 
     /**
@@ -97,9 +104,23 @@ class BahanBaku extends BaseModel
             if (empty($model->id_bahan_baku)) {
                 $latest = static::orderBy('id', 'desc')->first();
                 $nextId = $latest ? $latest->id + 1 : 1;
-                $prefix = 'BB';
-                $model->id_bahan_baku = $prefix . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+                $model->id_bahan_baku = \App\Helpers\IdCodeGenerator::generateBahanBakuId($nextId);
             }
+        });
+
+        static::created(function ($model) {
+            $min = (float) ($model->stok_minimal ?? 0);
+            $initialStok = $min > 0 ? ($min * 5) : 0;
+
+            StokBahan::firstOrCreate(
+                ['bahan_baku_id' => $model->id, 'jenis_persediaan' => StokBahan::JENIS_HARIAN],
+                ['jumlah_stok' => $initialStok, 'stok_minimal' => $min]
+            );
+
+            StokBahan::firstOrCreate(
+                ['bahan_baku_id' => $model->id, 'jenis_persediaan' => StokBahan::JENIS_CATERING],
+                ['jumlah_stok' => $initialStok, 'stok_minimal' => $min]
+            );
         });
     }
 }

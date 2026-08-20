@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
@@ -18,23 +18,23 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
                     fontSize: {
-                        xs: ['13px', '1.45'],
-                        sm: ['15px', '1.5'],
-                        base: ['16px', '1.55'],
-                        lg: ['18px', '1.5'],
-                        xl: ['20px', '1.4'],
-                        '2xl': ['24px', '1.3'],
-                        '3xl': ['30px', '1.25'],
-                        '4xl': ['36px', '1.2'],
-                        '5xl': ['48px', '1.15'],
-                        '6xl': ['60px', '1.1'],
+                        xs: ['11px', '1.45'],
+                        sm: ['13px', '1.5'],
+                        base: ['14px', '1.55'],
+                        lg: ['16px', '1.5'],
+                        xl: ['18px', '1.4'],
+                        '2xl': ['21px', '1.3'],
+                        '3xl': ['26px', '1.25'],
+                        '4xl': ['32px', '1.2'],
+                        '5xl': ['40px', '1.15'],
+                        '6xl': ['48px', '1.1'],
                     },
                     colors: {
-                        brand:   '#171717',
-                        accent:  '#525252',
-                        surface: '#F7F7F7',
+                        brand:   '#0D3024',
+                        accent:  '#D4A843',
+                        surface: '#FAFAF7',
                     }
                 }
             }
@@ -44,7 +44,7 @@
         [x-cloak]{display:none!important}
         .no-scrollbar::-webkit-scrollbar{display:none}
         .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { font-family: 'Outfit', sans-serif; }
     </style>
 </head>
 
@@ -313,17 +313,14 @@
             </div>
             
             <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wider mt-4 mb-2">Metode Pembayaran</p>
-            <div class="grid grid-cols-1 gap-2">
-                <label class="cursor-default border-neutral-900 bg-neutral-50 border rounded-lg p-2.5 flex items-center gap-2.5 transition-all">
-                    <input type="radio" value="kasir" x-model="metodePembayaran" class="hidden">
-                    <div class="w-7 h-7 rounded-full bg-neutral-100 text-neutral-900 flex items-center justify-center text-sm shrink-0">
-                        <x-heroicon-o-currency-dollar class="w-4 h-4" />
-                    </div>
-                    <div>
-                        <span class="block text-xs font-semibold text-neutral-900 leading-tight">Bayar di Kasir</span>
-                        <span class="block text-[10px] text-neutral-400 mt-0.5">Selesaikan pembayaran di Kasir</span>
-                    </div>
-                </label>
+            <div class="w-full rounded-lg p-2.5 border border-neutral-900 bg-neutral-50 flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-full bg-neutral-100 text-neutral-900 flex items-center justify-center text-sm shrink-0">
+                    <x-heroicon-o-currency-dollar class="w-4 h-4" />
+                </div>
+                <div>
+                    <span class="block text-xs font-semibold text-neutral-900 leading-tight">Bayar di Kasir</span>
+                    <span class="block text-[10px] text-neutral-400 mt-0.5">Kasir / Manual</span>
+                </div>
             </div>
         </div>
 
@@ -333,9 +330,12 @@
                 <div class="py-3.5 flex items-start gap-3">
                     <div class="flex-1 min-w-0">
                         <h4 class="text-xs font-semibold text-neutral-900" x-text="c.nama"></h4>
-                        <span class="text-xs font-semibold text-neutral-900" x-text="rp(c.harga)"></span>
+                        <div class="flex items-center justify-between gap-1 mt-0.5">
+                            <span class="text-[11px] text-neutral-500 font-medium" x-text="`@ ${rp(c.harga)} / porsi`"></span>
+                            <span class="text-xs font-bold text-neutral-900" x-text="rp(c.harga * c.qty)"></span>
+                        </div>
                         <template x-if="c.catatan">
-                            <p class="text-sm text-neutral-400 italic mt-0.5 truncate" x-text="'📝 '+c.catatan"></p>
+                            <p class="text-xs text-neutral-400 italic mt-0.5 truncate" x-text="'📝 '+c.catatan"></p>
                         </template>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
@@ -358,16 +358,18 @@
 
         {{-- Footer --}}
         <div class="p-4 border-t border-neutral-100 bg-white shrink-0 space-y-3">
-            <div class="space-y-1">
+            <div class="space-y-1.5">
                 <div class="flex justify-between items-center text-xs text-neutral-500 font-medium">
-                    <span>Subtotal</span>
+                    <span>Subtotal Item</span>
                     <span x-text="rp(subTotal)"></span>
                 </div>
-                <div class="flex justify-between items-center text-xs text-neutral-500 font-medium pb-2 border-b border-neutral-100">
-                    <span>Biaya Layanan (5%)</span>
-                    <span x-text="rp(totalServiceFee)"></span>
-                </div>
-                <div class="flex justify-between items-end pt-1">
+                <template x-if="layananAktif && subTotal > 0">
+                    <div class="flex justify-between items-center text-xs text-neutral-500 font-medium">
+                        <span>Biaya Layanan</span>
+                        <span x-text="rp(totalServiceFee)"></span>
+                    </div>
+                </template>
+                <div class="flex justify-between items-end pt-2 border-t border-neutral-100">
                     <div>
                         <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider block">Total Tagihan</span>
                         <span class="text-xl font-bold text-neutral-900" x-text="rp(totalPrice)"></span>
@@ -382,13 +384,10 @@
                 <template x-if="sending">
                     <x-heroicon-o-arrow-path class="w-5 h-5 animate-spin" />
                 </template>
-                <template x-if="!sending && metodePembayaran === 'qris'">
-                    <x-heroicon-o-qr-code class="w-5 h-5" />
-                </template>
-                <template x-if="!sending && metodePembayaran !== 'qris'">
+                <template x-if="!sending">
                     <x-heroicon-o-paper-airplane class="w-5 h-5" />
                 </template>
-                <span x-text="sending?'Mengirim…':(metodePembayaran==='qris'?'Lanjut ke Pembayaran QRIS':'Pesan Menu')"></span>
+                <span x-text="sending ? 'Mengirim…' : 'Pesan Menu'"></span>
             </button>
         </div>
     </div>
@@ -412,13 +411,13 @@
         <h3 class="text-sm font-semibold text-neutral-900">Scan untuk Membayar</h3>
         <p class="text-xs text-neutral-400 mt-0.5 mb-4">GoPay, OVO, ShopeePay, Dana, Mobile Banking</p>
 
-        <div class="my-2 bg-white p-3 border border-neutral-200 rounded-lg inline-block">
+        <div class="my-2 bg-white p-3 border border-neutral-200 rounded-lg inline-block shadow-sm">
             <template x-if="qrisData.qr_url">
                 <img :src="qrisData.qr_url" alt="QRIS Code" class="w-48 h-48 object-contain rounded-xl mx-auto">
             </template>
             <template x-if="!qrisData.qr_url">
-                <div class="w-48 h-48 flex items-center justify-center text-neutral-400">
-                    <x-heroicon-o-arrow-path class="w-8 h-8 animate-spin" />
+                <div class="w-48 h-48 flex items-center justify-center">
+                    {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(180)->margin(1)->generate('00020101021126590013ID.NOBUPAN.WWW01189360050300000881530215ID10264761295010303UMI51440014ID.LINKAJA.WWW0118936009140000881530215ID10264761295010303UMI5204581253033605802ID5915RUMAH MAKAN BBC6013KAB SUMEDANG 61054536362070703A016304') !!}
                 </div>
             </template>
         </div>
@@ -479,10 +478,11 @@
             </div>
             
             <div class="flex gap-2">
-                <button @click="if(lastId) window.open('/pos/dinein/pesanan/' + lastId + '/print-gabungan', '_blank')"
-                        class="flex-1 h-12 bg-white text-neutral-900 border-2 border-neutral-900 font-bold text-xs uppercase tracking-widest hover:bg-neutral-50 transition active:scale-[.99] flex items-center justify-center gap-2">
+                <a :href="'/qr-menu/download/' + (lastId || lastCode || '1')"
+                   target="_blank"
+                   class="flex-1 h-12 bg-white text-neutral-900 border-2 border-neutral-900 font-bold text-xs uppercase tracking-widest hover:bg-neutral-50 transition active:scale-[.99] flex items-center justify-center gap-2 no-underline cursor-pointer">
                     <x-heroicon-o-arrow-down-tray class="w-4 h-4" /> Unduh
-                </button>
+                </a>
                 <button @click="window.location.reload()"
                         class="flex-1 h-12 bg-neutral-900 text-white font-bold text-xs uppercase tracking-widest hover:bg-neutral-800 transition active:scale-[.99]">
                     Tutup
@@ -509,10 +509,15 @@ function qrMenu(){
         namaUser:'', nomorHpUser:'',
 
         // Cart
-        cart:[], sending:false, lastCode:'',
+        cart:[], sending:false, lastCode:'', lastId:null,
         dm:{}, dQty:1, dNote:'',
         metodePembayaran:'kasir',
         qrisData:{}, pollingTimer:null,
+
+        layananAktif: {{ json_encode($pengaturan ? (bool)$pengaturan->layanan_aktif : true) }},
+        nominalLayanan: {{ (float)($pengaturan ? ($pengaturan->nominal_layanan ?? 1000) : 1000) }},
+        pajakAktif: false,
+        persentasePajak: 0,
 
         // ── Computed ──────────────────────────────────
         get mejaLabel(){ return this.mejaNomor ? 'Meja '+this.mejaNomor : '—'; },
@@ -524,7 +529,8 @@ function qrMenu(){
         },
         get totalQty(){ return this.cart.reduce((s,c)=>s+c.qty,0); },
         get subTotal(){ return this.cart.reduce((s,c)=>s+(c.harga*c.qty),0); },
-        get totalServiceFee(){ return this.subTotal * 0.05; },
+        get totalServiceFee(){ return (this.layananAktif && this.subTotal > 0) ? this.nominalLayanan : 0; },
+        get totalPajak(){ return 0; },
         get totalPrice(){ return this.subTotal + this.totalServiceFee; },
 
         // ── Cart actions ──────────────────────────────
@@ -584,6 +590,7 @@ function qrMenu(){
                 const d=await r.json();
                 if(d.success){
                     this.lastCode=d.kode_pesanan;
+                    this.lastId=d.pesanan_id||d.kode_pesanan;
                     if(d.metode_pembayaran==='qris'&&d.qris){
                         this.qrisData=d.qris;
                         this.modal='qris';

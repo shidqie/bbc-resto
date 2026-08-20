@@ -12,4 +12,14 @@ class KategoriMenu extends BaseModel
     {
         return $this->hasMany(Menu::class, 'kategori_menu_id', 'id');
     }
+
+    public function getKodeKategoriAttribute(): string
+    {
+        return \App\Helpers\IdCodeGenerator::generateKategoriMenuId($this->id);
+    }
+
+    public function getIdKategoriMenuAttribute(): string
+    {
+        return $this->kode_kategori;
+    }
 }

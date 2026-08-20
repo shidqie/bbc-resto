@@ -66,11 +66,23 @@ class KebutuhanBahanService
 
         // 2. Tambahkan resep dari komponen/item paket
         foreach ($paket->item_paket()->with(['menu_terkait', 'opsi.menu'])->get() as $item) {
-            if ($item->tipe_item === 'tetap' && $item->menu_id_terkait) {
+            if ($item->tipe_item === 'wajib' && $item->menu_id_terkait) {
                 $agregat = $agregat->merge($this->agregasi(
                     $this->resepMenuIds($item->menu_terkait, $jumlahPorsi * (float) ($item->jumlah ?? 1)),
                     $item->menu_terkait->nama_menu
                 ));
+                continue;
+            }
+
+            if ($item->tipe_item === 'semua_didapat') {
+                foreach ($item->opsi as $opsi) {
+                    if ($opsi->menu) {
+                        $agregat = $agregat->merge($this->agregasi(
+                            $this->resepMenuIds($opsi->menu, $jumlahPorsi * (float) ($item->jumlah ?? 1)),
+                            $opsi->menu->nama_menu
+                        ));
+                    }
+                }
                 continue;
             }
 
@@ -171,24 +183,29 @@ class KebutuhanBahanService
      */
     public function porsiTersedia(Menu $menu, string $jenisPersediaan = 'harian'): float
     {
-        if (! $menu->resep_menu()->exists()) {
+        if (! $this->isPaket($menu) && ! $menu->resep_menu()->exists()) {
             return PHP_FLOAT_MAX; // tanpa resep → dianggap selalu tersedia
         }
 
+        $kebutuhanList = $this->kebutuhanMenu($menu, 1);
+        if ($kebutuhanList->isEmpty()) {
+            return PHP_FLOAT_MAX;
+        }
+
         $porsi = null;
-        foreach ($menu->resep_menu()->get() as $resep) {
-            $kebutuhanPerPorsi = (float) $resep->jumlah_kebutuhan;
+        foreach ($kebutuhanList as $item) {
+            $kebutuhanPerPorsi = (float) $item['kebutuhan'];
             if ($kebutuhanPerPorsi <= 0) {
                 continue;
             }
-            $stok = (float) (StokBahan::where('bahan_baku_id', $resep->bahan_baku_id)
+            $stok = (float) (StokBahan::where('bahan_baku_id', $item['bahan_baku_id'])
                 ->where('jenis_persediaan', $jenisPersediaan)
                 ->value('jumlah_stok') ?? 0);
             $maxPorsi = $stok / $kebutuhanPerPorsi;
             $porsi = $porsi === null ? $maxPorsi : min($porsi, $maxPorsi);
         }
 
-        return (float) $porsi;
+        return $porsi === null ? PHP_FLOAT_MAX : (float) $porsi;
     }
 
     /**
@@ -199,6 +216,10 @@ class KebutuhanBahanService
      */
     public function bahanCukup(Menu $menu, float $jumlahPorsi, ?DetailPesanan $detail = null, string $jenisPersediaan = 'harian'): bool
     {
+        if (! $menu->status_aktif || $menu->status === 'nonaktif' || $menu->status === 'habis') {
+            return false;
+        }
+
         if (! $this->isPaket($menu) && ! $menu->resep_menu()->exists()) {
             return true; // menu tanpa resep → tidak bisa divalidasi, dianggap cukup
         }

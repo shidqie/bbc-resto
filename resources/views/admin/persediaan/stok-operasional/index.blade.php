@@ -1,6 +1,6 @@
-{{-- Halaman: Stok Operasional --}}
+{{-- Halaman: Stok Bahan Baku --}}
 @extends('layouts.pos')
-@section('title', 'Stok Operasional')
+@section('title', 'Stok Bahan Baku')
 
 @section('content')
 <div class="flex-1 bg-gray-50 text-gray-800">
@@ -8,13 +8,36 @@
 
         {{-- PAGE HEADER --}}
         <x-ui.page-header
-            title="Stok Operasional"
+            title="Stok Bahan Baku"
             subtitle="Monitor stok bahan baku untuk kebutuhan dine in dan nasi box."
-            :breadcrumbs="['Persediaan', 'Stok Operasional']">
+            :breadcrumbs="['Persediaan', 'Stok Bahan Baku']">
             <x-slot:actions>
-                <x-ui.button variant="primary" icon="plus" href="{{ route('pengadaan.po.create', ['tipe' => 'Operasional']) }}">
-                    Buat PO Operasional
-                </x-ui.button>
+                <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open = false">
+                    <button @click="open = !open" type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-[#0D3024] hover:bg-[#0D3024]/90 text-white font-semibold text-sm rounded-lg shadow-sm transition-all duration-150">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
+                        <span>Buat Purchase Order</span>
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95"
+                         class="absolute right-0 mt-2 w-52 rounded-xl bg-white shadow-xl border border-gray-100 py-1.5 z-50 text-sm">
+                        
+                        <a href="{{ route('pengadaan.po.create', ['tipe' => 'Operasional']) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-[#0D3024] font-medium transition-colors">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span>Harian (Dine-In & Nasi Box)</span>
+                        </a>
+                        <a href="{{ route('pengadaan.po.create', ['tipe' => 'Catering']) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-[#0D3024] font-medium transition-colors">
+                            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.701 2.701 0 01-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18z"></path></svg>
+                            <span>Katering</span>
+                        </a>
+                    </div>
+                </div>
                 <x-ui.button variant="secondary" href="{{ route('bahan-baku.index') }}">
                     Data Bahan Baku
                 </x-ui.button>
@@ -91,18 +114,18 @@
                                 <p class="text-xs text-gray-400 mt-0.5">{{ $bahan->id_bahan_baku }}</p>
                             </td>
                             <td class="px-4 py-4 text-right">
-                                <span class="font-bold text-lg {{ $isHabis ? 'text-red-600' : ($isMenipis ? 'text-amber-600' : 'text-emerald-600') }}">{{ rtrim(rtrim(number_format($stok, 2), '0'), '.') }} {{ $bahan->satuan->singkatan ?? '' }}</span>
+                                <span class="font-bold text-lg {{ $isHabis ? 'text-red-600' : ($isMenipis ? 'text-amber-600' : 'text-emerald-600') }}">{{ \App\Helpers\UnitHelper::formatQuantity($stok, $bahan->satuan->singkatan ?? $bahan->satuan->nama_satuan ?? 'gram') }}</span>
                             </td>
                             <td class="px-4 py-4 text-right text-sm text-gray-500 font-medium">
-                                {{ rtrim(rtrim(number_format($min, 2), '0'), '.') }} {{ $bahan->satuan->singkatan ?? '' }}
+                                {{ \App\Helpers\UnitHelper::formatQuantity($min, $bahan->satuan->singkatan ?? $bahan->satuan->nama_satuan ?? 'gram') }}
                             </td>
                             <td class="px-4 py-4">
                                 @if($isHabis)
-                                    <x-ui.badge color="danger" dot>Habis</x-ui.badge>
+                                    <x-ui.badge color="danger">Habis</x-ui.badge>
                                 @elseif($isMenipis)
-                                    <x-ui.badge color="warning" dot>Menipis</x-ui.badge>
+                                    <x-ui.badge color="warning">Menipis</x-ui.badge>
                                 @else
-                                    <x-ui.badge color="success" dot>Aman</x-ui.badge>
+                                    <x-ui.badge color="success">Aman</x-ui.badge>
                                 @endif
                             </td>
                             <td class="px-4 py-4 text-center">
@@ -180,7 +203,7 @@
                                         {{ $group['tanggal']->format('d M Y, H:i') }}
                                     </td>
                                     <td class="px-4 py-4 text-sm">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-200">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-soft text-primary font-bold border border-primary/20">
                                             {{ count($group['items']) }} Bahan Keluar
                                         </span>
                                     </td>
@@ -199,7 +222,7 @@
                                                 @foreach($group['items'] as $item)
                                                     <div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
                                                         <div>
-                                                            <p class="text-[13px] font-bold text-gray-800 leading-none">{{ $item->bahan_baku->nama_bahan ?? '-' }}</p>
+                                                            <p class="text-sm font-bold text-gray-800 leading-none">{{ $item->bahan_baku->nama_bahan ?? '-' }}</p>
                                                             <p class="text-[10px] text-gray-400 mt-1.5 font-medium">Sisa: {{ rtrim(rtrim(number_format($item->stok_sesudah ?? 0, 2), '0'), '.') }} {{ $item->bahan_baku->satuan->singkatan ?? '' }}</p>
                                                         </div>
                                                         <div class="text-right">

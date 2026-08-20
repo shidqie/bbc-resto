@@ -20,7 +20,7 @@ class KonsumenPesananController extends Controller
                 'pembayaran',
             ])
             ->whereIn('jenis_pesanan_id', [2, 3]) // Catering & Nasi Box
-            ->latest()
+            ->latest('dibuat_pada')
             ->get();
 
         return view('pelanggan.pesanan.index', compact('pelanggan', 'pesanans'));

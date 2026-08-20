@@ -58,7 +58,7 @@
                                     <h2 class="text-base font-semibold text-gray-900">Aturan Gratis Pengiriman</h2>
                                     <p class="text-sm text-gray-500 mt-1">Tentukan jarak gratis pengiriman berdasarkan jumlah porsi pesanan.</p>
                                 </div>
-                                <button type="button" @click="tambahAturan()" class="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                                <button type="button" @click="tambahAturan()" class="text-sm font-medium text-primary hover:text-primary flex items-center gap-1 bg-primary-soft px-3 py-1.5 rounded-lg transition-colors">
                                     <x-heroicon-o-plus class="w-4 h-4" />
                                     <span>Tambah Aturan</span>
                                 </button>
@@ -79,14 +79,14 @@
                                             <tr>
                                                 <td class="px-4 py-3">
                                                     <input type="hidden" :name="`aturan[${index}][id]`" x-model="item.id">
-                                                    <input type="number" x-bind:name="`aturan[${index}][minimal_porsi]`" x-model.number="item.minimal_porsi" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 transition-colors" required>
+                                                    <input type="number" x-bind:name="`aturan[${index}][minimal_porsi]`" x-model.number="item.minimal_porsi" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors" required>
                                                 </td>
                                                 <td class="px-4 py-3">
-                                                    <input type="number" x-bind:name="`aturan[${index}][maksimal_porsi]`" x-model="item.maksimal_porsi" placeholder="Tidak terbatas" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 transition-colors">
+                                                    <input type="number" x-bind:name="`aturan[${index}][maksimal_porsi]`" x-model="item.maksimal_porsi" placeholder="Tidak terbatas" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors">
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     <div class="flex items-center gap-2">
-                                                        <input type="number" step="0.01" x-bind:name="`aturan[${index}][kilometer_gratis]`" x-model.number="item.kilometer_gratis" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 transition-colors" required>
+                                                        <input type="number" step="0.01" x-bind:name="`aturan[${index}][kilometer_gratis]`" x-model.number="item.kilometer_gratis" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors" required>
                                                         <span class="text-gray-500 font-medium">km</span>
                                                     </div>
                                                 </td>
@@ -121,7 +121,7 @@
             <div class="lg:col-span-1">
                 <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm shadow-gray-100/50 h-full flex flex-col">
                     <h2 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <x-heroicon-o-calculator class="w-5 h-5 text-blue-500" />
+                        <x-heroicon-o-calculator class="w-5 h-5 text-primary" />
                         Simulasi Perhitungan
                     </h2>
                     
@@ -129,11 +129,11 @@
                         <div class="space-y-4 mb-4">
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Input Contoh Jarak (Km)</label>
-                                <input type="number" x-model.number="simulasiJarak" class="block w-full rounded-lg border-gray-200 text-sm px-3 py-1.5 focus:border-blue-500 focus:ring-blue-500">
+                                <input type="number" x-model.number="simulasiJarak" class="block w-full rounded-lg border-gray-200 text-sm px-3 py-1.5 focus:border-primary focus:ring-primary">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Input Contoh Jumlah Porsi</label>
-                                <input type="number" x-model.number="simulasiPorsi" class="block w-full rounded-lg border-gray-200 text-sm px-3 py-1.5 focus:border-blue-500 focus:ring-blue-500">
+                                <input type="number" x-model.number="simulasiPorsi" class="block w-full rounded-lg border-gray-200 text-sm px-3 py-1.5 focus:border-primary focus:ring-primary">
                             </div>
                         </div>
                         
@@ -160,7 +160,7 @@
                         
                         <div class="flex justify-between items-center text-base">
                             <span class="font-bold text-gray-900">Total Ongkir</span>
-                            <span class="font-black text-blue-600 text-lg" x-text="'Rp ' + totalOngkir.toLocaleString('id-ID')"></span>
+                            <span class="font-black text-primary text-lg" x-text="'Rp ' + totalOngkir.toLocaleString('id-ID')"></span>
                         </div>
                     </div>
                 </div>
@@ -175,7 +175,7 @@
                     </h2>
                     
                     <div class="bg-gray-50/80 p-4 rounded-xl border border-gray-100 flex-1 flex flex-col">
-                        <p class="text-[11px] text-gray-500 mb-4 pb-3 border-b border-gray-200">Pengaturan yang sedang aktif di sistem.</p>
+                        <p class="text-xs text-gray-500 mb-4 pb-3 border-b border-gray-200">Pengaturan yang sedang aktif di sistem.</p>
                         
                         <div class="space-y-4 flex-1">
                             <div>
@@ -222,7 +222,7 @@
                             <div class="text-xs font-medium text-gray-700">
                                 {{ $riwayats->first()->dibuat_pada->format('d F Y, H:i') }}
                             </div>
-                            <div class="text-[11px] text-gray-500 mt-0.5">
+                            <div class="text-xs text-gray-500 mt-0.5">
                                 Oleh {{ $riwayats->first()->diubahOleh->nama ?? 'Sistem' }}
                             </div>
                         </div>
@@ -244,7 +244,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-white border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                        <tr class="bg-white border-b border-gray-100 text-xs font-bold text-gray-400 uppercase tracking-wider">
                             <th class="px-6 py-4">Tanggal</th>
                             <th class="px-6 py-4">Pengaturan</th>
                             <th class="px-6 py-4">Sebelumnya</th>
@@ -273,7 +273,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[10px]">
+                                    <div class="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center font-bold text-[10px]">
                                         {{ strtoupper(substr($riwayat->diubahOleh->nama ?? 'S', 0, 2)) }}
                                     </div>
                                     <span class="font-medium text-gray-700">{{ $riwayat->diubahOleh->nama ?? 'Sistem' }}</span>

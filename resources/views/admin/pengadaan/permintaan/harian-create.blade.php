@@ -117,7 +117,7 @@
     function validatePermintaanForm(form) {
         const checked = document.querySelectorAll('.bahan-checkbox:checked');
         if (checked.length === 0) {
-            alert('Pilih minimal satu bahan baku.');
+            window.showToast('warning', 'Pilih minimal satu bahan baku.');
             return false;
         }
         let anyPositive = false;
@@ -127,7 +127,7 @@
             if (jml && parseFloat(jml.value.replace(',', '.')) > 0) anyPositive = true;
         });
         if (!anyPositive) {
-            alert('Jumlah permintaan harus lebih dari 0 untuk minimal satu bahan.');
+            window.showToast('warning', 'Jumlah permintaan harus lebih dari 0 untuk minimal satu bahan.');
             return false;
         }
         

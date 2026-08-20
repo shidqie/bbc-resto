@@ -72,9 +72,9 @@
                             <p class="text-xs text-gray-400">{{ $bahan->satuan?->nama_satuan }}</p>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500">{{ $bahan->kategori_bahan_baku?->nama_kategori ?? '-' }}</td>
-                        <td class="px-4 py-3 text-right font-bold {{ $stok <= 0 ? 'text-red-600' : 'text-amber-600' }}">{{ number_format($stok, 2, ',', '.') }}</td>
-                        <td class="px-4 py-3 text-right text-gray-600">{{ number_format($min, 2, ',', '.') }}</td>
-                        <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ $kurang > 0 ? number_format($kurang, 2, ',', '.') : '-' }}</td>
+                        <td class="px-4 py-3 text-right font-bold {{ $stok <= 0 ? 'text-red-600' : 'text-amber-600' }}">{{ \App\Helpers\UnitHelper::formatQuantity($stok, $bahan->satuan?->singkatan ?? $bahan->satuan?->nama_satuan ?? 'gram') }}</td>
+                        <td class="px-4 py-3 text-right text-gray-600">{{ \App\Helpers\UnitHelper::formatQuantity($min, $bahan->satuan?->singkatan ?? $bahan->satuan?->nama_satuan ?? 'gram') }}</td>
+                        <td class="px-4 py-3 text-right font-semibold text-gray-900">{{ $kurang > 0 ? \App\Helpers\UnitHelper::formatQuantity($kurang, $bahan->satuan?->singkatan ?? $bahan->satuan?->nama_satuan ?? 'gram') : '-' }}</td>
                         <td class="px-4 py-3 text-center">
                             <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $status === 'Habis' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-700 border border-amber-200' }}">
                                 {{ $status }}

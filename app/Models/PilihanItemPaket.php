@@ -23,4 +23,8 @@ class PilihanItemPaket extends BaseModel
     {
         return $this->belongsTo(ItemPaket::class, 'item_paket_id');
     }
+    public function getNamaPilihanAttribute($value)
+    {
+        return $this->menu ? $this->menu->nama_menu : $value;
+    }
 }

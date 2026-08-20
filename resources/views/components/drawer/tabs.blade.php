@@ -4,7 +4,7 @@
     @foreach($tabs as $key => $label)
         <button type="button" 
                 @click="{{ $activeTab }} = '{{ $key }}'" 
-                :class="{{ $activeTab }} === '{{ $key }}' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                :class="{{ $activeTab }} === '{{ $key }}' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-primary hover:border-primary/40'"
                 class="py-3 px-1 mr-6 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none whitespace-nowrap">
             {{ $label }}
         </button>

@@ -12,15 +12,17 @@ class PesananBaru extends Notification implements ShouldQueue
     use Queueable;
 
     public $pesanan;
+    public $title;
     public $message;
     public $url;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($pesanan, $message, $url = '#')
+    public function __construct($pesanan, $title, $message, $url = '#')
     {
         $this->pesanan = $pesanan;
+        $this->title = $title;
         $this->message = $message;
         $this->url = $url;
     }
@@ -43,7 +45,7 @@ class PesananBaru extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         return [
-            'title' => 'Pesanan Baru Masuk!',
+            'title' => $this->title,
             'message' => $this->message,
             'pesanan_id' => $this->pesanan->id,
             'url' => $this->url,

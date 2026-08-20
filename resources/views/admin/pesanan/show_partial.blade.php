@@ -16,7 +16,7 @@
                     {{ optional($pesanan->status_pesanan)->nama_status ?? 'Unknown' }}
                 </x-drawer.badge>
             </h2>
-            <p class="text-[13px] text-gray-500 mt-1">
+            <p class="text-sm text-gray-500 mt-1">
                 Dibuat: {{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('d F Y, H:i') }} &bull; {{ optional($pesanan->jenis_pesanan)->nama_jenis ?? '-' }}
             </p>
         </div>
@@ -35,7 +35,7 @@
                 <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
                     <h4 class="text-sm font-bold text-red-900">Pesanan Dibatalkan</h4>
-                    <p class="text-[13px] text-red-700 mt-1">{{ $pesanan->alasan_batal }}</p>
+                    <p class="text-sm text-red-700 mt-1">{{ $pesanan->alasan_batal }}</p>
                 </div>
             </div>
         @endif
@@ -160,7 +160,7 @@
                     </x-drawer.item>
                 @empty
                     <div class="text-center py-4">
-                        <p class="text-[13px] text-gray-500">Belum ada pembayaran yang masuk</p>
+                        <p class="text-sm text-gray-500">Belum ada pembayaran yang masuk</p>
                     </div>
                 @endforelse
             </x-drawer.item-list>

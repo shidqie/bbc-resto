@@ -55,22 +55,51 @@ class PurchaseOrderController extends Controller
         $items = collect();
         $pesanan = null;
 
-        if ($tipe === 'Operasional') {
-            // Cari bahan baku yang stok hariannya < stok minimal
-            $items = BahanBaku::with('satuan')->join('stok_bahan', function($join) {
+        $suppliers = \App\Models\Pemasok::where('status_aktif', true)->orderBy('nama_pemasok')->get();
+
+        if ($tipe === 'Operasional' || $tipe === 'Harian') {
+            // Ambil SEMUA bahan baku beserta stok hariannya (menampilkan data master)
+            $rawItems = BahanBaku::with('satuan')->leftJoin('stok_bahan', function($join) {
                 $join->on('bahan_baku.id', '=', 'stok_bahan.bahan_baku_id')
                      ->where('stok_bahan.jenis_persediaan', StokBahan::JENIS_HARIAN);
             })
-            ->select('bahan_baku.*', 'stok_bahan.jumlah_stok', 'stok_bahan.stok_minimal')
-            ->whereRaw('stok_bahan.jumlah_stok < stok_bahan.stok_minimal')
-            ->get()
-            ->map(function($item) {
-                $item->kebutuhan = max(0, $item->stok_minimal - $item->jumlah_stok);
-                $item->sudah_dipesan = 0;
-                $item->kebutuhan_bersih = $item->kebutuhan;
+            ->select('bahan_baku.*', 'stok_bahan.jumlah_stok as stok_saat_ini', 'stok_bahan.stok_minimal')
+            ->orderBy('bahan_baku.nama_bahan')
+            ->get();
+
+            // Hitung bahan baku yang masih dalam proses pesanan (PO pending)
+            $poPending = DetailPurchaseOrder::whereHas('purchase_order', function($q) {
+                $q->whereIn('status', [PurchaseOrder::MENUNGGU_BARANG, PurchaseOrder::DITERIMA_SEBAGIAN])
+                  ->whereIn('jenis_po', ['operasional', 'harian']);
+            })->select('bahan_baku_id', DB::raw('SUM(jumlah_dipesan - jumlah_diterima) as sisa_pesan'))
+              ->having('sisa_pesan', '>', 0)
+              ->groupBy('bahan_baku_id')
+              ->get()->keyBy('bahan_baku_id');
+
+            // Filter HANYA bahan baku yang stok saat ininya sama dengan 0 (stok <= 0)
+            $items = $rawItems->filter(function($item) {
+                $stokSaatIni = (float) ($item->stok_saat_ini ?? 0);
+                return $stokSaatIni <= 0;
+            })->values();
+
+            $items->transform(function($item) use ($poPending) {
+                $stokMinimal = (float) ($item->stok_minimal ?? 0);
+                if ($stokMinimal <= 0) {
+                    $stokMinimal = (float) ($item->stok_minimal_harian ?? 5);
+                }
+                if ($stokMinimal <= 0) {
+                    $stokMinimal = 5;
+                }
+
+                // Untuk setiap bahan baku yang stoknya habis (stok = 0), 
+                // sistem secara otomatis mengisi jumlah pesan sebesar stok minimum dikalikan 2.
+                $item->jumlah_beli = $stokMinimal * 2;
+                $item->kebutuhan = $item->jumlah_beli;
+                $item->kebutuhan_bersih = $item->jumlah_beli;
+
                 return $item;
             });
-        } elseif ($tipe === 'Catering') {
+        } elseif ($tipe === 'Catering' || $tipe === 'Katering') {
             if ($request->filled('kode_pesanan')) {
                 $kodePesanan = trim($request->kode_pesanan);
                 $pesanan = Pesanan::with(['detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering'])
@@ -101,7 +130,6 @@ class PurchaseOrderController extends Controller
                     ->get()->keyBy('bahan_baku_id');
                     
                 // Hitung riwayat PO sebelumnya untuk pesanan ini
-                // Detail PO -> PO -> Pengadaan
                 $poSebelumnya = DetailPurchaseOrder::whereHas('purchase_order.pengadaan_bahan', function($q) use ($pesanan) {
                     $q->where('pesanan_id', $pesanan->id);
                 })->whereHas('purchase_order', function($q) {
@@ -125,45 +153,96 @@ class PurchaseOrderController extends Controller
                         $bahan->kebutuhan_awal = $kebutuhanAwal;
                         $bahan->sudah_dipesan = $sudahDipesan;
                         $bahan->kebutuhan_bersih = $kebutuhanBersih;
-                        $bahan->jumlah_stok = $stokSaatIni;
+                        $bahan->stok_saat_ini = $stokSaatIni;
                         $bahan->jumlah_beli = $jumlahBeli;
                         
                         $items->push($bahan);
                     }
                 }
                 
-                // Info jika sudah ada PO
                 if ($poSebelumnya->isNotEmpty()) {
                     session()->now('warning', 'Pesanan ini sudah memiliki Purchase Order sebelumnya. Hanya merekomendasikan sisa kebutuhan yang belum dipesan.');
                 }
+            } else {
+                // PO Catering umum: rekomendasi bahan baku yang stok kateringnya < stok minimal kateringnya
+                $items = BahanBaku::with('satuan')->leftJoin('stok_bahan', function($join) {
+                    $join->on('bahan_baku.id', '=', 'stok_bahan.bahan_baku_id')
+                         ->where('stok_bahan.jenis_persediaan', StokBahan::JENIS_CATERING);
+                })
+                ->select('bahan_baku.*', 'stok_bahan.jumlah_stok as stok_saat_ini', 'stok_bahan.stok_minimal')
+                ->orderBy('bahan_baku.nama_bahan')
+                ->get();
+
+                $items->transform(function($item) {
+                    $stokSaatIni = (float) $item->stok_saat_ini;
+                    $stokMinimal = (float) $item->stok_minimal;
+
+                    $item->kebutuhan = max(0, $stokMinimal - $stokSaatIni);
+                    $item->sudah_dipesan = 0;
+                    $item->kebutuhan_bersih = $item->kebutuhan;
+                    
+                    if ($stokSaatIni < $stokMinimal && $stokMinimal > 0) {
+                        $item->jumlah_beli = $item->kebutuhan;
+                    } else {
+                        $item->jumlah_beli = 0;
+                    }
+                    return $item;
+                });
             }
         }
 
-        return view('admin.pengadaan.purchase-order.create', compact('items', 'kodePo', 'tipe', 'pesanan'));
+        $pesananKatering = collect();
+        if ($tipe === 'Catering' || $tipe === 'Katering') {
+            $pesananKatering = Pesanan::with('pelanggan')
+                ->where('jenis_pesanan_id', 2)
+                ->where('status_pesanan_id', '>=', 2)
+                ->where('status_pesanan_id', '!=', 6)
+                ->orderBy('dibuat_pada', 'desc')
+                ->get();
+        }
+
+        $allBahanBaku = BahanBaku::with('satuan')->orderBy('nama_bahan')->get();
+
+        return view('admin.pengadaan.purchase-order.create', compact('items', 'kodePo', 'tipe', 'pesanan', 'suppliers', 'allBahanBaku', 'pesananKatering'));
     }
 
     public function storeUnified(Request $request)
     {
         $request->validate([
-            'tipe' => 'required|in:Operasional,Catering',
             'supplier_nama' => 'required|string|max:150',
-            'supplier_telepon' => 'nullable|string|max:20',
+            'supplier_telepon' => 'nullable|string|max:50',
             'supplier_alamat' => 'nullable|string|max:500',
-            'item_checked' => 'required|array|min:1',
             'jumlah_beli' => 'required|array',
+            'tanggal_po' => 'nullable|date',
+        ], [
+            'supplier_nama.required' => 'Nama supplier wajib diisi.',
+            'jumlah_beli.required' => 'Daftar bahan baku wajib diisi.',
         ]);
 
-        $checkeds = collect($request->item_checked)->filter(fn ($v) => $v)->keys()->all();
-        if(count($checkeds) == 0) {
-            return back()->with('error', 'Pilih minimal satu bahan untuk dibuatkan PO.');
+        $itemIds = [];
+        if ($request->has('jumlah_beli') && is_array($request->jumlah_beli)) {
+            $itemIds = array_keys(array_filter($request->jumlah_beli, fn ($val) => (float)$val > 0));
         }
 
-        DB::transaction(function () use ($request, $checkeds) {
-            // Auto match or create Pemasok
-            $pemasok = Pemasok::firstOrCreate(
-                ['nama_pemasok' => $request->supplier_nama],
-                ['nomor_telepon' => $request->supplier_telepon, 'alamat' => $request->supplier_alamat, 'kode_pemasok' => 'SUP-'.time()]
-            );
+        if (count($itemIds) == 0) {
+            return back()->withInput()->with('error', 'Masukkan minimal satu bahan baku dengan jumlah pesan > 0 untuk dibuatkan PO.');
+        }
+
+        $checkeds = $itemIds;
+
+        try {
+            $po = DB::transaction(function () use ($request, $checkeds) {
+                // Auto match or create Pemasok
+                $pemasok = Pemasok::firstOrCreate(
+                    ['nama_pemasok' => trim($request->supplier_nama)],
+                    [
+                        'nomor_telepon' => $request->supplier_telepon ?? '-',
+                        'alamat' => $request->supplier_alamat ?? '-',
+                        'kode_pemasok' => 'SUP-' . time() . rand(100, 999)
+                    ]
+                );
+
+            $tipePO = $request->input('tipe', 'Operasional');
 
             // Create Pengadaan (Background)
             $pengadaan = PengadaanBahan::create([
@@ -172,38 +251,64 @@ class PurchaseOrderController extends Controller
                 'pesanan_id' => $request->pesanan_id ?? null,
                 'diajukan_oleh' => auth()->id() ?? 1,
                 'status_pengadaan_id' => 3, // Disetujui/Diproses
-                'jenis_pengadaan' => $request->tipe === 'Catering' ? 'Catering' : 'Harian',
-                'tanggal_pengadaan' => now()->toDateString(),
-                'total_pengadaan' => 0, // Simplified
+                'jenis_pengadaan' => $tipePO === 'Catering' ? 'Catering' : 'Harian',
+                'tanggal_pengadaan' => $request->tanggal_po ?? now()->toDateString(),
+                'total_pengadaan' => 0,
             ]);
+
+            // Ensure unique PO code
+            $nomorPo = $request->nomor_po;
+            if (!$nomorPo || PurchaseOrder::where('nomor_po', $nomorPo)->exists()) {
+                $nomorPo = $this->kodePo();
+            }
 
             // Create PO
             $po = PurchaseOrder::create([
-                'nomor_po' => $this->kodePo(),
+                'nomor_po' => $nomorPo,
                 'pengadaan_bahan_id' => $pengadaan->id,
                 'supplier' => $request->supplier_nama,
                 'no_telp_supplier' => $request->supplier_telepon,
                 'alamat_supplier' => $request->supplier_alamat,
-                'jenis_po' => $request->tipe === 'Catering' ? 'catering' : 'operasional',
+                'jenis_po' => $tipePO === 'Catering' ? 'catering' : 'operasional',
                 'kode_pesanan_catering' => $request->pesanan_id ?? null,
-                'tanggal_po' => now()->toDateString(),
+                'tanggal_po' => $request->tanggal_po ?? now()->toDateString(),
                 'status' => PurchaseOrder::MENUNGGU_BARANG,
                 'catatan' => $request->catatan,
                 'dibuat_oleh' => auth()->id() ?? 1,
             ]);
 
+            $totalPengadaan = 0;
             foreach ($checkeds as $bahanId) {
-                $jumlah = $request->jumlah_beli[$bahanId] ?? 0;
+                $jumlah = (float) ($request->jumlah_beli[$bahanId] ?? 0);
                 if ($jumlah > 0) {
                     $bahan = \App\Models\BahanBaku::find($bahanId);
+                    
+                    $rawTotal = str_replace(['.', ','], ['', '.'], $request->total_pembelian[$bahanId] ?? 0);
+                    $totalPembelian = (float) $rawTotal;
+                    $hargaSatuan = (float) ($request->harga_satuan[$bahanId] ?? 0);
+                    
+                    if ($totalPembelian > 0) {
+                        $subtotal = $totalPembelian;
+                        $hargaSatuan = $totalPembelian / $jumlah;
+                    } else {
+                        $subtotal = $jumlah * $hargaSatuan;
+                    }
+                    
+                    $totalPengadaan += $subtotal;
+
+                    // Update harga_satuan on BahanBaku if user provided one
+                    if ($hargaSatuan > 0 && $bahan) {
+                        $bahan->harga_satuan = $hargaSatuan;
+                        $bahan->save();
+                    }
                     
                     $detailPengadaan = \App\Models\DetailPengadaanBahan::create([
                         'pengadaan_bahan_id' => $pengadaan->id,
                         'bahan_baku_id' => $bahanId,
                         'jumlah_dipesan' => $jumlah,
                         'satuan_id' => $bahan ? $bahan->satuan_id : 1,
-                        'harga_satuan' => 0,
-                        'subtotal' => 0,
+                        'harga_satuan' => $hargaSatuan,
+                        'subtotal' => $subtotal,
                     ]);
                     
                     DetailPurchaseOrder::create([
@@ -215,27 +320,40 @@ class PurchaseOrderController extends Controller
                     ]);
                 }
             }
+            // Update total pengadaan
+            $pengadaan->total_pengadaan = $totalPengadaan;
+            $pengadaan->save();
+            
+            return $po;
         });
 
-        return redirect()->route('pengadaan.po.show', $po->id)->with('success', 'Purchase Order berhasil dibuat.');
+        return redirect()->route('pengadaan.po.index')->with('success', 'Purchase Order ' . $po->nomor_po . ' berhasil dibuat.');
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::error('Error storing PO: ' . $e->getMessage());
+        return back()->withInput()->with('error', 'Gagal membuat Purchase Order: ' . $e->getMessage());
     }
+}
 
     public function show(PurchaseOrder $po)
     {
-        $po->load(['pengadaan_bahan', 'detail_purchase_order.bahan_baku.satuan']);
+        $po->load(['pengadaan_bahan']);
+        
+        $items = $po->detail_purchase_order()
+            ->with(['bahan_baku.satuan'])
+            ->paginate(15);
         
         // Cek penerimaan yg sudah ada per bahan
         $penerimaanList = \App\Models\DetailPenerimaanBahan::whereHas('penerimaan_bahan', function($q) use ($po) {
             $q->where('purchase_order_id', $po->id);
         })->get()->groupBy('bahan_baku_id');
 
-        $items = $po->detail_purchase_order->map(function($detail) use ($penerimaanList) {
+        $items->getCollection()->transform(function($detail) use ($penerimaanList) {
             $diterima = 0;
             if (isset($penerimaanList[$detail->bahan_baku_id])) {
                 $diterima = $penerimaanList[$detail->bahan_baku_id]->where('kondisi', 'Baik')->sum('jumlah_diterima');
             }
             $detail->sudah_diterima = $diterima;
-            $detail->sisa = max(0, $detail->jumlah_pesanan - $diterima);
+            $detail->sisa = max(0, $detail->jumlah_dipesan - $diterima);
             return $detail;
         });
 
@@ -257,7 +375,8 @@ class PurchaseOrderController extends Controller
                 'diterima_oleh' => auth()->id() ?? 1,
             ]);
 
-            $jenisPersediaan = $po->jenis_po === 'catering' ? StokBahan::JENIS_CATERING : StokBahan::JENIS_HARIAN;
+            $isCatering = strtolower($po->jenis_po ?? '') === 'catering';
+            $jenisPersediaan = $isCatering ? StokBahan::JENIS_CATERING : StokBahan::JENIS_HARIAN;
 
             $adaDiterima = false;
             $semuaLengkap = true;
@@ -267,16 +386,16 @@ class PurchaseOrderController extends Controller
             })->get()->groupBy('bahan_baku_id');
 
             foreach ($po->detail_purchase_order as $detail) {
-                $qtyTerima = $request->terima[$detail->bahan_baku_id] ?? 0;
+                $qtyTerima = (float) ($request->terima[$detail->bahan_baku_id] ?? 0);
                 $kondisi = $request->kondisi[$detail->bahan_baku_id] ?? 'Baik';
                 
                 $sudah = 0;
                 if (isset($penerimaanList[$detail->bahan_baku_id])) {
-                    $sudah = $penerimaanList[$detail->bahan_baku_id]->where('kondisi', 'Baik')->sum('jumlah_diterima');
+                    $sudah = (float) $penerimaanList[$detail->bahan_baku_id]->where('kondisi', 'Baik')->sum('jumlah_diterima');
                 }
 
                 if ($qtyTerima > 0) {
-                    $sisa = max(0, $detail->jumlah_dipesan - $sudah);
+                    $sisa = max(0, (float)$detail->jumlah_dipesan - $sudah);
                     if ($kondisi === 'Baik' && $qtyTerima > $sisa) {
                         $qtyTerima = $sisa;
                     }
@@ -291,9 +410,19 @@ class PurchaseOrderController extends Controller
                         'detail_purchase_order_id' => $detail->id,
                         'bahan_baku_id' => $detail->bahan_baku_id,
                         'jumlah_diterima' => $qtyTerima,
-                        'harga_satuan' => 0,
+                        'harga_satuan' => (float) ($detail->detail_pengadaan_bahan?->harga_satuan ?? $detail->bahan_baku?->harga_satuan ?? 0),
                         'kondisi' => $kondisi,
                     ]);
+
+                    // Update jumlah_diterima pada DetailPurchaseOrder
+                    $detail->jumlah_diterima = (float) $detail->jumlah_diterima + $qtyTerima;
+                    $detail->save();
+
+                    // Update jumlah_diterima pada DetailPengadaanBahan jika ada
+                    if ($detail->detail_pengadaan_bahan) {
+                        $detail->detail_pengadaan_bahan->jumlah_diterima = (float) $detail->detail_pengadaan_bahan->jumlah_diterima + $qtyTerima;
+                        $detail->detail_pengadaan_bahan->save();
+                    }
 
                     if ($kondisi === 'Baik') {
                         // Gunakan StockService agar atomic dan mencatat kartu stok dengan benar
@@ -310,7 +439,7 @@ class PurchaseOrderController extends Controller
                     }
                 }
                 
-                if ($sudah + ($kondisi === 'Baik' ? $qtyTerima : 0) < $detail->jumlah_dipesan) {
+                if ((float)$detail->jumlah_diterima < (float)$detail->jumlah_dipesan) {
                     $semuaLengkap = false;
                 }
             }
@@ -327,7 +456,7 @@ class PurchaseOrderController extends Controller
     public function print(PurchaseOrder $po)
     {
         $po->load(['pengadaan_bahan', 'detail_purchase_order.bahan_baku.satuan']);
-        $pdf = Pdf::loadView('admin.pengadaan.purchase-order.print', compact('po'));
+        $pdf = Pdf::loadView('pdf.po', compact('po'));
         return $pdf->stream('Purchase-Order-' . $po->nomor_po . '.pdf');
     }
 
@@ -336,6 +465,20 @@ class PurchaseOrderController extends Controller
         $po->status = PurchaseOrder::DIBATALKAN;
         $po->save();
         return back()->with('success', 'Purchase Order dibatalkan.');
+    }
+
+    public function destroy(PurchaseOrder $po)
+    {
+        DB::transaction(function () use ($po) {
+            $po->detail_purchase_order()->delete();
+            if ($po->pengadaan_bahan) {
+                $po->pengadaan_bahan->detail_pengadaan_bahan()->delete();
+                $po->pengadaan_bahan->delete();
+            }
+            $po->delete();
+        });
+
+        return redirect()->route('pengadaan.po.index')->with('success', 'Purchase Order berhasil dihapus.');
     }
 
     protected function kodePo(): string

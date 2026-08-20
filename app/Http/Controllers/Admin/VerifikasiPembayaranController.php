@@ -35,7 +35,7 @@ class VerifikasiPembayaranController extends Controller
             });
         }
 
-        $pembayarans = $query->latest()->paginate(20)->withQueryString();
+        $pembayarans = $query->latest('dibuat_pada')->paginate(20)->withQueryString();
 
         return view('admin.pembayaran.verifikasi', compact('pembayarans', 'status'));
     }

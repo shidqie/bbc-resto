@@ -140,9 +140,7 @@ class PengadaanStatusService
      */
     public function poMasihBisaDiterima(PurchaseOrder $po): bool
     {
-        return ! in_array($po->status, [PurchaseOrder::SELESAI, PurchaseOrder::DIBATALKAN])
-            && $po->detail_purchase_order()->exists()
-            && $po->detail_purchase_order()->sum('jumlah_diterima') < $po->detail_purchase_order()->sum('jumlah_dipesan');
+        return $po->status === PurchaseOrder::MENUNGGU_BARANG;
     }
 
     /**
@@ -160,6 +158,7 @@ class PengadaanStatusService
                 'jumlah_dipesan' => (float) $d->jumlah_dipesan,
                 'jumlah_diterima' => (float) $d->jumlah_diterima,
                 'sisa' => (float) $d->sisa,
+                'harga_satuan' => (float) optional($d->bahan_baku)->harga_satuan,
                 'status_nama' => $d->status_nama,
                 'warna' => $d->status_warna,
             ];

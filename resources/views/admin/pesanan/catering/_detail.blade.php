@@ -44,7 +44,7 @@
                     </svg>
                     <div>
                         <h4 class="text-sm font-bold text-red-900">Pesanan Dibatalkan</h4>
-                        <p class="text-[13px] text-red-700 mt-1">{{ $pesanan->alasan_batal }}</p>
+                        <p class="text-sm text-red-700 mt-1">{{ $pesanan->alasan_batal }}</p>
                     </div>
                 </div>
             @endif
@@ -206,7 +206,7 @@
                                                         </div>
                                                         <div class="mt-4 flex justify-between items-center">
                                                             <p class="text-xs text-gray-500">Diupload: {{ \Carbon\Carbon::parse($pemb->tanggal_pembayaran)->translatedFormat('d M Y, H:i') }}</p>
-                                                            <a href="{{ asset('storage/' . $pemb->bukti_pembayaran) }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 hover:underline font-semibold flex items-center gap-1">
+                                                            <a href="{{ asset('storage/' . $pemb->bukti_pembayaran) }}" target="_blank" class="text-sm text-primary hover:text-primary hover:underline font-semibold flex items-center gap-1">
                                                                 Buka Penuh <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                                             </a>
                                                         </div>
@@ -297,7 +297,7 @@
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="9">
-                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Proses Pengadaan', name: '{{ $pesanan->id_pesanan }}', message: 'Mulai proses pengadaan bahan untuk pesanan ini?', formId: 'form-pengadaan-catering', confirmText: 'Proses', cancelText: 'Batal', type: 'warning' })" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Proses Pengadaan', name: '{{ $pesanan->id_pesanan }}', message: 'Mulai proses pengadaan bahan untuk pesanan ini?', formId: 'form-pengadaan-catering', confirmText: 'Proses', cancelText: 'Batal', type: 'warning' })" class="bg-primary hover:bg-primary-container text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-shopping-cart class="mr-2 w-5 h-5" />Mulai Proses Pengadaan
                                     </button>
                                 </form>
@@ -321,7 +321,7 @@
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="11">
-                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Sedang Produksi', name: '{{ $pesanan->id_pesanan }}', message: 'Mulai proses dapur? Stok bahan akan dipotong otomatis jika belum dipotong.', formId: 'form-produksi-catering', confirmText: 'Mulai Produksi', cancelText: 'Batal', type: 'warning' })" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Sedang Produksi', name: '{{ $pesanan->id_pesanan }}', message: 'Mulai proses dapur? Stok bahan akan dipotong otomatis jika belum dipotong.', formId: 'form-produksi-catering', confirmText: 'Mulai Produksi', cancelText: 'Batal', type: 'warning' })" class="bg-primary hover:bg-primary-container text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-sparkles class="mr-2 w-5 h-5" />Mulai Sedang Produksi
                                     </button>
                                 </form>

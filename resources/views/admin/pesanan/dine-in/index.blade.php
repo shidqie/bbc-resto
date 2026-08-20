@@ -27,11 +27,11 @@
                 <form action="{{ route('admin.pesanan.dinein.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari No. Pesanan / Nama Pemesan…" />
                     
-                    <x-ui.multi-select name="status" :options="['all' => 'Semua Status', 'ditinjau' => 'Baru', 'terkonfirmasi' => 'Terkonfirmasi', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status', 'all')" label="Pilih status" type="radio" />
+                    <x-ui.multi-select name="status" :options="['all' => 'Semua Status', 'ditinjau' => 'Baru', 'terkonfirmasi' => 'Terkonfirmasi', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status', 'all')" label="Status Pesanan" type="radio" />
                     
-                    <x-ui.multi-select name="status_pembayaran" :options="['all' => 'Semua Pembayaran', 'belum_bayar' => 'Belum Bayar', 'lunas' => 'Lunas']" :selected="request('status_pembayaran', 'all')" label="Pilih pembayaran" type="radio" />
+                    <x-ui.multi-select name="status_pembayaran" :options="['all' => 'Semua Pembayaran', 'belum_bayar' => 'Belum Bayar', 'lunas' => 'Lunas']" :selected="request('status_pembayaran', 'all')" label="Status Pembayaran" type="radio" />
                     
-                    <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'kustom' => 'Kustom']" :selected="request('periode')" label="Pilih periode" type="radio" />
+                    <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'kustom' => 'Kustom']" :selected="request('periode')" label="Periode Pesanan" type="radio" />
                     
                     <template x-if="new URLSearchParams(window.location.search).get('periode') === 'kustom'">
                         <div class="flex items-center gap-2">
@@ -82,11 +82,25 @@
                             @php $totalP = (float) $p->total_tagihan; @endphp
                         </td>
                         <td class="px-4 py-4 text-center align-middle">
-                            @php
-                                $sColorMap = [1 => 'warning', 2 => 'info', 3 => 'primary', 4 => 'primary', 5 => 'success', 6 => 'danger'];
-                                $sColor = $sColorMap[$p->status_pesanan_id] ?? 'gray';
-                            @endphp
-                            <x-ui.badge :color="$sColor" size="sm">{{ $p->status_pesanan->nama_status ?? '-' }}</x-ui.badge>
+                            <form action="{{ route('admin.pesanan.dinein.update-status', $p->id) }}" method="POST" class="inline-block">
+                                @csrf
+                                @method('PATCH')
+                                <select name="status_pesanan_id" onchange="this.form.submit()"
+                                        class="text-xs font-bold px-2.5 py-1.5 rounded-lg border focus:ring-primary focus:border-primary cursor-pointer transition-colors shadow-xs
+                                        {{ $p->status_pesanan_id == 1 ? 'text-amber-700 bg-amber-50 border-amber-200' : '' }}
+                                        {{ $p->status_pesanan_id == 2 ? 'text-blue-700 bg-blue-50 border-blue-200' : '' }}
+                                        {{ $p->status_pesanan_id == 3 ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : '' }}
+                                        {{ $p->status_pesanan_id == 4 ? 'text-purple-700 bg-purple-50 border-purple-200' : '' }}
+                                        {{ $p->status_pesanan_id == 5 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : '' }}
+                                        {{ $p->status_pesanan_id == 6 ? 'text-red-700 bg-red-50 border-red-200' : '' }}">
+                                    <option value="1" {{ $p->status_pesanan_id == 1 ? 'selected' : '' }}>Menunggu Konfirmasi</option>
+                                    <option value="2" {{ $p->status_pesanan_id == 2 ? 'selected' : '' }}>Dikonfirmasi</option>
+                                    <option value="3" {{ $p->status_pesanan_id == 3 ? 'selected' : '' }}>Sedang Diproses</option>
+                                    <option value="4" {{ $p->status_pesanan_id == 4 ? 'selected' : '' }}>Siap Disajikan</option>
+                                    <option value="5" {{ $p->status_pesanan_id == 5 ? 'selected' : '' }}>Selesai</option>
+                                    <option value="6" {{ $p->status_pesanan_id == 6 ? 'selected' : '' }}>Dibatalkan</option>
+                                </select>
+                            </form>
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             @php

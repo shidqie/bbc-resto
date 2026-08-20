@@ -57,7 +57,7 @@
                         </td>
                         <td class="px-4 py-4 text-center">
                             @if($bayar->bukti_pembayaran)
-                                <a href="{{ Storage::url($bayar->bukti_pembayaran) }}" target="_blank" class="text-blue-500 hover:underline text-xs font-medium">Lihat Bukti</a>
+                                <a href="{{ Storage::url($bayar->bukti_pembayaran) }}" target="_blank" class="text-primary hover:underline text-xs font-medium">Lihat Bukti</a>
                             @else
                                 <span class="text-gray-400 text-xs">-</span>
                             @endif
@@ -80,13 +80,13 @@
                                 @if($bayar->status_verifikasi == 'menunggu_verifikasi')
                                     <form action="{{ route('admin.pembayaran.verify', $bayar->id) }}" method="POST">
                                         @csrf
-                                        <x-ui.button type="submit" variant="primary" size="sm" onclick="return confirm('Verifikasi pembayaran ini?')">
+                                        <x-ui.button type="submit" variant="primary" size="sm" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi pembayaran ini?', message: 'Pembayaran ini akan ditandai sebagai terverifikasi.', form: this.closest('form'), confirmText: 'Verifikasi', cancelText: 'Batal', type: 'warning' })">
                                             <x-heroicon-o-check class="w-3.5 h-3.5 mr-1 inline" /> Verifikasi
                                         </x-ui.button>
                                     </form>
                                     <form action="{{ route('admin.pembayaran.cancel', $bayar->id) }}" method="POST">
                                         @csrf
-                                        <x-ui.button type="submit" variant="danger" size="sm" onclick="return confirm('Batalkan pembayaran ini?')">
+                                        <x-ui.button type="submit" variant="danger" size="sm" onclick="window.confirmDialog({ title: 'Batalkan Pembayaran', name: 'Batalkan pembayaran ini?', message: 'Pembayaran ini akan dibatalkan dan statusnya diubah.', form: this.closest('form'), confirmText: 'Batalkan', cancelText: 'Batal', type: 'danger' })">
                                             <x-heroicon-o-x-mark class="w-3.5 h-3.5 mr-1 inline" /> Batal
                                         </x-ui.button>
                                     </form>

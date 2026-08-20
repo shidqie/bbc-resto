@@ -11,16 +11,25 @@
     toggleStatus(id, nama, aktif) {
         if (this.busy) return;
         const self = this;
-        if (confirm(`${aktif ? 'Nonaktifkan' : 'Aktifkan'} akun ${nama}?`)) {
-            self.busy = true;
-            fetch('/users/' + id + '/toggle-status', {
-                method: 'PATCH',
-                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' }
-            }).then(r => r.json()).then(data => {
-                if (data.success) { location.reload(); }
-                else { alert(data.message || 'Gagal mengubah status.'); }
-            }).catch(() => alert('Terjadi kesalahan jaringan.')).finally(() => self.busy = false);
-        }
+        const label = aktif ? 'Nonaktifkan' : 'Aktifkan';
+        window.confirmDialog({
+            title: label + ' Akun',
+            name: label + ' akun ' + nama + '?',
+            message: 'Status akun ini akan diubah.',
+            confirmText: label,
+            cancelText: 'Batal',
+            type: 'warning',
+            onConfirm: function () {
+                self.busy = true;
+                fetch('/users/' + id + '/toggle-status', {
+                    method: 'PATCH',
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' }
+                }).then(r => r.json()).then(data => {
+                    if (data.success) { location.reload(); }
+                    else { window.showToast('error', data.message || 'Gagal mengubah status.'); }
+                }).catch(() => window.showToast('error', 'Terjadi kesalahan jaringan.')).finally(() => self.busy = false);
+            }
+        });
     }
 }" class="flex-1 bg-gray-50 text-gray-800 pb-10 w-full h-full flex flex-col">
     <div class="w-full p-6 space-y-5 flex flex-col flex-1 min-h-0">
@@ -28,7 +37,7 @@
     <!-- Header Area -->
     <x-ui.page-header title="Manajemen Pengguna" subtitle="Kelola data karyawan dan konsumen yang terdaftar di sistem." :breadcrumbs="['Manajemen Pengguna', request('type') === 'pelanggan' ? 'Data Konsumen' : 'Data Karyawan']">
         <x-slot:actions>
-            <button x-show="activeTab === 'karyawan'" x-cloak @click="showCreateModal = true" class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
+            <button x-show="activeTab === 'karyawan'" x-cloak @click="showCreateModal = true" class="bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors text-sm">
                 <x-heroicon-o-plus class="w-4 h-4" />
                 Tambah Karyawan
             </button>
@@ -95,7 +104,7 @@
                                 <x-ui.action-button href="{{ route('users.show', $user) }}" title="Detail">
                                     <x-heroicon-o-eye class="w-4 h-4" />
                                 </x-ui.action-button>
-                                <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus karyawan ini?');">
+                                <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" data-confirm="Yakin ingin menghapus karyawan ini?">
                                     @csrf
                                     @method('DELETE')
                                     <x-ui.action-button type="submit" title="Hapus">
@@ -171,7 +180,7 @@
                                 <x-ui.action-button href="{{ route('pelanggan.show', $user) }}" title="Detail">
                                     <x-heroicon-o-eye class="w-4 h-4" />
                                 </x-ui.action-button>
-                                <form action="{{ route('pelanggan.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus data konsumen ini? Semua riwayat pesanan juga akan terhapus.');">
+                                <form action="{{ route('pelanggan.destroy', $user) }}" method="POST" class="inline" data-confirm="Yakin ingin menghapus data konsumen ini? Semua riwayat pesanan juga akan terhapus.">
                                     @csrf
                                     @method('DELETE')
                                     <x-ui.action-button type="submit" title="Hapus">

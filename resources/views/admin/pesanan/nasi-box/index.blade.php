@@ -16,11 +16,11 @@
                 <form action="{{ route('admin.pesanan.nasibox.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari Kode / Pemesan / HP…" />
                     
-                    <x-ui.multi-select name="status" :options="['all' => 'Semua Status', 'ditinjau' => 'Baru', 'terkonfirmasi' => 'Terkonfirmasi', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status', 'all')" label="Pilih status" type="radio" />
+                    <x-ui.multi-select name="status" :options="['all' => 'Semua Status', 'ditinjau' => 'Baru', 'terkonfirmasi' => 'Terkonfirmasi', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status', 'all')" label="Status Pesanan" type="radio" />
                     
-                    <x-ui.multi-select name="status_pembayaran" :options="['all' => 'Semua Pembayaran', 'menunggu_dp' => 'Menunggu Pembayaran DP', 'verifikasi_dp' => 'Menunggu Verifikasi DP', 'menunggu_pelunasan' => 'Menunggu Pelunasan', 'verifikasi_lunas' => 'Menunggu Verifikasi Pelunasan', 'lunas' => 'Lunas']" :selected="request('status_pembayaran', 'all')" label="Pilih pembayaran" type="radio" />
+                    <x-ui.multi-select name="status_pembayaran" :options="['all' => 'Semua Pembayaran', 'menunggu_dp' => 'Menunggu Pembayaran DP', 'verifikasi_dp' => 'Menunggu Verifikasi DP', 'menunggu_pelunasan' => 'Menunggu Pelunasan', 'verifikasi_lunas' => 'Menunggu Verifikasi Pelunasan', 'lunas' => 'Lunas']" :selected="request('status_pembayaran', 'all')" label="Status Pembayaran" type="radio" />
                     
-                    <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'kustom' => 'Kustom']" :selected="request('periode')" label="Pilih periode" type="radio" />
+                    <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'kustom' => 'Kustom']" :selected="request('periode')" label="Periode Pesanan" type="radio" />
                     
                     <template x-if="new URLSearchParams(window.location.search).get('periode') === 'kustom'">
                         <div class="flex items-center gap-2">
@@ -94,7 +94,7 @@
                                             ];
                                             $validNext = $allowed[$p->status_pesanan_id] ?? [$p->status_pesanan_id];
                                         @endphp
-                                        <select name="status" onchange="this.form.submit()" class="text-xs font-semibold rounded-lg border-gray-300 py-1.5 pl-3 pr-8 focus:ring-[#0D3024] focus:border-[#0D3024] bg-gray-50 hover:bg-white transition-colors cursor-pointer">
+                                        <select name="status" onchange="this.form.submit()" class="text-xs font-semibold rounded-lg border-gray-300 py-1.5 pl-3 pr-8 focus:ring-primary focus:border-primary bg-gray-50 hover:bg-white transition-colors cursor-pointer">
                                             @if(in_array(1, $validNext)) <option value="1" {{ $p->status_pesanan_id == 1 ? 'selected' : '' }}>Menunggu Konfirmasi</option> @endif
                                             @if(in_array(2, $validNext)) <option value="2" {{ $p->status_pesanan_id == 2 ? 'selected' : '' }}>Dikonfirmasi</option> @endif
                                             @if(in_array(3, $validNext)) <option value="3" {{ $p->status_pesanan_id == 3 ? 'selected' : '' }}>Sedang Diproses</option> @endif

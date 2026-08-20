@@ -87,7 +87,7 @@
 
             <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
                 <p class="text-sm font-medium text-gray-500">Dalam Pengiriman</p>
-                <p class="text-xl font-bold text-blue-600 mt-1">{{ $dalamPengiriman }}</p>
+                <p class="text-xl font-bold text-primary mt-1">{{ $dalamPengiriman }}</p>
             </div>
 
             <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
@@ -132,7 +132,7 @@
                             '5' => 'Gagal Dikirim'
                         ]"
                         :selected="request('status')"
-                        label="Status"
+                        label="Status Pengiriman"
                         type="radio"
                     />
                 </form>
@@ -170,7 +170,7 @@
                                 $statusClass = 'bg-amber-50 text-amber-800 border-amber-200';
                             } elseif ($statusId === 3) {
                                 $statusLabel = 'Dalam Pengiriman';
-                                $statusClass = 'bg-blue-50 text-blue-800 border-blue-200';
+                                $statusClass = 'bg-primary-soft text-primary border-primary/20';
                             } elseif ($statusId === 4) {
                                 $statusLabel = 'Selesai';
                                 $statusClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
@@ -218,7 +218,7 @@
 
                             {{-- KODE PESANAN --}}
                             <td class="px-4 py-4">
-                                <p class="font-mono text-xs font-semibold text-[#0D3024]">
+                                <p class="font-mono text-xs font-semibold text-primary">
                                     {{ $kodePesanan }}
                                 </p>
                             </td>
@@ -285,7 +285,7 @@
 
                                                 <button
                                                     type="submit"
-                                                    class="w-full inline-flex justify-center items-center rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-800 transition"
+                                                    class="w-full inline-flex justify-center items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 transition"
                                                 >
                                                     Mulai Pengiriman
                                                 </button>
@@ -350,7 +350,7 @@
 
                                                 <button
                                                     type="submit"
-                                                    onclick="return confirm('Tandai pengiriman ini sebagai gagal dikirim?')"
+                                                    onclick="window.confirmDialog({ title: 'Tandai Gagal Dikirim', name: 'Tandai pengiriman ini sebagai gagal dikirim?', message: 'Status pengiriman akan diubah menjadi gagal dikirim.', form: this.closest('form'), confirmText: 'Ya, Gagal', cancelText: 'Batal', type: 'danger' })"
                                                     class="w-full text-xs font-medium text-red-600 hover:text-red-700"
                                                 >
                                                     Gagal Dikirim

@@ -54,4 +54,13 @@ class PurchaseOrder extends BaseModel
             default => 'gray',
         };
     }
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->nomor_po)) {
+                $model->nomor_po = \App\Helpers\IdCodeGenerator::generatePengadaanId($model->tanggal_po ?? $model->dibuat_pada ?? now());
+            }
+        });
+    }
 }

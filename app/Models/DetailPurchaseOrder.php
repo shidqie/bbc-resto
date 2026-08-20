@@ -61,4 +61,9 @@ class DetailPurchaseOrder extends BaseModel
             default => 'primary',
         };
     }
+
+    public function getIdDetailPengadaanAttribute(): string
+    {
+        return \App\Helpers\IdCodeGenerator::generateDetailPengadaanId($this->id);
+    }
 }

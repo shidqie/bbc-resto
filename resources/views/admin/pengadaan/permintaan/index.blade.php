@@ -11,7 +11,7 @@
             :breadcrumbs="['Pengadaan', 'Semua Permintaan']">
             <x-slot:actions>
                 <div x-data="{ openDropdown: false }" class="relative">
-                    <button @click="openDropdown = !openDropdown" @click.away="openDropdown = false" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+                    <button @click="openDropdown = !openDropdown" @click.away="openDropdown = false" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-primary rounded-lg px-3 py-2 hover:bg-primary/90 transition-colors">
                         <x-heroicon-o-plus class="w-4 h-4" />
                         Buat Permintaan
                         <x-heroicon-o-chevron-down class="w-4 h-4 ml-1 opacity-70" />
@@ -87,7 +87,7 @@
                                 <p class="text-xs text-gray-500 font-medium">Pesanan Catering</p>
                                 <p class="font-bold text-gray-900 text-xs font-mono">{{ $p->pesanan->id_pesanan }}</p>
                             @else
-                                <span class="text-xs text-gray-400 font-medium">Operasional Harian</span>
+                                <span class="text-xs text-gray-400 font-medium">Harian</span>
                             @endif
                         </td>
                         <td class="px-4 py-4 align-middle text-center font-bold text-gray-900">{{ $p->detail_pengadaan_bahan->count() }} <span class="text-xs font-normal text-gray-500">item</span></td>

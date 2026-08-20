@@ -10,7 +10,7 @@
         <x-ui.page-header title="Notifikasi Stok" subtitle="Peringatan stok menipis, habis, dan mutasi stok." :breadcrumbs="['Persediaan', 'Notifikasi Stok']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('pengadaan.harian.create') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors">
+                    <a href="{{ route('pengadaan.harian.create') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-primary rounded-lg px-3 py-2 hover:bg-primary/90 transition-colors">
                         <x-heroicon-o-shopping-cart class="w-3 h-3" />
                         Buat Pengadaan
                     </a>
@@ -28,9 +28,9 @@
                 <p class="text-sm font-medium text-gray-500">Total</p>
                 <p class="text-xl font-bold text-gray-900 mt-1">{{ $stats['total'] }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-blue-200 px-4 py-3">
+            <div class="bg-white rounded-xl border border-primary/20 px-4 py-3">
                 <p class="text-sm font-medium text-gray-500">Belum Dibaca</p>
-                <p class="text-xl font-bold text-blue-600 mt-1">{{ $stats['unread'] }}</p>
+                <p class="text-xl font-bold text-primary mt-1">{{ $stats['unread'] }}</p>
             </div>
             <div class="bg-white rounded-xl border border-amber-200 px-4 py-3">
                 <p class="text-sm font-medium text-gray-500">Menipis</p>
@@ -51,7 +51,7 @@
                     <a href="{{ route('notifikasi-stok.index') }}" class="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-2 rounded-lg hover:bg-red-50 transition-colors shrink-0">Reset</a>
                 @endif
             </form>
-            <button type="button" id="btnMarkAll" class="text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg px-3 py-2 transition-colors shrink-0">
+            <button type="button" id="btnMarkAll" class="text-sm font-medium text-primary bg-primary-soft hover:bg-primary/10 rounded-lg px-3 py-2 transition-colors shrink-0">
                 Tandai Semua Dibaca
             </button>
         </div>
@@ -89,7 +89,7 @@
                         </td>
                         <td class="px-4 py-3 text-center">
                             @if(!$n->dibaca)
-                            <button onclick="markRead({{ $n->id }}, this)" class="text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg px-2.5 py-1.5 transition-colors">Tandai Dibaca</button>
+                            <button onclick="markRead({{ $n->id }}, this)" class="text-xs font-semibold text-primary bg-primary-soft hover:bg-primary/10 rounded-lg px-2.5 py-1.5 transition-colors">Tandai Dibaca</button>
                             @else
                             <span class="text-xs text-gray-400">Dibaca</span>
                             @endif
@@ -135,7 +135,7 @@ document.getElementById('btnCheckNow')?.addEventListener('click', () => {
     fetch(`${BASE_URL}/notifikasi-stok/check-now`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
         .then(r => r.json())
         .then(d => {
-            alert(d.message);
+            window.showToast('success', d.message);
             window.location.reload();
         });
 });

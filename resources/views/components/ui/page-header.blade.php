@@ -27,7 +27,7 @@
 
     <div class="flex items-center justify-between gap-4">
         <div>
-            <h1 class="text-xl font-semibold text-gray-900 tracking-tight">{{ $title }}</h1>
+            <h1 class="text-xl font-semibold text-primary tracking-tight">{{ $title }}</h1>
             @if($subtitle)
                 <p class="text-sm text-gray-500 mt-0.5">{{ $subtitle }}</p>
             @endif

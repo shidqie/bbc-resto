@@ -13,8 +13,8 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['"Google Sans"', '"Outfit"', 'Inter', ...defaultTheme.fontFamily.sans],
-                serif: ['"Playfair Display"', '"Libre Caslon Text"', ...defaultTheme.fontFamily.serif],
+                sans: ['Outfit', ...defaultTheme.fontFamily.sans],
+                serif: ['Outfit', ...defaultTheme.fontFamily.serif],
                 mono: ['"Anonymous Pro"', ...defaultTheme.fontFamily.mono],
             },
             fontSize: {
@@ -31,17 +31,19 @@ export default {
             },
             colors: {
                 primary: {
-                    DEFAULT: '#0D3024',
-                    container: '#0a2219',
+                    DEFAULT: 'rgb(var(--color-primary-rgb) / <alpha-value>)',
+                    container: 'rgb(var(--color-primary-container-rgb) / <alpha-value>)',
+                    soft: 'rgb(var(--color-primary-soft-rgb) / <alpha-value>)',
                 },
                 secondary: {
-                    DEFAULT: '#B8860B',
-                    container: '#d4a843',
+                    DEFAULT: 'rgb(var(--color-secondary-rgb) / <alpha-value>)',
+                    container: 'rgb(var(--color-secondary-container-rgb) / <alpha-value>)',
+                    soft: 'rgb(var(--color-secondary-soft-rgb) / <alpha-value>)',
                 },
-                accent: '#D4A843',
-                canvas: '#FAFAF7',
-                surface: '#FFFFFF',
-                body: '#3D3D3D',
+                accent: 'rgb(var(--color-accent-rgb) / <alpha-value>)',
+                canvas: 'rgb(var(--color-canvas-rgb) / <alpha-value>)',
+                surface: 'rgb(var(--color-surface-rgb) / <alpha-value>)',
+                body: 'rgb(var(--color-body-rgb) / <alpha-value>)',
                 success: '#16A34A',
                 warning: '#D97706',
                 danger: '#DC2626',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\KategoriMenu;
 use App\Models\Menu;
+use App\Models\Galeri;
 
 class LandingController extends Controller
 {
@@ -35,6 +36,9 @@ class LandingController extends Controller
         // 4. Ambil Paket Nasi Box aktif (jenis_menu_id = 3)
         $paketNasiBox = Menu::where('status_aktif', true)->where('jenis_menu_id', 3)->whereHas('komponen_paket')->with('komponen_paket.opsi')->get();
 
-        return view('landing', compact('kategoris', 'semuaMenu', 'paketCatering', 'paketNasiBox'));
+        // 5. Ambil Galeri
+        $galeri = Galeri::where('is_active', true)->orderBy('urutan', 'asc')->orderBy('dibuat_pada', 'desc')->get();
+
+        return view('landing', compact('kategoris', 'semuaMenu', 'paketCatering', 'paketNasiBox', 'galeri'));
     }
 }

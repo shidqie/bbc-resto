@@ -15,7 +15,7 @@
             Atur Komposisi
         </button>
     @else
-        <button onclick="openResepForm({{ $aksiId }}, false)" title="Atur Resep" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors">
+        <button onclick="openResepForm({{ $aksiId }}, false)" title="Atur Resep" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">
             <x-heroicon-o-clipboard-document-list class="w-3.5 h-3.5" />
             Atur Resep
         </button>
@@ -23,11 +23,11 @@
 
     {{-- Detail --}}
     @if($aksiIsPaket)
-        <a href="{{ route('paket-catering.show', $aksiId) }}" title="Lihat Detail Paket" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+        <a href="{{ route('paket-catering.show', $aksiId) }}" title="Lihat Detail Paket" class="w-7 h-7 rounded-full flex items-center justify-center bg-primary-soft text-primary hover:bg-primary/10 transition-colors">
             <x-heroicon-o-eye class="w-4 h-4" />
         </a>
     @else
-        <a href="{{ route('menu.show', $aksiId) }}" title="Lihat Detail Menu" class="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+        <a href="{{ route('menu.show', $aksiId) }}" title="Lihat Detail Menu" class="w-7 h-7 rounded-full flex items-center justify-center bg-primary-soft text-primary hover:bg-primary/10 transition-colors">
             <x-heroicon-o-eye class="w-4 h-4" />
         </a>
     @endif

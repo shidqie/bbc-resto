@@ -42,6 +42,14 @@ class StockService
             $stok->terakhir_diperbarui = now();
             $stok->save();
 
+            $bahan = BahanBaku::find($bahanBakuId);
+            if ($bahan && \Illuminate\Support\Facades\Schema::hasColumn('bahan_baku', 'stok_harian')) {
+                if ($jenisPersediaan === StokBahan::JENIS_HARIAN) {
+                    $bahan->stok_harian = (float) $stok->jumlah_stok;
+                    $bahan->save();
+                }
+            }
+
             return $this->catatMutasi($bahanBakuId, $jenisMutasiStokId, $jumlah, $stokSebelum, (float) $stok->jumlah_stok, $keterangan, $userId, $referensi, $jenisPersediaan);
         });
     }

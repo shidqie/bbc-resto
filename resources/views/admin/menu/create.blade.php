@@ -51,18 +51,21 @@
                     {{-- Nama Menu --}}
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nama Menu <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama_menu" value="{{ old('nama_menu') }}" required placeholder="Contoh: Ayam Bakar Madu" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none transition-all">
+                        <input type="text" name="nama_menu" value="{{ old('nama_menu') }}" required placeholder="Contoh: Ayam Bakar Madu" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none transition-all">
                     </div>
 
                     {{-- Kategori --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Menu <span class="text-red-500">*</span></label>
-                        <select name="kategori_menu_id" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
-                            <option value="">Pilih Kategori</option>
-                            @foreach($kategoris as $kategori)
-                                <option value="{{ $kategori->id }}" {{ old('kategori_menu_id') == $kategori->id ? 'selected' : '' }}>{{ $kategori->nama_kategori_kategori ?? $kategori->nama_kategori }}</option>
-                            @endforeach
-                        </select>
+                        @php
+                            $katOptions = [];
+                            foreach($kategoris as $kategori) {
+                                if(!isset($kategori->jenis_menu_id) || $kategori->jenis_menu_id == 1 || $kategori->jenis_menu_id == '') {
+                                    $katOptions[$kategori->id] = $kategori->nama_kategori_kategori ?? $kategori->nama_kategori;
+                                }
+                            }
+                        @endphp
+                        <x-ui.searchable-select name="kategori_menu_id" :options="$katOptions" :selected="old('kategori_menu_id')" placeholder="-- Pilih Kategori --" required="true" />
                     </div>
 
                     {{-- Jenis Menu (Hidden, Force Dine In) --}}
@@ -73,33 +76,37 @@
                         <x-ui.input-currency label="Harga (Rp)" name="harga_jual" value="{{ old('harga_jual') }}" required="true" />
                     </div>
 
+                    {{-- Minimal Pemesanan --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Minimal Pemesanan</label>
+                        <input type="number" name="minimal_pemesanan" value="{{ old('minimal_pemesanan') }}" placeholder="Contoh: 20" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none transition-all">
+                        <p class="text-xs text-gray-400 mt-1">Hanya untuk Katering & Nasi Box</p>
+                    </div>
+
                     {{-- Status --}}
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Status Ketersediaan <span class="text-red-500">*</span></label>
-                        <select name="status_aktif" required class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
-                            <option value="1" {{ (old('status_aktif', isset($menu) ? $menu->status_aktif : 1) == 1) ? 'selected' : '' }}>Tersedia</option>
-                            <option value="0" {{ (old('status_aktif', isset($menu) ? $menu->status_aktif : 1) == 0) ? 'selected' : '' }}>Habis</option>
-                        </select>
+                        <x-ui.searchable-select name="status_aktif" :options="['1' => 'Tersedia', '0' => 'Habis']" :selected="old('status_aktif', 1)" placeholder="-- Pilih Status --" required="true" />
                     </div>
 
                     {{-- Deskripsi --}}
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi / Keterangan Tambahan</label>
-                        <textarea name="deskripsi" rows="3" placeholder="Opsional" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none resize-none transition-all">{{ old('deskripsi') }}</textarea>
+                        <textarea name="deskripsi" rows="3" placeholder="Opsional" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none resize-none transition-all">{{ old('deskripsi') }}</textarea>
                     </div>
 
                     {{-- Komposisi Bahan Baku / Resep --}}
                     <div class="md:col-span-2 border-t border-gray-100 pt-6 mt-4">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-sm font-bold text-gray-900">Komposisi Bahan Baku (Resep Takaran)</h3>
-                            <button type="button" onclick="addBahanBakuRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                            <button type="button" onclick="addBahanBakuRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
                                 <x-heroicon-o-plus class="w-4 h-4 inline-block" /> Tambah Bahan
                             </button>
                         </div>
                         <div class="space-y-3" id="bahanBakuContainer">
                             <div class="flex gap-3 items-start bahan-baku-row">
                                 <div class="flex-1">
-                                    <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
+                                    <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-white transition-all">
                                         <option value="">Pilih Bahan Baku</option>
                                         @foreach($bahanBakus as $bb)
                                             <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
@@ -107,7 +114,7 @@
                                     </select>
                                 </div>
                                 <div class="w-32">
-                                    <x-ui.input-decimal name="jumlah_kebutuhan[]" placeholder="Takaran" />
+                                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none transition-all">
                                 </div>
                                 <div>
                                     <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
@@ -154,35 +161,26 @@
 
     function addBahanBakuRow() {
         const container = document.getElementById('bahanBakuContainer');
-        const firstRow = container.querySelector('.bahan-baku-row');
-        if (firstRow) {
-            const clone = firstRow.cloneNode(true);
-            clone.querySelector('select').value = '';
-            clone.querySelector('input').value = '';
-            container.appendChild(clone);
-        } else {
-            // Fallback if empty
-            container.insertAdjacentHTML('beforeend', `
-                <div class="flex gap-3 items-start bahan-baku-row">
-                    <div class="flex-1">
-                        <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#3B82F6] outline-none bg-white transition-all">
-                            <option value="">Pilih Bahan Baku</option>
-                            @foreach($bahanBakus as $bb)
-                                <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="w-32">
-                        <x-ui.input-decimal name="jumlah_kebutuhan[]" placeholder="Takaran" />
-                    </div>
-                    <div>
-                        <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
-                            <x-heroicon-o-trash class="w-5 h-5" />
-                        </button>
-                    </div>
+        container.insertAdjacentHTML('beforeend', `
+            <div class="flex gap-3 items-start bahan-baku-row">
+                <div class="flex-1">
+                    <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-white transition-all">
+                        <option value="">Pilih Bahan Baku</option>
+                        @foreach($bahanBakus as $bb)
+                            <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                        @endforeach
+                    </select>
                 </div>
-            `);
-        }
+                <div class="w-32">
+                    <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none transition-all">
+                </div>
+                <div>
+                    <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
+                        <x-heroicon-o-trash class="w-5 h-5" />
+                    </button>
+                </div>
+            </div>
+        `);
     }
 </script>
 @endsection

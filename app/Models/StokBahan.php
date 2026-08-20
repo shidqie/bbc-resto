@@ -43,4 +43,14 @@ class StokBahan extends BaseModel
     {
         return $this->jenis_persediaan === self::JENIS_CATERING ? 'Catering' : 'Harian';
     }
+
+    public function getIdStokAttribute(): string
+    {
+        return \App\Helpers\IdCodeGenerator::generateStokId($this->id);
+    }
+
+    public function getKodeStokAttribute(): string
+    {
+        return $this->id_stok;
+    }
 }

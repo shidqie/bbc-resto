@@ -4,7 +4,7 @@
     @if($title)
         <h4 class="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">{{ $title }}</h4>
     @endif
-    <div class="text-[13px] text-slate-600 leading-relaxed">
+    <div class="text-sm text-slate-600 leading-relaxed">
         {{ $slot }}
     </div>
 </div>

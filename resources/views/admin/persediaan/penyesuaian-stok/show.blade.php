@@ -23,7 +23,7 @@
                 <h3 class="text-sm font-semibold text-gray-700 border-b border-gray-100 pb-3">Info Penyesuaian</h3>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">Nomor</span>
-                    <span class="font-mono font-semibold text-[#3B82F6]">{{ $penyesuaian->nomor_penyesuaian }}</span>
+                    <span class="font-mono font-semibold text-primary">{{ $penyesuaian->nomor_penyesuaian }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">Tanggal</span>
@@ -56,11 +56,11 @@
                     <table class="w-full text-left">
                         <thead>
                             <tr class="border-b border-gray-100">
-                                <th class="px-5 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Bahan Baku</th>
-                                <th class="px-5 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right">Stok Sistem</th>
-                                <th class="px-5 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right">Stok Fisik</th>
-                                <th class="px-5 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right">Selisih</th>
-                                <th class="px-5 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Catatan</th>
+                                <th class="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Bahan Baku</th>
+                                <th class="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Stok Sistem</th>
+                                <th class="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Stok Fisik</th>
+                                <th class="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Selisih</th>
+                                <th class="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Catatan</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">

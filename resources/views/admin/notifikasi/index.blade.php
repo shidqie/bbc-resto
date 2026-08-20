@@ -6,14 +6,14 @@
         
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             @forelse($notifications as $notif)
-                <div class="p-4 border-b border-gray-100 flex items-start gap-4 {{ is_null($notif->read_at) ? 'bg-blue-50/30' : '' }}">
+                <div class="p-4 border-b border-gray-100 flex items-start gap-4 {{ is_null($notif->read_at) ? 'bg-primary/5' : '' }}">
                     <div class="flex-1">
                         <h4 class="font-medium text-gray-900">{{ $notif->data['title'] ?? 'Notifikasi' }}</h4>
                         <p class="text-sm text-gray-600 mt-1">{{ $notif->data['message'] ?? '' }}</p>
                         <p class="text-xs text-gray-400 mt-2">{{ $notif->created_at->diffForHumans() }}</p>
                     </div>
                     @if($notif->data['url'] ?? false)
-                        <a href="{{ $notif->data['url'] }}" class="text-sm text-blue-600 font-medium">Lihat Detail</a>
+                        <a href="{{ $notif->data['url'] }}" class="text-sm text-primary font-medium">Lihat Detail</a>
                     @endif
                 </div>
             @empty

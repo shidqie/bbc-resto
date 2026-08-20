@@ -33,11 +33,11 @@
     $base = 'inline-flex items-center justify-center gap-2 font-medium transition-all duration-150 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed';
 
     $variants = [
-        'primary'   => 'bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-400 shadow-sm',
-        'secondary' => 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 focus:ring-gray-200 shadow-sm',
+        'primary'   => 'bg-primary text-white hover:bg-primary/90 focus:ring-primary/40 shadow-sm dark:text-neutral-900',
+        'secondary' => 'bg-surface border border-gray-200 text-gray-700 hover:bg-gray-50 focus:ring-gray-200 shadow-sm',
         'danger'    => 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-300 shadow-sm',
         'success'   => 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-300 shadow-sm',
-        'outline'   => 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 focus:ring-gray-200 shadow-sm',
+        'outline'   => 'bg-surface border border-gray-200 text-gray-700 hover:bg-gray-50 focus:ring-gray-200 shadow-sm',
         'ghost'     => 'bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:ring-gray-200',
     ];
 

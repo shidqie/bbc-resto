@@ -9,4 +9,9 @@ class JenisPesanan extends BaseModel
     protected $guarded = [];
 
     public $timestamps = false;
+
+    public function getKodeJenisAttribute(): string
+    {
+        return \App\Helpers\IdCodeGenerator::generateJenisPesananId($this->id);
+    }
 }

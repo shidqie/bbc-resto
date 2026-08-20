@@ -10,19 +10,19 @@
         {{-- ── STAT CARDS ── --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
             <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
-                <span class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pesanan Hari Ini</span>
+                <span class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pesanan Hari Ini</span>
                 <span class="text-lg sm:text-xl font-bold text-gray-900">{{ $pesananHariIni }}</span>
             </div>
             <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
-                <span class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pendapatan Hari Ini</span>
+                <span class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pendapatan Hari Ini</span>
                 <span class="text-lg sm:text-xl font-bold text-gray-900 tabular-nums">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</span>
             </div>
             <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
-                <span class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pesanan Menunggu</span>
+                <span class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Pesanan Menunggu</span>
                 <span class="text-lg sm:text-xl font-bold text-amber-500">{{ $pesananPending }}</span>
             </div>
             <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-center">
-                <span class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Stok Menipis</span>
+                <span class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Stok Menipis</span>
                 <span class="text-lg sm:text-xl font-bold text-rose-500">{{ $stokMenipis }}</span>
             </div>
         </div>
@@ -36,11 +36,11 @@
                 <div>
                     <h2 class="font-bold text-neutral-900 text-sm flex items-center gap-2">
                         Tren Pendapatan & Pesanan (7 Hari Terakhir)
-                        <span class="px-2 py-0.5 bg-sky-50 text-sky-600 text-[10px] font-bold rounded-full uppercase tracking-wider">{{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</span>
+                        <span class="px-2 py-0.5 bg-primary-soft text-primary text-[10px] font-bold rounded-full uppercase tracking-wider">{{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</span>
                     </h2>
                     <p class="text-xs text-neutral-400 font-medium mt-1">Grafik akumulasi omset harian serta jumlah pesanan Dine-in, Katering, dan Nasi Box</p>
                 </div>
-                <span class="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-[11px] font-medium rounded border border-neutral-200">
+                <span class="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-xs font-medium rounded border border-neutral-200">
                     Realtime
                 </span>
             </div>
@@ -135,8 +135,8 @@
         const dataNasiBox = {!! json_encode($dataNasiBox) !!};
         
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+        gradient.addColorStop(0, 'rgba(13, 48, 36, 0.2)');
+        gradient.addColorStop(1, 'rgba(13, 48, 36, 0)');
         
         new Chart(ctx, {
             type: 'bar',
@@ -147,11 +147,11 @@
                         type: 'line',
                         label: 'Pendapatan (Rp)',
                         data: dataPendapatan,
-                        borderColor: '#3B82F6',
+                        borderColor: '#0D3024',
                         backgroundColor: gradient,
                         borderWidth: 2.5,
                         pointBackgroundColor: '#FFFFFF',
-                        pointBorderColor: '#3B82F6',
+                        pointBorderColor: '#0D3024',
                         pointBorderWidth: 2,
                         pointRadius: 4,
                         pointHoverRadius: 6,

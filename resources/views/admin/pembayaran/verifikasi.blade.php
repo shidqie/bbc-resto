@@ -70,7 +70,7 @@
                         </td>
                         <td class="px-4 py-4 text-center">
                             @if($pembayaran->bukti_pembayaran)
-                                <a href="{{ Storage::url($pembayaran->bukti_pembayaran) }}" target="_blank" class="text-blue-500 hover:underline text-xs font-medium">Lihat Bukti</a>
+                                <a href="{{ Storage::url($pembayaran->bukti_pembayaran) }}" target="_blank" class="text-primary hover:underline text-xs font-medium">Lihat Bukti</a>
                             @else
                                 <span class="text-gray-400 text-xs">-</span>
                             @endif
@@ -90,14 +90,14 @@
                                     <form action="{{ route('admin.verifikasi_pembayaran.process', $pembayaran->id) }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="action" value="terima">
-                                        <x-ui.button type="submit" variant="primary" size="sm" onclick="return confirm('Verifikasi pembayaran ini?')">
+                                        <x-ui.button type="submit" variant="primary" size="sm" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi pembayaran ini?', message: 'Pembayaran ini akan ditandai sebagai terverifikasi.', form: this.closest('form'), confirmText: 'Verifikasi', cancelText: 'Batal', type: 'warning' })">
                                             <x-heroicon-o-check class="w-3.5 h-3.5 mr-1 inline" /> Verifikasi
                                         </x-ui.button>
                                     </form>
                                     <form action="{{ route('admin.verifikasi_pembayaran.process', $pembayaran->id) }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="action" value="tolak">
-                                        <x-ui.button type="submit" variant="danger" size="sm" onclick="return confirm('Batalkan pembayaran ini?')">
+                                        <x-ui.button type="submit" variant="danger" size="sm" onclick="window.confirmDialog({ title: 'Batalkan Pembayaran', name: 'Batalkan pembayaran ini?', message: 'Pembayaran ini akan dibatalkan dan statusnya diubah.', form: this.closest('form'), confirmText: 'Batalkan', cancelText: 'Batal', type: 'danger' })">
                                             <x-heroicon-o-x-mark class="w-3.5 h-3.5 mr-1 inline" /> Batal
                                         </x-ui.button>
                                     </form>
@@ -145,7 +145,7 @@
                         <img src="{{ Storage::url($pembayaran->bukti_pembayaran) }}" alt="Bukti Pembayaran" class="max-h-96 object-contain rounded-lg">
                     </div>
                     <div class="mt-2 text-right">
-                        <a href="{{ Storage::url($pembayaran->bukti_pembayaran) }}" target="_blank" class="text-xs font-bold text-blue-600 hover:underline">
+                        <a href="{{ Storage::url($pembayaran->bukti_pembayaran) }}" target="_blank" class="text-xs font-bold text-primary hover:underline">
                             Buka gambar penuh &rarr;
                         </a>
                     </div>
@@ -162,14 +162,14 @@
 
                     <div class="mb-4">
                         <label class="block text-xs font-bold text-gray-700 mb-1">Catatan (Opsional, wajib jika ditolak)</label>
-                        <textarea name="catatan" rows="2" class="w-full border-gray-200 rounded-xl text-sm focus:border-[#0D3024] focus:ring focus:ring-[#0D3024]/10"></textarea>
+                        <textarea name="catatan" rows="2" class="w-full border-gray-200 rounded-xl text-sm focus:border-primary focus:ring focus:ring-primary/10"></textarea>
                     </div>
 
                     <div class="flex gap-2">
                         <button type="submit" name="action" value="tolak" class="flex-1 py-2.5 bg-red-50 text-red-700 border border-red-200 font-bold rounded-xl hover:bg-red-100 transition-colors">
                             Tolak Pembayaran
                         </button>
-                        <button type="submit" name="action" value="terima" class="flex-1 py-2.5 bg-[#0D3024] text-white font-bold rounded-xl shadow-sm hover:bg-[#0a1f17] transition-colors">
+                        <button type="submit" name="action" value="terima" class="flex-1 py-2.5 bg-primary text-white font-bold rounded-xl shadow-sm hover:bg-primary-container transition-colors">
                             Terima & Selesai
                         </button>
                     </div>

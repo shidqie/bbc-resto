@@ -30,17 +30,17 @@
             {{ $pesanan->id_pesanan ?? 'ORD-'.date('Ymd').'-'.str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) }}
         </div>
         
-        <div class="text-3xl font-black text-[#0D3024] mb-8">
+        <div class="text-3xl font-black text-primary mb-8">
             Rp {{ number_format($pesanan->total_tagihan, 0, ',', '.') }}
         </div>
 
         {{-- Tombol Aksi --}}
         <div class="w-full space-y-3">
-            <button @click="window.open('{{ route('pos.dinein.print-nota', $pesanan->id) }}', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-[#0D3024] text-white rounded-xl font-bold text-sm hover:bg-[#0a241b] transition flex justify-center items-center gap-2 shadow-sm">
+            <button @click="window.open('{{ route('pos.dinein.print-nota', $pesanan->id) }}', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-container transition flex justify-center items-center gap-2 shadow-sm">
                 <i class="ph-bold ph-printer text-lg text-emerald-400"></i> Cetak Struk
             </button>
-            <button @click="window.open('{{ route('pos.dinein.print-dapur', $pesanan->id) }}', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-emerald-50 border border-emerald-200 text-[#0D3024] rounded-xl font-bold text-sm hover:bg-emerald-100 transition flex justify-center items-center gap-2 shadow-sm">
-                <i class="ph-bold ph-printer text-lg text-[#0D3024]"></i> Cetak Struk Dapur
+            <button @click="window.open('{{ route('pos.dinein.print-dapur', $pesanan->id) }}', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-emerald-50 border border-emerald-200 text-primary rounded-xl font-bold text-sm hover:bg-emerald-100 transition flex justify-center items-center gap-2 shadow-sm">
+                <i class="ph-bold ph-printer text-lg text-primary"></i> Cetak Struk Dapur
             </button>
             <a href="{{ route('pos.dinein.index') }}" class="w-full py-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold text-sm transition flex justify-center items-center">
                 Pesanan Baru
@@ -94,9 +94,9 @@
                     <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Paper Size</p>
                     <div class="space-y-2">
                         <label class="flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-colors"
-                               :class="settings.paper_size === '58' ? 'border-[#ea580c] bg-orange-50/30' : 'border-slate-200 hover:border-slate-300'">
+                               :class="settings.paper_size === '58' ? 'border-warning bg-orange-50/30' : 'border-slate-200 hover:border-slate-300'">
                             <div class="flex items-center gap-3">
-                                <input type="radio" x-model="settings.paper_size" value="58" class="text-[#ea580c] focus:ring-[#ea580c]" @change="updatePreviewUrl()">
+                                <input type="radio" x-model="settings.paper_size" value="58" class="text-warning focus:ring-warning" @change="updatePreviewUrl()">
                                 <div>
                                     <p class="text-sm font-bold text-slate-800">58mm</p>
                                     <p class="text-xs text-slate-500">Small thermal</p>
@@ -105,9 +105,9 @@
                             <div class="w-5 h-6 border-2 border-slate-300 rounded-sm"></div>
                         </label>
                         <label class="flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-colors"
-                               :class="settings.paper_size === '80' ? 'border-[#ea580c] bg-orange-50/30' : 'border-slate-200 hover:border-slate-300'">
+                               :class="settings.paper_size === '80' ? 'border-warning bg-orange-50/30' : 'border-slate-200 hover:border-slate-300'">
                             <div class="flex items-center gap-3">
-                                <input type="radio" x-model="settings.paper_size" value="80" class="text-[#ea580c] focus:ring-[#ea580c]" @change="updatePreviewUrl()">
+                                <input type="radio" x-model="settings.paper_size" value="80" class="text-warning focus:ring-warning" @change="updatePreviewUrl()">
                                 <div>
                                     <p class="text-sm font-bold text-slate-800">80mm</p>
                                     <p class="text-xs text-slate-500">Standard thermal</p>
@@ -127,7 +127,7 @@
                                 <span class="text-sm font-semibold text-slate-700" x-text="label"></span>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" x-model="settings[key]" class="sr-only peer" @change="updatePreviewUrl()">
-                                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ea580c]"></div>
+                                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-warning"></div>
                                 </label>
                             </div>
                         </template>
@@ -152,7 +152,7 @@
             <button @click="closePrintPreview()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
                 Cancel
             </button>
-            <button @click="executePrint()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-[#ea580c] hover:bg-orange-600 transition flex items-center gap-2 shadow-sm">
+            <button @click="executePrint()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-warning hover:bg-orange-600 transition flex items-center gap-2 shadow-sm">
                 <i class="ph-bold ph-printer"></i> Print Receipt
             </button>
         </div>

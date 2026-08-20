@@ -57,11 +57,11 @@
                 <tbody class="divide-y divide-gray-50 text-xs">
                     @if($pembayaran->pesanan && $pembayaran->pesanan->pembayaran->count() > 0)
                         @foreach($pembayaran->pesanan->pembayaran as $riwayat)
-                            <tr class="hover:bg-slate-50/50 transition-colors {{ $riwayat->id == $pembayaran->id ? 'bg-blue-50/30' : '' }}">
+                            <tr class="hover:bg-slate-50/50 transition-colors {{ $riwayat->id == $pembayaran->id ? 'bg-primary/5' : '' }}">
                                 <td class="px-4 py-3 font-medium text-gray-900">
                                     {{ optional($riwayat->jenis_pembayaran)->nama_jenis ?? 'Penuh' }}
                                     @if($riwayat->id == $pembayaran->id)
-                                        <span class="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-blue-500" title="Pembayaran Terpilih"></span>
+                                        <span class="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-primary-soft0" title="Pembayaran Terpilih"></span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 font-bold text-gray-900 whitespace-nowrap">
@@ -146,7 +146,7 @@
 
     <!-- Aksi -->
     <div class="grid grid-cols-2 gap-3 pb-8">
-        <button type="button" onclick="window.showToast('info', 'Verifikasi segera hadir')" class="w-full py-2.5 px-4 bg-[#0D3024] hover:bg-[#0a1f17] text-white rounded-xl text-sm font-bold shadow-sm transition-colors text-center">
+        <button type="button" onclick="window.showToast('info', 'Verifikasi segera hadir')" class="w-full py-2.5 px-4 bg-primary hover:bg-primary-container text-white rounded-xl text-sm font-bold shadow-sm transition-colors text-center">
             Verifikasi Pembayaran
         </button>
         <button type="button" onclick="window.showToast('info', 'Cetak segera hadir')" class="w-full py-2.5 px-4 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-bold shadow-sm transition-colors text-center">

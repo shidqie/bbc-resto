@@ -18,8 +18,9 @@
             <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                 <span class="text-sm font-bold text-gray-900">Informasi Bahan</span>
                 @php
-                    $stokAkhir = (float)optional($stok)->jumlah_stok;
-                    $stokMin = (float)$bahan->stok_minimal;
+                    $stokAkhir = isset($stokHarian) ? (float)$stokHarian : (float)optional($stok ?? null)->jumlah_stok;
+                    $stokMin = (float)($bahan->stok_minimal ?? 5);
+                    $jenisStok = $jenisStok ?? 'Harian';
                     $status = $stokAkhir <= 0 ? 'Habis' : ($stokAkhir <= $stokMin ? 'Menipis' : 'Aman');
                     $badgeColor = $status == 'Aman' ? 'success' : ($status == 'Menipis' ? 'warning' : 'danger');
                 @endphp

@@ -1,7 +1,7 @@
 @extends('layouts.pos')
 
 @section('content')
-<div class="flex-1 overflow-auto bg-[#F8FAFC] text-[#111827] font-sans p-6 md:p-8 space-y-6"
+<div class="flex-1 overflow-auto bg-canvas text-body font-sans p-6 md:p-8 space-y-6"
      x-data="{ activeTab: (window.location.hash === '#update-password' || (new URLSearchParams(window.location.search)).get('tab') === 'password') ? 'password' : 'profile' }">
     <div class="max-w-4xl mx-auto w-full space-y-6">
 

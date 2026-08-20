@@ -1,5 +1,5 @@
 @extends('layouts.pos')
-@section('title', 'Laporan Persediaan')
+@section('title', 'Laporan Persediaan Bahan Baku')
 
 @section('content')
 <div class="flex-1 bg-gray-50 text-gray-800 pb-10">
@@ -7,37 +7,26 @@
 
         {{-- PAGE HEADER --}}
         <x-ui.page-header
-            title="Laporan Persediaan"
-            subtitle="Ringkasan dan detail status stok bahan baku baik untuk operasional harian maupun catering."
+            title="Laporan Persediaan Bahan Baku"
+            subtitle="Informasi kondisi dan pergerakan persediaan bahan baku."
             :breadcrumbs="['Laporan', 'Persediaan']">
-            <x-slot:actions>
-                <div class="flex items-center gap-2">
-                    <x-ui.button variant="secondary" icon="document-text" href="{{ route('laporan.persediaan.cetak-pdf', request()->all()) }}" target="_blank">
-                        Export PDF
-                    </x-ui.button>
-                </div>
-            </x-slot:actions>
         </x-ui.page-header>
 
         <x-ui.alert />
 
-        {{-- STAT CARDS --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Item Tercatat</span>
-                <span class="text-2xl font-bold text-gray-900">{{ number_format($stats['total_bahan']) }}</span>
+        {{-- KPI CARDS (3 KARTU SKRIPSI PROMT.MD) --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total Bahan Baku</span>
+                <span class="text-2xl font-black text-gray-900">{{ number_format($stats['total_bahan']) }}</span>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">Stok Aman</span>
-                <span class="text-2xl font-bold text-gray-900">{{ number_format($stats['total_aman']) }}</span>
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
+                <span class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">Stok Menipis</span>
+                <span class="text-2xl font-black text-amber-700">{{ number_format($stats['total_menipis']) }}</span>
             </div>
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1">Stok Menipis</span>
-                <span class="text-2xl font-bold text-gray-900">{{ number_format($stats['total_menipis']) }}</span>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                <span class="text-xs font-semibold text-rose-600 uppercase tracking-wider mb-1">Stok Habis</span>
-                <span class="text-2xl font-bold text-gray-900">{{ number_format($stats['total_habis']) }}</span>
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
+                <span class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-1">Stok Habis</span>
+                <span class="text-2xl font-black text-rose-700">{{ number_format($stats['total_habis']) }}</span>
             </div>
         </div>
 
@@ -45,18 +34,32 @@
         <x-ui.data-table :paginator="$paginatedBahan">
             <x-slot:toolbar>
                 <form action="{{ route('laporan.persediaan') }}" method="GET" class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 w-full">
-                    <div class="w-full xl:max-w-sm shrink-0">
-                        <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama bahan baku..." width="w-full" />
-                    </div>
                     <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
-                        <x-ui.multi-select name="jenis_stok" :options="['harian' => 'Dine In & Nasi Box', 'catering' => 'Catering']" :selected="request('jenis_stok', [])" label="Jenis Stok" />
-                        <x-ui.multi-select name="kategori_id" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori_id', [])" label="Kategori" />
+                        <div class="w-full sm:w-auto shrink-0">
+                            <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari kode atau nama bahan baku..." width="w-full" />
+                        </div>
+                        
+                        <x-ui.multi-select name="kondisi" :options="['semua' => 'Semua Kondisi', 'Aman' => 'Aman', 'Menipis' => 'Menipis', 'Habis' => 'Habis']" :selected="request('kondisi', 'semua')" label="Kondisi" type="radio" />
+
+                        @if(count($kategoris) > 0)
+                            <x-ui.multi-select name="kategori_id" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori_id', [])" label="Kategori Bahan" />
+                        @endif
                         
                         <div class="flex items-center gap-2 shrink-0">
-                            @if(request()->hasAny(['search', 'jenis_stok', 'kategori_id']))
-                                <a href="{{ route('laporan.persediaan') }}" class="text-sm font-medium text-rose-500 hover:text-rose-700 px-3 py-2 transition-colors">Reset Filter</a>
+                            <button type="submit" class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 rounded-xl px-3.5 py-2.5 hover:bg-emerald-700 transition-colors shadow-2xs">
+                                <x-heroicon-o-funnel class="w-4 h-4" />
+                                Terapkan
+                            </button>
+                            @if(request()->hasAny(['search', 'kategori_id']) || request('kondisi') != 'semua')
+                                <a href="{{ route('laporan.persediaan') }}" class="text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-2 transition-colors">Reset</a>
                             @endif
                         </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <x-ui.button variant="secondary" icon="document-text" href="{{ route('laporan.persediaan.cetak-pdf', request()->all()) }}" target="_blank" size="sm">
+                            Export PDF
+                        </x-ui.button>
                     </div>
                 </form>
             </x-slot:toolbar>
@@ -64,13 +67,12 @@
             <x-ui.table class="min-w-[950px]">
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
-                    <th class="px-4 py-3.5 text-left">Kode Bahan</th>
-                    <th class="px-4 py-3.5 text-left">Nama Bahan</th>
-                    <th class="px-4 py-3.5 text-left">Kategori</th>
-                    <th class="px-4 py-3.5 text-left">Jenis Stok</th>
+                    <th class="px-4 py-3.5 text-left">Kode</th>
+                    <th class="px-4 py-3.5 text-left">Nama Bahan Baku</th>
+                    <th class="px-4 py-3.5 text-center">Satuan</th>
                     <th class="px-4 py-3.5 text-right">Stok Saat Ini</th>
-                    <th class="px-4 py-3.5 text-left">Satuan</th>
-                    <th class="px-4 py-3.5 text-center">Status</th>
+                    <th class="px-4 py-3.5 text-right">Stok Minimum</th>
+                    <th class="px-4 py-3.5 text-center">Kondisi</th>
                     <th class="px-4 py-3.5 text-right">Aksi</th>
                 </x-ui.table.header>
                 <tbody class="divide-y divide-gray-100">
@@ -85,40 +87,33 @@
                         <td class="px-4 py-4 align-middle">
                             <p class="font-semibold text-gray-900 text-sm">{{ $item['nama_bahan'] }}</p>
                         </td>
-                        <td class="px-4 py-4 align-middle">
-                            <span class="text-sm text-gray-500">{{ $item['kategori'] ?? '-' }}</span>
-                        </td>
-                        <td class="px-4 py-4 align-middle">
-                            <span class="text-sm font-medium text-gray-700">{{ $item['jenis_stok'] }}</span>
+                        <td class="px-4 py-4 align-middle text-center text-sm text-gray-600 font-medium">
+                            {{ $item['satuan'] }}
                         </td>
                         <td class="px-4 py-4 align-middle text-right font-bold text-gray-900 tabular-nums">
-                            {{ (float)$item['stok_saat_ini'] }}
+                            {{ \App\Helpers\UnitHelper::formatQuantity($item['stok_saat_ini'], $item['satuan']) }}
                         </td>
-                        <td class="px-4 py-4 align-middle">
-                            <span class="text-sm text-gray-500">{{ $item['satuan'] ?? '-' }}</span>
+                        <td class="px-4 py-4 align-middle text-right font-semibold text-gray-600 tabular-nums">
+                            {{ \App\Helpers\UnitHelper::formatQuantity($item['stok_minimum'], $item['satuan']) }}
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             @php
                                 $status = $item['status'];
                                 $badgeColor = $status == 'Aman' ? 'success' : ($status == 'Menipis' ? 'warning' : 'danger');
                             @endphp
-                            <x-ui.badge :color="$badgeColor" size="sm" dot>{{ $status }}</x-ui.badge>
+                            <x-ui.badge :color="$badgeColor" size="sm">{{ $status }}</x-ui.badge>
                         </td>
                         <td class="px-4 py-4 align-middle text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <x-ui.action-button onclick="openDetailDrawer('{{ $item['id'] }}')" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
-                                </x-ui.action-button>
-                                <x-ui.action-button onclick="window.showToast('info', 'Fitur Lihat Riwayat Stok belum tersedia sepenuhnya')" title="Lihat Riwayat Stok">
-                                    <x-heroicon-o-clock class="w-4 h-4" />
-                                </x-ui.action-button>
-                            </div>
+                            <button type="button" onclick="openDetailDrawer('{{ $item['id'] }}')" class="inline-flex items-center gap-1 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors shadow-2xs">
+                                <x-heroicon-o-clock class="w-3.5 h-3.5 text-gray-500" />
+                                Riwayat
+                            </button>
                         </td>
                     </x-ui.table.row>
                     @empty
                     <tr>
-                        <td colspan="9">
-                            <x-ui.empty-state icon="document-text" title="Belum ada data" message="Data akan muncul setelah transaksi tersedia." />
+                        <td colspan="8" class="px-4 py-12 text-center text-gray-500 font-medium">
+                            Data persediaan belum tersedia.
                         </td>
                     </tr>
                     @endforelse
@@ -129,10 +124,10 @@
     </div>
 </div>
 
-{{-- DRAWER: DETAIL PERSEDIAAN --}}
+{{-- DRAWER/MODAL: RIWAYAT KARTU STOK --}}
 <div id="drawerDetail" class="fixed inset-0 z-[100] hidden">
     <div id="drawerDetailOverlay" class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="closeDetailDrawer()"></div>
-    <div id="drawerDetailPanel" class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
+    <div id="drawerDetailPanel" class="absolute right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
         <div id="drawerDetailContent" class="flex-1 overflow-y-auto">
             <div class="flex items-center justify-center h-full">
                 <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -174,7 +169,7 @@
             .then(res => res.text())
             .then(html => { content.innerHTML = html; })
             .catch(err => {
-                content.innerHTML = '<div class="p-6 text-center text-red-500">Gagal memuat detail laporan.</div>';
+                content.innerHTML = '<div class="p-6 text-center text-red-500 font-semibold">Gagal memuat riwayat stok.</div>';
             });
     }
 

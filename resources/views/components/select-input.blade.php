@@ -22,7 +22,7 @@
         id="{{ $name }}"
         @if($form) form="{{ $form }}" @endif
         @if($autoSubmit) onchange="this.form.submit()" @endif
-        {{ $attributes->merge(['class' => 'w-full appearance-none rounded-lg border border-gray-200 bg-white py-2.5 pl-3.5 pr-9 text-sm text-gray-700 outline-none transition-all focus:border-gray-900 focus:ring-1 focus:ring-gray-900/20 hover:border-gray-300']) }}
+        {{ $attributes->merge(['class' => 'w-full appearance-none rounded-lg border border-gray-200 bg-surface py-2.5 pl-3.5 pr-9 text-sm text-gray-700 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary/20 hover:border-gray-300']) }}
     >
         <option value="{{ $blankValue }}">{{ $placeholder }}</option>
         @foreach($options as $key => $label)

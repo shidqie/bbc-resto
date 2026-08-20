@@ -82,7 +82,7 @@
     </div>
 
     {{-- Minimalist Mobile Menu (NO ICONS) --}}
-    <div id="mobile-nav-menu">
+    <div id="mobile-nav-menu" class="absolute top-full left-0 w-full bg-white dark:bg-surface border-b border-neutral-200 dark:border-neutral-800 shadow-xl lg:hidden">
         <div class="px-6 py-4 flex flex-col space-y-1">
 
             {{-- Nav Links --}}

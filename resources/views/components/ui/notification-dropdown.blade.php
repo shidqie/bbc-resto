@@ -79,7 +79,7 @@
         
         <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <h3 class="text-sm font-semibold text-gray-800">Notifikasi</h3>
-            <button x-show="unreadCount > 0" @click="markAllAsRead()" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">Tandai semua dibaca</button>
+            <button x-show="unreadCount > 0" @click="markAllAsRead()" class="text-xs text-primary hover:text-primary font-medium transition-colors">Tandai semua dibaca</button>
         </div>
         
         <div class="max-h-[400px] overflow-y-auto no-scrollbar relative bg-white">
@@ -98,8 +98,8 @@
             <template x-for="notif in notifications" :key="notif.id">
                 <div @click="markAsRead(notif.id); if(notif.data.url) window.location.href = notif.data.url;"
                     class="px-4 py-3 border-b border-gray-50 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3 relative group"
-                    :class="{'bg-blue-50/30': !notif.read_at}">
-                    <div class="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" x-show="!notif.read_at"></div>
+                    :class="{'bg-primary/5': !notif.read_at}">
+                    <div class="w-2 h-2 rounded-full bg-primary-soft0 mt-1.5 shrink-0" x-show="!notif.read_at"></div>
                     <div class="w-2 h-2 shrink-0 mt-1.5" x-show="notif.read_at"></div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-gray-900 mb-0.5" x-text="notif.data.title"></p>

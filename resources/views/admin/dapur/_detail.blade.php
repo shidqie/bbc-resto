@@ -134,7 +134,7 @@
                         </div>
                         @if($isAdminOrPemilik)
                         @if(!in_array($pesanan->status_pesanan_id, [1, 6]))
-                        <a href="{{ route('pengadaan.catering.create', ['pesanan_id' => $pesanan->id]) }}" class="inline-flex items-center gap-2 bg-[#0D3024] hover:bg-[#0a1f17] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">
+                        <a href="{{ route('pengadaan.catering.create', ['pesanan_id' => $pesanan->id]) }}" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-container text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs">
                             <x-heroicon-o-plus class="w-4 h-4" />
                             Buat Pengadaan Katering
                         </a>
@@ -158,7 +158,7 @@
                                     <tr class="hover:bg-gray-50/50">
                                         <td class="px-4 py-3 font-bold text-gray-900">{{ $item['nama_bahan'] }}</td>
                                         <td class="px-4 py-3 font-medium text-gray-700">{{ number_format($item['stok_sekarang'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
-                                        <td class="px-4 py-3 font-bold text-blue-700">{{ number_format($item['total_kebutuhan'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
+                                        <td class="px-4 py-3 font-bold text-primary">{{ number_format($item['total_kebutuhan'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
                                         <td class="px-4 py-3">
                                             @if($kurang > 0)
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
@@ -324,7 +324,7 @@
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="9">
-                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Proses Pengadaan', name: '{{ $pesanan->id_pesanan }}', message: 'Mulai proses pengadaan bahan untuk pesanan ini?', formId: 'form-pengadaan-catering', confirmText: 'Proses', cancelText: 'Batal', type: 'warning' })" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Proses Pengadaan', name: '{{ $pesanan->id_pesanan }}', message: 'Mulai proses pengadaan bahan untuk pesanan ini?', formId: 'form-pengadaan-catering', confirmText: 'Proses', cancelText: 'Batal', type: 'warning' })" class="bg-primary hover:bg-primary-container text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-shopping-cart class="mr-2 w-5 h-5" />Mulai Proses Pengadaan
                                     </button>
                                 </form>
@@ -348,7 +348,7 @@
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="11">
-                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Sedang Produksi', name: '{{ $pesanan->id_pesanan }}', message: 'Mulai proses dapur? Stok bahan akan dipotong otomatis jika belum dipotong.', formId: 'form-produksi-catering', confirmText: 'Mulai Produksi', cancelText: 'Batal', type: 'warning' })" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow">
+                                    <button type="button" onclick="window.confirmDialog({ title: 'Mulai Sedang Produksi', name: '{{ $pesanan->id_pesanan }}', message: 'Mulai proses dapur? Stok bahan akan dipotong otomatis jika belum dipotong.', formId: 'form-produksi-catering', confirmText: 'Mulai Produksi', cancelText: 'Batal', type: 'warning' })" class="bg-primary hover:bg-primary-container text-white font-bold py-3 px-8 rounded-lg shadow">
                                         <x-heroicon-o-sparkles class="mr-2 w-5 h-5" />Mulai Sedang Produksi
                                     </button>
                                 </form>

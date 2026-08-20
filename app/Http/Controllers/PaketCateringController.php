@@ -35,7 +35,7 @@ class PaketCateringController extends Controller
     public function create(Request $request)
     {
         $jenis = $request->query('jenis', 'catering');
-        $menus = Menu::where('jenis_menu_id', 1)->where('status_aktif', 1)->get();
+        $menus = Menu::where('status_aktif', 1)->whereDoesntHave('komponen_paket')->orderBy('nama_menu')->get();
 
         return view('admin.menu.paket.create', compact('jenis', 'menus'));
     }
@@ -51,11 +51,14 @@ class PaketCateringController extends Controller
             'komponen' => 'required|array|min:1',
             'komponen.*.nama_komponen' => 'nullable|string',
             'komponen.*.menu_id' => 'nullable|exists:menu,id',
-            'komponen.*.tipe' => 'required|in:fixed,choice',
+            'komponen.*.tipe' => 'required|in:wajib,pilihan,semua_didapat',
             'komponen.*.urutan' => 'required|numeric',
             'komponen.*.jumlah' => 'required|numeric|min:1',
-            'komponen.*.pilihan' => 'nullable|array', // array of menu_id
-            'komponen.*.pilihan.*' => 'exists:menu,id',
+            'komponen.*.pilihan' => 'nullable|array',
+            'komponen.*.pilihan.*' => 'string',
+            'komponen.*.min_pilihan' => 'nullable|numeric|min:0',
+            'komponen.*.max_pilihan' => 'nullable|numeric|min:0',
+            'komponen.*.nama_item_manual' => 'nullable|string',
         ]);
 
         $fotoPath = null;
@@ -77,36 +80,41 @@ class PaketCateringController extends Controller
         ]);
 
         foreach ($request->komponen as $komp) {
-            $tipe = $komp['tipe'] === 'choice' ? 'pilihan' : 'tetap';
-            $menuTerkait = $tipe === 'tetap' ? Menu::find($komp['menu_id']) : null;
-            $namaItem = $tipe === 'tetap' && $menuTerkait ? $menuTerkait->nama_menu : ($komp['nama_komponen'] ?? 'Pilihan Menu');
+            $tipe = $komp['tipe'] === 'wajib' ? 'tetap' : ($komp['tipe'] === 'semua_didapat' ? 'semua_didapat' : 'pilihan');
+            $menuTerkait = ($tipe === 'tetap' && !empty($komp['menu_id'])) ? Menu::find($komp['menu_id']) : null;
+            
+            if (!empty($komp['nama_item_manual'])) {
+                $namaItem = $komp['nama_item_manual'];
+            } elseif ($menuTerkait) {
+                $namaItem = $menuTerkait->nama_menu;
+            } else {
+                $namaItem = $komp['nama_komponen'] ?? 'Pilihan Menu';
+            }
 
             $komponen = ItemPaket::create([
                 'menu_id' => $paket->id,
-                'menu_id_terkait' => $tipe === 'tetap' ? ($komp['menu_id'] ?? null) : null,
+                'menu_id_terkait' => $menuTerkait ? $menuTerkait->id : null,
                 'nama_item' => $namaItem,
                 'tipe_item' => $tipe,
                 'jumlah' => $komp['jumlah'] ?? 1,
                 'satuan_sajian' => 'porsi',
-                'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
-                'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                'minimum_pilihan' => $tipe === 'pilihan' ? ($komp['min_pilihan'] ?? 1) : 0,
+                'maksimum_pilihan' => $tipe === 'pilihan' ? ($komp['max_pilihan'] ?? 1) : 0,
                 'urutan' => $komp['urutan'],
             ]);
 
-            if ($tipe === 'pilihan' && ! empty($komp['pilihan']) && is_array($komp['pilihan'])) {
+            if (($tipe === 'pilihan' || $tipe === 'semua_didapat') && ! empty($komp['pilihan']) && is_array($komp['pilihan'])) {
                 $urutanPilihan = 1;
-                foreach ($komp['pilihan'] as $pilihanMenuId) {
-                    $pilihanMenu = Menu::find($pilihanMenuId);
-                    if ($pilihanMenu) {
-                        PilihanItemPaket::create([
-                            'item_paket_id' => $komponen->id,
-                            'menu_id' => $pilihanMenu->id,
-                            'nama_pilihan' => $pilihanMenu->nama_menu,
-                            'jumlah' => $komp['jumlah'] ?? 1,
-                            'satuan_sajian' => 'porsi',
-                            'urutan' => $urutanPilihan++,
-                        ]);
-                    }
+                foreach ($komp['pilihan'] as $pilihanValue) {
+                    $pilihanMenu = is_numeric($pilihanValue) ? Menu::find($pilihanValue) : null;
+                    PilihanItemPaket::create([
+                        'item_paket_id' => $komponen->id,
+                        'menu_id' => $pilihanMenu ? $pilihanMenu->id : null,
+                        'nama_pilihan' => $pilihanMenu ? $pilihanMenu->nama_menu : $pilihanValue,
+                        'jumlah' => $komp['jumlah'] ?? 1,
+                        'satuan_sajian' => 'porsi',
+                        'urutan' => $urutanPilihan++,
+                    ]);
                 }
             }
         }
@@ -142,7 +150,7 @@ class PaketCateringController extends Controller
     {
         $paketCatering = Menu::with(['komponen_paket.opsi.menu', 'komponen_paket.menu_terkait'])->findOrFail($id);
         $jenis = $paketCatering->jenis_menu_id == 2 ? 'catering' : 'nasi_box';
-        $menus = Menu::where('jenis_menu_id', 1)->where('status_aktif', 1)->get();
+        $menus = Menu::where('status_aktif', 1)->whereDoesntHave('komponen_paket')->orderBy('nama_menu')->get();
 
         return view('admin.menu.paket.edit', compact('paketCatering', 'jenis', 'menus'));
     }
@@ -160,11 +168,14 @@ class PaketCateringController extends Controller
             'komponen' => 'required|array|min:1',
             'komponen.*.nama_komponen' => 'nullable|string',
             'komponen.*.menu_id' => 'nullable|exists:menu,id',
-            'komponen.*.tipe' => 'required|in:fixed,choice',
+            'komponen.*.tipe' => 'required|in:wajib,pilihan,semua_didapat',
             'komponen.*.urutan' => 'required|numeric',
             'komponen.*.jumlah' => 'required|numeric|min:1',
             'komponen.*.pilihan' => 'nullable|array',
-            'komponen.*.pilihan.*' => 'exists:menu,id',
+            'komponen.*.pilihan.*' => 'string',
+            'komponen.*.min_pilihan' => 'nullable|numeric|min:0',
+            'komponen.*.max_pilihan' => 'nullable|numeric|min:0',
+            'komponen.*.nama_item_manual' => 'nullable|string',
         ]);
 
         $jenisId = $request->jenis_paket === 'catering' ? 2 : 3;
@@ -185,36 +196,41 @@ class PaketCateringController extends Controller
         $paketCatering->komponen_paket()->delete();
 
         foreach ($request->komponen as $komp) {
-            $tipe = $komp['tipe'] === 'choice' ? 'pilihan' : 'tetap';
-            $menuTerkait = $tipe === 'tetap' ? Menu::find($komp['menu_id']) : null;
-            $namaItem = $tipe === 'tetap' && $menuTerkait ? $menuTerkait->nama_menu : ($komp['nama_komponen'] ?? 'Pilihan Menu');
+            $tipe = $komp['tipe'] === 'wajib' ? 'tetap' : ($komp['tipe'] === 'semua_didapat' ? 'semua_didapat' : 'pilihan');
+            $menuTerkait = ($tipe === 'tetap' && !empty($komp['menu_id'])) ? Menu::find($komp['menu_id']) : null;
+            
+            if (!empty($komp['nama_item_manual'])) {
+                $namaItem = $komp['nama_item_manual'];
+            } elseif ($menuTerkait) {
+                $namaItem = $menuTerkait->nama_menu;
+            } else {
+                $namaItem = $komp['nama_komponen'] ?? 'Pilihan Menu';
+            }
 
             $komponen = ItemPaket::create([
                 'menu_id' => $paketCatering->id,
-                'menu_id_terkait' => $tipe === 'tetap' ? ($komp['menu_id'] ?? null) : null,
+                'menu_id_terkait' => $menuTerkait ? $menuTerkait->id : null,
                 'nama_item' => $namaItem,
                 'tipe_item' => $tipe,
                 'jumlah' => $komp['jumlah'] ?? 1,
                 'satuan_sajian' => 'porsi',
-                'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
-                'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                'minimum_pilihan' => $tipe === 'pilihan' ? ($komp['min_pilihan'] ?? 1) : 0,
+                'maksimum_pilihan' => $tipe === 'pilihan' ? ($komp['max_pilihan'] ?? 1) : 0,
                 'urutan' => $komp['urutan'],
             ]);
 
-            if ($tipe === 'pilihan' && ! empty($komp['pilihan']) && is_array($komp['pilihan'])) {
+            if (($tipe === 'pilihan' || $tipe === 'semua_didapat') && ! empty($komp['pilihan']) && is_array($komp['pilihan'])) {
                 $urutanPilihan = 1;
-                foreach ($komp['pilihan'] as $pilihanMenuId) {
-                    $pilihanMenu = Menu::find($pilihanMenuId);
-                    if ($pilihanMenu) {
-                        PilihanItemPaket::create([
-                            'item_paket_id' => $komponen->id,
-                            'menu_id' => $pilihanMenu->id,
-                            'nama_pilihan' => $pilihanMenu->nama_menu,
-                            'jumlah' => $komp['jumlah'] ?? 1,
-                            'satuan_sajian' => 'porsi',
-                            'urutan' => $urutanPilihan++,
-                        ]);
-                    }
+                foreach ($komp['pilihan'] as $pilihanValue) {
+                    $pilihanMenu = is_numeric($pilihanValue) ? Menu::find($pilihanValue) : null;
+                    PilihanItemPaket::create([
+                        'item_paket_id' => $komponen->id,
+                        'menu_id' => $pilihanMenu ? $pilihanMenu->id : null,
+                        'nama_pilihan' => $pilihanMenu ? $pilihanMenu->nama_menu : $pilihanValue,
+                        'jumlah' => $komp['jumlah'] ?? 1,
+                        'satuan_sajian' => 'porsi',
+                        'urutan' => $urutanPilihan++,
+                    ]);
                 }
             }
         }

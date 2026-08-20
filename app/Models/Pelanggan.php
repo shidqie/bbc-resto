@@ -27,4 +27,14 @@ class Pelanggan extends BaseModel implements AuthenticatableContract, CanResetPa
     {
         return $this->belongsTo(Pengguna::class, 'user_id');
     }
+
+    public function getKodePelangganAttribute(): string
+    {
+        return \App\Helpers\IdCodeGenerator::generatePelangganId($this->id);
+    }
+
+    public function getIdPelangganAttribute(): string
+    {
+        return $this->kode_pelanggan;
+    }
 }

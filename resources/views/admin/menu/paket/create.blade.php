@@ -34,21 +34,18 @@
                         <div>
                             <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Nama Paket <span class="text-red-500">*</span></label>
                             <input type="text" name="nama_paket" required value="{{ old('nama_paket') }}" placeholder="Contoh: Paket Nasi Box A"
-                                   class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0D3024]/10 focus:border-[#0D3024] outline-none text-sm font-extrabold text-gray-900">
+                                   class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none text-sm font-extrabold text-gray-900">
                         </div>
 
                         <div>
                             <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Jenis Paket <span class="text-red-500">*</span></label>
-                            <select name="jenis_paket" required class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0D3024]/10 focus:border-[#0D3024] outline-none text-sm font-bold text-gray-900">
-                                <option value="catering" {{ old('jenis_paket', $jenis) == 'catering' ? 'selected' : '' }}>Katering</option>
-                                <option value="nasi_box" {{ old('jenis_paket', $jenis) == 'nasi_box' ? 'selected' : '' }}>Nasi Box</option>
-                            </select>
+                            <x-ui.searchable-select name="jenis_paket" :options="['catering' => 'Katering', 'nasi_box' => 'Nasi Box']" :selected="old('jenis_paket', $jenis)" placeholder="-- Pilih Jenis Paket --" required="true" />
                         </div>
 
                         <div>
                             <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Harga / Porsi (Rp) <span class="text-red-500">*</span></label>
                             <input type="number" name="harga" required min="0" value="{{ old('harga') }}" placeholder="25000"
-                                   class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0D3024]/10 focus:border-[#0D3024] outline-none text-sm font-black text-[#0D3024]">
+                                   class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none text-sm font-black text-primary">
                         </div>
 
                         <div>
@@ -60,7 +57,7 @@
                         <div class="md:col-span-2">
                             <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-1">Deskripsi Singkat</label>
                             <input type="text" name="deskripsi" value="{{ old('deskripsi') }}" placeholder="Contoh: Cocok untuk santap siang kantor…" 
-                                   class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0D3024]/10 focus:border-[#0D3024] outline-none text-sm font-medium">
+                                   class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none text-sm font-medium">
                         </div>
                     </div>
                 </div>
@@ -74,7 +71,7 @@
                     <a href="{{ route('paket-catering.index', ['jenis' => $jenis]) }}" class="px-5 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all">
                         Batal
                     </a>
-                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-[#0D3024] hover:bg-[#0a1f17] text-white text-sm font-extrabold transition-all shadow-sm active:scale-95 flex items-center gap-2">
+                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white text-sm font-extrabold transition-all shadow-sm active:scale-95 flex items-center gap-2">
                         <x-heroicon-o-check class="w-4 h-4" /> Simpan Paket Baru
                     </button>
                 </div>

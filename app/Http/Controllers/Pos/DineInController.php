@@ -29,7 +29,7 @@ class DineInController extends Controller
         $mejas = $this->sortMejasByNumber(Meja::with('status_meja')->get());
 
         // Jenis Menu Dine In (misal id 1)
-        $menus = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.stok_relasi'])
+        $menus = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.stok_harian', 'resep_menu.bahan_baku.stok_relasi'])
             ->where(function ($query) {
                 $query->where('jenis_menu_id', 1)
                     ->orWhereNull('jenis_menu_id');
@@ -37,30 +37,18 @@ class DineInController extends Controller
             ->where('status_aktif', true)
             ->get();
 
+        $kebutuhanBahanService = app(\App\Services\KebutuhanBahanService::class);
         $menuHabisIds = [];
         $sisaPorsiMenu = [];
         foreach ($menus as $menu) {
-            if ($menu->resep_menu->isEmpty()) {
-                $sisaPorsiMenu[$menu->id] = 0;
-                continue;
-            }
-            $porsi = PHP_INT_MAX;
-            foreach ($menu->resep_menu as $resep) {
-                $bahan = $resep->bahan_baku;
-                if (!$bahan) continue;
-                $stok = (float) ($bahan->stok_relasi->jumlah_stok ?? 0);
-                $kebutuhan = (float) ($resep->jumlah ?? 0);
-                if ($kebutuhan > 0) {
-                    $bisa = (int) floor($stok / $kebutuhan);
-                    if ($bisa < $porsi) {
-                        $porsi = $bisa;
-                    }
+            $porsi = $kebutuhanBahanService->porsiTersedia($menu, \App\Models\StokBahan::JENIS_HARIAN);
+            if ($porsi >= PHP_FLOAT_MAX) {
+                $sisaPorsiMenu[$menu->id] = 999;
+            } else {
+                $sisaPorsiMenu[$menu->id] = max(0, (int) floor($porsi));
+                if ($porsi < 1) {
+                    $menuHabisIds[] = $menu->id;
                 }
-            }
-            if ($porsi == PHP_INT_MAX) $porsi = 0;
-            $sisaPorsiMenu[$menu->id] = $porsi;
-            if ($porsi <= 0) {
-                $menuHabisIds[] = $menu->id;
             }
         }
 
@@ -79,31 +67,34 @@ class DineInController extends Controller
         // Map ke format yang dipakai frontend (bill.items, bill.nama_konsumen, dll)
         $openBills = $openBillsRaw->map(function ($p) {
             $arr = $p->toArray();
-            // Ekstrak nama_konsumen dari catatan atau fallback
+            // Ekstrak nama_konsumen dan no_telepon dari catatan atau fallback
             $namaKonsumen = null;
+            $noTelepon = $p->pelanggan->nomor_telepon ?? null;
+
             if (! empty($p->catatan)) {
-                if (preg_match('/^Pemesan:\s*(.+)$/m', $p->catatan, $m)) {
+                $rawCatatan = $p->catatan;
+                if (str_contains($rawCatatan, ' | ')) {
+                    $parts = explode(' | ', $rawCatatan);
+                    $rawCatatan = trim($parts[0]);
+                    if (empty($noTelepon) && isset($parts[1])) {
+                        $noTelepon = trim($parts[1]);
+                    }
+                }
+
+                if (preg_match('/^Pemesan:\s*(.+)$/i', $rawCatatan, $m)) {
                     $namaKonsumen = trim($m[1]);
-                } elseif (preg_match('/Self-Order QR \(([^)]+)\)/', $p->catatan, $m)) {
-                    $namaKonsumen = trim($m[1]);
-                } elseif (preg_match('/^(.+?)\s*\(\d+\s*tamu\)/', $p->catatan, $m)) {
+                } elseif (preg_match('/Self-Order QR \(([^)]+)\)/i', $rawCatatan, $m)) {
                     $namaKonsumen = trim($m[1]);
                 } else {
-                    $namaKonsumen = trim(explode('|', $p->catatan)[0]);
-                    $namaKonsumen = strlen($namaKonsumen) > 40 ? substr($namaKonsumen, 0, 40).'…' : $namaKonsumen;
+                    $namaKonsumen = trim($rawCatatan);
+                    if (strlen($namaKonsumen) > 40) {
+                        $namaKonsumen = substr($namaKonsumen, 0, 40) . '…';
+                    }
                 }
             }
+
             $arr['nama_konsumen'] = $namaKonsumen ?: 'Tamu';
-            
-            // Ekstrak no telepon
-            $noTelepon = $p->pelanggan->nomor_telepon ?? '-';
-            if ($noTelepon === '-' && !empty($p->catatan) && str_contains($p->catatan, ' | ')) {
-                $parts = explode(' | ', $p->catatan);
-                if (isset($parts[1]) && is_numeric(str_replace(['+', '-', ' '], '', $parts[1]))) {
-                    $noTelepon = trim($parts[1]);
-                }
-            }
-            $arr['no_telepon'] = $noTelepon;
+            $arr['no_telepon'] = $noTelepon ?: '-';
 
             // Status untuk UI
             if ($p->status_pesanan_id == 5) {

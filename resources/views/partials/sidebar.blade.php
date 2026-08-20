@@ -29,7 +29,7 @@
         </button>
 
         <button @click="sidebarOpen = !sidebarOpen"
-                class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all focus:outline-none shrink-0 border border-transparent hover:border-blue-100/50 shadow-sm shadow-transparent hover:shadow-blue-500/5"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary-soft transition-all focus:outline-none shrink-0 border border-transparent hover:border-primary/25 shadow-sm shadow-transparent hover:shadow-primary/5"
                 x-bind:class="sidebarOpen ? '' : 'hidden'"
                 title="Toggle Sidebar">
             <x-heroicon-o-chevron-left class="w-5 h-5" />
@@ -44,8 +44,8 @@
         @include('partials.sidebar-link', [
             'route' => 'dashboard',
             'icon' => 'heroicon-o-squares-2x2',
-            'label' => 'Dashboard',
-            'active' => request()->routeIs('dashboard'),
+            'label' => in_array($userRole, ['Dapur', 'Tim Dapur']) ? 'Dashboard Dapur' : ($userRole === 'Kasir' ? 'Dashboard Kasir' : 'Dashboard'),
+            'active' => request()->routeIs('dashboard') || request()->routeIs('kasir.dashboard'),
         ])
         @endif
 
@@ -55,27 +55,21 @@
         {{-- Penjualan --}}
         @php
         $penjualanItems = [];
-        if ($hasRole('Pemilik')) {
-            $penjualanItems[] = ['label' => 'Semua Daftar Pesanan ', 'url' => route('admin.pesanan.index'), 'active' => request()->routeIs('admin.pesanan.index')];
+        if ($hasRole('Admin', 'Manajer', 'Pemilik', 'Kasir', 'Dapur', 'Tim Dapur')) {
+            $penjualanItems[] = ['label' => 'Pesanan Dine-In', 'url' => route('admin.pesanan.dinein.index'), 'active' => request()->routeIs('admin.pesanan.dinein.*') || request()->routeIs('pos.dinein.*')];
+            $penjualanItems[] = ['label' => 'Pesanan Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
+            $penjualanItems[] = ['label' => 'Pesanan Katering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
+            $penjualanItems[] = ['label' => 'Semua Pesanan', 'url' => route('admin.pesanan.index'), 'active' => request()->routeIs('admin.pesanan.index')];
         }
-        if ($hasRole('Kasir', 'Pemilik')) {
-            $penjualanItems[] = ['label' => 'Daftar Pesanan Dine In', 'url' => route('admin.pesanan.dinein.index'), 'active' => request()->routeIs('admin.pesanan.dinein.*')];
-        }
-        if ($hasRole('Pemilik')) {
-            $penjualanItems[] = ['label' => 'Daftar Pesanan Katering', 'url' => route('admin.pesanan.catering.index'), 'active' => request()->routeIs('admin.pesanan.catering.*')];
-            $penjualanItems[] = ['label' => 'Daftar Pesanan  Nasi Box', 'url' => route('admin.pesanan.nasibox.index'), 'active' => request()->routeIs('admin.pesanan.nasibox.*')];
-        }
-
-            
-            @endphp
-            @if(count($penjualanItems))
-            @include('partials.sidebar-submenu', [
-                'icon' => 'heroicon-o-shopping-cart',
-                'label' => 'Transaksi Penjualan',
-                'isOpen' => request()->routeIs('pos.dinein.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.pembayaran.*') || request()->routeIs('admin.jadwal.*'),
-                'items' => $penjualanItems,
-                ])
-                @endif
+        @endphp
+        @if(count($penjualanItems))
+        @include('partials.sidebar-submenu', [
+            'icon' => 'heroicon-o-shopping-cart',
+            'label' => 'Transaksi Penjualan',
+            'isOpen' => request()->routeIs('pos.dinein.*') || request()->routeIs('admin.pesanan.*') || request()->routeIs('admin.pembayaran.*') || request()->routeIs('admin.jadwal.*'),
+            'items' => $penjualanItems,
+        ])
+        @endif
                 
                 {{-- Jadwal Pengiriman --}}
                 @if($hasRole('Pemilik', 'Pengantaran'))
@@ -113,11 +107,12 @@
                 @include('partials.sidebar-submenu', [
                     'icon' => 'heroicon-o-archive-box',
                     'label' => 'Persediaan',
-                    'isOpen' => request()->routeIs('stok-operasional.*') || request()->routeIs('stok-catering.*') || request()->routeIs('penyesuaian-stok.*'),
+                    'isOpen' => request()->routeIs('stok-operasional.*') || request()->routeIs('stok-catering.*') || request()->routeIs('riwayat-stok.*') || request()->routeIs('mutasi-stok.*') || request()->routeIs('penyesuaian-stok.*'),
                     'items' => [
-                        ['label' => 'Stok Operasional', 'url' => route('stok-operasional.index'), 'active' => request()->routeIs('stok-operasional.*')],
-                        ['label' => 'Stok Catering', 'url' => route('stok-catering.index'), 'active' => request()->routeIs('stok-catering.*')],
+                        ['label' => 'Stok Harian', 'url' => route('stok-operasional.index'), 'active' => request()->routeIs('stok-operasional.*')],
+                        ['label' => 'Stok Katering', 'url' => route('stok-catering.index'), 'active' => request()->routeIs('stok-catering.*')],
                         ['label' => 'Penyesuaian Stok', 'url' => route('penyesuaian-stok.index'), 'active' => request()->routeIs('penyesuaian-stok.*')],
+                        ['label' => 'Riwayat Stok', 'url' => route('riwayat-stok.index'), 'active' => request()->routeIs('riwayat-stok.*') || request()->routeIs('mutasi-stok.*')],
                     ],
                 ])
                 @endif
@@ -127,12 +122,13 @@
                             @include('partials.sidebar-submenu', [
                                 'icon' => 'heroicon-o-shopping-bag',
                                 'label' => 'Pengadaan',
-                                'isOpen' => request()->routeIs('pengadaan.po.*'),
+                                'isOpen' => request()->routeIs('pengadaan.po.*') || request()->routeIs('pengadaan.penerimaan.*'),
                                 'items' => [
                                     ['label' => 'Purchase Order', 'url' => route('pengadaan.po.index'), 'active' => request()->routeIs('pengadaan.po.*')],
                                 ],
                             ])
                         @endif
+
 
         {{-- Laporan --}}
         @if($hasRole('Pemilik', 'Manajer'))
@@ -165,10 +161,11 @@
             'icon' => 'heroicon-o-cog-6-tooth',
             'label' => 'Pengaturan',
             'isOpen' => request()->routeIs('admin.pengaturan.*'),
-            'items' => [
-                ['label' => 'Pajak & Layanan', 'url' => route('admin.pengaturan.transaksi.index'), 'active' => request()->routeIs('admin.pengaturan.transaksi.*')],
+            'items' => array_filter([
+                ['label' => 'Biaya Layanan', 'url' => route('admin.pengaturan.transaksi.index'), 'active' => request()->routeIs('admin.pengaturan.transaksi.*')],
                 ['label' => 'Tarif Pengiriman', 'url' => route('admin.pengaturan.pengiriman.index'), 'active' => request()->routeIs('admin.pengaturan.pengiriman.*')],
-            ],
+                $hasRole('Pemilik') ? ['label' => 'Galeri', 'url' => route('admin.pengaturan.galeri.index'), 'active' => request()->routeIs('admin.pengaturan.galeri.*')] : null,
+            ]),
         ])
         @endif
 

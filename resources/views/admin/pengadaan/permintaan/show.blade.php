@@ -47,7 +47,7 @@
             </x-ui.card>
             <x-ui.card>
                 <p class="text-xs font-semibold text-gray-500">Sumber</p>
-                <p class="font-bold text-gray-900 mt-1 text-sm">{{ $pengadaan->jenis_pengadaan == 'catering' && $pengadaan->pesanan ? $pengadaan->pesanan->id_pesanan : 'Operasional Harian' }}</p>
+                <p class="font-bold text-gray-900 mt-1 text-sm">{{ $pengadaan->jenis_pengadaan == 'catering' && $pengadaan->pesanan ? $pengadaan->pesanan->id_pesanan : 'Harian' }}</p>
             </x-ui.card>
             <x-ui.card>
                 <p class="text-xs font-semibold text-gray-500">Status</p>

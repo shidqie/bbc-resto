@@ -52,7 +52,7 @@ class ResepController extends Controller
             ->paginate(10)->withQueryString();
 
         $kategoris = KategoriMenu::orderBy('nama_kategori', 'asc')->get();
-        $bahanBakus = BahanBaku::with('satuan')->orderBy('nama_bahan', 'asc')->get();
+        $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan', 'asc')->get();
 
         // Menu yang sudah dipakai (transaksi / dipakai paket) → jangan tampilkan tombol hapus menu
         $menuUsedIds = DB::table('detail_pesanan')->distinct()->pluck('menu_id')
@@ -137,7 +137,7 @@ class ResepController extends Controller
     {
         $menu->load('resep_menu.bahan_baku.satuan');
 
-        $bahanBakus = BahanBaku::with('satuan')->orderBy('nama_bahan')->get();
+        $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
 
         $totalHpp = 0;
         foreach ($menu->resep_menu as $resep) {
@@ -187,7 +187,7 @@ class ResepController extends Controller
         }
     }
 
-    public function destroy(Menu $menu)
+    public function destroy(Request $request, Menu $menu)
     {
         try {
             DB::beginTransaction();
@@ -196,11 +196,17 @@ class ResepController extends Controller
 
             DB::commit();
 
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => "Resep untuk menu {$menu->nama_menu} berhasil dihapus."]);
+            }
             return redirect()->route('resep.index')->with('success', "Resep untuk menu {$menu->nama_menu} berhasil dihapus.");
 
         } catch (\Exception $e) {
             DB::rollBack();
 
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menghapus resep: '.$e->getMessage()], 500);
+            }
             return back()->with('error', 'Terjadi kesalahan saat menghapus resep: '.$e->getMessage());
         }
     }

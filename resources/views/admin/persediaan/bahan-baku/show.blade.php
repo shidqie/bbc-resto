@@ -47,17 +47,17 @@
                     <div class="inline-flex flex-col border border-gray-100 rounded-xl px-6 py-3 bg-gray-50/50 mb-4 w-full">
                         <span class="text-xs text-gray-500 font-medium mb-1">Total Stok Saat Ini</span>
                         <span class="text-3xl font-bold {{ $stok <= 0 ? 'text-red-600' : ($stok <= $bahanBaku->stok_minimal ? 'text-yellow-600' : 'text-emerald-600') }}">
-                            {{ rtrim(rtrim(number_format($stok, 2, ',', '.'), '0'), ',') }} <span class="text-base font-normal text-gray-500">{{ $bahanBaku->satuan->singkatan }}</span>
+                            {{ \App\Helpers\UnitHelper::formatQuantity($stok, $bahanBaku->satuan->singkatan ?? $bahanBaku->satuan->nama_satuan ?? 'gram') }}
                         </span>
                         
                         <div class="mt-3 pt-3 border-t border-gray-200 flex justify-between text-sm">
                             <div class="text-left">
-                                <span class="block text-xs text-gray-400">Harian</span>
-                                <span class="font-semibold text-gray-700">{{ rtrim(rtrim(number_format($stokHarian, 2, ',', '.'), '0'), ',') }}</span>
+                                <span class="block text-xs text-gray-400">Resto</span>
+                                <span class="font-semibold text-gray-700">{{ \App\Helpers\UnitHelper::formatQuantity($stokHarian, $bahanBaku->satuan->singkatan ?? $bahanBaku->satuan->nama_satuan ?? 'gram') }}</span>
                             </div>
                             <div class="text-right">
                                 <span class="block text-xs text-gray-400">Catering</span>
-                                <span class="font-semibold text-gray-700">{{ rtrim(rtrim(number_format($stokCatering, 2, ',', '.'), '0'), ',') }}</span>
+                                <span class="font-semibold text-gray-700">{{ \App\Helpers\UnitHelper::formatQuantity($stokCatering, $bahanBaku->satuan->singkatan ?? $bahanBaku->satuan->nama_satuan ?? 'gram') }}</span>
                             </div>
                         </div>
                     </div>
@@ -117,7 +117,7 @@
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                         <h3 class="font-semibold text-gray-900">Riwayat Stok (5 Terakhir)</h3>
-                        <a href="{{ route('mutasi-stok.index', ['search' => $bahanBaku->id_bahan_baku]) }}" class="text-sm text-[#3B82F6] hover:text-[#2563EB] font-medium">
+                        <a href="{{ route('mutasi-stok.index', ['search' => $bahanBaku->id_bahan_baku]) }}" class="text-sm text-primary hover:text-primary font-medium">
                             Lihat Semua Riwayat <x-heroicon-o-chevron-right class="ml-1 w-5 h-5 inline-block shrink-0" />
                         </a>
                     </div>

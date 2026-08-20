@@ -12,7 +12,8 @@
 {{-- 3. LAYANAN --}}
 <x-landing.section title="Layanan Kami">
     <div class="relative -mx-6 md:-mx-10 rounded-lg overflow-hidden">
-        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ asset('images/saungbabakan.webp') }}');"></div>
+        <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out dark:opacity-0" style="background-image: url('{{ asset('images/saungbabakan.webp') }}');"></div>
+        <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out opacity-0 dark:opacity-100" style="background-image: url('{{ asset('images/saungbabakan_malam.webp') }}');"></div>
         <div class="absolute inset-0 bg-black/60"></div>
 
         <div class="relative z-10 grid md:grid-cols-3 gap-10 max-w-4xl mx-auto px-6 py-16">
@@ -70,7 +71,7 @@
     </x-landing.section>
 
     {{-- 5. PAKET CATERING --}}
-    <x-landing.section id="catering" title="Paket Katering" subtitle="Pemesanan min. H-4. DP 50%." bgBatik="true">
+    <x-landing.section id="catering" title="Paket Katering" subtitle="Pemesanan min. H-3. DP 50%." bgBatik="true">
         <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             @forelse($paketCatering as $paket)
                 <x-landing.package-card :paket="$paket" type="catering" />
@@ -81,7 +82,7 @@
     </x-landing.section>
 
     {{-- 6. PAKET NASI BOX --}}
-    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Minimal 20 box. Pemesanan min. H-4. DP 25%." bgBatik="true">
+    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Minimal 20 box. Pemesanan min. H-3. DP 25%." bgBatik="true">
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             @forelse($paketNasiBox as $paket)
                 <x-landing.package-card :paket="$paket" type="nasi_box" />
@@ -92,7 +93,7 @@
     </x-landing.section>
 
     {{-- 8. GALERI --}}
-    <x-landing.gallery />
+    <x-landing.gallery :galeri="$galeri" />
 
 
     {{-- 10. KONTAK --}}

@@ -78,6 +78,48 @@ class BuktiPembayaranController extends Controller
         ]);
     }
 
+    /** POST /pesan/bayar/simulasi-qris — instant QRIS auto-verification simulation */
+    public function simulasiQris(Request $request)
+    {
+        $request->validate([
+            'kode_pesanan' => 'required|string',
+        ]);
+
+        $pesanan = Pesanan::where('id_pesanan', $request->kode_pesanan)->first();
+        if (!$pesanan) {
+            return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
+        }
+
+        $lunas = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+        $dpAmount = $pesanan->nominalDP();
+        $isPelunasan = $lunas >= $dpAmount && $lunas < $pesanan->total_tagihan;
+        $amountToPay = $isPelunasan ? max(0, $pesanan->total_tagihan - $lunas) : max(0, $dpAmount);
+
+        // Record QRIS payment as automatically accepted/verified
+        Pembayaran::create([
+            'kode_pembayaran' => 'BYR-' . now()->format('Ymd-His') . '-' . rand(10, 99),
+            'pesanan_id' => $pesanan->id,
+            'jenis_pembayaran' => $isPelunasan ? 'pelunasan' : 'uang_muka',
+            'jumlah_dibayar' => $amountToPay,
+            'metode_pembayaran' => 'qris',
+            'status_verifikasi' => 'diterima',
+            'tanggal_pembayaran' => now(),
+            'catatan_verifikasi' => 'Terverifikasi otomatis via QRIS Dinamis'
+        ]);
+
+        $totalTerbayarBaru = $lunas + $amountToPay;
+        $pesanan->update([
+            'status_pembayaran_id' => ($totalTerbayarBaru >= (float) $pesanan->total_tagihan) ? 5 : 3,
+            'status_pesanan_id' => 2
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran QRIS Dinamis berhasil terverifikasi otomatis!',
+            'redirect' => route('pesanan.bayar', $pesanan->id_pesanan)
+        ]);
+    }
+
     /** POST /pesan/bukti */
     public function store(Request $request)
     {
@@ -147,6 +189,20 @@ class BuktiPembayaranController extends Controller
             $pesanan->update(['status_pembayaran_id' => 2]); // Menunggu Verifikasi DP
         } else {
             $pesanan->update(['status_pembayaran_id' => 4]); // Menunggu Verifikasi Pelunasan
+        }
+
+        // Kirim notifikasi
+        $admins = \App\Models\Pengguna::whereHas('peran', function ($q) {
+            $q->whereIn('nama_peran', ['Pemilik', 'Admin', 'Manajer']);
+        })->get();
+        if ($admins->count() > 0) {
+            $jenisLabel = $jenisBayar === 'uang_muka' ? 'DP' : 'Pelunasan';
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\StatusPembayaran(
+                $pembayaran,
+                "Pembayaran $jenisLabel Masuk",
+                "Pembayaran $jenisLabel untuk pesanan #{$pesanan->id_pesanan} telah diterima dan menunggu verifikasi.",
+                route('admin.pembayaran.verifikasi')
+            ));
         }
 
         return redirect()->route('pesanan.bayar', $pesanan->id_pesanan)

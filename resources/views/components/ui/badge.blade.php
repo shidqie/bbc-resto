@@ -23,25 +23,33 @@
 @php
     // Mapping warna badge
     $colors = [
-        'primary' => 'bg-blue-50 text-blue-700 border-blue-200/50',
+        'primary' => 'bg-primary-soft text-primary border-primary/20',
+        'blue'    => 'bg-primary-soft text-primary border-primary/20',
         'success' => 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
+        'emerald' => 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
         'warning' => 'bg-orange-50 text-orange-700 border-orange-200/50',
+        'amber'   => 'bg-orange-50 text-orange-700 border-orange-200/50',
         'danger'  => 'bg-red-50 text-red-700 border-red-200/50',
+        'red'     => 'bg-red-50 text-red-700 border-red-200/50',
         'gray'    => 'bg-gray-100 text-gray-700 border-gray-200',
     ];
 
     // Mapping warna dot
     $dots = [
-        'primary' => 'bg-blue-500',
+        'primary' => 'bg-primary',
+        'blue'    => 'bg-primary',
         'success' => 'bg-emerald-500',
+        'emerald' => 'bg-emerald-500',
         'warning' => 'bg-orange-500',
+        'amber'   => 'bg-orange-500',
         'danger'  => 'bg-red-500',
+        'red'     => 'bg-red-500',
         'gray'    => 'bg-gray-500',
     ];
 
     // Ukuran
     $sizes = [
-        'xs' => 'text-[11px] px-2 py-0.5',
+        'xs' => 'text-xs px-2 py-0.5',
         'sm' => 'text-xs px-2 py-0.5',
         'md' => 'text-sm px-2.5 py-1',
     ];

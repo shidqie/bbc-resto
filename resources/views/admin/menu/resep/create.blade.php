@@ -24,7 +24,7 @@
                     <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total Modal (HPP)</p>
                     <p class="text-lg font-black text-gray-900" id="textTotalHpp">Rp 0</p>
                 </div>
-                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <div class="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center text-primary">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
             </div>
@@ -56,7 +56,7 @@
                 
                 <div class="mb-5 flex justify-between items-end">
                     <h2 class="text-sm font-bold text-gray-900">Komposisi Bahan Baku</h2>
-                    <button type="button" onclick="addBahanBakuRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                    <button type="button" onclick="addBahanBakuRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         Tambah Bahan
                     </button>
@@ -78,7 +78,7 @@
                             </div>
                             <div class="w-32">
                                 <label class="block text-sm font-semibold text-gray-500 mb-1">Jml. Kebutuhan</label>
-                                <x-ui.input-decimal name="jumlah_kebutuhan[]" value="{{ $resep->jumlah_kebutuhan }}" class="hpp-qty" required="true" oninput="calculateHPP()" />
+                                <x-ui.input-decimal name="jumlah_kebutuhan[]" value="{{ (float)$resep->jumlah_kebutuhan }}" class="hpp-qty" required="true" oninput="calculateHPP()" />
                             </div>
                             <div class="pt-6">
                                 <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
@@ -112,7 +112,7 @@
 
                 <div class="mt-8 pt-5 border-t border-gray-100 flex justify-end gap-2">
                     <a href="{{ route('resep.index') }}" class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Batal</a>
-                    <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors">Simpan Resep</button>
+                    <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">Simpan Resep</button>
                 </div>
             </form>
         </div>

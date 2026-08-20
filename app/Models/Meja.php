@@ -24,13 +24,7 @@ class Meja extends BaseModel
                 $meja->qr_token = Str::random(32);
             }
             if (empty($meja->kode_meja)) {
-                // Generate a simple code like MJ-001 based on nomor_meja or random if not available
-                $number = preg_replace('/[^0-9]/', '', $meja->nomor_meja);
-                if ($number) {
-                    $meja->kode_meja = 'MJ-'.str_pad($number, 3, '0', STR_PAD_LEFT);
-                } else {
-                    $meja->kode_meja = 'MJ-'.strtoupper(Str::random(4));
-                }
+                $meja->kode_meja = \App\Helpers\IdCodeGenerator::generateMejaId($meja->nomor_meja ?? $meja->id);
             }
         });
     }

@@ -29,9 +29,26 @@ class BahanBakuController extends Controller
             $query->where('kategori_bahan_baku_id', $request->kategori);
         }
 
-        $bahanBakus = $query->orderBy('bahan_baku.id', 'desc')->paginate(12)->withQueryString();
-        $kategorisPage = KategoriBahanBaku::withCount('bahan_bakus')->orderBy('id', 'desc')->paginate(12)->withQueryString();
-        $satuansPage = Satuan::withCount('bahan_bakus')->orderBy('id', 'desc')->paginate(12)->withQueryString();
+        $sort = $request->input('sort', 'nama');
+        $sortMap = [
+            'nama' => ['bahan_baku.nama_bahan', 'asc'],
+            'kategori' => ['kategori.nama_kategori', 'asc'],
+            'harga' => ['bahan_baku.harga_satuan', 'asc'],
+            'terbaru' => ['bahan_baku.id', 'desc'],
+        ];
+        $sortCol = $sortMap[$sort][0] ?? $sortMap['nama'][0];
+        $sortDir = $sortMap[$sort][1] ?? $sortMap['nama'][1];
+
+        if ($sortCol === 'kategori.nama_kategori') {
+            $query->leftJoin('kategori_bahan_baku as kategori', 'kategori.id', '=', 'bahan_baku.kategori_bahan_baku_id');
+        }
+
+        $bahanBakus = $query->orderBy($sortCol, $sortDir)
+            ->select('bahan_baku.*')
+            ->paginate(12)
+            ->withQueryString();
+        $kategorisPage = KategoriBahanBaku::withCount('bahan_bakus')->orderBy('nama_kategori', 'asc')->paginate(12)->withQueryString();
+        $satuansPage = Satuan::withCount('bahan_bakus')->orderBy('nama_satuan', 'asc')->paginate(12)->withQueryString();
         
         $kategoris = KategoriBahanBaku::all();
         $satuans = Satuan::all();
@@ -58,7 +75,7 @@ class BahanBakuController extends Controller
     {
         $validated = $request->validate([
             'id_bahan_baku' => 'nullable|string|unique:bahan_baku,id_bahan_baku',
-            'nama_bahan' => 'required|string|max:255',
+            'nama_bahan' => 'required|string|max:255|unique:bahan_baku,nama_bahan',
             'kategori_bahan_baku_id' => 'required|exists:kategori_bahan_baku,id',
             'satuan_id' => 'required|exists:satuan,id',
             'stok' => 'nullable|numeric|min:0',
@@ -227,7 +244,7 @@ class BahanBakuController extends Controller
     {
         $bahanBaku = BahanBaku::findOrFail($id);
         $validated = $request->validate([
-            'nama_bahan' => 'required|string|max:255',
+            'nama_bahan' => 'required|string|max:255|unique:bahan_baku,nama_bahan,'.$bahanBaku->id,
             'kategori_bahan_baku_id' => 'required|exists:kategori_bahan_baku,id',
             'satuan_id' => 'required|exists:satuan,id',
             'stok_minimal_harian' => 'required|numeric|min:0',

@@ -17,34 +17,34 @@
 @php
     $colorMap = [
         'blue' => [
-            'iconBg'    => 'bg-[#F5F1E6] text-[#0D3024]',
+            'iconBg'    => 'bg-secondary-soft text-primary',
         ],
         'green' => [
-            'iconBg'    => 'bg-[#E8F0EC] text-[#0D3024]',
+            'iconBg'    => 'bg-primary-soft text-primary',
         ],
         'orange' => [
-            'iconBg'    => 'bg-[#F5F1E6] text-[#0D3024]',
+            'iconBg'    => 'bg-secondary-soft text-primary',
         ],
         'red' => [
-            'iconBg'    => 'bg-[#FBF0EC] text-[#A43E2A]',
+            'iconBg'    => 'bg-red-50 text-red-700',
         ],
         'brand' => [
-            'iconBg'    => 'bg-[#0D3024] text-[#D4A843]',
+            'iconBg'    => 'bg-primary text-accent dark:text-neutral-900',
         ],
         'violet' => [
-            'iconBg'    => 'bg-[#F5F1E6] text-[#0D3024]',
+            'iconBg'    => 'bg-secondary-soft text-primary',
         ],
         'sky' => [
-            'iconBg'    => 'bg-[#E8F0EC] text-[#0D3024]',
+            'iconBg'    => 'bg-primary-soft text-primary',
         ],
         'rose' => [
-            'iconBg'    => 'bg-[#FBF0EC] text-[#A43E2A]',
+            'iconBg'    => 'bg-red-50 text-red-700',
         ],
         'emerald' => [
-            'iconBg'    => 'bg-[#E8F0EC] text-[#0D3024]',
+            'iconBg'    => 'bg-primary-soft text-primary',
         ],
         'purple' => [
-            'iconBg'    => 'bg-[#F5F1E6] text-[#0D3024]',
+            'iconBg'    => 'bg-secondary-soft text-primary',
         ],
     ];
 

@@ -44,4 +44,13 @@ class Pengiriman extends BaseModel
 
         return 10000 + ($jarakHitung * 3000);
     }
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->nomor_pengiriman)) {
+                $model->nomor_pengiriman = \App\Helpers\IdCodeGenerator::generatePengirimanId($model->jadwal_pengiriman ?? $model->dibuat_pada ?? now());
+            }
+        });
+    }
 }

@@ -38,7 +38,7 @@
         {{-- DETAIL PESANAN --}}
         <div>
             <h3 class="text-[10px] font-bold text-primary/50 uppercase tracking-wider mb-2">Detail Pesanan</h3>
-            <div class="grid grid-cols-2 gap-x-5 gap-y-2.5 text-[11px]">
+            <div class="grid grid-cols-2 gap-x-5 gap-y-2.5 text-xs">
                 <div class="min-w-0">
                     <p class="text-body/50 mb-0.5">Paket</p>
                     <p id="summary-paket" class="font-bold text-body truncate">-</p>
@@ -61,7 +61,7 @@
         {{-- PENGIRIMAN --}}
         <div class="pt-3 border-t border-primary/10">
             <h3 class="text-[10px] font-bold text-primary/50 uppercase tracking-wider mb-2">Pengiriman</h3>
-            <div class="grid grid-cols-2 gap-x-5 gap-y-2.5 text-[11px]">
+            <div class="grid grid-cols-2 gap-x-5 gap-y-2.5 text-xs">
                 <div>
                     <p class="text-body/50 mb-0.5">Metode</p>
                     <p id="summary-metode" class="font-bold text-body">Diambil (Pickup)</p>
@@ -84,7 +84,7 @@
         {{-- RINCIAN PEMBAYARAN --}}
         <div class="pt-3 border-t border-primary/10">
             <h3 class="text-[10px] font-bold text-primary/50 uppercase tracking-wider mb-2">Rincian Pembayaran</h3>
-            <div class="space-y-2 text-[11px]">
+            <div class="space-y-2 text-xs">
                 <div class="flex justify-between items-center">
                     <span class="text-body/60">Subtotal Menu</span>
                     <span id="subtotal-menu" class="font-bold text-body">Rp 0</span>
@@ -152,9 +152,9 @@
 
     {{-- STICKY SUBMIT BUTTON --}}
     <div class="p-4 sm:p-5 border-t border-primary/10 bg-surface rounded-b-2xl shrink-0">
-        <button type="submit" id="submitBtn"
-                class="w-full bg-primary hover:bg-primary-container text-white font-semibold text-sm py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] shadow-sm shadow-primary/20">
-            Lanjut Pembayaran
-        </button>
+            <button type="submit" id="submitBtn"
+                    class="w-full bg-primary hover:bg-primary-container text-white font-bold text-base py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] shadow-[0_4px_12px_rgba(var(--color-primary),0.2)]">
+                Bayar
+            </button>
     </div>
 </div>

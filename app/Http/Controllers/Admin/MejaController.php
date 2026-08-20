@@ -19,8 +19,22 @@ class MejaController extends Controller
             $query->where('nomor_meja', 'like', "%{$search}%");
         }
 
-        $mejas = $query->orderBy(DB::raw('CAST(REGEXP_REPLACE(nomor_meja, "[^0-9]", "") AS UNSIGNED)'), 'asc')
-            ->paginate(10)
+        $sort = $request->input('sort', 'nomor');
+        $sortMap = [
+            'nomor' => ['nomor', 'asc'],
+            'kapasitas' => ['kapasitas', 'asc'],
+            'terbaru' => ['dibuat_pada', 'desc'],
+        ];
+        $sortCol = $sortMap[$sort][0] ?? $sortMap['nomor'][0];
+        $sortDir = $sortMap[$sort][1] ?? $sortMap['nomor'][1];
+
+        if ($sortCol === 'nomor') {
+            $query->orderBy(DB::raw('CAST(REGEXP_REPLACE(nomor_meja, "[^0-9]", "") AS UNSIGNED)'), $sortDir);
+        } else {
+            $query->orderBy($sortCol, $sortDir);
+        }
+
+        $mejas = $query->paginate(10)
             ->withQueryString();
 
         return view('admin.pos.meja.index', compact('mejas'));
@@ -86,8 +100,11 @@ class MejaController extends Controller
             return back()->with('error', 'Meja tidak dapat dihapus karena sedang terisi atau dipesan.');
         }
 
-        $meja->delete();
-
-        return back()->with('success', 'Meja berhasil dihapus.');
+        try {
+            $meja->delete();
+            return back()->with('success', 'Meja berhasil dihapus.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', 'Meja tidak dapat dihapus karena sudah memiliki histori pesanan.');
+        }
     }
 }

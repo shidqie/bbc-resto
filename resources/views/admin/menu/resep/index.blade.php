@@ -99,7 +99,7 @@
                                     <td class="px-4 py-1"></td>
                                     <td class="px-4 py-1"></td>
                                     <td class="px-4 py-1 pl-10">
-                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-gray-500 uppercase tracking-wide">
+                                        <span class="inline-flex items-center gap-1 text-xs font-bold text-gray-500 uppercase tracking-wide">
                                             <x-heroicon-o-tag class="w-3.5 h-3.5 text-amber-500" />
                                             {{ $item->nama_item }}
                                         </span>
@@ -247,7 +247,7 @@
                 <div id="resepBahanContainer" class="space-y-2">
                     {{-- JS rendered rows --}}
                 </div>
-                <button type="button" id="btnTambahBahanResep" onclick="addBahanBakuRowResep()" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                <button type="button" id="btnTambahBahanResep" onclick="addBahanBakuRowResep()" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Tambah Bahan Baku
                 </button>
@@ -260,7 +260,7 @@
                 </button>
                 <div class="flex gap-2 ml-auto">
                     <button type="button" id="btnBatalResep" onclick="closeResepForm()" class="px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
-                    <button type="submit" id="btnSimpanResep" class="px-5 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors">Simpan Resep</button>
+                    <button type="submit" id="btnSimpanResep" class="px-5 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">Simpan Resep</button>
                 </div>
             </div>
         </form>
@@ -318,7 +318,7 @@
 
             <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/80 shrink-0">
                 <button type="button" onclick="closeKomposisiForm()" class="px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors">Simpan Komposisi</button>
+                <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">Simpan Komposisi</button>
             </div>
         </form>
     </div>
@@ -639,7 +639,7 @@ function addKelompokRow(data = null) {
         <div class="opsi-container space-y-1.5 pl-1">
             ${(data && data.opsi) ? data.opsi.map(o => opsiHtml(idx, o)).join('') : ''}
         </div>
-        <button type="button" onclick="addOpsiRow(this, ${idx})" class="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-amber-700 bg-white border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
+        <button type="button" onclick="addOpsiRow(this, ${idx})" class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-amber-700 bg-white border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
             <x-heroicon-o-plus class="w-3 h-3" /> Tambah Opsi Menu
         </button>
     `;
@@ -782,7 +782,6 @@ function closeDeleteResepModal() {
 
 function showToast(type, message) {
     if (window.showToast) window.showToast(type, message);
-    else alert(message);
 }
 
 // Konfirmasi hapus menu/paket (bukan confirm() bawaan)
@@ -803,14 +802,14 @@ function confirmHapusMenu(event, nama) {
 <div id="confirmModal" class="fixed inset-0 z-[60] hidden items-center justify-center">
     <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px]" onclick="closeConfirmModal()"></div>
     <div class="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm m-4">
-        <div class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center mb-4">
+        <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center mb-4">
             <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
         <h3 class="text-base font-bold text-gray-900" id="confirmModalTitle">Konfirmasi</h3>
         <p class="text-sm text-gray-500 mt-1" id="confirmModalMessage"></p>
         <div class="flex gap-2 mt-5">
             <button type="button" onclick="closeConfirmModal()" class="flex-1 px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
-            <button type="button" onclick="proceedConfirm()" class="flex-1 px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors">Ya, Lanjut</button>
+            <button type="button" onclick="proceedConfirm()" class="flex-1 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">Ya, Lanjut</button>
         </div>
     </div>
 </div>

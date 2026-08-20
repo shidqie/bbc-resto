@@ -44,7 +44,7 @@
         <span>{{ $label }}</span>
         
         <span x-show="count > 0" x-text="count" style="display: none;" 
-              class="flex items-center justify-center w-5 h-5 text-[11px] font-bold text-white bg-gray-900 rounded-full shadow-sm">
+              class="flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-primary rounded-full shadow-sm">
         </span>
         
         <x-heroicon-o-chevron-down class="w-4 h-4 text-gray-400 transition-transform duration-200" x-bind:class="{'rotate-180': open}" />
@@ -57,7 +57,7 @@
         x-transition:leave="transition ease-in duration-75"
         x-transition:leave-start="transform opacity-100 scale-100"
         x-transition:leave-end="transform opacity-0 scale-95"
-        class="absolute z-50 w-56 py-2 mt-2 bg-white border border-gray-100 shadow-xl rounded-xl left-0"
+        class="absolute z-[100] w-56 py-2 mt-2 bg-white border border-gray-100 shadow-xl rounded-xl left-0"
         style="display: none;">
         
         <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Pilih {{ strtolower($label) }}</div>

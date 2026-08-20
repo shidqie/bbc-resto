@@ -116,7 +116,7 @@
     
     <!-- Footer -->
     <div class="p-4 border-t border-gray-100 bg-white shrink-0">
-        <a href="{{ route('laporan.penjualan.cetak-pdf', ['id' => $pesanan->id]) }}" class="w-full inline-flex justify-center items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-xl px-4 py-3 hover:bg-gray-800 transition-colors shadow-sm">
+        <a href="{{ route('laporan.penjualan.cetak-pdf', ['id' => $pesanan->id]) }}" class="w-full inline-flex justify-center items-center gap-1.5 text-sm font-semibold text-white bg-primary rounded-xl px-4 py-3 hover:bg-primary/90 transition-colors shadow-sm">
             <x-heroicon-o-printer class="w-4 h-4" />
             Cetak Struk Detail
         </a>

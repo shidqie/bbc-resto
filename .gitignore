@@ -23,3 +23,5 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 bbc-resto.zip
+backup/
+backup_err.txt

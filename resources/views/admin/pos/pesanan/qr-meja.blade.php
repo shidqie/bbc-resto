@@ -6,14 +6,14 @@
     <title>Mengunduh QR Code...</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- QRCode.js — Local, works fully offline on LAN -->
     <script src="{{ asset('js/qrcode.min.js') }}"></script>
     <!-- HTML2PDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Outfit', sans-serif;
             background-color: #ffffff;
             margin: 0;
             padding: 0;
@@ -88,13 +88,18 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
                     fontSize: {
-                        xs: ['13px', '1.45'], sm: ['15px', '1.5'],
-                        base: ['16px', '1.55'], lg: ['18px', '1.5'],
-                        xl: ['20px', '1.4'], '2xl': ['24px', '1.3'],
-                        '3xl': ['30px', '1.25'], '4xl': ['36px', '1.2'],
-                        '5xl': ['48px', '1.15'], '6xl': ['60px', '1.1'],
+                        xs: ['11px', '1.45'], sm: ['13px', '1.5'],
+                        base: ['14px', '1.55'], lg: ['16px', '1.5'],
+                        xl: ['18px', '1.4'], '2xl': ['21px', '1.3'],
+                        '3xl': ['26px', '1.25'], '4xl': ['32px', '1.2'],
+                        '5xl': ['40px', '1.15'], '6xl': ['48px', '1.1'],
+                    },
+                    colors: {
+                        primary: '#0D3024',
+                        canvas: '#FAFAF7',
+                        surface: '#FFFFFF',
                     },
                 }
             }
@@ -118,11 +123,15 @@
             $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,'.base64_encode(file_get_contents($logoPath)) : '';
         @endphp
         
+        @php
+            $lanBaseUrl = \App\Helpers\IdCodeGenerator::getLanBaseUrl();
+        @endphp
+        
         @forelse($mejas as $m)
             @php
                 $qrTargetUrl = !empty(trim($m->qr_token)) 
-                    ? env('APP_URL') . '/qr-menu/' . trim($m->qr_token) 
-                    : env('APP_URL') . '/qr-menu?invalid';
+                    ? $lanBaseUrl . '/qr-menu/' . trim($m->qr_token) 
+                    : $lanBaseUrl . '/qr-menu?invalid';
                 $cleanNomorMeja = trim(preg_replace('/^meja\s*/i', '', $m->nomor_meja));
             @endphp
             

@@ -35,21 +35,39 @@ class PesananCateringController extends Controller
     // GET /pesan/catering/komponen/{paketId}
     public function getKomponen($paketId)
     {
-        $paket = Menu::with('komponen_paket.opsi')->findOrFail($paketId);
+        $paket = Menu::with('komponen_paket.opsi.menu')->findOrFail($paketId);
 
         return response()->json(
-            $paket->komponen_paket->map(fn ($k) => [
-                'id' => $k->id,
-                'nama_komponen' => $k->nama_komponen,
-                'tipe' => $k->tipe_komponen === 'tetap' ? 'fixed' : 'choice',
-                'opsi' => $k->opsi->map(fn ($o) => [
-                    'menu' => [
-                        'id' => $o->id,
-                        'nama' => $o->nama_pilihan,
-                        'foto' => null,
-                    ],
-                ]),
-            ])
+            $paket->komponen_paket->map(function ($k) {
+                if (in_array($k->tipe_komponen, ['wajib', 'tetap'])) {
+                    $menu = $k->menu_id_terkait ? \App\Models\Menu::find($k->menu_id_terkait) : null;
+                    return [
+                        'id' => $k->id,
+                        'nama_komponen' => $k->nama_komponen,
+                        'tipe' => 'fixed',
+                        'opsi' => [[
+                            'menu' => [
+                                'id' => $menu ? $menu->id : $k->id,
+                                'nama' => $menu ? ($k->nama_komponen !== $menu->nama_menu && $k->nama_komponen ? $k->nama_komponen : $menu->nama_menu) : $k->nama_komponen,
+                                'foto' => $menu ? $menu->foto : null,
+                            ]
+                        ]]
+                    ];
+                }
+
+                return [
+                    'id' => $k->id,
+                    'nama_komponen' => $k->nama_komponen,
+                    'tipe' => $k->tipe_komponen === 'semua_didapat' ? 'fixed' : 'choice',
+                    'opsi' => $k->opsi->map(fn ($o) => [
+                        'menu' => [
+                            'id' => $o->id,
+                            'nama' => $o->nama_pilihan,
+                            'foto' => $o->foto ?? ($o->menu ? $o->menu->foto : null),
+                        ],
+                    ])->values()->all(),
+                ];
+            })
         );
     }
 
@@ -104,7 +122,7 @@ class PesananCateringController extends Controller
             'nama_pemesan.required' => 'Nama pemesan wajib diisi.',
             'kontak.required' => 'Kontak WhatsApp wajib diisi.',
             'tanggal_acara.required' => 'Tanggal acara wajib diisi.',
-            'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-4 sebelum hari pelaksanaan acara.',
+            'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-3 sebelum hari pelaksanaan acara.',
             'lokasi_acara.required' => 'Alamat acara wajib diisi.',
             'metode_pengiriman.required' => 'Metode pengiriman wajib dipilih.',
             'jumlah_porsi.required' => 'Jumlah porsi wajib diisi.',
@@ -215,15 +233,17 @@ class PesananCateringController extends Controller
                 'expires_at' => now()->addMinutes(15),
             ]);
 
-            // Kirim notifikasi ke admin
+            // Kirim notifikasi
             $admins = \App\Models\Pengguna::whereHas('peran', function ($q) {
-                $q->whereIn('nama_peran', ['Pemilik', 'Admin', 'Manajer', 'Kasir']);
+                $q->whereIn('nama_peran', ['Pemilik', 'Admin', 'Manajer', 'Dapur']);
             })->get();
             
             if ($admins->count() > 0) {
+                $qty = $pesanan->detail_pesanan->sum('jumlah') ?: $pesanan->detail_pesanan->sum('kuantitas');
                 \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\PesananBaru(
-                    $pesanan, 
-                    "Pesanan Katering Baru - Invoice {$pesanan->id_pesanan}", 
+                    $pesanan,
+                    "Pesanan Baru",
+                    "Pesanan Katering #{$pesanan->id_pesanan} sebanyak {$qty} porsi telah masuk dan menunggu konfirmasi.", 
                     route('admin.pesanan.catering.index')
                 ));
             }
@@ -246,7 +266,7 @@ class PesananCateringController extends Controller
 
         $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'status_pesanan', 'pembayaran', 'pelanggan'])
             ->where('jenis_pesanan_id', 2)
-            ->latest();
+            ->latest('dibuat_pada');
 
         if ($request->has('search')) {
             $search = $request->search;
@@ -410,10 +430,10 @@ class PesananCateringController extends Controller
         ]);
 
         if ($pembayaran->jenis_pembayaran === 'uang_muka') {
-            // Set batas pelunasan H-4 dari tanggal acara
+            // Set batas pelunasan H-3 dari tanggal acara
             $batasPelunasan = null;
             if ($pesanan->jadwal_pesanan && $pesanan->jadwal_pesanan->tanggal_acara) {
-                $batasPelunasan = \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->subDays(4)->endOfDay();
+                $batasPelunasan = \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->subDays(3)->endOfDay();
             }
 
             $pesanan->update([
@@ -439,7 +459,7 @@ class PesananCateringController extends Controller
         $type = 'catering';
         $kodePesanan = $pesanan->id_pesanan;
 
-        $pdf = Pdf::loadView('pesanan.invoice-pdf', compact('pesanan', 'type', 'kodePesanan'));
+        $pdf = Pdf::loadView('pdf.invoice', compact('pesanan', 'type', 'kodePesanan'));
 
         return $pdf->download('bukti-pesanan-'.$pesanan->id_pesanan.'.pdf');
     }
@@ -524,6 +544,74 @@ class PesananCateringController extends Controller
                 $pesanan->pengiriman->update(['status_pengiriman_id' => 2]); // Siap Dikirim di Pengiriman
             } elseif ($status == 5) { // Selesai
                 $pesanan->pengiriman->update(['status_pengiriman_id' => 4]); // Selesai/Diterima di Pengiriman
+            }
+        }
+
+        // Kirim Notifikasi Status
+        $statusTexts = [
+            1 => 'menunggu konfirmasi',
+            2 => 'telah dikonfirmasi',
+            3 => 'sedang diproses',
+            4 => 'dalam pengantaran',
+            5 => 'telah selesai',
+            6 => 'dibatalkan',
+        ];
+        $statusText = $statusTexts[$status] ?? 'diperbarui';
+
+        // 1. Notifikasi ke Konsumen
+        if ($pesanan->pelanggan) {
+            $pesanan->pelanggan->notify(new \App\Notifications\StatusPesanan(
+                'Status Pesanan', 
+                "Pesanan Katering #{$pesanan->id_pesanan} Anda {$statusText}.", 
+                route('konsumen.pesanan.index')
+            ));
+        }
+
+        // 2. Notifikasi ke Dapur & Pemilik (Dikonfirmasi / Diproses)
+        if (in_array($status, [2, 3])) {
+            $roles = $status == 2 ? ['Dapur'] : ['Dapur', 'Pemilik'];
+            $internalMsg = $status == 2 
+                ? "Pesanan Katering #{$pesanan->id_pesanan} telah dikonfirmasi. Silakan cek detail." 
+                : "Pesanan Katering #{$pesanan->id_pesanan} siap diproses (produksi bisa dimulai).";
+            
+            $internals = \App\Models\Pengguna::whereHas('peran', function ($q) use ($roles) {
+                $q->whereIn('nama_peran', $roles);
+            })->get();
+            
+            if ($internals->count() > 0) {
+                \Illuminate\Support\Facades\Notification::send($internals, new \App\Notifications\StatusPesanan(
+                    'Update Pesanan',
+                    $internalMsg,
+                    route('admin.pesanan.catering.index')
+                ));
+            }
+        }
+
+        // 3. Notifikasi ke Tim Pengantaran (Siap Dikirim)
+        if ($status == 4) {
+            $kurirs = \App\Models\Pengguna::whereHas('peran', function ($q) {
+                $q->where('nama_peran', 'Tim Pengantaran');
+            })->get();
+            if ($kurirs->count() > 0) {
+                \Illuminate\Support\Facades\Notification::send($kurirs, new \App\Notifications\StatusPesanan(
+                    'Pesanan Siap Dikirim',
+                    "Pesanan Katering #{$pesanan->id_pesanan} siap dikirim.",
+                    route('admin.pengantaran.index')
+                ));
+            }
+        }
+
+        // 4. Notifikasi ke Pemilik (Selesai)
+        if ($status == 5) {
+            $pemilik = \App\Models\Pengguna::whereHas('peran', function ($q) {
+                $q->where('nama_peran', 'Pemilik');
+            })->get();
+            if ($pemilik->count() > 0) {
+                \Illuminate\Support\Facades\Notification::send($pemilik, new \App\Notifications\StatusPesanan(
+                    'Pesanan Selesai',
+                    "Pesanan Katering #{$pesanan->id_pesanan} telah selesai / pengiriman selesai.",
+                    route('admin.pesanan.catering.index')
+                ));
             }
         }
 

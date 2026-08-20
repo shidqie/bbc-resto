@@ -157,4 +157,13 @@ class Pembayaran extends BaseModel
     {
         return $query->where('upload_progress', '>=', 100);
     }
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->kode_pembayaran)) {
+                $model->kode_pembayaran = \App\Helpers\IdCodeGenerator::generatePembayaranId($model->tanggal_pembayaran ?? $model->dibuat_pada ?? now());
+            }
+        });
+    }
 }

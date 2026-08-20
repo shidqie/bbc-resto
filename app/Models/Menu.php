@@ -55,10 +55,12 @@ class Menu extends BaseModel
             if (empty($model->id_menu)) {
                 $latest = static::orderBy('id', 'desc')->first();
                 $nextId = $latest ? $latest->id + 1 : 1;
-                $prefix = 'MN';
-                $model->id_menu = $prefix . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+                if (in_array((int)$model->jenis_menu_id, [2, 3])) {
+                    $model->id_menu = \App\Helpers\IdCodeGenerator::generatePaketId($model->jenis_menu_id, $nextId);
+                } else {
+                    $model->id_menu = \App\Helpers\IdCodeGenerator::generateMenuId($nextId);
+                }
             }
         });
     }
 }
-

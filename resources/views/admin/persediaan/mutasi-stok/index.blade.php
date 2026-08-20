@@ -32,12 +32,13 @@
         <x-ui.alert />
 
         {{-- Table with integrated toolbar --}}
+        {{-- Table with integrated toolbar --}}
         <x-ui.data-table :paginator="$mutasiStoks">
             <x-slot:toolbar>
                 <form action="{{ route('mutasi-stok.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama bahan..." />
-                    <x-ui.multi-select name="jenis_mutasi_stok_id" :options="['1' => 'Stok Masuk', '2' => 'Stok Keluar']" :selected="request('jenis_mutasi_stok_id')" label="Mutasi" type="radio" />
-                    <x-ui.multi-select name="jenis_stok" :options="['OPERASIONAL' => 'Operasional', 'CATERING' => 'Katering']" :selected="request('jenis_stok')" label="Jenis Stok" type="radio" />
+                    <x-ui.multi-select name="jenis_stok" :options="['' => 'Semua', 'harian' => 'Harian', 'catering' => 'Katering']" :selected="request('jenis_stok', '')" label="Jenis Stok" type="radio" />
+                    <x-ui.multi-select name="jenis_mutasi_stok_id" :options="['' => 'Semua Mutasi', '1' => 'Stok Masuk', '2' => 'Stok Keluar']" :selected="request('jenis_mutasi_stok_id', '')" label="Aktivitas" type="radio" />
                     <div class="w-full xl:max-w-xs shrink-0">
                         <x-ui.input type="date" name="tanggal" value="{{ request('tanggal') }}" onchange="this.form.submit()" />
                     </div>
@@ -47,62 +48,61 @@
                 </form>
             </x-slot:toolbar>
 
-            <x-ui.table class="min-w-[900px]">
+            <x-ui.table class="min-w-[950px]">
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Tanggal</th>
                     <th class="px-4 py-3.5 text-left">Bahan Baku</th>
-                    <th class="px-4 py-3.5 text-left">Jenis Transaksi</th>
-                    <th class="px-4 py-3.5 text-right">Jumlah</th>
+                    <th class="px-4 py-3.5 text-center">Jenis Stok</th>
+                    <th class="px-4 py-3.5 text-left">Aktivitas</th>
+                    <th class="px-4 py-3.5 text-right">Masuk</th>
+                    <th class="px-4 py-3.5 text-right">Keluar</th>
                     <th class="px-4 py-3.5 text-right">Stok Akhir</th>
-                    <th class="px-4 py-3.5 text-left">Keterangan</th>
                 </x-ui.table.header>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($mutasiStoks as $mutasi)
                     <x-ui.table.row>
-                        <td class="px-4 py-4 text-sm text-gray-500 font-medium">{{ $mutasiStoks->firstItem() + $loop->index }}</td>
+                        <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">{{ $mutasiStoks->firstItem() + $loop->index }}</td>
                         <td class="px-4 py-4">
                             <p class="font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($mutasi->tanggal_mutasi)->translatedFormat('d M Y') }}</p>
                             <p class="text-xs text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($mutasi->tanggal_mutasi)->format('H:i') }} WIB</p>
                         </td>
                         <td class="px-4 py-4">
                             <p class="font-semibold text-gray-900 leading-tight">{{ $mutasi->bahan_baku->nama_bahan ?? '-' }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5 font-mono">{{ $mutasi->bahan_baku->id_bahan_baku ?? '' }}</p>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 text-center">
                             @php
-                                $jenisColor = $mutasi->jenis_mutasi_stok_id == 1 ? 'success' : 'danger';
-                                if(str_contains(strtolower($mutasi->catatan ?? ''), 'penyesuaian') || str_contains(strtolower($mutasi->catatan ?? ''), 'opname')) {
-                                    $jenisColor = 'warning';
-                                }
+                                $isCat = strtolower($mutasi->jenis_persediaan ?? '') === 'catering';
                             @endphp
-                            <x-ui.badge :color="$jenisColor" size="sm">
-                                @if(str_contains(strtolower($mutasi->catatan ?? ''), 'penyesuaian') || str_contains(strtolower($mutasi->catatan ?? ''), 'opname'))
-                                    Penyesuaian
-                                @elseif($mutasi->jenis_mutasi_stok_id == 1)
-                                    Stok Masuk
-                                @else
-                                    Stok Keluar
-                                @endif
+                            <x-ui.badge :color="$isCat ? 'warning' : 'info'" size="sm">
+                                {{ $isCat ? 'Katering' : 'Harian' }}
                             </x-ui.badge>
                         </td>
-                        <td class="px-4 py-4 text-right">
-                            @if($mutasi->jenis_mutasi_stok_id == 1)
-                                <span class="font-bold text-emerald-600">+{{ number_format($mutasi->jumlah, 2, ',', '.') }}</span>
-                            @else
-                                <span class="font-bold text-red-600">-{{ number_format($mutasi->jumlah, 2, ',', '.') }}</span>
-                            @endif
-                            <span class="text-xs text-gray-400 ml-1">{{ $mutasi->bahan_baku->satuan->nama_satuan ?? '' }}</span>
-                        </td>
-                        <td class="px-4 py-4 text-right font-medium text-gray-900">
-                            {{ number_format($mutasi->stok_sesudah ?? 0, 2, ',', '.') }} <span class="text-xs text-gray-400">{{ $mutasi->bahan_baku->satuan->nama_satuan ?? '' }}</span>
-                        </td>
                         <td class="px-4 py-4">
-                            <p class="text-sm text-gray-700 max-w-xs truncate" title="{{ $mutasi->catatan }}">{{ $mutasi->catatan ?? '-' }}</p>
+                            <p class="text-sm font-medium text-gray-800">{{ $mutasi->catatan ?? '-' }}</p>
+                        </td>
+                        <td class="px-4 py-4 text-right">
+                            @if($mutasi->jenis_mutasi_stok_id == 1 || $mutasi->jumlah > 0)
+                                <span class="font-bold text-emerald-600">+{{ \App\Helpers\UnitHelper::formatQuantity(abs($mutasi->jumlah), $mutasi->bahan_baku->satuan->singkatan ?? $mutasi->bahan_baku->satuan->nama_satuan ?? 'gram') }}</span>
+                            @else
+                                <span class="text-gray-400 text-sm">-</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-4 text-right">
+                            @if($mutasi->jenis_mutasi_stok_id == 2 || $mutasi->jumlah < 0)
+                                <span class="font-bold text-red-600">-{{ \App\Helpers\UnitHelper::formatQuantity(abs($mutasi->jumlah), $mutasi->bahan_baku->satuan->singkatan ?? $mutasi->bahan_baku->satuan->nama_satuan ?? 'gram') }}</span>
+                            @else
+                                <span class="text-gray-400 text-sm">-</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-4 text-right font-bold text-gray-900 font-mono">
+                            {{ \App\Helpers\UnitHelper::formatQuantity($mutasi->stok_sesudah ?? 0, $mutasi->bahan_baku->satuan->singkatan ?? $mutasi->bahan_baku->satuan->nama_satuan ?? 'gram') }}
                         </td>
                     </x-ui.table.row>
                     @empty
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <x-ui.empty-state icon="clock" title="Belum ada riwayat mutasi" message="Data pergerakan stok akan muncul di sini." />
                         </td>
                     </tr>

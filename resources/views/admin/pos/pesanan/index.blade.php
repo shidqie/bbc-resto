@@ -11,7 +11,7 @@
 {{-- ║  BBC RESTO — POINT OF SALE (POS)     ║ --}}
 {{-- ╚══════════════════════════════════════╝ --}}
 <style>
-  .pos-root        { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .pos-root        { font-family: 'Outfit', sans-serif; }
   .chip-active     { background:#0D3024; color:#ffffff; border: 1px solid #0D3024; }
   .chip-default    { background:#FFFFFF; color:#374151; border: 1px solid #E5E7EB; }
   .chip-default:hover { background:#F9FAFB; color:#111827; border-color:#D1D5DB; }
@@ -222,19 +222,19 @@ function posSystemData() {
     savedPesananObject: null,
     activePrintEmbed: 'gabungan',
 
-    // Pengaturan Pajak & Layanan
-    pajakAktif: {{ ($pengaturanTransaksi->pajak_aktif ?? false) ? 'true' : 'false' }},
-    persentasePajak: {{ (float) ($pengaturanTransaksi->persentase_pajak ?? 0) }},
-    layananAktif: {{ ($pengaturanTransaksi->layanan_aktif ?? false) ? 'true' : 'false' }},
-    persentaseLayanan: {{ (float) ($pengaturanTransaksi->persentase_layanan ?? 0) }},
+    // Pengaturan Biaya Layanan Flat Nominal per Transaksi/Struk
+    pajakAktif: false,
+    persentasePajak: 0,
+    layananAktif: {{ ($pengaturanTransaksi->layanan_aktif ?? true) ? 'true' : 'false' }},
+    nominalLayanan: {{ (float) ($pengaturanTransaksi->nominal_layanan ?? 1000) }},
 
     openBills: @json($openBills),
 
     // ── Computed ────────────────────────────────────
     get subTotal()   { return this.cart.reduce((t, i) => t + i.harga * i.qty, 0); },
-    get totalServiceFee() { return this.layananAktif ? (this.subTotal * (this.persentaseLayanan / 100)) : 0; },
-    get totalPajak() { return this.pajakAktif ? ((this.subTotal + this.totalServiceFee) * (this.persentasePajak / 100)) : 0; },
-    get totalPrice() { return this.subTotal + this.totalServiceFee + this.totalPajak; },
+    get totalServiceFee() { return (this.layananAktif && this.subTotal > 0) ? this.nominalLayanan : 0; },
+    get totalPajak() { return 0; },
+    get totalPrice() { return this.subTotal + this.totalServiceFee; },
     get totalQty()   { return this.cart.reduce((t, i) => t + i.qty, 0); },
 
     formatPrice(n) {
@@ -504,6 +504,24 @@ function posSystemData() {
         }
     },
 
+    async updateOrderStatus(billId, newStatusId) {
+        try {
+            const res = await fetch('/admin/pesanan/dinein/' + billId + '/update-status', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ status_pesanan_id: newStatusId })
+            });
+            if (res.ok) {
+                window.location.reload();
+            }
+        } catch(e) {
+            console.error('Update status error:', e);
+        }
+    },
+
     openChecker(bill) {
         this.checkerBill = bill;
         this.showCheckerModal = true;
@@ -638,7 +656,7 @@ document.addEventListener('alpine:init', () => {
 });
 </script>
 
-<div x-data="posSystem" x-init="startTableStatusPolling()" class="pos-root min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] w-full flex flex-col lg:flex-row lg:overflow-hidden bg-[#f5f5f0] text-[#111827]">
+<div x-data="posSystem" x-init="startTableStatusPolling()" class="pos-root min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] w-full flex flex-col lg:flex-row lg:overflow-hidden bg-secondary-soft text-body">
 
   {{-- ─────────────────────────────── LEFT PANEL ────────────────────────────── --}}
   <div class="flex-1 flex flex-col min-w-0 lg:overflow-hidden">
@@ -658,14 +676,14 @@ document.addEventListener('alpine:init', () => {
           {{-- Tab 1: Katalog Menu --}}
           @if(!$isPelayan)
           <x-ui.tab @click="leftView = 'menu'"
-                    x-bind:class="leftView === 'menu' ? 'border-gray-900 text-gray-900 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'">
+                    x-bind:class="leftView === 'menu' ? 'border-primary text-primary font-bold' : 'border-transparent text-gray-500 hover:text-primary hover:border-primary/40'">
             Katalog Menu
           </x-ui.tab>
           @endif
 
           {{-- Tab 2: Daftar Pesanan Dine In --}}
           <x-ui.tab @click="leftView = 'open_bills'"
-                    x-bind:class="leftView === 'open_bills' ? 'border-gray-900 text-gray-900 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'">
+                    x-bind:class="leftView === 'open_bills' ? 'border-primary text-primary font-bold' : 'border-transparent text-gray-500 hover:text-primary hover:border-primary/40'">
             <span class="inline-flex items-center gap-2">
               <span>Daftar Pesanan Dine In</span>
               {{-- Badge Angka (Pill) --}}
@@ -677,7 +695,7 @@ document.addEventListener('alpine:init', () => {
 
           {{-- Tab 3: Meja --}}
           <x-ui.tab @click="leftView = 'meja'"
-                    x-bind:class="leftView === 'meja' ? 'border-gray-900 text-gray-900 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'">
+                    x-bind:class="leftView === 'meja' ? 'border-primary text-primary font-bold' : 'border-transparent text-gray-500 hover:text-primary hover:border-primary/40'">
             Meja
           </x-ui.tab>
 
@@ -748,7 +766,7 @@ document.addEventListener('alpine:init', () => {
               <button type="button" @click="open = !open" 
                 class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 focus:outline-none transition-colors">
                 <span>Metode</span>
-                <span x-show="openBillFilter !== 'semua'" class="flex items-center justify-center w-5 h-5 text-[11px] font-bold text-white bg-emerald-500 rounded-full shadow-sm">1</span>
+                <span x-show="openBillFilter !== 'semua'" class="flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-emerald-500 rounded-full shadow-sm">1</span>
                 <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{'rotate-180': open}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -776,7 +794,7 @@ document.addEventListener('alpine:init', () => {
               <button type="button" @click="open = !open"
                 class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 focus:outline-none transition-colors">
                 <span>Status</span>
-                <span x-show="openBillStatusFilter !== 'semua'" class="flex items-center justify-center w-5 h-5 text-[11px] font-bold text-white bg-emerald-500 rounded-full shadow-sm">1</span>
+                <span x-show="openBillStatusFilter !== 'semua'" class="flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-emerald-500 rounded-full shadow-sm">1</span>
                 <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{'rotate-180': open}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -814,14 +832,14 @@ document.addEventListener('alpine:init', () => {
             
             <div class="h-5 w-px bg-gray-300 mx-1 shrink-0"></div>
 
-            <select x-model="riwayatStatusFilter" class="h-9 px-3 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-[#0D3024]">
+            <select x-model="riwayatStatusFilter" class="h-9 px-3 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-primary">
               <option value="semua">Semua Status</option>
               <option value="lunas">Lunas</option>
               <option value="menunggu_pembayaran">Pending</option>
               <option value="void">Void / Batal</option>
             </select>
 
-            <select x-model="riwayatPayFilter" class="h-9 px-3 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-[#0D3024]">
+            <select x-model="riwayatPayFilter" class="h-9 px-3 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-700 outline-none focus:border-primary">
               <option value="semua">Semua Bayar</option>
               <option value="cash">Tunai (Cash)</option>
               <option value="qris">Nontunai (QRIS)</option>
@@ -829,7 +847,7 @@ document.addEventListener('alpine:init', () => {
 
             <button type="button" @click="exportToCsv()"
                     title="Export CSV"
-                    class="h-9 px-3.5 rounded-xl bg-[#0D3024] hover:bg-[#0a1f17] text-white font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-2xs">
+                    class="h-9 px-3.5 rounded-xl bg-primary hover:bg-primary-container text-white font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-2xs">
               <x-heroicon-o-arrow-down-tray class="w-3 h-3" />
               <span>Export CSV</span>
             </button>
@@ -843,7 +861,7 @@ document.addEventListener('alpine:init', () => {
           <button type="button" class="chip-active shadow-2xs px-3.5 h-8 rounded-xl text-sm font-extrabold transition-all shrink-0">Semua Meja ({{ $mejas->count() }})</button>
         </div>
         <a href="{{ route('pos.dinein.print-qr') }}" target="_blank"
-           class="h-8 px-3.5 rounded-xl bg-[#0D3024] hover:bg-[#0a1f17] text-white font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-2xs">
+           class="h-8 px-3.5 rounded-xl bg-primary hover:bg-primary-container text-white font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-2xs">
           <x-heroicon-o-printer class="w-3 h-3 text-emerald-400" />
           <span>Cetak Semua QR</span>
         </a>
@@ -900,14 +918,14 @@ document.addEventListener('alpine:init', () => {
           {{-- Info --}}
           <div class="p-3 flex-1 flex flex-col justify-between gap-1.5">
             <div>
-              <p class="text-xs font-bold text-[#111827] leading-snug line-clamp-2" title="{{ $menu->nama_menu }}">{{ $menu->nama_menu }}</p>
+              <p class="text-xs font-bold text-body leading-snug line-clamp-2" title="{{ $menu->nama_menu }}">{{ $menu->nama_menu }}</p>
             </div>
             <div class="flex items-center justify-between mt-auto pt-1">
               <div>
-                <span class="text-xs font-extrabold text-[#0D3024] block">Rp {{ number_format($menu->harga_jual, 0, ',', '.') }}</span>
+                <span class="text-xs font-extrabold text-primary block">Rp {{ number_format($menu->harga_jual, 0, ',', '.') }}</span>
               </div>
               @if(!$isHabis)
-              <button type="button" class="w-6 h-6 rounded-full bg-[#0D3024]/10 text-[#0D3024] flex items-center justify-center hover:bg-[#0D3024] hover:text-white transition-colors shrink-0">
+              <button type="button" class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary-container hover:text-white transition-colors shrink-0">
                 <x-heroicon-o-plus class="w-3 h-3" />
               </button>
               @endif
@@ -919,7 +937,7 @@ document.addEventListener('alpine:init', () => {
     </div>
 
     {{-- ══════════════════════  VIEW 2 · MANAJEMEN MEJA  ══════════════════════ --}}
-    <div x-show="leftView === 'meja'" x-cloak class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0]">
+    <div x-show="leftView === 'meja'" x-cloak class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-secondary-soft">
 
       <div class="bg-white border border-gray-200/80 rounded-xl shadow-xs overflow-x-auto overflow-y-visible min-h-64">
         <table class="w-full text-left border-collapse">
@@ -972,7 +990,7 @@ document.addEventListener('alpine:init', () => {
                     </span>
                   </template>
                   <template x-if="mejaStatusMap[{{ $meja->id }}] && !mejaStatusMap[{{ $meja->id }}].kot && mejaStatusMap[{{ $meja->id }}].has_active_order">
-                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1 bg-blue-50 text-blue-800 border-blue-200">
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1 bg-primary-soft text-primary border-primary/20">
                       <x-heroicon-o-clock class="w-3 h-3" />
                       KOT Menunggu
                     </span>
@@ -984,7 +1002,7 @@ document.addEventListener('alpine:init', () => {
               <td class="py-3.5 px-4 text-right flex items-center justify-end gap-2 h-full">
                 @if($meja->status === 'kosong')
                   <button type="button" @click="selectTable({{ $meja->id }}, '{{ addslashes($meja->nomor_meja) }}')"
-                          class="px-4 py-2 rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5 min-w-[120px] justify-center bg-[#0D3024] hover:bg-[#0a1f17] text-white cursor-pointer active:scale-95">
+                          class="px-4 py-2 rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5 min-w-[120px] justify-center bg-primary hover:bg-primary-container text-white cursor-pointer active:scale-95">
                     <span x-text="selectedTable == {{ $meja->id }} ? '✓ Terpilih' : 'Pilih Meja'"></span>
                   </button>
                 @else
@@ -1016,7 +1034,7 @@ document.addEventListener('alpine:init', () => {
     </div>
 
     {{-- ══════════════════════  VIEW 3 · PESANAN BELUM DIBAYAR  ════════════════════════ --}}
-    <div x-show="leftView === 'open_bills'" x-cloak class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0]">
+    <div x-show="leftView === 'open_bills'" x-cloak class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-secondary-soft">
 
 
       {{-- Empty state --}}
@@ -1099,7 +1117,7 @@ document.addEventListener('alpine:init', () => {
                 {{-- Metode --}}
                 <td class="px-4 py-4 align-middle">
                   <span class="text-xs font-semibold px-2 py-1 rounded-lg"
-                        :class="bill.sumber_pesanan === 'self_order' ? 'bg-violet-50 text-violet-700 border border-violet-200' : 'bg-blue-50 text-blue-700 border border-blue-200'"
+                        :class="bill.sumber_pesanan === 'self_order' ? 'bg-violet-50 text-violet-700 border border-violet-200' : 'bg-primary-soft text-primary border border-primary/20'"
                         x-text="bill.sumber_pesanan === 'self_order' ? 'Self Order' : 'POS'"></span>
                 </td>
                 
@@ -1110,10 +1128,23 @@ document.addEventListener('alpine:init', () => {
                 
                 {{-- Status Pesanan --}}
                 <td class="px-4 py-4 text-center align-middle">
-                  <span class="inline-flex items-center gap-1.5 font-medium rounded-full border text-xs px-2 py-0.5"
-                        :class="bill.status_raw === 'selesai' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' : (bill.status_raw === 'dibatalkan' ? 'bg-red-50 text-red-700 border-red-200/50' : 'bg-blue-50 text-blue-700 border-blue-200/50')"
-                        x-text="bill.status">
-                  </span>
+                  <select :value="bill.status_pesanan_id || (bill.status_raw === 'selesai' ? 5 : (bill.status_raw === 'dibatalkan' ? 6 : 2))"
+                          @change="updateOrderStatus(bill.id, $event.target.value)"
+                          class="text-xs font-bold px-2 py-1 rounded-lg border focus:ring-primary focus:border-primary cursor-pointer transition-colors shadow-xs"
+                          :class="
+                            (bill.status_pesanan_id == 1) ? 'text-amber-700 bg-amber-50 border-amber-200' :
+                            (bill.status_pesanan_id == 2 || !bill.status_pesanan_id) ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                            (bill.status_pesanan_id == 3) ? 'text-indigo-700 bg-indigo-50 border-indigo-200' :
+                            (bill.status_pesanan_id == 4) ? 'text-purple-700 bg-purple-50 border-purple-200' :
+                            (bill.status_pesanan_id == 5) ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-red-700 bg-red-50 border-red-200'
+                          ">
+                    <option value="1">Menunggu Konfirmasi</option>
+                    <option value="2">Dikonfirmasi</option>
+                    <option value="3">Sedang Diproses</option>
+                    <option value="4">Siap Disajikan</option>
+                    <option value="5">Selesai</option>
+                    <option value="6">Dibatalkan</option>
+                  </select>
                 </td>
                 
                 {{-- Pembayaran --}}
@@ -1171,7 +1202,7 @@ document.addEventListener('alpine:init', () => {
                         <!-- Konfirmasi - khusus jika pesanan belum dikonfirmasi -->
                         <template x-if="bill.status === 'Menunggu Konfirmasi'">
                           <button type="button" @click="konfirmasiPesanan(bill)"
-                                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5">
+                                  class="px-4 py-2 bg-primary hover:bg-primary-container active:scale-[0.99] text-white rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5">
                             <x-heroicon-o-check-circle class="w-3.5 h-3.5" />
                             <span>KONFIRMASI</span>
                           </button>
@@ -1190,7 +1221,7 @@ document.addEventListener('alpine:init', () => {
                       <div class="flex items-center justify-end gap-1.5">
                         <a :href="'/pos/dinein/receipts/' + bill.id" target="_blank"
                            title="Struk Nota"
-                           class="flex items-center justify-center p-2 bg-slate-100 hover:bg-[#0D3024] hover:text-white text-slate-700 rounded-xl transition-all shadow-xs">
+                           class="flex items-center justify-center p-2 bg-slate-100 hover:bg-primary-container hover:text-white text-slate-700 rounded-xl transition-all shadow-xs">
                           <x-heroicon-o-printer class="w-4 h-4" />
                         </a>
                         <button type="button" @click="openDetailModal(bill)"
@@ -1220,10 +1251,10 @@ document.addEventListener('alpine:init', () => {
     </div>
 
     {{-- ══════════════════════ VIEW 5 · QR SCAN MENU (KARTU MEJA) ══════════════════════ --}}
-    <div x-show="leftView === 'qr'" class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-[#f5f5f0] space-y-4">
+    <div x-show="leftView === 'qr'" class="flex-1 overflow-y-auto p-4 md:p-6 pb-8 bg-secondary-soft space-y-4">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-base font-extrabold text-[#0D3024]">QR Scan Menu (Kartu Meja Digital)</h2>
+          <h2 class="text-base font-extrabold text-primary">QR Scan Menu (Kartu Meja Digital)</h2>
           <p class="text-xs text-gray-500 font-medium">Kartu QR Code Meja untuk pemesanan mandiri oleh pelanggan Saung Babakan Cinta</p>
         </div>
       </div>
@@ -1311,14 +1342,14 @@ document.addEventListener('alpine:init', () => {
         {{-- Header & Customer Input --}}
         <div class="p-5 border-b border-gray-100 space-y-3 shrink-0">
           <div class="flex items-center justify-between">
-            <h2 class="text-base font-extrabold text-[#0D3024]">Detail Pesanan</h2>
+            <h2 class="text-base font-extrabold text-primary">Detail Pesanan</h2>
           </div>
 
           <div class="space-y-2 pt-1">
             {{-- Input 1: Pilih Meja (Custom Dropdown) --}}
             <div class="relative" @click.outside="showTableDropdown = false">
               <button type="button" @click.stop="showTableDropdown = !showTableDropdown"
-                      class="w-full h-10 px-3.5 text-xs font-medium rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-white focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none transition text-left flex items-center justify-between cursor-pointer">
+                      class="w-full h-10 px-3.5 text-xs font-medium rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition text-left flex items-center justify-between cursor-pointer">
                 <span :class="selectedTable ? 'text-gray-900 font-extrabold' : 'text-gray-400'"
                       x-text="selectedTableLabel ? (selectedTableLabel.startsWith('Meja') ? selectedTableLabel : 'Meja ' + selectedTableLabel) : 'Pilih Meja Resto *'"></span>
                 <x-heroicon-o-chevron-down class="w-3 h-3 text-gray-400 transition-transform" x-bind:class="showTableDropdown ? 'rotate-180' : ''" />
@@ -1339,7 +1370,7 @@ document.addEventListener('alpine:init', () => {
                   <button type="button"
                           @click.stop="if (m.status === 'kosong') { selectTable(m.id, m.nomor_meja); showTableDropdown = false }"
                           :disabled="m.status !== 'kosong'"
-                          :class="m.status !== 'kosong' ? 'opacity-40 bg-gray-100/70 text-gray-400 cursor-not-allowed border-transparent' : (selectedTable == m.id ? 'bg-emerald-50 text-[#0D3024] font-black border-emerald-200 cursor-pointer' : 'hover:bg-gray-50 text-gray-700 font-bold border-transparent cursor-pointer')"
+                          :class="m.status !== 'kosong' ? 'opacity-40 bg-gray-100/70 text-gray-400 cursor-not-allowed border-transparent' : (selectedTable == m.id ? 'bg-emerald-50 text-primary font-black border-emerald-200 cursor-pointer' : 'hover:bg-gray-50 text-gray-700 font-bold border-transparent cursor-pointer')"
                           class="w-full text-left px-3 py-2 text-xs rounded-xl border flex items-center justify-between transition-all">
                     <span x-text="m.nomor_meja.startsWith('Meja') ? m.nomor_meja : 'Meja ' + m.nomor_meja"></span>
                     <span class="text-xs px-2 py-0.5 rounded-full font-bold"
@@ -1352,13 +1383,13 @@ document.addEventListener('alpine:init', () => {
 
             {{-- Input 2: Nama Pelanggan --}}
             <input type="text" x-model="customerName" placeholder="Nama Pelanggan / Konsumen *"
-                   class="w-full h-10 px-3.5 text-sm font-medium rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none transition">
+                   class="w-full h-10 px-3.5 text-sm font-medium rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition">
 
             {{-- Input 3: No WhatsApp --}}
             <input type="text" x-model="customerPhone" placeholder="No. WhatsApp (Opsional)"
                    inputmode="numeric" pattern="[0-9]*" maxlength="13"
                    oninput="let v = this.value.replace(/[^0-9]/g, ''); if(v.startsWith('62')) v = '0' + v.substring(2); if(v.length > 0 && v[0] !== '0') v = '0' + v; if(v.length > 1 && v[1] !== '8') v = '08' + v.substring(1); this.value = v; customerPhone = v"
-                   class="w-full h-10 px-3.5 text-sm font-medium rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0D3024] focus:ring-2 focus:ring-[#0D3024]/10 outline-none transition">
+                   class="w-full h-10 px-3.5 text-sm font-medium rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition">
           </div>
         </div>
 
@@ -1378,12 +1409,12 @@ document.addEventListener('alpine:init', () => {
             <div class="pt-3 first:pt-0 space-y-1.5">
               <div class="flex items-start justify-between gap-2">
                 <span class="font-extrabold text-sm text-gray-900 flex-1 leading-snug" x-text="item.nama"></span>
-                <span class="font-black text-sm text-[#0D3024]" x-text="'Rp ' + formatPrice(item.harga * item.qty)"></span>
+                <span class="font-black text-sm text-primary" x-text="'Rp ' + formatPrice(item.harga * item.qty)"></span>
               </div>
 
               <div class="flex items-center justify-between pt-1">
                 <input type="text" x-model="item.catatan" placeholder="Catatan khusus…"
-                       class="h-7 text-sm px-2.5 rounded-lg border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#0D3024] outline-none w-44">
+                       class="h-7 text-sm px-2.5 rounded-lg border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-primary outline-none w-44">
 
                 <div class="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
                   <button @click="updateQty(index, -1)" class="w-6 h-6 rounded-full bg-white text-gray-700 font-extrabold text-sm flex items-center justify-center hover:bg-gray-200 transition-colors">-</button>
@@ -1406,9 +1437,9 @@ document.addEventListener('alpine:init', () => {
               <span class="font-bold text-gray-700">Subtotal Item</span>
               <span class="font-bold text-gray-700" x-text="'Rp ' + formatPrice(subTotal)"></span>
             </div>
-            <template x-if="layananAktif && persentaseLayanan > 0">
+            <template x-if="layananAktif && subTotal > 0">
               <div class="flex justify-between text-sm pb-1">
-                <span class="font-bold text-gray-700" x-text="`Biaya Layanan (${persentaseLayanan}%)`"></span>
+                <span class="font-bold text-gray-700">Biaya Layanan</span>
                 <span class="font-bold text-gray-700" x-text="'Rp ' + formatPrice(totalServiceFee)"></span>
               </div>
             </template>
@@ -1420,7 +1451,7 @@ document.addEventListener('alpine:init', () => {
             </template>
             <div class="flex justify-between text-sm pt-1 border-t border-gray-200/60">
               <span class="font-bold text-gray-700">Total Tagihan</span>
-              <span class="font-black text-base text-[#0D3024]" x-text="'Rp ' + formatPrice(totalPrice)"></span>
+              <span class="font-black text-base text-primary" x-text="'Rp ' + formatPrice(totalPrice)"></span>
             </div>
           </div>
 
@@ -1430,7 +1461,7 @@ document.addEventListener('alpine:init', () => {
               SIMPAN
             </button>
             <button type="button" @click.stop="submitOrder('bayar')" :disabled="isSubmitting"
-                    class="py-3.5 px-3 rounded-xl bg-[#0D3024] hover:bg-[#0a1f17] active:scale-[0.99] text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+                    class="py-3.5 px-3 rounded-xl bg-primary hover:bg-primary-container active:scale-[0.99] text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
               <span>BAYAR</span>
               <x-heroicon-o-chevron-right class="w-3 h-3" />
             </button>
@@ -1445,19 +1476,19 @@ document.addEventListener('alpine:init', () => {
         {{-- Header Status Banner --}}
         <div class="p-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-white flex items-center justify-between shrink-0 shadow-2xs">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-full bg-[#0D3024] text-emerald-400 flex items-center justify-center text-sm font-black shadow-xs ring-4 ring-emerald-500/10">
+            <div class="w-9 h-9 rounded-full bg-primary text-emerald-400 flex items-center justify-center text-sm font-black shadow-xs ring-4 ring-emerald-500/10">
               <x-heroicon-o-check class="w-5 h-5" />
             </div>
             <div>
               <div class="flex items-center gap-1.5">
                 <h2 class="text-xs font-black text-slate-900 uppercase tracking-wider">PESANAN DISIMPAN</h2>
-                <span class="px-2 py-0.5 rounded-full bg-[#0D3024] text-emerald-300 font-black text-xs tracking-wide" x-text="savedPesananObject ? ('#' + (savedPesananObject.id_pesanan || ('DIN-' + savedPesananObject.id))) : ''"></span>
+                <span class="px-2 py-0.5 rounded-full bg-primary text-emerald-300 font-black text-xs tracking-wide" x-text="savedPesananObject ? ('#' + (savedPesananObject.id_pesanan || ('DIN-' + savedPesananObject.id))) : ''"></span>
               </div>
               <p class="text-xs font-bold text-emerald-800 mt-0.5" x-text="savedPesananObject ? ((savedPesananObject.meja ? (savedPesananObject.meja.nomor_meja.startsWith('Meja') ? savedPesananObject.meja.nomor_meja : 'Meja ' + savedPesananObject.meja.nomor_meja) : 'Meja -') + ' • ' + savedPesananObject.nama_konsumen) : ''"></p>
             </div>
           </div>
 
-          <button type="button" @click="resetCartPanel()" class="text-sm font-extrabold text-[#0D3024] hover:bg-emerald-100 bg-white px-3 py-1.5 rounded-xl border border-emerald-200/90 shadow-2xs transition-all active:scale-95 cursor-pointer">
+          <button type="button" @click="resetCartPanel()" class="text-sm font-extrabold text-primary hover:bg-emerald-100 bg-white px-3 py-1.5 rounded-xl border border-emerald-200/90 shadow-2xs transition-all active:scale-95 cursor-pointer">
             + Pesanan Baru
           </button>
         </div>
@@ -1465,17 +1496,17 @@ document.addEventListener('alpine:init', () => {
         {{-- Receipt View Filter Tabs --}}
         <div class="px-4 py-2 bg-gray-50 border-b border-gray-200/60 flex items-center gap-1 shrink-0">
           <button type="button" @click="receiptTab = 'all'"
-                  :class="receiptTab === 'all' ? 'bg-[#0D3024] text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
+                  :class="receiptTab === 'all' ? 'bg-primary text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
                   class="flex-1 py-1.5 text-xs rounded-xl transition-all text-center cursor-pointer">
             Semua (Gabungan)
           </button>
           <button type="button" @click="receiptTab = 'dapur'"
-                  :class="receiptTab === 'dapur' ? 'bg-[#0D3024] text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
+                  :class="receiptTab === 'dapur' ? 'bg-primary text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
                   class="flex-1 py-1.5 text-xs rounded-xl transition-all text-center cursor-pointer">
             Dapur
           </button>
           <button type="button" @click="receiptTab = 'meja'"
-                  :class="receiptTab === 'meja' ? 'bg-[#0D3024] text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
+                  :class="receiptTab === 'meja' ? 'bg-primary text-white shadow-2xs font-extrabold' : 'bg-white text-gray-600 font-bold hover:bg-gray-100 border border-gray-200/80'"
                   class="flex-1 py-1.5 text-xs rounded-xl transition-all text-center cursor-pointer">
             Meja
           </button>
@@ -1550,7 +1581,7 @@ document.addEventListener('alpine:init', () => {
             <div class="bg-white rounded-xl p-5 border border-gray-200/90 shadow-sm space-y-3 relative overflow-hidden">
               <div class="text-center space-y-1">
                 <div class="font-black text-sm text-slate-900 tracking-wider font-sans">SAUNG BABAKAN CINTA</div>
-                <div class="inline-block px-3 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200/80 font-bold text-xs uppercase tracking-wider font-sans">
+                <div class="inline-block px-3 py-0.5 rounded-full bg-primary-soft text-primary border border-primary/30 font-bold text-xs uppercase tracking-wider font-sans">
                   ** CHECKER MEJA **
                 </div>
               </div>
@@ -1590,7 +1621,7 @@ document.addEventListener('alpine:init', () => {
 
               <div class="flex justify-between items-center font-extrabold text-xs pt-0.5">
                 <span class="text-gray-600">TOTAL ITEM:</span>
-                <span class="px-2.5 py-1 bg-blue-100 text-blue-900 rounded-lg text-xs font-black" x-text="(savedPesananObject && savedPesananObject.items) ? savedPesananObject.items.reduce((s, i) => s + i.qty, 0) : 0"></span>
+                <span class="px-2.5 py-1 bg-primary/10 text-primary rounded-lg text-xs font-black" x-text="(savedPesananObject && savedPesananObject.items) ? savedPesananObject.items.reduce((s, i) => s + i.qty, 0) : 0"></span>
               </div>
             </div>
           </template>
@@ -1600,7 +1631,7 @@ document.addEventListener('alpine:init', () => {
         <div class="p-4 border-t border-gray-200/80 bg-white space-y-2 shrink-0 shadow-lg">
           <button type="button"
                   @click="printSilentIframe(receiptTab === 'all' ? ('/pos/dinein/pesanan/' + savedPesananId + '/print-gabungan') : (receiptTab === 'dapur' ? ('/pos/dinein/pesanan/' + savedPesananId + '/print-dapur') : ('/pos/dinein/pesanan/' + savedPesananId + '/print-meja')))"
-                  class="w-full py-3.5 px-4 bg-[#0D3024] hover:bg-[#0a1f17] active:scale-[0.99] text-white font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md text-center cursor-pointer">
+                  class="w-full py-3.5 px-4 bg-primary hover:bg-primary-container active:scale-[0.99] text-white font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md text-center cursor-pointer">
             <x-heroicon-o-printer class="text-emerald-400 w-5 h-5" />
             <span x-text="receiptTab === 'all' ? 'Cetak Struk Dapur & Meja (1 Halaman)' : (receiptTab === 'dapur' ? 'Cetak Struk Dapur' : 'Cetak Struk Meja')"></span>
           </button>
@@ -1641,7 +1672,7 @@ document.addEventListener('alpine:init', () => {
             <div><span class="text-slate-400 font-bold block">Pelanggan:</span> <span class="font-extrabold text-slate-900" x-text="selectedTrxDetail?.nama_konsumen || '-'"></span></div>
             <div><span class="text-slate-400 font-bold block">Meja:</span> <span class="font-extrabold text-emerald-800" x-text="selectedTrxDetail?.meja ? selectedTrxDetail.meja.nomor_meja : '-'"></span></div>
             <div><span class="text-slate-400 font-bold block">Kasir Bertugas:</span> <span class="font-extrabold text-slate-800" x-text="(selectedTrxDetail?.pembayaran?.diverifikasi_oleh_pengguna?.name) || 'Kasir'"></span></div>
-            <div><span class="text-slate-400 font-bold block">Metode Bayar:</span> <span class="font-extrabold text-blue-800 uppercase" x-text="selectedTrxDetail?.pembayaran ? selectedTrxDetail.pembayaran.metode_bayar : 'LUNAS'"></span></div>
+            <div><span class="text-slate-400 font-bold block">Metode Bayar:</span> <span class="font-extrabold text-primary uppercase" x-text="selectedTrxDetail?.pembayaran ? selectedTrxDetail.pembayaran.metode_bayar : 'LUNAS'"></span></div>
           </div>
 
           {{-- Item List --}}
@@ -1666,7 +1697,7 @@ document.addEventListener('alpine:init', () => {
               <span>Subtotal:</span>
               <span x-text="'Rp ' + formatPrice((selectedTrxDetail.items || []).reduce((s, i) => s + ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * i.qty), 0))"></span>
             </div>
-            <div class="flex justify-between font-black text-sm text-[#0D3024] pt-1 border-t border-slate-200">
+            <div class="flex justify-between font-black text-sm text-primary pt-1 border-t border-slate-200">
               <span>Total Tagihan:</span>
               <span x-text="'Rp ' + formatPrice((selectedTrxDetail.items || []).reduce((s, i) => s + ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * i.qty), 0))"></span>
             </div>
@@ -1679,11 +1710,11 @@ document.addEventListener('alpine:init', () => {
             <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + selectedTrxDetail.id + '/print-dapur')" class="px-4 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold rounded-xl text-sm hover:bg-emerald-100 transition-colors">
                 <x-heroicon-o-printer class="w-5 h-5" /> Struk Dapur
             </button>
-            <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + selectedTrxDetail.id + '/print-meja')" class="px-4 py-2.5 bg-blue-50 text-blue-800 border border-blue-200 font-extrabold rounded-xl text-sm hover:bg-blue-100 transition-colors">
+            <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + selectedTrxDetail.id + '/print-meja')" class="px-4 py-2.5 bg-primary-soft text-primary border border-primary/20 font-extrabold rounded-xl text-sm hover:bg-primary/10 transition-colors">
                 <x-heroicon-o-printer class="w-5 h-5" /> Struk Meja
             </button>
         </div>
-        <button type="button" @click="showTrxDetailModal = false" class="px-5 py-2.5 bg-slate-900 text-white font-extrabold rounded-xl text-sm hover:bg-slate-800 transition-colors cursor-pointer">
+        <button type="button" @click="showTrxDetailModal = false" class="px-5 py-2.5 bg-primary text-white font-extrabold rounded-xl text-sm hover:bg-primary/90 transition-colors cursor-pointer">
           Tutup
         </button>
       </div>
@@ -1707,7 +1738,7 @@ document.addEventListener('alpine:init', () => {
       <div class="px-6 py-4 space-y-3">
         <template x-if="checkerBill && checkerBill.meja">
           <div class="flex items-center gap-2">
-            <span class="px-3 py-1.5 bg-[#0D3024]/5 text-[#0D3024] font-black text-xs rounded-lg border border-[#0D3024]/20">
+            <span class="px-3 py-1.5 bg-primary/5 text-primary font-black text-xs rounded-lg border border-primary/20">
               <x-heroicon-s-users class="w-3.5 h-3.5 inline-block mr-1" />
               <span x-text="checkerBill.meja.nomor_meja"></span>
             </span>
@@ -1739,7 +1770,7 @@ document.addEventListener('alpine:init', () => {
                       class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-colors"
                       :class="item.status_item === 'disajikan'
                           ? 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50'
-                          : 'bg-[#0D3024] hover:bg-[#0a1f17] text-white'">
+                          : 'bg-primary hover:bg-primary-container text-white'">
                 <span x-text="item.status_item === 'disajikan' ? 'Batalkan' : 'Sajikan'"></span>
               </button>
             </div>
@@ -1748,10 +1779,10 @@ document.addEventListener('alpine:init', () => {
       </div>
 
       <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-2">
-        <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + (checkerBill ? checkerBill.id : '') + '/print-meja')" class="px-4 py-2.5 bg-blue-50 text-blue-800 border border-blue-200 font-extrabold rounded-xl text-sm hover:bg-blue-100 transition-colors">
+        <button type="button" @click="printSilentIframe('/pos/dinein/pesanan/' + (checkerBill ? checkerBill.id : '') + '/print-meja')" class="px-4 py-2.5 bg-primary-soft text-primary border border-primary/20 font-extrabold rounded-xl text-sm hover:bg-primary/10 transition-colors">
           <x-heroicon-o-printer class="w-4 h-4 inline-block mr-1" /> Cetak Struk Meja
         </button>
-        <button type="button" @click="showCheckerModal = false" class="px-5 py-2.5 bg-slate-900 text-white font-extrabold rounded-xl text-sm hover:bg-slate-800 transition-colors cursor-pointer">
+        <button type="button" @click="showCheckerModal = false" class="px-5 py-2.5 bg-primary text-white font-extrabold rounded-xl text-sm hover:bg-primary/90 transition-colors cursor-pointer">
           Tutup
         </button>
       </div>
@@ -1776,7 +1807,7 @@ document.addEventListener('alpine:init', () => {
 
         <div class="space-y-1.5">
           <label class="font-extrabold text-slate-700">Pilih Alasan Void <span class="text-red-500">*</span></label>
-          <select x-model="alasanVoidInput" class="w-full h-11 px-3.5 text-sm font-extrabold rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0D3024] outline-none">
+          <select x-model="alasanVoidInput" class="w-full h-11 px-3.5 text-sm font-extrabold rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-primary outline-none">
             <option value="Salah Input Menu">Salah Input Menu</option>
             <option value="Request Pembatalan Pelanggan">Request Pembatalan Pelanggan</option>
             <option value="Lainnya">Lainnya</option>
@@ -1785,7 +1816,7 @@ document.addEventListener('alpine:init', () => {
 
         <div class="space-y-1.5 mt-3">
           <label class="font-extrabold text-slate-700">Catatan Tambahan</label>
-          <input type="text" x-model="catatanVoidInput" class="w-full h-11 px-3.5 text-sm font-extrabold rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0D3024] outline-none" placeholder="Misal: Pesanan ganda...">
+          <input type="text" x-model="catatanVoidInput" class="w-full h-11 px-3.5 text-sm font-extrabold rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-primary outline-none" placeholder="Misal: Pesanan ganda...">
         </div>
 
         <div class="mt-6 flex gap-3">
@@ -1815,7 +1846,7 @@ document.addEventListener('alpine:init', () => {
       
       {{-- Modal Header --}}
       <div class="text-center mb-6 relative">
-        <h3 class="text-lg font-bold text-[#111827]">Cetak Struk</h3>
+        <h3 class="text-lg font-bold text-body">Cetak Struk</h3>
         <p class="text-sm font-medium text-gray-500 mt-0.5">Pilih struk yang akan dicetak</p>
         <button type="button" @click="closePrintModal()" class="absolute right-0 top-0 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100/80 hover:bg-gray-200 text-gray-500 transition-colors">
           <x-heroicon-o-x-mark class="w-4 h-4" />
@@ -1897,7 +1928,7 @@ document.addEventListener('alpine:init', () => {
       
       {{-- Modal Header --}}
       <div class="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 shrink-0">
-        <h3 class="text-sm font-black text-[#0D3024] tracking-wide" x-text="(receiptType === 'meja' ? 'Table Receipt' : 'Receipt Preview') + ' - Order #' + (previewTrx?.id_pesanan || ('DIN-' + previewTrx?.id))"></h3>
+        <h3 class="text-sm font-black text-primary tracking-wide" x-text="(receiptType === 'meja' ? 'Table Receipt' : 'Receipt Preview') + ' - Order #' + (previewTrx?.id_pesanan || ('DIN-' + previewTrx?.id))"></h3>
         <button type="button" @click="showReceiptPreview = false" class="text-gray-400 hover:text-gray-700 transition-colors">
           <x-heroicon-o-x-mark class="w-5 h-5" />
         </button>
@@ -1905,7 +1936,7 @@ document.addEventListener('alpine:init', () => {
 
       {{-- Receipt Container (Scrollable) --}}
       <div class="p-6 overflow-y-auto flex-1 flex justify-center">
-        <div class="bg-white border border-gray-200 shadow-sm rounded-lg p-5 w-full font-mono text-[11px] leading-relaxed text-gray-800" style="width: 300px; min-height: 400px;">
+        <div class="bg-white border border-gray-200 shadow-sm rounded-lg p-5 w-full font-mono text-xs leading-relaxed text-gray-800" style="width: 300px; min-height: 400px;">
           <div class="text-center font-bold text-sm mb-1 uppercase tracking-wider">{{ config('app.name', 'Resto Sunda') }}</div>
           <div class="text-center text-[10px] text-gray-500 mb-1">Jl Kebun Raya<br>6285797856221</div>
           
@@ -1977,7 +2008,7 @@ document.addEventListener('alpine:init', () => {
             <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
             Save PDF
           </a>
-          <a :href="'/pos/dinein/pesanan/' + (previewTrx?.id || '') + (receiptType === 'meja' ? '/print-meja' : '/print-nota')" target="_blank" class="px-4 py-2.5 rounded-xl bg-[#3f5235] hover:bg-[#2d3a26] text-white font-bold text-xs flex items-center gap-2 transition-colors shadow-sm">
+          <a :href="'/pos/dinein/pesanan/' + (previewTrx?.id || '') + (receiptType === 'meja' ? '/print-meja' : '/print-nota')" target="_blank" class="px-4 py-2.5 rounded-xl bg-primary-container hover:bg-primary-container text-white font-bold text-xs flex items-center gap-2 transition-colors shadow-sm">
             <x-heroicon-o-printer class="w-4 h-4" />
             <span x-text="receiptType === 'meja' ? 'Print Table' : 'Print Receipt'"></span>
           </a>
@@ -1995,7 +2026,7 @@ document.addEventListener('alpine:init', () => {
       
       {{-- Modal Header --}}
       <div class="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 shrink-0">
-        <h3 class="text-sm font-black text-[#0D3024] tracking-wide" x-text="'Kitchen Preview - Order #' + (previewTrx?.id_pesanan || ('ORD-' + previewTrx?.id))"></h3>
+        <h3 class="text-sm font-black text-primary tracking-wide" x-text="'Kitchen Preview - Order #' + (previewTrx?.id_pesanan || ('ORD-' + previewTrx?.id))"></h3>
         <button type="button" @click="showKitchenPreview = false" class="text-gray-400 hover:text-gray-700 transition-colors">
           <x-heroicon-o-x-mark class="w-5 h-5" />
         </button>
@@ -2003,7 +2034,7 @@ document.addEventListener('alpine:init', () => {
 
       {{-- Kitchen Container (Scrollable) --}}
       <div class="p-6 overflow-y-auto flex-1 flex justify-center">
-        <div class="bg-white border border-gray-200 shadow-sm rounded-lg p-5 w-full font-mono text-[11px] leading-relaxed text-gray-800" style="width: 300px; min-height: 400px;">
+        <div class="bg-white border border-gray-200 shadow-sm rounded-lg p-5 w-full font-mono text-xs leading-relaxed text-gray-800" style="width: 300px; min-height: 400px;">
           <div class="text-center font-bold text-sm mb-1 uppercase tracking-wider">KITCHEN ORDER</div>
           
           <div class="border-b border-dashed border-gray-400 my-3"></div>
@@ -2044,7 +2075,7 @@ document.addEventListener('alpine:init', () => {
           <x-heroicon-o-x-mark class="w-4 h-4" />
           Close
         </button>
-        <a :href="'/pos/dinein/pesanan/' + (previewTrx?.id || '') + '/print-dapur'" target="_blank" class="px-6 py-2.5 rounded-xl bg-[#4A5D23] hover:bg-[#3f5235] text-white font-bold text-xs flex items-center gap-2 transition-colors shadow-sm ml-auto">
+        <a :href="'/pos/dinein/pesanan/' + (previewTrx?.id || '') + '/print-dapur'" target="_blank" class="px-6 py-2.5 rounded-xl bg-primary-container hover:bg-primary-container text-white font-bold text-xs flex items-center gap-2 transition-colors shadow-sm ml-auto">
           <x-heroicon-o-printer class="w-4 h-4" />
           Print Kitchen
         </a>
@@ -2075,15 +2106,15 @@ document.addEventListener('alpine:init', () => {
         <div class="text-lg font-bold text-slate-800 tracking-wide mb-3" x-text="savedPesananObject ? (savedPesananObject.id_pesanan || ('DIN-' + savedPesananObject.id)) : '-'">
         </div>
         
-        <div class="text-3xl font-black text-[#0D3024] mb-8" x-text="savedPesananObject ? ('Rp ' + formatPrice(savedPesananObject.total_tagihan)) : 'Rp 0'">
+        <div class="text-3xl font-black text-primary mb-8" x-text="savedPesananObject ? ('Rp ' + formatPrice(savedPesananObject.total_tagihan)) : 'Rp 0'">
         </div>
 
         <div class="w-full space-y-3">
-            <button @click="window.open('/pos/dinein/pesanan/' + savedPesananId + '/print-gabungan', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-[#0D3024] text-white rounded-xl font-bold text-sm hover:bg-[#0a241b] transition flex justify-center items-center gap-2 shadow-sm">
+            <button @click="window.open('/pos/dinein/pesanan/' + savedPesananId + '/print-gabungan', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-container transition flex justify-center items-center gap-2 shadow-sm">
                 <x-heroicon-o-printer class="w-5 h-5 text-emerald-400" /> Cetak Struk
             </button>
-            <button @click="window.open('/pos/dinein/pesanan/' + savedPesananId + '/print-dapur', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-emerald-50 border border-emerald-200 text-[#0D3024] rounded-xl font-bold text-sm hover:bg-emerald-100 transition flex justify-center items-center gap-2 shadow-sm">
-                <x-heroicon-o-printer class="w-5 h-5 text-[#0D3024]" /> Cetak Struk Dapur
+            <button @click="window.open('/pos/dinein/pesanan/' + savedPesananId + '/print-dapur', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-emerald-50 border border-emerald-200 text-primary rounded-xl font-bold text-sm hover:bg-emerald-100 transition flex justify-center items-center gap-2 shadow-sm">
+                <x-heroicon-o-printer class="w-5 h-5 text-primary" /> Cetak Struk Dapur
             </button>
             <button @click="showSuccessModal = false; resetCartPanel()" class="w-full py-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold text-sm transition flex justify-center items-center">
                 Pesanan Baru

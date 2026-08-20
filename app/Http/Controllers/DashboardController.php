@@ -25,6 +25,10 @@ class DashboardController extends Controller
             return redirect()->route('admin.jadwal.index');
         }
 
+        if ($userRole === 'Kasir') {
+            return $this->kasirDashboard();
+        }
+
         // 1. Statistik Hari Ini
         $today = Carbon::today();
 
@@ -81,7 +85,7 @@ class DashboardController extends Controller
         // 4. Pesanan Terbaru
         $pesananTerbaru = collect();
 
-        foreach (Pesanan::with('jenis_pesanan', 'status_pesanan')->latest()->take(10)->get() as $p) {
+        foreach (Pesanan::with('jenis_pesanan', 'status_pesanan')->latest('dibuat_pada')->take(10)->get() as $p) {
             $pesananTerbaru->push((object) [
                 'id' => $p->id,
                 'no' => $p->id_pesanan,
@@ -97,12 +101,12 @@ class DashboardController extends Controller
         // 2 = Catering, 3 = Nasi Box, status 1 = Menunggu
         $cateringMenunggu = Pesanan::where('jenis_pesanan_id', 2)
             ->where('status_pesanan_id', 1)
-            ->latest()
+            ->latest('dibuat_pada')
             ->get();
 
         $nasiBoxMenunggu = Pesanan::where('jenis_pesanan_id', 3)
             ->where('status_pesanan_id', 1)
-            ->latest()
+            ->latest('dibuat_pada')
             ->get();
 
         // 6. Pesanan Mendekati Batas Konfirmasi (H-3)
@@ -135,6 +139,55 @@ class DashboardController extends Controller
             'nasiBoxMenunggu',
             'cateringUrgent',
             'nasiBoxUrgent'
+        ));
+    }
+
+    public function kasirDashboard()
+    {
+        $today = Carbon::today();
+
+        // 1. Omset Kasir Hari Ini
+        $omsetHariIni = Pembayaran::whereDate('dibuat_pada', $today)
+            ->where('status_verifikasi', 'diterima')
+            ->sum('jumlah_dibayar');
+
+        // 2. Transaksi Selesai Hari Ini
+        $transaksiSelesaiCount = Pesanan::whereDate('dibuat_pada', $today)
+            ->where('status_pesanan_id', 4)
+            ->count();
+
+        // 3. Tagihan Belum Lunas Hari Ini (Dine In & POS)
+        $pesananBelumBayar = Pesanan::with(['meja', 'detail_pesanan.menu', 'status_pesanan', 'pembayaran'])
+            ->where('jenis_pesanan_id', 1)
+            ->where('status_pembayaran_id', '!=', 3)
+            ->whereDate('dibuat_pada', $today)
+            ->latest('dibuat_pada')
+            ->get();
+
+        $pesananBelumBayarCount = $pesananBelumBayar->count();
+
+        // 4. Meja Status
+        $allMeja = \App\Models\Meja::with('status_meja')->orderBy('nomor_meja', 'asc')->get();
+        $mejaTerisiCount = $allMeja->where('status_meja_id', 2)->count();
+        $mejaTersediaCount = $allMeja->where('status_meja_id', 1)->count();
+
+        // 5. Transaksi Lunas Terakhir Hari Ini
+        $transaksiTerakhir = Pesanan::with(['meja', 'status_pesanan', 'pembayaran'])
+            ->whereDate('dibuat_pada', $today)
+            ->where('status_pembayaran_id', 3)
+            ->latest('dibuat_pada')
+            ->take(8)
+            ->get();
+
+        return view('kasir.dashboard', compact(
+            'omsetHariIni',
+            'transaksiSelesaiCount',
+            'pesananBelumBayar',
+            'pesananBelumBayarCount',
+            'allMeja',
+            'mejaTerisiCount',
+            'mejaTersediaCount',
+            'transaksiTerakhir'
         ));
     }
 }

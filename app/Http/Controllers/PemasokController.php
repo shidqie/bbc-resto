@@ -87,7 +87,8 @@ class PemasokController extends Controller
 
             return back()->with('success', 'Pemasok berhasil dihapus.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menghapus pemasok karena sudah digunakan pada data lain.');
+            $pemasok->update(['status_aktif' => false]);
+            return back()->with('success', 'Pemasok sudah digunakan pada data lain sehingga hanya dinonaktifkan.');
         }
     }
 }

@@ -55,7 +55,7 @@
                     <th class="px-4 py-3.5 text-left">Menu</th>
                     <th class="px-4 py-3.5 text-left">Kategori</th>
                     <th class="px-4 py-3.5 text-right">Harga</th>
-                    <th class="px-4 py-3.5 text-center">Stok Harian</th>
+                    <th class="px-4 py-3.5 text-center">Stok Bahan Baku</th>
                     <th class="px-4 py-3.5 text-center">Stok Katering</th>
                 </x-ui.table.header>
                 <tbody class="divide-y divide-gray-100">

@@ -31,4 +31,9 @@ class DetailPenerimaanBahan extends BaseModel
     {
         return $this->belongsTo(Satuan::class, 'satuan_id');
     }
+
+    public function getIdDetailPembelianAttribute(): string
+    {
+        return \App\Helpers\IdCodeGenerator::generateDetailPembelianId($this->id);
+    }
 }

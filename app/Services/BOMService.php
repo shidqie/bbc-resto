@@ -16,37 +16,13 @@ class BOMService
      */
     public static function cekKetersediaanBahan($menuId, $jumlahPesan = 1, $jenisPersediaan = StokBahan::JENIS_HARIAN)
     {
-        $menu = Menu::with('resep_menu.bahanBaku')->find($menuId);
+        $menu = Menu::find($menuId);
         if (! $menu) {
             return false;
         }
 
-        if ($menu->status_aktif == 0 || $menu->status === 'nonaktif' || $menu->status === 'habis') {
-            return false;
-        }
-
-        $resepList = $menu->resep_menu;
-
-        if ($resepList && $resepList->count() > 0) {
-            foreach ($resepList as $resep) {
-                $bahan = $resep->bahanBaku;
-                if (! $bahan || (isset($bahan->status_aktif) && ! $bahan->status_aktif)) {
-                    return false;
-                }
-
-                $stokAda = (float) (StokBahan::where('bahan_baku_id', $resep->bahan_baku_id)
-                    ->where('jenis_persediaan', $jenisPersediaan)
-                    ->value('jumlah_stok') ?? 0);
-
-                $kebutuhanTotal = $resep->jumlah_kebutuhan * $jumlahPesan;
-
-                if ($stokAda < $kebutuhanTotal) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+        $kebutuhanBahanService = app(KebutuhanBahanService::class);
+        return $kebutuhanBahanService->bahanCukup($menu, (float) $jumlahPesan, null, $jenisPersediaan);
     }
 
     /**

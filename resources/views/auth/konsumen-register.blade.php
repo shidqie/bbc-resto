@@ -8,14 +8,14 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        *, body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        *, body { font-family: 'Outfit', sans-serif; }
         input:focus { outline: none; box-shadow: 0 0 0 3px rgba(15,46,35,0.08); }
 
         @keyframes fadeUp {
@@ -29,7 +29,7 @@
         .d4  { animation-delay: .32s; }
     </style>
 </head>
-<body class="min-h-screen bg-[#f5f5f0] flex antialiased text-[#111827]">
+<body class="min-h-screen bg-secondary-soft flex antialiased text-body">
 
     <div class="flex min-h-screen w-full">
 
@@ -38,7 +38,7 @@
 
             <div class="absolute inset-0" style="background-image: url('{{ asset('images/homepage.webp') }}'); background-size: cover; background-position: center;"></div>
             <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
-            <div class="absolute inset-0 bg-[#0D3024]/40"></div>
+            <div class="absolute inset-0 bg-secondary-container/40"></div>
 
             <div class="relative z-10 flex items-center gap-2.5">
                 <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-full object-contain bg-white/10 p-0.5">
@@ -64,10 +64,10 @@
         </div>
 
         {{-- ── RIGHT: FORM ── --}}
-        <div class="flex-1 relative flex items-center justify-center px-6 py-16 sm:px-12 bg-[#f5f5f0]">
+        <div class="flex-1 relative flex items-center justify-center px-6 py-16 sm:px-12 bg-secondary-soft">
 
             <a href="{{ route('home') }}"
-               class="absolute top-6 left-6 sm:top-8 sm:left-8 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#0D3024] transition-colors fu d1">
+               class="absolute top-6 left-6 sm:top-8 sm:left-8 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-secondary-container transition-colors fu d1">
                 <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Kembali
             </a>
@@ -76,11 +76,11 @@
 
                 <div class="lg:hidden flex items-center gap-2.5 mb-10">
                     <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-full object-contain">
-                    <span class="text-sm font-bold text-[#111827] tracking-wide">BBC Resto · Konsumen</span>
+                    <span class="text-sm font-bold text-body tracking-wide">BBC Resto · Konsumen</span>
                 </div>
 
                 <div class="mb-8 fu d1">
-                    <h2 class="text-2xl font-bold text-[#111827] tracking-tight mb-1">Daftar Akun</h2>
+                    <h2 class="text-2xl font-bold text-body tracking-tight mb-1">Daftar Akun</h2>
                     <p class="text-sm text-gray-500 font-medium">Pantau status pesanan catering & nasi box Anda.</p>
                 </div>
 
@@ -106,7 +106,7 @@
                         <input id="nama" type="text" name="nama" value="{{ old('nama') }}"
                                required autofocus autocomplete="name"
                                placeholder="Nama Anda"
-                               class="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none">
+                               class="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-secondary-container focus:ring-1 focus:ring-secondary-container/20 outline-none">
                     </div>
 
                     <div class="fu d2">
@@ -118,29 +118,29 @@
                         <input id="email" type="email" name="email" value="{{ old('email') }}"
                                autocomplete="email"
                                placeholder="nama@email.com"
-                               class="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none">
+                               class="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-secondary-container focus:ring-1 focus:ring-secondary-container/20 outline-none">
                     </div>
 
                     <div class="fu d3">
                         <label for="kata_sandi" class="block text-xs font-bold text-gray-700 mb-1">Password</label>
                         <input id="kata_sandi" type="password" name="kata_sandi" x-model="pw" required minlength="8" autocomplete="new-password"
                                placeholder="Minimal 8 karakter"
-                               class="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none">
-                        <p class="text-[11px] text-gray-400 font-medium mt-1">Minimal 8 karakter.</p>
+                               class="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-secondary-container focus:ring-1 focus:ring-secondary-container/20 outline-none">
+                        <p class="text-xs text-gray-400 font-medium mt-1">Minimal 8 karakter.</p>
                     </div>
 
                     <div class="fu d3">
                         <label for="kata_sandi_confirmation" class="block text-xs font-bold text-gray-700 mb-1">Ulangi Password</label>
                         <input id="kata_sandi_confirmation" type="password" name="kata_sandi_confirmation" x-model="pw2" required autocomplete="new-password"
                                placeholder="••••••••"
-                               class="w-full px-3.5 py-2 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none"
+                               class="w-full px-3.5 py-2 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-secondary-container focus:ring-1 focus:ring-secondary-container/20 outline-none"
                                :class="pw2 && !match ? 'border-red-300' : 'border-gray-200'">
-                        <p class="text-[11px] text-red-500 font-medium mt-1" x-show="pw2 && !match" x-cloak>Password tidak cocok.</p>
+                        <p class="text-xs text-red-500 font-medium mt-1" x-show="pw2 && !match" x-cloak>Password tidak cocok.</p>
                     </div>
 
                     <div class="pt-1 fu d4">
                         <button type="submit"
-                                class="w-full py-2.5 bg-[#0D3024] hover:bg-[#1a4a35] text-white font-semibold text-xs rounded-xl transition-all duration-200 active:scale-[0.99]">
+                                class="w-full py-2.5 bg-secondary-container hover:bg-secondary/90 text-white font-semibold text-xs rounded-xl transition-all duration-200 active:scale-[0.99]">
                             Daftar
                         </button>
                     </div>
@@ -148,7 +148,7 @@
 
                 <p class="text-center text-sm text-gray-500 font-medium mt-6 fu d4">
                     Sudah punya akun?
-                    <a href="{{ route('konsumen.login') }}" class="text-[#0D3024] font-bold hover:opacity-70 transition-opacity">Masuk</a>
+                    <a href="{{ route('konsumen.login') }}" class="text-secondary-container font-bold hover:opacity-70 transition-opacity">Masuk</a>
                 </p>
 
             </div>

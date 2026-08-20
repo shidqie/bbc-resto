@@ -101,9 +101,9 @@ class DineInService
     /**
      * Buat pesanan baru secara langsung (Satu Pintu POS)
      */
-    public function createOrder($mejaId, $namaKonsumen, $jumlahTamu, $items, $staffId, $sumberPesanan = 'pos')
+    public function createOrder($mejaId, $namaKonsumen, $jumlahTamu, $items, $staffId, $sumberPesanan = 'pos', $nomorHp = null)
     {
-        return DB::transaction(function () use ($mejaId, $namaKonsumen, $jumlahTamu, $items, $staffId, $sumberPesanan) {
+        return DB::transaction(function () use ($mejaId, $namaKonsumen, $jumlahTamu, $items, $staffId, $sumberPesanan, $nomorHp) {
             $meja = Meja::findOrFail($mejaId);
 
             if ($meja->status_meja_id == 4 || $meja->status === 'tidak_aktif') {
@@ -115,7 +115,7 @@ class DineInService
                 ->whereIn('status_pesanan_id', [1, 2]) // 1=Menunggu, 2=Diproses
                 ->first();
 
-            // Hitung total tagihan pesanan tambahan/baru
+            // Hitung total tagihan pesanan tambahan/baru menggunakan KalkulasiPesananService (Pengaturan Transaksi)
             $subtotal = 0;
             foreach ($items as $item) {
                 $menu = Menu::find($item['menu_id']);
@@ -123,8 +123,9 @@ class DineInService
                 $subtotal += ($hargaUnit * $item['qty']);
             }
 
-            $biayaLayanan = $subtotal * 0.05;
-            $totalTagihan = $subtotal + $biayaLayanan;
+            $kalkulasiService = app(\App\Services\KalkulasiPesananService::class);
+            $kalkulasi = $kalkulasiService->hitungTotal((float) $subtotal);
+            $totalTagihan = $kalkulasi['total_tagihan'];
 
             if ($activeOrder) {
                 // UPDATE EXISTING ORDER
@@ -134,10 +135,8 @@ class DineInService
                 ]);
                 $kodePesanan = $pesanan->kode_pesanan;
             } else {
-                // BUAT PESANAN BARU
-                $lastDinein = PesananDinein::latest()->first();
-                $lastId = $lastDinein ? $lastDinein->id : 0;
-                $kodePesanan = 'DIN-'.date('Ymd').'-'.str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
+                // BUAT PESANAN BARU (Aturan 4: PSN-YYYYMMDD-HHMMSS)
+                $kodePesanan = \App\Helpers\IdCodeGenerator::generatePesananId();
 
                 $pesanan = PesananDinein::create([
                     'meja_id' => $meja->id,
@@ -156,6 +155,12 @@ class DineInService
                 $updateData['status'] = 'terisi';
             }
             $meja->update($updateData);
+
+            // Formatted Catatan String with Phone Number
+            $catatanString = ($sumberPesanan === 'self_order' ? 'Self-Order QR (' . $namaKonsumen . ')' : 'Pemesan: ' . $namaKonsumen);
+            if (!empty($nomorHp)) {
+                $catatanString .= ' | ' . $nomorHp;
+            }
 
             // Tambahkan item khusus untuk pesanan baru ini saja
             foreach ($items as $item) {
@@ -187,19 +192,31 @@ class DineInService
             $pesananNorm = Pesanan::where('id_pesanan', $kodePesanan)->first();
             if (! $pesananNorm) {
                 $pesananNorm = Pesanan::create([
-                    'id_pesanan'         => $kodePesanan,
-                    'tanggal_pesanan'    => now(),
-                    'jenis_pesanan_id'   => 1, // Dine In
-                    'meja_id'            => $meja->id,
-                    'pelayan_id'         => $staffId,
-                    'status_pesanan_id'  => 1, // Menunggu Konfirmasi
-                    'status_pembayaran_id' => 1, // Menunggu Pembayaran DP
-                    'total_tagihan'      => $totalTagihan,
-                    'catatan'            => 'Pemesan: '.$namaKonsumen,
+                    'id_pesanan'                => $kodePesanan,
+                    'tanggal_pesanan'           => now(),
+                    'jenis_pesanan_id'          => 1, // Dine In
+                    'meja_id'                   => $meja->id,
+                    'pelayan_id'                => $staffId,
+                    'status_pesanan_id'         => 1, // Menunggu Konfirmasi
+                    'status_pembayaran_id'        => 1, // Menunggu Pembayaran
+                    'jumlah_sebelum_potongan'   => $kalkulasi['subtotal'],
+                    'persentase_biaya_layanan'  => $kalkulasi['persentase_biaya_layanan'],
+                    'biaya_pelayanan'           => $kalkulasi['nominal_biaya_layanan'],
+                    'persentase_pajak'          => $kalkulasi['persentase_pajak'],
+                    'jumlah_pajak'              => $kalkulasi['nominal_pajak'],
+                    'total_tagihan'             => $kalkulasi['total_tagihan'],
+                    'catatan'                   => $catatanString,
                 ]);
             } else {
+                $newSubtotal = ($pesananNorm->jumlah_sebelum_potongan ?? 0) + $subtotal;
+                $newKalkulasi = $kalkulasiService->hitungTotal((float) $newSubtotal);
                 $pesananNorm->update([
-                    'total_tagihan' => $pesananNorm->total_tagihan + $totalTagihan
+                    'jumlah_sebelum_potongan'   => $newKalkulasi['subtotal'],
+                    'persentase_biaya_layanan'  => $newKalkulasi['persentase_biaya_layanan'],
+                    'biaya_pelayanan'           => $newKalkulasi['nominal_biaya_layanan'],
+                    'persentase_pajak'          => $newKalkulasi['persentase_pajak'],
+                    'jumlah_pajak'              => $newKalkulasi['nominal_pajak'],
+                    'total_tagihan'             => $newKalkulasi['total_tagihan'],
                 ]);
             }
 

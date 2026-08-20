@@ -41,24 +41,61 @@ class MenuController extends Controller
         if ($jenisId == 'catering') $jenisId = 2;
         if ($jenisId == 'nasi_box') $jenisId = 3;
         
-        $query->where('jenis_menu_id', $jenisId);
+        if ($jenisId !== 'all') {
+            $query->where('jenis_menu_id', $jenisId);
+        }
 
-        if ($request->has('kategori') && $request->kategori != '') {
-            $query->where('kategori_menu_id', $request->kategori);
+        $kategoriFilter = $request->input('kategori_id', $request->input('kategori'));
+        if ($kategoriFilter && $kategoriFilter !== 'all') {
+            $query->where('kategori_menu_id', $kategoriFilter);
         }
 
         if ($request->has('filter_resep') && $request->filter_resep != '') {
             if ($request->filter_resep == 'ada') {
-                $query->has('resep_menu');
+                $query->where(function ($q) {
+                    $q->whereHas('resep_menu')
+                      ->orWhereHas('komponen_paket.menu_terkait.resep_menu')
+                      ->orWhereHas('komponen_paket.opsi.menu.resep_menu');
+                });
             } elseif ($request->filter_resep == 'belum') {
-                $query->doesntHave('resep_menu');
+                $query->whereDoesntHave('resep_menu')
+                      ->whereDoesntHave('komponen_paket.menu_terkait.resep_menu')
+                      ->whereDoesntHave('komponen_paket.opsi.menu.resep_menu');
             }
         }
 
-        $menus = $query->orderBy('id', 'asc')->paginate(10)->withQueryString();
+        if ($request->input('show_komponen') != '1') {
+            $query->where('harga_jual', '>', 0);
+        }
+
+        $sort = $request->input('sort', 'nama');
+        $sortMap = [
+            'nama' => ['menu.nama_menu', 'asc'],
+            'kategori' => ['kategori.nama_kategori', 'asc'],
+            'harga' => ['menu.harga_jual', 'asc'],
+            'terbaru' => ['menu.dibuat_pada', 'desc'],
+        ];
+        $sortCol = $sortMap[$sort][0] ?? $sortMap['nama'][0];
+        $sortDir = $sortMap[$sort][1] ?? $sortMap['nama'][1];
+
+        if ($sortCol === 'kategori.nama_kategori') {
+            $query->leftJoin('kategori_menu as kategori', 'kategori.id', '=', 'menu.kategori_menu_id');
+        }
+
+        $menus = $query->orderBy($sortCol, $sortDir)
+            ->orderBy('menu.nama_menu', 'asc')
+            ->select('menu.*')
+            ->paginate(10)
+            ->withQueryString();
+        $masterMenus = Menu::where('status_aktif', 1)->whereDoesntHave('komponen_paket')->orderBy('nama_menu')->get();
 
         $kategoris = KategoriMenu::withCount('menu')->orderBy('id', 'asc')->paginate(10)->withQueryString();
-        $allKategoris = KategoriMenu::orderBy('id', 'asc')->get();
+        $allKategoris = KategoriMenu::with('menu')->orderBy('id', 'asc')->get()->map(function($kat) {
+            if ($kat->menu->isNotEmpty()) {
+                $kat->setAttribute('jenis_menu_id', $kat->menu->first()->jenis_menu_id);
+            }
+            return $kat;
+        });
 
         $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
 
@@ -112,14 +149,19 @@ class MenuController extends Controller
         });
 
         $satuans = \App\Models\Satuan::all();
-        $allMenusData = Menu::with('kategori_menu', 'resep_menu.bahan_baku.satuan')->get();
+        $allMenusData = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan'])->get();
 
-        return view('admin.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'satuans', 'stats', 'jenisId', 'allMenusData'));
+        return view('admin.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'satuans', 'stats', 'jenisId', 'allMenusData', 'masterMenus'));
     }
 
     public function create()
     {
-        $kategoris = KategoriMenu::orderBy('id')->get();
+        $kategoris = KategoriMenu::with('menu')->orderBy('id', 'asc')->get()->map(function($kat) {
+            if ($kat->menu->isNotEmpty()) {
+                $kat->setAttribute('jenis_menu_id', $kat->menu->first()->jenis_menu_id);
+            }
+            return $kat;
+        });
         $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
         $jenis_menu = JenisMenu::all();
 
@@ -144,6 +186,15 @@ class MenuController extends Controller
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'bahan_baku_id' => 'nullable|array',
             'jumlah_kebutuhan' => 'nullable|array',
+            'minimal_pemesanan' => 'nullable|integer|min:1',
+        ], [
+            'nama_menu.required' => 'Nama menu wajib diisi.',
+            'kategori_menu_id.required' => 'Kategori menu wajib dipilih.',
+            'harga_jual.required' => 'Harga jual menu wajib diisi.',
+            'harga_jual.numeric' => 'Harga jual harus berupa angka.',
+            'harga_jual.min' => 'Harga jual minimal Rp 0.',
+            'foto.image' => 'Foto harus berupa berkas gambar.',
+            'foto.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
         $jenisId = match ((string) $request->input('jenis_menu_id')) {
@@ -167,6 +218,7 @@ class MenuController extends Controller
                 'harga_jual' => $hargaJual,
                 'deskripsi' => $request->deskripsi,
                 'status_aktif' => $statusAktif,
+                'minimal_pemesanan' => $request->minimal_pemesanan ?? ($jenisId == 2 ? 50 : 20),
             ];
 
             if ($request->hasFile('foto')) {
@@ -196,46 +248,58 @@ class MenuController extends Controller
             }
 
             if ($request->has('komponen') && is_array($request->komponen)) {
-                foreach ($request->komponen as $komp) {
-                    $tipe = (isset($komp['tipe']) && $komp['tipe'] === 'choice') ? 'pilihan' : 'tetap';
+                foreach ($request->komponen as $index => $komp) {
+                    $tipe = $komp['tipe'] ?? 'wajib';
                     
-                    // Validation: if "tetap", menu_id is required. if "choice", nama_komponen is required.
-                    if ($tipe === 'tetap' && empty($komp['menu_id'])) continue;
-                    if ($tipe === 'pilihan' && empty($komp['nama_komponen'])) continue;
+                    // Validation
+                    if ($tipe === 'wajib' && empty($komp['menu_id'])) continue;
+                    if (in_array($tipe, ['pilihan', 'semua_didapat']) && empty($komp['nama_komponen'])) continue;
 
                     $menuTerkait = null;
                     $namaItem = $komp['nama_komponen'] ?? '';
 
-                    if ($tipe === 'tetap') {
+                    if ($tipe === 'wajib') {
                         $menuTerkait = Menu::find($komp['menu_id']);
                         if ($menuTerkait && empty($namaItem)) {
                             $namaItem = $menuTerkait->nama_menu;
                         }
                     }
 
+                    $minPilihan = ($tipe === 'pilihan') ? (int)($komp['min_pilihan'] ?? 1) : 0;
+                    $maxPilihan = ($tipe === 'pilihan') ? (int)($komp['max_pilihan'] ?? 1) : 0;
+
                     $komponen = \App\Models\ItemPaket::create([
                         'menu_id' => $menu->id,
                         'nama_item' => $namaItem,
                         'tipe_item' => $tipe,
-                        'menu_id_terkait' => $tipe === 'tetap' ? $komp['menu_id'] : null,
+                        'menu_id_terkait' => $tipe === 'wajib' ? $komp['menu_id'] : null,
                         'jumlah' => $komp['jumlah'] ?? 1,
-                        'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
-                        'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                        'minimum_pilihan' => $minPilihan,
+                        'maksimum_pilihan' => $maxPilihan,
                         'urutan' => $komp['urutan'] ?? 1,
                     ]);
 
-                    if ($tipe === 'pilihan' && !empty($komp['pilihan']) && is_array($komp['pilihan'])) {
+                    if (in_array($tipe, ['pilihan', 'semua_didapat']) && !empty($komp['pilihan']) && is_array($komp['pilihan'])) {
                         $urutanPilihan = 1;
-                        foreach ($komp['pilihan'] as $pilihanMenuId) {
-                            $menuOpsi = Menu::find($pilihanMenuId);
-                            if ($menuOpsi) {
-                                \App\Models\PilihanItemPaket::create([
+                        $urutanPilihan_0 = 0;
+                        foreach ($komp['pilihan'] as $pilihanText) {
+                            $pilihanText = trim($pilihanText);
+                            if ($pilihanText) {
+                                $pilihanData = [
                                     'item_paket_id' => $komponen->id,
-                                    'menu_id' => $pilihanMenuId,
-                                    'nama_pilihan' => $menuOpsi->nama_menu,
-                                    'urutan' => $urutanPilihan++,
-                                ]);
+                                    'menu_id' => null,
+                                    'nama_pilihan' => $pilihanText,
+                                    'urutan' => $urutanPilihan,
+                                ];
+                                if ($request->hasFile("komponen.$index.opsi_foto.$urutanPilihan_0")) {
+                                    $pilihanData['foto'] = $request->file("komponen.$index.opsi_foto.$urutanPilihan_0")->store('paket-opsi', 'public');
+                                } elseif (!empty($komp['opsi_foto_existing'][$urutanPilihan_0])) {
+                                    $pilihanData['foto'] = $komp['opsi_foto_existing'][$urutanPilihan_0];
+                                }
+                                \App\Models\PilihanItemPaket::create($pilihanData);
+                                $urutanPilihan++;
                             }
+                            $urutanPilihan_0++;
                         }
                     }
                 }
@@ -273,6 +337,15 @@ class MenuController extends Controller
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'bahan_baku_id' => 'nullable|array',
             'jumlah_kebutuhan' => 'nullable|array',
+            'minimal_pemesanan' => 'nullable|integer|min:1',
+        ], [
+            'nama_menu.required' => 'Nama menu wajib diisi.',
+            'kategori_menu_id.required' => 'Kategori menu wajib dipilih.',
+            'harga_jual.required' => 'Harga jual menu wajib diisi.',
+            'harga_jual.numeric' => 'Harga jual harus berupa angka.',
+            'harga_jual.min' => 'Harga jual minimal Rp 0.',
+            'foto.image' => 'Foto harus berupa berkas gambar.',
+            'foto.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
         $jenisId = match ((string) $request->input('jenis_menu_id')) {
@@ -295,6 +368,7 @@ class MenuController extends Controller
                 'harga_jual' => $hargaJual,
                 'deskripsi' => $request->deskripsi,
                 'status_aktif' => $statusAktif,
+                'minimal_pemesanan' => $request->minimal_pemesanan ?? ($jenisId == 2 ? 50 : 20),
             ];
 
             if ($request->hasFile('foto')) {
@@ -329,45 +403,58 @@ class MenuController extends Controller
 
             $menu->komponen_paket()->delete(); // Always clear existing components
             if ($request->has('komponen') && is_array($request->komponen)) {
-                foreach ($request->komponen as $komp) {
-                    $tipe = (isset($komp['tipe']) && $komp['tipe'] === 'choice') ? 'pilihan' : 'tetap';
+                foreach ($request->komponen as $index => $komp) {
+                    $tipe = $komp['tipe'] ?? 'wajib';
                     
-                    if ($tipe === 'tetap' && empty($komp['menu_id'])) continue;
-                    if ($tipe === 'pilihan' && empty($komp['nama_komponen'])) continue;
+                    // Validation
+                    if ($tipe === 'wajib' && empty($komp['menu_id'])) continue;
+                    if (in_array($tipe, ['pilihan', 'semua_didapat']) && empty($komp['nama_komponen'])) continue;
 
                     $menuTerkait = null;
                     $namaItem = $komp['nama_komponen'] ?? '';
 
-                    if ($tipe === 'tetap') {
+                    if ($tipe === 'wajib') {
                         $menuTerkait = Menu::find($komp['menu_id']);
                         if ($menuTerkait && empty($namaItem)) {
                             $namaItem = $menuTerkait->nama_menu;
                         }
                     }
 
+                    $minPilihan = ($tipe === 'pilihan') ? (int)($komp['min_pilihan'] ?? 1) : 0;
+                    $maxPilihan = ($tipe === 'pilihan') ? (int)($komp['max_pilihan'] ?? 1) : 0;
+
                     $komponen = \App\Models\ItemPaket::create([
                         'menu_id' => $menu->id,
                         'nama_item' => $namaItem,
                         'tipe_item' => $tipe,
-                        'menu_id_terkait' => $tipe === 'tetap' ? $komp['menu_id'] : null,
+                        'menu_id_terkait' => $tipe === 'wajib' ? $komp['menu_id'] : null,
                         'jumlah' => $komp['jumlah'] ?? 1,
-                        'minimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
-                        'maksimum_pilihan' => $tipe === 'pilihan' ? 1 : 0,
+                        'minimum_pilihan' => $minPilihan,
+                        'maksimum_pilihan' => $maxPilihan,
                         'urutan' => $komp['urutan'] ?? 1,
                     ]);
 
-                    if ($tipe === 'pilihan' && !empty($komp['pilihan']) && is_array($komp['pilihan'])) {
+                    if (in_array($tipe, ['pilihan', 'semua_didapat']) && !empty($komp['pilihan']) && is_array($komp['pilihan'])) {
                         $urutanPilihan = 1;
-                        foreach ($komp['pilihan'] as $pilihanMenuId) {
-                            $menuOpsi = Menu::find($pilihanMenuId);
-                            if ($menuOpsi) {
-                                \App\Models\PilihanItemPaket::create([
+                        $urutanPilihan_0 = 0;
+                        foreach ($komp['pilihan'] as $pilihanText) {
+                            $pilihanText = trim($pilihanText);
+                            if ($pilihanText) {
+                                $pilihanData = [
                                     'item_paket_id' => $komponen->id,
-                                    'menu_id' => $pilihanMenuId,
-                                    'nama_pilihan' => $menuOpsi->nama_menu,
-                                    'urutan' => $urutanPilihan++,
-                                ]);
+                                    'menu_id' => null,
+                                    'nama_pilihan' => $pilihanText,
+                                    'urutan' => $urutanPilihan,
+                                ];
+                                if ($request->hasFile("komponen.$index.opsi_foto.$urutanPilihan_0")) {
+                                    $pilihanData['foto'] = $request->file("komponen.$index.opsi_foto.$urutanPilihan_0")->store('paket-opsi', 'public');
+                                } elseif (!empty($komp['opsi_foto_existing'][$urutanPilihan_0])) {
+                                    $pilihanData['foto'] = $komp['opsi_foto_existing'][$urutanPilihan_0];
+                                }
+                                \App\Models\PilihanItemPaket::create($pilihanData);
+                                $urutanPilihan++;
                             }
+                            $urutanPilihan_0++;
                         }
                     }
                 }
@@ -379,7 +466,7 @@ class MenuController extends Controller
 
     public function show(Menu $menu)
     {
-        $menu->load(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'jenis_menu']);
+        $menu->load(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'jenis_menu', 'komponen_paket.pilihanItemPaket.menu']);
 
         return view('admin.menu.show', compact('menu'));
     }
@@ -408,10 +495,49 @@ class MenuController extends Controller
         } catch (QueryException $e) {
             $errorCode = $e->errorInfo[1] ?? $e->getCode();
             if ($errorCode == 1451 || $errorCode == '23000' || strpos($e->getMessage(), '1451') !== false) {
-                return redirect()->route('menu.index')->with('error', "Menu '{$menu->nama_menu}' tidak dapat dihapus karena sudah ada di data pesanan. Silakan ubah status menjadi Nonaktif.");
+                $menu->update(['status_aktif' => false]);
+                return redirect()->route('menu.index')->with('success', "Menu '{$menu->nama_menu}' tidak dihapus permanen melainkan Dinonaktifkan karena sudah memiliki data transaksi.");
             }
 
             return redirect()->route('menu.index')->with('error', 'Gagal menghapus menu: Terjadi kesalahan database. '.$e->getMessage());
+        }
+    }
+
+    public function createFromOption(Request $request)
+    {
+        $request->validate([
+            'opsi_id' => 'required|exists:pilihan_item_paket,id',
+            'nama_menu' => 'required|string|max:255',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $opsi = \App\Models\PilihanItemPaket::findOrFail($request->opsi_id);
+            $itemPaket = \App\Models\ItemPaket::findOrFail($opsi->item_paket_id);
+            $paket = Menu::findOrFail($itemPaket->menu_id);
+
+            // Create new menu
+            $menu = Menu::create([
+                'id_menu' => 'MN-' . time() . '-' . rand(100, 999),
+                'nama_menu' => $request->nama_menu,
+                'jenis_menu_id' => 1, // Default Dine In
+                'kategori_menu_id' => $paket->kategori_menu_id,
+                'harga_jual' => 0,
+                'status_aktif' => 1,
+            ]);
+
+            // Link it to the option
+            $opsi->menu_id = $menu->id;
+            $opsi->save();
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'menu_id' => $menu->id]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal membuat menu: ' . $e->getMessage()], 500);
         }
     }
 }

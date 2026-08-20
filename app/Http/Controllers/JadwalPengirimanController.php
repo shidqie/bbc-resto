@@ -187,6 +187,34 @@ class JadwalPengirimanController extends Controller
                 // Sync back to Pesanan
                 if ($request->status_pengiriman_id == 4) { // Diterima -> Selesai
                     $pengiriman->pesanan->update(['status_pesanan_id' => 5]);
+                    
+                    // Notify Pemilik
+                    $pemilik = \App\Models\Pengguna::whereHas('peran', function ($q) {
+                        $q->where('nama_peran', 'Pemilik');
+                    })->get();
+                    if ($pemilik->count() > 0) {
+                        \Illuminate\Support\Facades\Notification::send($pemilik, new \App\Notifications\StatusPesanan(
+                            'Pengiriman Selesai',
+                            "Pengiriman pesanan #{$pengiriman->pesanan->id_pesanan} telah selesai.",
+                            route('admin.pesanan.index')
+                        ));
+                    }
+                }
+
+                // Notify Konsumen
+                if ($pengiriman->pesanan->pelanggan) {
+                    $statusTexts = [
+                        2 => 'siap dikirim',
+                        3 => 'dalam perjalanan',
+                        4 => 'telah diterima',
+                        5 => 'gagal dikirim, akan dijadwalkan ulang',
+                    ];
+                    $txt = $statusTexts[$request->status_pengiriman_id] ?? 'diperbarui';
+                    $pengiriman->pesanan->pelanggan->notify(new \App\Notifications\StatusPesanan(
+                        'Status Pengiriman',
+                        "Pengiriman pesanan #{$pengiriman->pesanan->id_pesanan} Anda {$txt}.",
+                        route('konsumen.pesanan.index')
+                    ));
                 }
             });
             $msg = 'Status pengiriman diperbarui.';
@@ -212,6 +240,15 @@ class JadwalPengirimanController extends Controller
         $pengiriman->update([
             'ditugaskan_kepada' => $request->kurir_id,
         ]);
+
+        $kurir = Pengguna::find($request->kurir_id);
+        if ($kurir) {
+            \Illuminate\Support\Facades\Notification::send([$kurir], new \App\Notifications\StatusPesanan(
+                'Tugas Pengantaran Baru',
+                "Anda ditugaskan untuk mengirim pesanan #{$pengiriman->pesanan->id_pesanan}.",
+                route('admin.pengantaran.index')
+            ));
+        }
 
         return back()->with('success', 'Kurir berhasil ditugaskan.');
     }

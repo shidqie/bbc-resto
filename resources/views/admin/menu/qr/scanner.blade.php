@@ -8,7 +8,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Anonymous+Pro:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Anonymous+Pro:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -20,24 +20,24 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', '"Google Sans"', 'sans-serif'],
+                        sans: ['Outfit', 'sans-serif'],
                         mono: ['"Anonymous Pro"', 'monospace'],
                     },
                     fontSize: {
-                        xs: ['13px', '1.45'],
-                        sm: ['15px', '1.5'],
-                        base: ['16px', '1.55'],
-                        lg: ['18px', '1.5'],
-                        xl: ['20px', '1.4'],
-                        '2xl': ['24px', '1.3'],
-                        '3xl': ['30px', '1.25'],
-                        '4xl': ['36px', '1.2'],
-                        '5xl': ['48px', '1.15'],
-                        '6xl': ['60px', '1.1'],
+                        xs: ['11px', '1.45'],
+                        sm: ['13px', '1.5'],
+                        base: ['14px', '1.55'],
+                        lg: ['16px', '1.5'],
+                        xl: ['18px', '1.4'],
+                        '2xl': ['21px', '1.3'],
+                        '3xl': ['26px', '1.25'],
+                        '4xl': ['32px', '1.2'],
+                        '5xl': ['40px', '1.15'],
+                        '6xl': ['48px', '1.1'],
                     },
                     colors: {
                         brand:   '#0D3024',
-                        primary: '#3B82F6',
+                        primary: '#0D3024',
                         accent:  '#D4A843',
                         surface: '#FFFFFF',
                         text:    '#111827',
@@ -86,7 +86,7 @@
     </style>
 </head>
 
-<body class="bg-[#0D3024] text-white min-h-screen font-sans flex flex-col justify-between selection:bg-emerald-500 selection:text-white" x-data="qrScannerPage()" x-cloak>
+<body class="bg-primary text-white min-h-screen font-sans flex flex-col justify-between selection:bg-emerald-500 selection:text-white" x-data="qrScannerPage()" x-cloak>
 
     <!-- Header Section -->
     <header class="p-5 flex items-center justify-between border-b border-white/10 bg-black/20 backdrop-blur-md">
@@ -166,7 +166,7 @@
         <div class="relative bg-white text-gray-900 w-full max-w-sm rounded-xl p-6 shadow-2xl border border-gray-100 z-10 space-y-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-base font-extrabold text-[#0D3024]">Pilih Nomor Meja</h3>
+                    <h3 class="text-base font-extrabold text-primary">Pilih Nomor Meja</h3>
                     <p class="text-xs text-gray-500 font-medium">Klik meja tempat Anda duduk</p>
                 </div>
                 <button @click="showTableModal = false" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-sm hover:bg-gray-200 transition">
@@ -178,9 +178,9 @@
                 @foreach($mejas as $m)
                 @php $cleanNomor = trim(preg_replace('/^meja\s*/i', '', $m->nomor_meja)); @endphp
                 <a href="{{ $m->qr_token ? route('qr.menu', $m->qr_token) : route('qr.menu.no-token') }}" 
-                   class="bg-emerald-50/60 hover:bg-[#0D3024] hover:text-white border border-emerald-200/80 rounded-xl p-3 text-center transition-all group">
+                   class="bg-emerald-50/60 hover:bg-primary-container hover:text-white border border-emerald-200/80 rounded-xl p-3 text-center transition-all group">
                     <span class="block text-xs uppercase font-bold text-gray-400 group-hover:text-emerald-300">Meja</span>
-                    <span class="block text-base font-black text-[#0D3024] group-hover:text-white mt-0.5">{{ $cleanNomor }}</span>
+                    <span class="block text-base font-black text-primary group-hover:text-white mt-0.5">{{ $cleanNomor }}</span>
                 </a>
                 @endforeach
             </div>

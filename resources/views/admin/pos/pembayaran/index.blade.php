@@ -22,8 +22,8 @@
             $badgeDot = 'bg-emerald-500';
         } elseif ($statusVerifikasi === 'menunggu_verifikasi') {
             $badgeText = 'Menunggu Verifikasi';
-            $badgeClass = 'bg-blue-50 text-blue-700 border-blue-200/80';
-            $badgeDot = 'bg-blue-500 animate-pulse';
+            $badgeClass = 'bg-primary-soft text-primary border-primary/30';
+            $badgeDot = 'bg-primary-soft0 animate-pulse';
         } elseif ($statusVerifikasi === 'ditolak') {
             $badgeText = 'Ditolak';
             $badgeClass = 'bg-red-50 text-red-700 border-red-200/80';
@@ -53,11 +53,14 @@
         }
 
         $showUploadForm = !($lunas >= $pesanan->total_tagihan) && $statusVerifikasi !== 'menunggu_verifikasi';
+
+        $staticQris = "00020101021126590013ID.NOBUPAN.WWW01189360050300000881530215ID10264761295010303UMI51440014ID.LINKAJA.WWW0118936009140000881530215ID10264761295010303UMI5204581253033605802ID5915RUMAH MAKAN BBC6013KAB SUMEDANG 61054536362070703A016304";
+        $dynamicQris = \App\Helpers\QrisHelper::generateDynamicQris($staticQris, $amountToPay);
     @endphp
 
     <x-slot:title>{{ $payTitle }} — {{ $pesanan->id_pesanan }}</x-slot:title>
 
-    <div class="min-h-screen bg-[#F9FAFB] text-[#111827] pb-16"
+    <div class="min-h-screen bg-gray-50 text-body pb-16"
         x-data="paymentPage('{{ $expireTimeStr }}')">
 
         {{-- Header Bar --}}
@@ -108,7 +111,7 @@
                 <div class="bg-red-50 border-b border-red-200">
                     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2">
                         <svg class="w-4 h-4 text-red-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p class="text-xs font-bold text-red-800">Batas waktu {{ $isPelunasan ? 'pelunasan (H-4)' : 'pembayaran DP (15 Menit)' }} telah habis. Pesanan dibatalkan otomatis.</p>
+                        <p class="text-xs font-bold text-red-800">Batas waktu {{ $isPelunasan ? 'pelunasan (H-3)' : 'pembayaran DP (15 Menit)' }} telah habis. Pesanan dibatalkan otomatis.</p>
                     </div>
                 </div>
             </template>
@@ -139,33 +142,105 @@
                             <p class="text-xs text-emerald-700 mt-1">Bukti pembayaran Anda telah disetujui oleh admin.</p>
                         </div>
                     @elseif($statusVerifikasi === 'menunggu_verifikasi')
-                        <div class="bg-white rounded-2xl border border-blue-200 p-6 text-center">
-                            <p class="text-sm font-bold text-blue-900">Bukti Pembayaran Terkirim!</p>
-                            <p class="text-xs text-blue-700 mt-1">Menunggu proses verifikasi admin Resto (1×24 Jam).</p>
+                        <div class="bg-white rounded-2xl border border-primary/20 p-6 text-center">
+                            <p class="text-sm font-bold text-primary">Bukti Pembayaran Terkirim!</p>
+                            <p class="text-xs text-primary mt-1">Menunggu proses verifikasi admin Resto (1×24 Jam).</p>
                         </div>
                     @else
                         <template x-if="!isExpired || {{ $isPelunasan ? 'true' : 'false' }}">
                             <div class="bg-white rounded-2xl border border-gray-200/80 p-6 space-y-5" x-data="{ copied: false }">
 
                                 {{-- Nominal Transfer — satu-satunya sumber angka besar, langsung di atas aksi --}}
-                                <div class="bg-[#0D3024] text-white rounded-xl p-4">
-                                    <p class="text-emerald-300 text-[10px] font-bold uppercase mb-1">
+                                <div class="bg-primary text-white rounded-2xl p-5 shadow-sm space-y-1">
+                                    <p class="text-emerald-300 text-[10px] font-bold uppercase tracking-wider">
                                         Nominal Transfer ({{ $isPelunasan ? 'Pelunasan' : 'DP '.$dpPersen.'%' }})
                                     </p>
-                                    <p class="text-2xl font-bold">Rp {{ number_format($amountToPay, 0, ',', '.') }}</p>
+                                    <p class="text-3xl font-extrabold tracking-tight">Rp {{ number_format($amountToPay, 0, ',', '.') }}</p>
                                 </div>
 
-                                {{-- 1. Informasi Rekening --}}
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2">1. Transfer ke Rekening</label>
-                                    <div class="p-4 bg-emerald-50/60 border border-emerald-200/70 rounded-xl space-y-2">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Bank BCA</span>
-                                            <span class="text-[11px] font-medium text-emerald-700">A/N HENI</span>
+                                {{-- 1. Informasi Pembayaran (QRIS & Transfer Bank) langsung di bawah nominal transfer --}}
+                                <div x-data="{ tabPay: 'qris' }" class="space-y-3">
+                                    <label class="block text-xs font-bold text-gray-800">1. Pilih Metode Pembayaran (QRIS / Transfer Bank)</label>
+                                    
+                                    {{-- 1. Tabs Metode Pembayaran --}}
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <button type="button" @click="tabPay = 'qris'"
+                                                :class="tabPay === 'qris' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                                                class="py-3 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider cursor-pointer">
+                                            <x-heroicon-o-qr-code class="w-4 h-4" />
+                                            <span>QRIS</span>
+                                        </button>
+                                        <button type="button" @click="tabPay = 'transfer'"
+                                                :class="tabPay === 'transfer' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+                                                class="py-3 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider cursor-pointer">
+                                            <x-heroicon-o-building-library class="w-4 h-4" />
+                                            <span>Transfer Bank BCA</span>
+                                        </button>
+                                    </div>
+
+                                    {{-- 2. QRIS (Desain Sama Persis Kasir) --}}
+                                    <div x-show="tabPay === 'qris'" class="p-5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4 text-center">
+                                        {{-- Header & Instructions --}}
+                                        <div class="text-center space-y-1">
+                                            <div class="flex items-center justify-center gap-1.5 text-primary font-bold text-lg tracking-tight">
+                                                <x-heroicon-o-qr-code class="w-5 h-5 text-primary" />
+                                                <span>QRIS</span>
+                                            </div>
+                                            <p class="text-xs text-slate-500 max-w-[260px] leading-relaxed mx-auto">
+                                                Minta pelanggan untuk memindai kode QRIS untuk melakukan pembayaran
+                                            </p>
                                         </div>
-                                        <div class="text-lg font-bold font-mono text-[#0D3024] tracking-wider">2780378231</div>
+
+                                        {{-- Interactive Real-time Status --}}
+                                        <div class="flex items-center justify-between text-xs font-semibold text-emerald-800 bg-emerald-50/80 py-2 px-3 rounded-xl border border-emerald-200/80">
+                                            <span class="flex items-center gap-2 text-xs font-bold text-emerald-900">
+                                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shrink-0"></span>
+                                                Menunggu Pembayaran...
+                                            </span>
+                                            <span class="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-300">Otomatis Terverifikasi</span>
+                                        </div>
+
+                                        {{-- QR Code Image (Clickable for Fullscreen) --}}
+                                        <div @click="showFullscreenQR = true" class="p-3 bg-white border border-slate-200 rounded-2xl shadow-xs inline-block cursor-pointer hover:scale-105 transition-transform duration-200" title="Klik untuk memperbesar layar kasir">
+                                            <div class="w-44 h-44 mx-auto flex items-center justify-center [&>svg]:w-full [&>svg]:h-full">
+                                                {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(180)->margin(1)->generate($dynamicQris) !!}
+                                            </div>
+                                        </div>
+
+                                        {{-- Store Details --}}
+                                        <div class="text-center space-y-0.5">
+                                            <p class="text-xs font-semibold text-slate-700">Rumah Makan BBC</p>
+                                            <p class="text-xl font-bold text-primary">
+                                                Rp {{ number_format($amountToPay, 0, ',', '.') }}
+                                            </p>
+                                            <p class="text-[10px] font-medium text-slate-400 tracking-wider">
+                                                NMID: ID1026476129501
+                                            </p>
+                                        </div>
+
+                                        <button type="button" @click="simulasiQris('{{ $pesanan->id_pesanan }}')"
+                                                :disabled="isSimulating"
+                                                class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[.99] text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                                            <x-heroicon-o-check-circle class="w-4 h-4" />
+                                            <span x-text="isSimulating ? 'Memverifikasi Pembayaran...' : 'Konfirmasi / Simulasi Pembayaran QRIS'"></span>
+                                        </button>
+
+                                        <div class="pt-2 border-t border-slate-100 flex items-center justify-center gap-2">
+                                            <a href="{{ asset('images/QRISSTATIC.jpg') }}" target="_blank" class="text-[11px] font-bold text-slate-600 hover:text-primary hover:underline inline-flex items-center gap-1">
+                                                <x-heroicon-o-photo class="w-3.5 h-3.5" /> Lihat QRIS Statis Asli
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {{-- Transfer --}}
+                                    <div x-show="tabPay === 'transfer'" style="display:none;" class="p-4 bg-emerald-50/60 border border-emerald-200/70 rounded-2xl space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Bank BCA</span>
+                                            <span class="text-xs font-medium text-emerald-700">A/N HENI</span>
+                                        </div>
+                                        <div class="text-lg font-bold font-mono text-primary tracking-wider">2780378231</div>
                                         <button type="button" @click="navigator.clipboard.writeText('2780378231'); copied = true; setTimeout(() => copied = false, 2000)"
-                                                class="w-full py-2 bg-white hover:bg-emerald-100/50 border border-emerald-300 text-emerald-900 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5">
+                                                class="w-full py-2 bg-white hover:bg-emerald-100/50 border border-emerald-300 text-emerald-900 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
                                             <template x-if="!copied"><span class="font-bold">Salin Nomor Rekening</span></template>
                                             <template x-if="copied"><span class="font-bold text-emerald-700">Berhasil Disalin!</span></template>
                                         </button>
@@ -186,13 +261,13 @@
                                              @dragleave.prevent="isDragging = false"
                                              @drop.prevent="isDragging = false; const files = $event.dataTransfer.files; if(files.length > 0) { $refs.fileInput.files = files; handleFileSelect({ target: $refs.fileInput }); }"
                                              class="border-2 border-dashed rounded-xl p-5 text-center transition-all duration-200 cursor-pointer"
-                                             :class="isDragging ? 'border-[#0D3024] bg-[#0D3024]/5' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 hover:border-gray-300'">
+                                             :class="isDragging ? 'border-primary bg-primary/5' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 hover:border-gray-300'">
 
                                             <template x-if="!filePreview">
                                                 <div @click="$refs.fileInput.click()">
                                                     <p class="text-xs font-bold text-gray-800 mb-0.5">Klik atau tarik file ke sini</p>
-                                                    <p class="text-[11px] text-gray-400 font-medium mb-3">JPG • PNG • PDF • Maks 1 MB</p>
-                                                    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0D3024] text-white text-xs font-semibold">Pilih File</span>
+                                                    <p class="text-xs text-gray-400 font-medium mb-3">JPG • PNG • PDF • Maks 1 MB</p>
+                                                    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold">Pilih File</span>
                                                 </div>
                                             </template>
 
@@ -230,7 +305,7 @@
                                     </div>
 
                                     <button type="submit"
-                                            class="w-full py-3 bg-[#0D3024] hover:bg-[#1a4a35] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.99]">
+                                            class="w-full py-3 bg-primary hover:bg-primary-container text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.99]">
                                         Kirim Bukti Pembayaran
                                     </button>
                                 </form>
@@ -369,11 +444,11 @@
                     </div>
 
                     {{-- Informasi Penting --}}
-                    <div class="bg-blue-50/50 rounded-2xl border border-blue-100 p-6">
-                        <h3 class="text-xs font-bold text-blue-900 mb-3">Informasi Penting</h3>
-                        <ul class="list-disc pl-4 space-y-1.5 text-[11px] text-blue-800 leading-relaxed">
+                    <div class="bg-primary/10 rounded-2xl border border-primary/15 p-6">
+                        <h3 class="text-xs font-bold text-primary mb-3">Informasi Penting</h3>
+                        <ul class="list-disc pl-4 space-y-1.5 text-xs text-primary leading-relaxed">
                             <li>DP (Uang Muka) tidak dapat dikembalikan jika pesanan dibatalkan oleh konsumen.</li>
-                            <li>Pelunasan wajib dilakukan maksimal H-4 sebelum tanggal acara.</li>
+                            <li>Pelunasan wajib dilakukan maksimal H-3 sebelum tanggal acara.</li>
                             <li>Jika tidak melakukan pelunasan hingga batas waktu, pesanan akan dianggap batal.</li>
                         </ul>
                     </div>
@@ -381,22 +456,106 @@
 
             </div>
         </main>
+
+        {{-- FULLSCREEN QR MODAL (SAMA PERSIS DENGAN SCREENSHOT KASIR) --}}
+        <div x-show="showFullscreenQR" 
+             style="display: none;"
+             class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-90"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-90">
+            <div class="relative bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center space-y-4 font-sans">
+                {{-- Close Button --}}
+                <button type="button" @click="showFullscreenQR = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full p-1.5 transition-colors cursor-pointer">
+                    <x-heroicon-o-x-mark class="w-5 h-5" />
+                </button>
+
+                <div class="space-y-1">
+                    <h3 class="text-lg font-bold text-slate-900 tracking-tight">QRIS</h3>
+                    <p class="text-xs text-slate-500 font-medium">Scan untuk membayar</p>
+                </div>
+
+                {{-- QR Code Image --}}
+                <div class="p-3 bg-white border border-slate-200 rounded-2xl shadow-xs inline-block">
+                    <div class="w-56 h-56 mx-auto flex items-center justify-center [&>svg]:w-full [&>svg]:h-full">
+                        {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(220)->margin(1)->generate($dynamicQris) !!}
+                    </div>
+                </div>
+
+                {{-- Details Box --}}
+                <div class="bg-slate-50 rounded-2xl p-3.5 space-y-0.5 border border-slate-100">
+                    <p class="text-xs font-semibold text-slate-700">Rumah Makan BBC</p>
+                    <p class="text-2xl font-black text-primary tracking-tight">
+                        Rp {{ number_format($amountToPay, 0, ',', '.') }}
+                    </p>
+                    <p class="text-[10px] font-medium text-slate-400 tracking-wider">
+                        NMID: ID1026476129501
+                    </p>
+                </div>
+
+                <p class="text-xs text-slate-400 font-medium pt-1">Tunjukkan layar ini ke pelanggan</p>
+            </div>
+        </div>
     </div>
 
     @push('scripts')
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('paymentPage', (expireTimeStr) => ({
+                showFullscreenQR: false,
                 expireTime: expireTimeStr ? new Date(expireTimeStr).getTime() : null,
                 days: 0,
                 hours: '00',
                 minutes: '15',
                 seconds: '00',
                 isExpired: false,
+                isSimulating: false,
+                qrisTimer: null,
                 init() {
-                    if (!this.expireTime) return;
-                    this.updateTimer();
-                    setInterval(() => { this.updateTimer(); }, 1000);
+                    if (this.expireTime) {
+                        this.updateTimer();
+                        setInterval(() => { this.updateTimer(); }, 1000);
+                    }
+                    this.startQrisPolling('{{ $pesanan->id_pesanan }}');
+                },
+                startQrisPolling(kode) {
+                    if (this.qrisTimer) clearInterval(this.qrisTimer);
+                    this.qrisTimer = setInterval(async () => {
+                        try {
+                            const res = await fetch('/pesan/bayar/status/' + kode);
+                            const json = await res.json();
+                            if (json && json.lunas) {
+                                window.location.reload();
+                            }
+                        } catch (e) {}
+                    }, 4000);
+                },
+                async simulasiQris(kode) {
+                    this.isSimulating = true;
+                    try {
+                        const res = await fetch('{{ route("pesanan.simulasi_qris") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ kode_pesanan: kode })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.showToast('success', data.message || 'Pembayaran QRIS Berhasil!');
+                            setTimeout(() => { window.location.reload(); }, 600);
+                        } else {
+                            window.showToast('error', data.message || 'Gagal verifikasi QRIS.');
+                        }
+                    } catch(e) {
+                        window.showToast('error', 'Terjadi kesalahan jaringan.');
+                    } finally {
+                        this.isSimulating = false;
+                    }
                 },
                 updateTimer() {
                     if (!this.expireTime) return;

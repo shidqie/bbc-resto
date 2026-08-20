@@ -14,4 +14,9 @@ class Satuan extends BaseModel
     {
         return $this->hasMany(BahanBaku::class, 'satuan_id');
     }
+
+    public function getKodeSatuanAttribute(): string
+    {
+        return \App\Helpers\IdCodeGenerator::generateSatuanId($this->id);
+    }
 }

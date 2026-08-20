@@ -15,8 +15,16 @@ class PesananController extends Controller
         $query = Pesanan::with(['jenis_pesanan', 'status_pesanan', 'meja', 'kasir', 'jadwal_pesanan'])
             ->orderBy('dibuat_pada', 'desc');
 
-        if ($request->has('jenis') && $request->jenis != '') {
+        if ($request->has('jenis') && $request->jenis != '' && $request->jenis != 'all') {
             $query->where('jenis_pesanan_id', $request->jenis);
+        }
+
+        if ($request->has('status') && $request->status != '' && $request->status != 'all') {
+            $query->where('status_pesanan_id', $request->status);
+        }
+
+        if ($request->has('status_pembayaran') && $request->status_pembayaran != '' && $request->status_pembayaran != 'all') {
+            $query->where('status_pembayaran_id', $request->status_pembayaran);
         }
 
         if ($request->has('periode') && $request->periode != '') {
@@ -53,8 +61,9 @@ class PesananController extends Controller
         $pesanans = $query->paginate(20)->withQueryString();
         $jenis_pesanan = JenisPesanan::all();
         $status_pesanan = StatusPesanan::all();
+        $status_pembayaran = \App\Models\StatusPembayaran::all();
 
-        return view('admin.pesanan.index', compact('pesanans', 'jenis_pesanan', 'status_pesanan'));
+        return view('admin.pesanan.index', compact('pesanans', 'jenis_pesanan', 'status_pesanan', 'status_pembayaran'));
     }
 
     public function show(Request $request, $id)

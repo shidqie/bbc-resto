@@ -38,4 +38,14 @@ class ResepMenu extends BaseModel
     {
         return $this->belongsTo(Satuan::class, 'satuan_id');
     }
+
+    public function getIdResepAttribute(): string
+    {
+        return \App\Helpers\IdCodeGenerator::generateResepId($this->id);
+    }
+
+    public function getKodeResepAttribute(): string
+    {
+        return $this->id_resep;
+    }
 }

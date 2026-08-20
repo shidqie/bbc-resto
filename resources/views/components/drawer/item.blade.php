@@ -9,7 +9,7 @@
         <div>
             <p class="text-sm font-medium text-gray-900">{{ $title }}</p>
             @if($subtitle)
-                <p class="text-[13px] text-gray-500 mt-0.5">{{ $subtitle }}</p>
+                <p class="text-sm text-gray-500 mt-0.5">{{ $subtitle }}</p>
             @endif
             {{ $slot }}
         </div>

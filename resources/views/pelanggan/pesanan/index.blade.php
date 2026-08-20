@@ -76,12 +76,12 @@
                                         $statusVerifikasiO = $terakhirBayarO ? $terakhirBayarO->status_verifikasi : null;
 
                                         $bayarLabel = $lunasO >= $totalO ? 'Lunas' : ($statusVerifikasiO === 'menunggu_verifikasi' ? 'Menunggu Verifikasi' : ($statusVerifikasiO === 'ditolak' ? 'Ditolak' : ($dpO > 0 ? 'DP Terbayar' : 'Belum Bayar')));
-                                        $bayarColor = $lunasO >= $totalO ? 'bg-emerald-100 text-emerald-700' : ($statusVerifikasiO === 'menunggu_verifikasi' ? 'bg-blue-100 text-blue-700' : ($statusVerifikasiO === 'ditolak' ? 'bg-red-100 text-red-700' : ($dpO > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')));
+                                        $bayarColor = $lunasO >= $totalO ? 'bg-emerald-100 text-emerald-700' : ($statusVerifikasiO === 'menunggu_verifikasi' ? 'bg-primary/10 text-primary' : ($statusVerifikasiO === 'ditolak' ? 'bg-red-100 text-red-700' : ($dpO > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')));
 
                                         $statusMap = [
                                             1 => ['Menunggu Konfirmasi', 'bg-amber-100 text-amber-700'],
-                                            2 => ['Dikonfirmasi', 'bg-blue-100 text-blue-700'],
-                                            3 => ['Diproses', 'bg-indigo-100 text-indigo-700'],
+                                            2 => ['Dikonfirmasi', 'bg-primary/10 text-primary'],
+                                            3 => ['Diproses', 'bg-primary/10 text-primary'],
                                             4 => ['Siap Dikirim', 'bg-cyan-100 text-cyan-700'],
                                             5 => ['Selesai', 'bg-emerald-100 text-emerald-700'],
                                             6 => ['Dibatalkan', 'bg-rose-100 text-rose-700'],
@@ -91,20 +91,20 @@
                                     <tr class="hover:bg-primary/[0.01] transition-colors">
                                         <td class="py-4 px-5">
                                             <div class="font-mono font-bold text-primary">{{ $o->id_pesanan }}</div>
-                                            <div class="text-[11px] text-body/50 mt-1 font-medium">{{ $o->dibuat_pada ? \Carbon\Carbon::parse($o->dibuat_pada)->format('d M Y H:i') : '-' }}</div>
+                                            <div class="text-xs text-body/50 mt-1 font-medium">{{ $o->dibuat_pada ? \Carbon\Carbon::parse($o->dibuat_pada)->format('d M Y H:i') : '-' }}</div>
                                         </td>
                                         <td class="py-4 px-5 font-medium text-gray-800">
                                             {{ $o->jadwal_pesanan?->tanggal_acara ? \Carbon\Carbon::parse($o->jadwal_pesanan->tanggal_acara)->format('d M Y') : '-' }}
                                         </td>
                                         <td class="py-4 px-5">
                                             <div class="font-medium text-gray-900">{{ $paket->menu->nama_menu ?? 'Paket' }}</div>
-                                            <div class="text-[11px] text-body/50 mt-1 font-medium">{{ $paket->jumlah ?? 0 }} porsi</div>
+                                            <div class="text-xs text-body/50 mt-1 font-medium">{{ $paket->jumlah ?? 0 }} porsi</div>
                                         </td>
                                         <td class="py-4 px-5">
-                                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full {{ $bayarColor }}">{{ $bayarLabel }}</span>
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ $bayarColor }}">{{ $bayarLabel }}</span>
                                         </td>
                                         <td class="py-4 px-5">
-                                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full {{ $st[1] }}">{{ $st[0] }}</span>
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ $st[1] }}">{{ $st[0] }}</span>
                                         </td>
                                         <td class="py-4 px-5 text-right space-x-3">
                                             <a href="{{ route('konsumen.pesanan.show', $o->id_pesanan) }}" class="text-xs font-bold text-primary hover:underline">Detail</a>

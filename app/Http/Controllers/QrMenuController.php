@@ -37,9 +37,18 @@ class QrMenuController extends Controller
     {
         $selectedMeja = null;
 
-        // Resolve meja dari token QR
+        if (! $token) {
+            $token = $request->query('token') ?? $request->query('meja') ?? $request->query('table');
+        }
+
+        // Resolve meja dari token QR, ID, atau Nomor Meja
         if ($token) {
-            $selectedMeja = Meja::where('qr_token', $token)->first();
+            $selectedMeja = Meja::where('qr_token', $token)
+                ->orWhere('id', $token)
+                ->orWhere('nomor_meja', $token)
+                ->orWhere('nomor_meja', 'Meja '.$token)
+                ->orWhere('nomor_meja', 'meja '.$token)
+                ->first();
         }
 
         // Jika tidak ada token atau token tidak valid → tampilkan halaman "scan QR dulu"
@@ -47,46 +56,46 @@ class QrMenuController extends Controller
             return view('admin.menu.qr.scan-required');
         }
 
-        // Fetch kategori (urut sesuai id: Paket Nasi Liwet → Minuman Non-Coffee)
-        $kategoris = KategoriMenu::orderBy('id', 'asc')->get();
+        $kebutuhanBahanService = app(\App\Services\KebutuhanBahanService::class);
 
         // Fetch menu Dine-In aktif, beserta resep & stok bahan baku
-        $rawMenus = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.stok_relasi'])
+        $rawMenus = Menu::with(['kategori_menu', 'resep_menu.bahan_baku', 'item_paket'])
             ->where(function ($q) {
                 $q->where('jenis_menu_id', 1)->orWhereNull('jenis_menu_id');
             })
             ->where('status_aktif', true)
             ->get();
 
-        // Hitung menu yang habis berdasarkan stok bahan baku (sama seperti DineInController)
-        $menuHabisIds = $rawMenus->filter(function ($menu) {
-            if ($menu->resep_menu->isEmpty()) {
-                return false; // Jika tidak ada resep, anggap tersedia
-            }
-            foreach ($menu->resep_menu as $resep) {
-                $bahan = $resep->bahan_baku;
-                if (!$bahan) continue;
-                $stok = (float) ($bahan->stok_relasi->jumlah_stok ?? 0);
-                $kebutuhan = (float) ($resep->jumlah ?? 0);
-                if ($kebutuhan > 0 && $stok < $kebutuhan) {
-                    return true; // Stok tidak cukup → menu habis
-                }
-            }
-            return false;
-        })->pluck('id')->toArray();
+        // Fetch kategori yang memuat menu Dine-In aktif (sama persis dengan landing page)
+        $kategoriIds = $rawMenus->pluck('kategori_menu_id')->filter()->unique();
+        $kategoris = KategoriMenu::whereIn('id', $kategoriIds)->orderBy('id', 'asc')->get();
 
-        $menus = $rawMenus->map(fn ($m) => [
-            'id'              => $m->id,
-            'nama'            => $m->nama_menu ?? $m->nama ?? 'Menu',
-            'harga'           => (float) ($m->harga_jual ?? 0),
-            'foto'            => $m->foto,
-            'deskripsi'       => $m->deskripsi,
-            'kategori_menu_id'=> $m->kategori_menu_id,
-            'status'          => (in_array($m->id, $menuHabisIds)) ? 'habis' : ($m->status_aktif ? 'aktif' : 'habis'),
-            'is_habis'        => in_array($m->id, $menuHabisIds),
-        ]);
+        // Hitung menu yang habis berdasarkan stok bahan baku harian (menggunakan KebutuhanBahanService)
+        $menuHabisIds = [];
+        foreach ($rawMenus as $menu) {
+            $porsi = $kebutuhanBahanService->porsiTersedia($menu, \App\Models\StokBahan::JENIS_HARIAN);
+            if ($porsi < 1) {
+                $menuHabisIds[] = $menu->id;
+            }
+        }
 
-        return view('admin.menu.qr.index', compact('kategoris', 'menus', 'selectedMeja'));
+        $menus = $rawMenus->map(function ($m) use ($menuHabisIds) {
+            $isHabis = in_array($m->id, $menuHabisIds) || ! $m->status_aktif || $m->status === 'habis';
+            return [
+                'id'              => $m->id,
+                'nama'            => $m->nama_menu ?? $m->nama ?? 'Menu',
+                'harga'           => (float) ($m->harga_jual ?? 0),
+                'foto'            => $m->foto,
+                'deskripsi'       => $m->deskripsi,
+                'kategori_menu_id'=> $m->kategori_menu_id,
+                'status'          => $isHabis ? 'habis' : 'aktif',
+                'is_habis'        => $isHabis,
+            ];
+        });
+
+        $pengaturan = \App\Models\PengaturanTransaksi::first();
+
+        return view('admin.menu.qr.index', compact('kategoris', 'menus', 'selectedMeja', 'pengaturan'));
     }
 
     /**
@@ -106,6 +115,23 @@ class QrMenuController extends Controller
             'items.*.catatan' => 'nullable|string',
         ]);
 
+        $kebutuhanBahanService = app(\App\Services\KebutuhanBahanService::class);
+        foreach ($request->items as $item) {
+            $menu = Menu::find($item['menu_id']);
+            if (! $menu) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Menu tidak ditemukan.',
+                ], 400);
+            }
+            if (! $kebutuhanBahanService->bahanCukup($menu, (float) $item['qty'], null, \App\Models\StokBahan::JENIS_HARIAN)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Stok bahan baku untuk menu '{$menu->nama_menu}' tidak mencukupi / habis. Silakan sesuaikan pesanan Anda.",
+                ], 400);
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -116,23 +142,31 @@ class QrMenuController extends Controller
                 $request->nama_konsumen,
                 $request->jumlah_tamu ?? 1,
                 $request->items,
-                $staffId
+                $staffId,
+                'self_order',
+                $request->nomor_hp
             );
 
-            // Kirim notifikasi ke kasir/manajer/pemilik (peran 1, 2, 3)
+            // Kirim notifikasi ke kasir/manajer/pemilik/dapur
             $meja = \App\Models\Meja::find($request->meja_id);
             $pesananNorm = \App\Models\Pesanan::where('id_pesanan', $pesanan->kode_pesanan)->first();
             if ($pesananNorm && $meja) {
-                $users = \App\Models\Pengguna::whereIn('peran_id', [1, 2, 3])->get();
-                $pesananMessage = "Ada pesanan baru dari QR Code (Meja: {$meja->nomor_meja}). Pemesan: {$request->nama_konsumen}";
-                \Illuminate\Support\Facades\Notification::send($users, new \App\Notifications\PesananBaru($pesananNorm, $pesananMessage, route('pos.dinein.index')));
+                $users = \App\Models\Pengguna::whereHas('peran', function ($q) {
+                    $q->whereIn('nama_peran', ['Pemilik', 'Admin', 'Manajer', 'Kasir', 'Dapur']);
+                })->get();
+                $qty = collect($request->items)->sum('qty');
+                if (! $qty && $pesananNorm->detail_pesanan) {
+                    $qty = $pesananNorm->detail_pesanan->sum('jumlah');
+                }
+                $pesananMessage = "Pesanan Dine-In #{$pesanan->kode_pesanan} sebanyak {$qty} porsi telah masuk dari Meja {$meja->nomor_meja} atas nama {$request->nama_konsumen}.";
+                \Illuminate\Support\Facades\Notification::send($users, new \App\Notifications\PesananBaru($pesananNorm, "Pesanan Baru", $pesananMessage, route('pos.dinein.index')));
             }
 
             DB::commit();
             return response()->json([
                 'success' => true,
                 'message' => 'Pesanan berhasil dikirim. Anda dapat melihat detail pesanan atau melakukan pembayaran kasir.',
-                'pesanan_id' => $pesanan->id,
+                'pesanan_id' => $pesananNorm ? $pesananNorm->id : $pesanan->id,
                 'kode_pesanan' => $pesanan->kode_pesanan,
                 'status' => 'pending'
             ]);
@@ -146,5 +180,20 @@ class QrMenuController extends Controller
                 'message' => 'Gagal membuat pesanan: '.$e->getMessage(),
             ], 400);
         }
+    }
+
+    /**
+     * Unduh / Cetak Struk Bukti Pesanan Self-Order QR (Public)
+     */
+    public function downloadReceipt($id)
+    {
+        $pesanan = \App\Models\Pesanan::with(['meja', 'pelanggan', 'detail_pesanan.menu', 'kasir'])->find($id);
+        if (!$pesanan) {
+            $pesanan = \App\Models\Pesanan::with(['meja', 'pelanggan', 'detail_pesanan.menu', 'kasir'])->where('id_pesanan', $id)->firstOrFail();
+        }
+
+        $pengaturan = \App\Models\PengaturanTransaksi::first();
+
+        return view('admin.pos.pesanan.print-nota', compact('pesanan', 'pengaturan'));
     }
 }

@@ -23,13 +23,13 @@
 
         {{-- TABS --}}
         <div class="flex items-center gap-6 border-b border-gray-200">
-            <a href="{{ route('menu.index') }}" class="py-3 text-sm font-medium border-b-2 transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            <a href="{{ route('menu.index') }}" class="py-3 text-sm font-medium border-b-2 transition-colors border-transparent text-gray-500 hover:text-primary hover:border-primary/40">
                 Menu Dine In
             </a>
-            <a href="{{ route('paket-catering.index', ['jenis' => 'nasi_box']) }}" class="py-3 text-sm border-b-2 transition-colors {{ $jenis === 'nasi_box' ? 'font-bold border-gray-900 text-gray-900' : 'font-medium border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+            <a href="{{ route('paket-catering.index', ['jenis' => 'nasi_box']) }}" class="py-3 text-sm border-b-2 transition-colors {{ $jenis === 'nasi_box' ? 'font-bold border-gray-900 text-gray-900' : 'font-medium border-transparent text-gray-500 hover:text-primary hover:border-primary/40' }}">
                 Paket Menu Nasi Box
             </a>
-            <a href="{{ route('paket-catering.index', ['jenis' => 'catering']) }}" class="py-3 text-sm border-b-2 transition-colors {{ $jenis === 'catering' ? 'font-bold border-gray-900 text-gray-900' : 'font-medium border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+            <a href="{{ route('paket-catering.index', ['jenis' => 'catering']) }}" class="py-3 text-sm border-b-2 transition-colors {{ $jenis === 'catering' ? 'font-bold border-gray-900 text-gray-900' : 'font-medium border-transparent text-gray-500 hover:text-primary hover:border-primary/40' }}">
                 Paket Menu Katering
             </a>
         </div>
@@ -170,7 +170,7 @@
 
         {{-- Footer --}}
         <div class="px-5 py-4 border-t border-gray-100 flex justify-between items-center bg-gray-50/80 shrink-0">
-            <button type="button" id="vBtnEdit" onclick="openPaketForm(window.currentPaketDetail ? window.currentPaketDetail.id : null)" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-gray-900 rounded-lg px-4 py-2 hover:bg-gray-800 transition-colors">
+            <button type="button" id="vBtnEdit" onclick="openPaketForm(window.currentPaketDetail ? window.currentPaketDetail.id : null)" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-primary rounded-lg px-4 py-2 hover:bg-primary/90 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Edit Paket
             </button>
@@ -245,7 +245,7 @@
             {{-- Footer --}}
             <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/80 shrink-0">
                 <button type="button" onclick="closePaketForm()" class="text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" class="text-sm font-semibold text-white bg-gray-900 rounded-lg px-5 py-2 hover:bg-gray-800 transition-colors">Simpan Paket</button>
+                <button type="submit" class="text-sm font-semibold text-white bg-primary rounded-lg px-5 py-2 hover:bg-primary/90 transition-colors">Simpan Paket</button>
             </div>
         </form>
     </div>
@@ -272,7 +272,7 @@
                     Batal
                 </button>
                 <button type="submit"
-                    class="flex-1 text-sm font-semibold text-white bg-[#0D3024] rounded-xl px-4 py-2.5 hover:bg-[#0a1f17] transition-colors">
+                    class="flex-1 text-sm font-semibold text-white bg-primary rounded-xl px-4 py-2.5 hover:bg-primary-container transition-colors">
                     Ya, Lanjutkan
                 </button>
             </div>
@@ -303,7 +303,7 @@ function openPaketDrawer(paket, isView = true) {
         paket.komponen_paket.forEach(komp => {
             const tipeBadge = komp.tipe_komponen === 'pilihan'
                 ? '<span class="inline-block text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 ml-1">pilih 1</span>'
-                : '<span class="inline-block text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5 ml-1">semua dapat</span>';
+                : '<span class="inline-block text-xs font-bold bg-primary-soft text-primary border border-primary/20 rounded-full px-2 py-0.5 ml-1">semua dapat</span>';
 
             let menuList = '';
             if (komp.opsi && komp.opsi.length > 0) {

@@ -183,10 +183,10 @@
                 <div class="border-t border-gray-100 pt-4 flex gap-3 flex-wrap">
                     <button onclick="window.showToast('info', 'Cetak KOT segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Cetak KOT</button>
                     <button onclick="window.showToast('info', 'Ubah Pesanan segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Ubah Pesanan</button>
-                    <button onclick="window.showToast('info', 'Proses Pembayaran segera hadir')" class="px-4 py-2 bg-blue-50 text-blue-700 font-bold text-sm rounded-lg hover:bg-blue-100 shadow-sm">Proses Pembayaran</button>
+                    <button onclick="window.showToast('info', 'Proses Pembayaran segera hadir')" class="px-4 py-2 bg-primary-soft text-primary font-bold text-sm rounded-lg hover:bg-primary/10 shadow-sm">Proses Pembayaran</button>
                     <button onclick="window.showToast('info', 'Batalkan segera hadir')" class="px-4 py-2 bg-red-50 text-red-600 font-bold text-sm rounded-lg hover:bg-red-100 shadow-sm">Batalkan Pesanan</button>
                     @if($pesanan->status_pesanan_id == 5)
-                        <button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" class="px-4 py-2 bg-[#0D3024] text-white font-bold text-sm rounded-lg hover:bg-[#0a1f17] shadow-sm">Cetak Bukti Transaksi</button>
+                        <button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" class="px-4 py-2 bg-primary text-white font-bold text-sm rounded-lg hover:bg-primary-container shadow-sm">Cetak Bukti Transaksi</button>
                         <button onclick="window.showToast('info', 'Selesaikan Pesanan segera hadir')" class="px-4 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-lg hover:bg-emerald-100 shadow-sm">Selesaikan Pesanan</button>
                     @endif
                 </div>
@@ -302,7 +302,7 @@
                 </div>
 
                 <div class="border-t border-gray-100 pt-4 flex gap-3 flex-wrap">
-                    <button onclick="window.showToast('info', 'Konfirmasi Pesanan segera hadir')" class="px-4 py-2 bg-blue-50 text-blue-700 font-bold text-sm rounded-lg hover:bg-blue-100 shadow-sm">Konfirmasi Pesanan</button>
+                    <button onclick="window.showToast('info', 'Konfirmasi Pesanan segera hadir')" class="px-4 py-2 bg-primary-soft text-primary font-bold text-sm rounded-lg hover:bg-primary/10 shadow-sm">Konfirmasi Pesanan</button>
                     <button onclick="window.showToast('info', 'Verifikasi Pembayaran segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Verifikasi Pembayaran</button>
                     <button onclick="window.showToast('info', 'Cetak Daftar Produksi segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Cetak Daftar Produksi</button>
                     <button onclick="window.showToast('info', 'Buat Pengadaan Bahan segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Buat Pengadaan Bahan</button>
@@ -385,7 +385,7 @@
                 </div>
 
                 <div class="border-t border-gray-100 pt-4 flex gap-3 flex-wrap">
-                    <button onclick="window.showToast('info', 'Konfirmasi Pesanan segera hadir')" class="px-4 py-2 bg-blue-50 text-blue-700 font-bold text-sm rounded-lg hover:bg-blue-100 shadow-sm">Konfirmasi Pesanan</button>
+                    <button onclick="window.showToast('info', 'Konfirmasi Pesanan segera hadir')" class="px-4 py-2 bg-primary-soft text-primary font-bold text-sm rounded-lg hover:bg-primary/10 shadow-sm">Konfirmasi Pesanan</button>
                     <button onclick="window.showToast('info', 'Verifikasi DP segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Verifikasi DP</button>
                     <button onclick="window.showToast('info', 'Cetak Daftar Produksi segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Cetak Daftar Produksi</button>
                     <button onclick="window.showToast('info', 'Buat Pengadaan segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Buat Pengadaan</button>
@@ -439,7 +439,7 @@
                                 
                                 <td class="px-5 py-4 text-gray-600">Rp{{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
                                 <td class="px-5 py-4 text-center font-bold text-gray-900">{{ $item->jumlah }}</td>
-                                <td class="px-5 py-4 text-right font-black text-[#0D3024]">Rp{{ number_format($item->subtotal, 0, ',', '.') }}</td>
+                                <td class="px-5 py-4 text-right font-black text-primary">Rp{{ number_format($item->subtotal, 0, ',', '.') }}</td>
                                 
                                 @if($pesanan->jenis_pesanan_id == 1)
                                 <td class="px-5 py-4 text-gray-500 text-xs italic">{{ $item->catatan ?? '-' }}</td>
@@ -485,7 +485,7 @@
                         
                         <div class="pt-3 mt-2 border-t border-gray-200 border-dashed flex justify-between items-center">
                             <span class="font-bold text-gray-800 uppercase tracking-wider">Total Tagihan</span>
-                            <span class="text-lg font-black text-[#0D3024]">Rp{{ number_format($pesanan->total_tagihan, 0, ',', '.') }}</span>
+                            <span class="text-lg font-black text-primary">Rp{{ number_format($pesanan->total_tagihan, 0, ',', '.') }}</span>
                         </div>
                         
                         @php
@@ -515,13 +515,13 @@
                             </p>
                         </div>
                         
-                        <button onclick="window.showToast('info', 'Halaman Proses Pembayaran segera hadir')" class="w-full flex items-center justify-center gap-2 bg-[#0D3024] hover:bg-[#0a1f17] text-white py-2.5 px-4 rounded-xl text-sm font-bold transition-colors">
+                        <button onclick="window.showToast('info', 'Halaman Proses Pembayaran segera hadir')" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white py-2.5 px-4 rounded-xl text-sm font-bold transition-colors">
                             <x-heroicon-o-banknotes class="w-5 h-5" /> Proses Pembayaran
                         </button>
                         <button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" class="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-sm font-bold transition-colors">
                             <x-heroicon-o-printer class="w-5 h-5" /> Cetak Tagihan
                         </button>
-                        <button onclick="window.showToast('info', 'Riwayat Pembayaran segera hadir')" class="w-full flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2.5 px-4 rounded-xl text-sm font-bold transition-colors">
+                        <button onclick="window.showToast('info', 'Riwayat Pembayaran segera hadir')" class="w-full flex items-center justify-center gap-2 bg-primary-soft hover:bg-primary/10 text-primary py-2.5 px-4 rounded-xl text-sm font-bold transition-colors">
                             <x-heroicon-o-clock class="w-5 h-5" /> Lihat Riwayat Pembayaran
                         </button>
                     </div>
@@ -531,11 +531,11 @@
 
         {{-- Catatan Tambahan (Bila ada, selain ekstrak nama) --}}
         @if(!empty($pesanan->catatan) && !preg_match('/^Pemesan:/', $pesanan->catatan) && !preg_match('/Self-Order QR/', $pesanan->catatan))
-        <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 shadow-sm flex items-start gap-3">
-            <div class="text-blue-400 shrink-0 mt-0.5"><x-heroicon-o-sparkles class="w-5 h-5" /></div>
+        <div class="bg-primary/10 p-4 rounded-xl border border-primary/15 shadow-sm flex items-start gap-3">
+            <div class="text-primary/70 shrink-0 mt-0.5"><x-heroicon-o-sparkles class="w-5 h-5" /></div>
             <div>
-                <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">Catatan Pesanan</h4>
-                <p class="text-sm text-blue-900 font-medium leading-relaxed">{{ $pesanan->catatan }}</p>
+                <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-1">Catatan Pesanan</h4>
+                <p class="text-sm text-primary font-medium leading-relaxed">{{ $pesanan->catatan }}</p>
             </div>
         </div>
         @endif

@@ -96,10 +96,17 @@ class PenerimaanBahanController extends Controller
         $checkeds = collect($request->item_checked)->filter(fn ($v) => $v)->keys()->all();
 
         $pengadaan = $po->pengadaan_bahan;
-        $jenisPersediaan = $pengadaan->jenis_pengadaan === 'catering' ? StokBahan::JENIS_CATERING : StokBahan::JENIS_HARIAN;
+        $isCatering = (strtolower($po->jenis_po ?? '') === 'catering') || ($pengadaan && strtolower($pengadaan->jenis_pengadaan ?? '') === 'catering');
+        $jenisPersediaan = $isCatering ? StokBahan::JENIS_CATERING : StokBahan::JENIS_HARIAN;
         $stokService = app(StockService::class);
 
         DB::transaction(function () use ($request, $po, $pengadaan, $jenisPersediaan, $stokService, $sisaItems, $checkeds) {
+            $totalNotaRaw = $request->total_nota;
+            $totalPembelian = null;
+            if ($totalNotaRaw !== null && $totalNotaRaw !== '') {
+                $totalPembelian = (float) str_replace(['Rp', '.', ' ', ','], ['', '', '', '.'], $totalNotaRaw);
+            }
+
             $penerimaan = PenerimaanBahan::create([
                 'nomor_penerimaan' => $this->kodePenerimaan(),
                 'purchase_order_id' => $po->id,
@@ -110,6 +117,7 @@ class PenerimaanBahanController extends Controller
                     : now(),
                 'supplier' => $po->supplier,
                 'nomor_nota' => $request->nomor_nota,
+                'total_pembelian' => $totalPembelian,
                 'status' => 'diproses',
                 'catatan' => $request->catatan,
             ]);
@@ -147,13 +155,13 @@ class PenerimaanBahanController extends Controller
                     continue;
                 }
 
-                $hargaRaw = isset($request->harga_beli[$detailId]) && $request->harga_beli[$detailId] !== ''
-                    ? $request->harga_beli[$detailId]
-                    : (float) ($detailPo->detail_pengadaan_bahan?->harga_satuan ?? 0);
-
-                $hargaBeli = is_numeric($hargaRaw)
-                    ? (float) $hargaRaw
-                    : (float) str_replace(['Rp', '.', ' '], '', $hargaRaw);
+                // Pengguna dapat menginput harga satuan aktual pada masing-masing bahan
+                $hargaBeliRaw = $request->harga_beli[$detailId] ?? null;
+                if ($hargaBeliRaw !== null && $hargaBeliRaw !== '') {
+                    $hargaBeli = (float) str_replace(['Rp', '.', ' ', ','], ['', '', '', '.'], $hargaBeliRaw);
+                } else {
+                    $hargaBeli = (float) ($detailPo->detail_pengadaan_bahan?->harga_satuan ?? 0);
+                }
 
                 $diminta = (float) $detailPo->jumlah_dipesan;
 
@@ -222,7 +230,7 @@ class PenerimaanBahanController extends Controller
             $pengadaan->save();
         });
 
-        return redirect()->route('pengadaan.penerimaan.index')
+        return redirect()->route('pengadaan.po.show', $po->id)
             ->with('success', 'Penerimaan berhasil disimpan. Stok bahan yang diterima telah diperbarui.');
     }
 

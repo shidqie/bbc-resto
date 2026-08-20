@@ -20,7 +20,15 @@ class KategoriMenuController extends Controller
             });
         }
 
-        $kategoris = $query->withCount('menu')->orderBy('id', 'asc')->paginate(15)->withQueryString();
+        $sort = $request->input('sort', 'nama');
+        $sortMap = [
+            'nama' => ['nama_kategori', 'asc'],
+            'terbaru' => ['dibuat_pada', 'desc'],
+        ];
+        $sortCol = $sortMap[$sort][0] ?? $sortMap['nama'][0];
+        $sortDir = $sortMap[$sort][1] ?? $sortMap['nama'][1];
+
+        $kategoris = $query->withCount('menu')->orderBy($sortCol, $sortDir)->paginate(15)->withQueryString();
 
         return view('admin.menu.kategori.index', compact('kategoris'));
     }
@@ -84,8 +92,9 @@ class KategoriMenuController extends Controller
         return DB::transaction(function () use ($kategori_menu) {
             $count = $kategori_menu->menu()->count();
             if ($count > 0) {
+                $kategori_menu->update(['status_aktif' => false]);
                 return redirect()->route('kategori-menu.index')
-                    ->with('error', "Gagal Menghapus: Kategori '{$kategori_menu->nama_kategori}' tidak dapat dihapus karena masih digunakan oleh {$count} menu.");
+                    ->with('success', "Kategori '{$kategori_menu->nama_kategori}' hanya dinonaktifkan karena masih digunakan oleh {$count} menu.");
             }
 
             $nama = $kategori_menu->nama_kategori;

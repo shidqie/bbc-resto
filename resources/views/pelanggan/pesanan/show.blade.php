@@ -43,7 +43,7 @@
                     ? ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-700 border-rose-200/60']
                     : ($statusKey === 'selesai'
                         ? ['label' => 'Pesanan Selesai', 'color' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60']
-                        : ['label' => collect($timeline)->firstWhere('key', $statusKey)['label'] ?? 'Pesanan Diterima', 'color' => 'bg-blue-50 text-blue-700 border-blue-200/60']);
+                        : ['label' => collect($timeline)->firstWhere('key', $statusKey)['label'] ?? 'Pesanan Diterima', 'color' => 'bg-primary-soft text-primary border-primary/25']);
 
                 $total = (float) $pesanan->total_tagihan;
                 $dpTerbayar = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
@@ -53,7 +53,7 @@
                 $statusBayarKey = $dpTerbayar >= $total ? 'lunas' : ($statusVerifikasi === 'menunggu_verifikasi' ? 'menunggu_verifikasi' : ($statusVerifikasi === 'ditolak' ? 'ditolak' : ($dpTerbayar > 0 ? 'dp_terbayar' : 'belum_bayar')));
                 $statusBayarInfo = [
                     'belum_bayar'         => ['label' => 'Belum Bayar',         'color' => 'bg-amber-50 text-amber-700 border-amber-200/60'],
-                    'menunggu_verifikasi' => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-blue-50 text-blue-700 border-blue-200/60'],
+                    'menunggu_verifikasi' => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-primary-soft text-primary border-primary/25'],
                     'dp_terbayar'         => ['label' => 'DP Terbayar',         'color' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60'],
                     'lunas'               => ['label' => 'Lunas',               'color' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60'],
                     'ditolak'             => ['label' => 'Ditolak',             'color' => 'bg-red-50 text-red-700 border-red-200/60'],
@@ -226,9 +226,9 @@
 
                             {{-- Menunggu verifikasi: jangan bisa upload lagi --}}
                             @if($statusBayarKey === 'menunggu_verifikasi')
-                                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-center">
-                                    <p class="font-bold text-blue-700 mb-1">⏳ Menunggu Verifikasi Admin</p>
-                                    <p class="text-blue-600">Bukti pembayaran Anda sedang kami periksa. Biasanya dalam 1×24 jam.</p>
+                                <div class="bg-primary-soft border border-primary/20 rounded-xl p-4 text-sm text-center">
+                                    <p class="font-bold text-primary mb-1">⏳ Menunggu Verifikasi Admin</p>
+                                    <p class="text-primary">Bukti pembayaran Anda sedang kami periksa. Biasanya dalam 1×24 jam.</p>
                                 </div>
 
                             {{-- Belum bayar / ditolak: tampilkan form upload DP --}}
@@ -242,14 +242,14 @@
                                      x-data="countdownTimer('{{ $sesiDp ? $sesiDp->expires_at : '' }}')">
                                     <div class="flex items-center justify-between">
                                         <p class="text-sm font-bold text-gray-900">Unggah Bukti DP ({{ $dpPersen }}%)</p>
-                                        <span class="text-sm font-bold text-blue-700">Rp {{ number_format($nominalDp, 0, ',', '.') }}</span>
+                                        <span class="text-sm font-bold text-primary">Rp {{ number_format($nominalDp, 0, ',', '.') }}</span>
                                     </div>
                                     @if($sesiDp && $sesiDp->expires_at)
                                     <div class="bg-amber-50 text-amber-800 p-3 rounded-lg text-xs flex justify-between items-center font-medium border border-amber-200/60">
                                         <span>Selesaikan pembayaran dalam <span x-text="timeLeft" class="font-bold font-mono text-sm ml-1"></span></span>
                                         <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </div>
-                                    <p class="text-[11px] text-gray-500 mb-2">Pesanan otomatis dibatalkan apabila pembayaran DP tidak dilakukan sampai waktu berakhir.</p>
+                                    <p class="text-xs text-gray-500 mb-2">Pesanan otomatis dibatalkan apabila pembayaran DP tidak dilakukan sampai waktu berakhir.</p>
                                     @endif
 
                                     <form action="{{ route('pesanan.upload_bukti') }}" method="POST" enctype="multipart/form-data" class="space-y-2">
@@ -261,7 +261,7 @@
                                             <span class="text-xs text-gray-500">Klik untuk pilih bukti transfer (JPG/PNG/PDF, maks 1MB)</span>
                                             <input type="file" name="file_bukti" accept=".jpg,.jpeg,.png,.pdf" class="hidden" required>
                                         </label>
-                                        <button type="submit" x-bind:disabled="isExpired" x-bind:class="isExpired ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600 active:scale-[0.99] shadow-md shadow-blue-500/20'" class="w-full flex items-center justify-center gap-2 bg-[#3B82F6] text-white font-bold py-3 px-6 rounded-xl text-xs tracking-widest uppercase transition-all">
+                                        <button type="submit" x-bind:disabled="isExpired" x-bind:class="isExpired ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary-container active:scale-[0.99] shadow-md shadow-primary/20'" class="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold py-3 px-6 rounded-xl text-xs tracking-widest uppercase transition-all">
                                             Kirim Bukti DP
                                         </button>
                                     </form>
@@ -313,7 +313,7 @@
                                     @else
                                         <form action="{{ route('pesanan.mulai_pelunasan', $pesanan->id_pesanan) }}" method="POST">
                                             @csrf
-                                            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl text-xs tracking-widest uppercase transition-all shadow-md active:scale-[0.99]">
+                                            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-xl text-xs tracking-widest uppercase transition-all shadow-md active:scale-[0.99]">
                                                 Mulai Sesi Pelunasan
                                             </button>
                                         </form>

@@ -78,12 +78,13 @@ class StokOperasionalController extends Controller
             }
         }
 
-        $query->orderByRaw('(stok_bahan.jumlah_stok / NULLIF(stok_bahan.stok_minimal, 0)) ASC');
+        $query->orderBy('stok_bahan.jumlah_stok', 'desc')
+              ->orderBy('bahan_baku.nama_bahan', 'asc');
 
         $bahanBakus = $query->paginate(15)->withQueryString();
 
         $stats = [
-            'total_bahan' => BahanBaku::count(),
+            'total_bahan' => StokBahan::harian()->count(),
             'total_aman' => StokBahan::harian()->whereColumn('jumlah_stok', '>', 'stok_minimal')->count(),
             'total_menipis' => StokBahan::harian()->where('jumlah_stok', '>', 0)
                 ->whereColumn('jumlah_stok', '<=', 'stok_minimal')->count(),

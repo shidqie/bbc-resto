@@ -105,6 +105,11 @@ class MutasiStok extends BaseModel
         return $this->belongsTo(Pengguna::class, 'dibuat_oleh');
     }
 
+    public function pengguna()
+    {
+        return $this->belongsTo(Pengguna::class, 'dibuat_oleh');
+    }
+
     public function getJenisPersediaanNamaAttribute(): string
     {
         return ($this->jenis_persediaan ?? 'harian') === 'catering' ? 'Catering' : 'Harian';

@@ -8,14 +8,14 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        *, body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        *, body { font-family: 'Outfit', sans-serif; }
         input:focus { outline: none; box-shadow: 0 0 0 3px rgba(15,46,35,0.08); }
 
         @keyframes fadeUp {
@@ -29,7 +29,7 @@
         .d4  { animation-delay: .32s; }
     </style>
 </head>
-<body class="min-h-screen bg-[#f5f5f0] flex antialiased text-[#111827]">
+<body class="min-h-screen bg-secondary-soft flex antialiased text-body">
 
     <div class="flex min-h-screen w-full">
 
@@ -41,7 +41,7 @@
             {{-- Dark gradient overlay --}}
             <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
             {{-- Color tint --}}
-            <div class="absolute inset-0 bg-[#0D3024]/40"></div>
+            <div class="absolute inset-0 bg-primary/40"></div>
 
             {{-- Top: Logo --}}
             <div class="relative z-10 flex items-center gap-2.5">
@@ -70,10 +70,10 @@
         </div>
 
         {{-- ── RIGHT: FORM ── --}}
-        <div class="flex-1 relative flex items-center justify-center px-6 py-16 sm:px-12 bg-[#f5f5f0]">
+        <div class="flex-1 relative flex items-center justify-center px-6 py-16 sm:px-12 bg-secondary-soft">
 
             <a href="{{ route('home') }}"
-               class="absolute top-6 left-6 sm:top-8 sm:left-8 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#0D3024] transition-colors fu d1">
+               class="absolute top-6 left-6 sm:top-8 sm:left-8 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-colors fu d1">
                 <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Kembali
             </a>
@@ -83,12 +83,12 @@
                 {{-- Mobile logo --}}
                 <div class="lg:hidden flex items-center gap-2.5 mb-10">
                     <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-full object-contain">
-                    <span class="text-sm font-bold text-[#111827] tracking-wide">BBC Resto · Staff</span>
+                    <span class="text-sm font-bold text-body tracking-wide">BBC Resto · Staff</span>
                 </div>
 
                 {{-- Heading --}}
                 <div class="mb-6 fu d1">
-                    <h2 class="text-xl font-bold text-[#111827] tracking-tight mb-1">Masuk Portal Staff</h2>
+                    <h2 class="text-xl font-bold text-body tracking-tight mb-1">Masuk Portal Staff</h2>
                     <p class="text-xs text-gray-500 font-medium">Gunakan Email atau No. WhatsApp & password akun staff Anda.</p>
                 </div>
 
@@ -109,7 +109,7 @@
                         <input id="login" type="text" name="login" value="{{ old('login') }}"
                                required autofocus autocomplete="username"
                                placeholder="admin@resto.com / 08xxxxxxxxxx"
-                               class="w-full px-3.5 py-2 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none {{ $errors->has('login') ? 'border-red-300' : 'border-gray-200' }}">
+                               class="w-full px-3.5 py-2 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none {{ $errors->has('login') ? 'border-red-300' : 'border-gray-200' }}">
                     </div>
 
                     {{-- Password --}}
@@ -117,14 +117,14 @@
                         <div class="flex items-center justify-between mb-1">
                             <label for="password" class="block text-xs font-bold text-gray-700">Password</label>
                             @if(Route::has('password.request'))
-                                <a href="{{ route('password.request') }}" class="text-[11px] font-semibold text-[#0D3024] hover:opacity-70 transition-opacity">Lupa password?</a>
+                                <a href="{{ route('password.request') }}" class="text-xs font-semibold text-primary hover:opacity-70 transition-opacity">Lupa password?</a>
                             @endif
                         </div>
                         <div class="relative">
                             <input id="password" :type="show ? 'text' : 'password'" name="password"
                                    required autocomplete="current-password"
                                    placeholder="••••••••"
-                                   class="w-full px-3.5 py-2 pr-10 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-[#0D3024] focus:ring-1 focus:ring-[#0D3024]/20 outline-none {{ $errors->has('password') ? 'border-red-300' : 'border-gray-200' }}">
+                                   class="w-full px-3.5 py-2 pr-10 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none {{ $errors->has('password') ? 'border-red-300' : 'border-gray-200' }}">
                             <button type="button" @click="show = !show"
                                     class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
                                 <x-heroicon-o-eye class="w-4 h-4" x-show="!show" />
@@ -136,14 +136,14 @@
                     {{-- Remember --}}
                     <div class="flex items-center gap-2 fu d3">
                         <input id="remember_me" type="checkbox" name="remember"
-                               class="w-3.5 h-3.5 rounded border-gray-300 text-[#0D3024] focus:ring-[#0D3024]/20 transition-all cursor-pointer">
+                               class="w-3.5 h-3.5 rounded border-gray-300 text-primary focus:ring-primary/20 transition-all cursor-pointer">
                         <label for="remember_me" class="text-xs text-gray-500 font-medium cursor-pointer select-none">Ingat saya</label>
                     </div>
 
                     {{-- Submit --}}
                     <div class="pt-1 fu d4">
                         <button type="submit"
-                                class="w-full py-2.5 bg-[#0D3024] hover:bg-[#1a4a35] text-white font-semibold text-xs rounded-xl transition-all duration-200 active:scale-[0.99]">
+                                class="w-full py-2.5 bg-primary hover:bg-primary-container text-white font-semibold text-xs rounded-xl transition-all duration-200 active:scale-[0.99]">
                             Masuk
                         </button>
                     </div>

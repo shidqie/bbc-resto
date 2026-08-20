@@ -8,10 +8,10 @@
 
     <x-slot:title>Pembayaran Berhasil</x-slot:title>
 
-    <div class="min-h-screen bg-[#FFFFFF] text-[#111827]">
+    <div class="min-h-screen bg-surface text-body">
         <header class="py-12 border-b border-gray-100">
             <div class="max-w-6xl mx-auto px-6 md:px-12">
-                <h1 class="text-[40px] font-medium leading-tight tracking-tight mb-2 text-[#0D3024]">Hasil Pembayaran</h1>
+                <h1 class="text-[40px] font-medium leading-tight tracking-tight mb-2 text-primary">Hasil Pembayaran</h1>
                 <p class="text-gray-500 text-base font-light">Status terakhir transaksi Anda.</p>
             </div>
         </header>
@@ -29,7 +29,7 @@
                 <div class="text-left border border-gray-200/80 rounded-xl overflow-hidden bg-white shadow-lg shadow-gray-200/50">
                     <div class="p-6 border-b border-gray-100 bg-gray-50/40">
                         <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Nomor Invoice</p>
-                        <p class="font-['Anonymous_Pro'] text-xl font-medium tracking-wider text-[#0D3024]">{{ $pesanan->id_pesanan }}</p>
+                        <p class="font-['Anonymous_Pro'] text-xl font-medium tracking-wider text-primary">{{ $pesanan->id_pesanan }}</p>
                     </div>
                     <div class="p-6 space-y-4">
                         <div class="flex justify-between items-start gap-4">
@@ -53,8 +53,8 @@
                             <span class="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200/60">Sudah Dikonfirmasi</span>
                         </div>
                     </div>
-                    <div class="p-6 bg-[#0D3024] text-white flex justify-between items-center">
-                        <span class="text-xs font-bold uppercase tracking-widest text-[#D4A843]">Total Dibayar</span>
+                    <div class="p-6 bg-primary text-white flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase tracking-widest text-accent">Total Dibayar</span>
                         <span class="text-2xl font-medium tracking-tight">Rp {{ number_format($lunas, 0, ',', '.') }}</span>
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                 <!-- Aksi -->
                 <div class="mt-8 space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <a href="{{ route('pesanan.invoice', $pesanan->id_pesanan) }}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0D3024] hover:bg-[#164032] text-white font-bold tracking-widest text-xs uppercase rounded-xl transition-all border border-[#0D3024]">
+                        <a href="{{ route('pesanan.invoice', $pesanan->id_pesanan) }}" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary-container text-white font-bold tracking-widest text-xs uppercase rounded-xl transition-all border border-primary">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 16l5 5 5-5M12 3v12"/></svg>
                             Unduh Bukti Pesanan
                         </a>
@@ -71,7 +71,7 @@
                             Lacak Pesanan
                         </a>
                     </div>
-                    <a href="{{ route('home') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-[#0D3024] font-bold tracking-widest text-xs uppercase rounded-xl transition-all">
+                    <a href="{{ route('home') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-primary font-bold tracking-widest text-xs uppercase rounded-xl transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
                         Kembali ke Beranda
                     </a>

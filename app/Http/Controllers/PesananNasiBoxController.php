@@ -97,7 +97,7 @@ class PesananNasiBoxController extends Controller
             'nama_pemesan.required' => 'Nama pemesan wajib diisi.',
             'kontak.required' => 'Kontak WhatsApp wajib diisi.',
             'tanggal_acara.required' => 'Tanggal acara wajib diisi.',
-            'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-4 sebelum hari pelaksanaan acara.',
+            'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-3 sebelum hari pelaksanaan acara.',
             'lokasi_acara.required' => 'Alamat acara wajib diisi.',
             'metode_pengiriman.required' => 'Metode pengiriman wajib dipilih.',
             'jumlah_box.required' => 'Jumlah pesanan wajib diisi.',
@@ -208,15 +208,17 @@ class PesananNasiBoxController extends Controller
                         'expires_at' => now()->addMinutes(15),
                     ]);
 
-                    // Kirim notifikasi ke admin
+                    // Kirim notifikasi
                     $admins = \App\Models\Pengguna::whereHas('peran', function ($q) {
-                        $q->whereIn('nama_peran', ['Pemilik', 'Admin', 'Manajer', 'Kasir']);
+                        $q->whereIn('nama_peran', ['Pemilik', 'Admin', 'Manajer', 'Dapur']);
                     })->get();
                     
                     if ($admins->count() > 0) {
+                        $qty = $pesananBaru->detail_pesanan->sum('jumlah') ?: $pesananBaru->detail_pesanan->sum('kuantitas');
                         \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\PesananBaru(
-                            $pesananBaru, 
-                            "Pesanan Nasi Box Baru - Invoice {$pesananBaru->id_pesanan}", 
+                            $pesananBaru,
+                            "Pesanan Baru",
+                            "Pesanan Nasi Box #{$pesananBaru->id_pesanan} sebanyak {$qty} box telah masuk dan menunggu konfirmasi.", 
                             route('admin.pesanan.nasibox.index')
                         ));
                     }
@@ -240,7 +242,7 @@ class PesananNasiBoxController extends Controller
     {
         $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'status_pesanan'])
             ->where('jenis_pesanan_id', 3)
-            ->latest();
+            ->latest('dibuat_pada');
 
         if ($request->has('search')) {
             $query->where('id_pesanan', 'like', "%{$request->search}%");
@@ -344,7 +346,7 @@ class PesananNasiBoxController extends Controller
 
         $kebutuhanBahan = $this->hitungKebutuhanBahan($pesanan);
 
-        $pdf = Pdf::loadView('order.nasi-box.pdf', compact('pesanan', 'kebutuhanBahan'));
+        $pdf = Pdf::loadView('pdf.invoice', compact('pesanan', 'kebutuhanBahan'));
 
         return $pdf->stream('rincian-nasi-box-'.$pesanan->id_pesanan.'.pdf');
     }
@@ -468,6 +470,74 @@ class PesananNasiBoxController extends Controller
             }
         }
 
+        // Kirim Notifikasi Status
+        $statusTexts = [
+            1 => 'menunggu konfirmasi',
+            2 => 'telah dikonfirmasi',
+            3 => 'sedang diproses',
+            4 => 'dalam pengantaran',
+            5 => 'telah selesai',
+            6 => 'dibatalkan',
+        ];
+        $statusText = $statusTexts[$status] ?? 'diperbarui';
+
+        // 1. Notifikasi ke Konsumen
+        if ($pesanan->pelanggan) {
+            $pesanan->pelanggan->notify(new \App\Notifications\StatusPesanan(
+                'Status Pesanan', 
+                "Pesanan Nasi Box #{$pesanan->id_pesanan} Anda {$statusText}.", 
+                route('konsumen.pesanan.index')
+            ));
+        }
+
+        // 2. Notifikasi ke Dapur & Pemilik (Dikonfirmasi / Diproses)
+        if (in_array($status, [2, 3])) {
+            $roles = $status == 2 ? ['Dapur'] : ['Dapur', 'Pemilik'];
+            $internalMsg = $status == 2 
+                ? "Pesanan Nasi Box #{$pesanan->id_pesanan} telah dikonfirmasi. Silakan cek detail." 
+                : "Pesanan Nasi Box #{$pesanan->id_pesanan} siap diproses (produksi bisa dimulai).";
+            
+            $internals = \App\Models\Pengguna::whereHas('peran', function ($q) use ($roles) {
+                $q->whereIn('nama_peran', $roles);
+            })->get();
+            
+            if ($internals->count() > 0) {
+                \Illuminate\Support\Facades\Notification::send($internals, new \App\Notifications\StatusPesanan(
+                    'Update Pesanan',
+                    $internalMsg,
+                    route('admin.pesanan.nasibox.index')
+                ));
+            }
+        }
+
+        // 3. Notifikasi ke Tim Pengantaran (Siap Dikirim)
+        if ($status == 4) {
+            $kurirs = \App\Models\Pengguna::whereHas('peran', function ($q) {
+                $q->where('nama_peran', 'Tim Pengantaran');
+            })->get();
+            if ($kurirs->count() > 0) {
+                \Illuminate\Support\Facades\Notification::send($kurirs, new \App\Notifications\StatusPesanan(
+                    'Pesanan Siap Dikirim',
+                    "Pesanan Nasi Box #{$pesanan->id_pesanan} siap dikirim.",
+                    route('admin.pengantaran.index')
+                ));
+            }
+        }
+
+        // 4. Notifikasi ke Pemilik (Selesai)
+        if ($status == 5) {
+            $pemilik = \App\Models\Pengguna::whereHas('peran', function ($q) {
+                $q->where('nama_peran', 'Pemilik');
+            })->get();
+            if ($pemilik->count() > 0) {
+                \Illuminate\Support\Facades\Notification::send($pemilik, new \App\Notifications\StatusPesanan(
+                    'Pesanan Selesai',
+                    "Pesanan Nasi Box #{$pesanan->id_pesanan} telah selesai / pengiriman selesai.",
+                    route('admin.pesanan.nasibox.index')
+                ));
+            }
+        }
+
         return back()->with('success', 'Status pesanan berhasil diperbarui.');
     }
 
@@ -487,10 +557,10 @@ class PesananNasiBoxController extends Controller
         ]);
 
         if ($pembayaran->jenis_pembayaran === 'uang_muka') {
-            // Set batas pelunasan H-4 dari tanggal acara
+            // Set batas pelunasan H-3 dari tanggal acara
             $batasPelunasan = null;
             if ($pesanan->jadwal_pesanan && $pesanan->jadwal_pesanan->tanggal_acara) {
-                $batasPelunasan = \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->subDays(4)->endOfDay();
+                $batasPelunasan = \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->subDays(3)->endOfDay();
             }
 
             $pesanan->update([

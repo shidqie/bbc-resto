@@ -3,7 +3,7 @@
 @section('title', 'Detail ' . ($user->peran ? 'Karyawan' : 'Konsumen'))
 
 @section('content')
-<div class="p-4 md:p-8 w-full h-full flex flex-col bg-[#F3F4F6]">
+<div class="p-4 md:p-8 w-full h-full flex flex-col bg-gray-100">
     <!-- Header Area -->
     <x-ui.page-header title="Detail {{ $user->peran ? 'Karyawan' : 'Konsumen' }}" subtitle="Informasi lengkap {{ strtolower($user->peran ? 'karyawan' : 'konsumen') }} dan riwayat aktivitas." class="mb-6" :breadcrumbs="['Manajemen Pengguna', $user->peran ? 'Data Karyawan' : 'Data Konsumen', 'Detail']">
         <x-slot:actions>
@@ -199,7 +199,7 @@
                                     @php
                                         $statusColors = [
                                             'pending' => 'bg-yellow-50 text-yellow-700 border-yellow-100',
-                                            'diproses' => 'bg-blue-50 text-blue-700 border-blue-100',
+                                            'diproses' => 'bg-primary-soft text-primary border-primary/15',
                                             'selesai' => 'bg-green-50 text-green-700 border-green-100',
                                             'dibatalkan' => 'bg-red-50 text-red-700 border-red-100',
                                         ];
@@ -233,8 +233,8 @@
                             <p class="text-sm font-medium text-gray-500">Total Pesanan</p>
                             <p class="text-2xl font-bold text-gray-900">{{ $pesananList->count() }}</p>
                         </div>
-                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                            <x-heroicon-o-shopping-bag class="w-5 h-5 text-blue-600" />
+                        <div class="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center">
+                            <x-heroicon-o-shopping-bag class="w-5 h-5 text-primary" />
                         </div>
                     </div>
                 </div>

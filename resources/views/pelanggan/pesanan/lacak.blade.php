@@ -1,22 +1,22 @@
 <x-layouts.landing>
     <x-slot:title>Lacak Pesanan — Saung Babakan Cinta</x-slot:title>
 
-    <section class="py-16 bg-canvas min-h-screen">
-        <div class="max-w-5xl mx-auto px-4 lg:px-8">
+    <section class="py-16 bg-canvas min-h-[calc(100vh-80px)] flex flex-col justify-center">
+        <div class="w-full max-w-5xl mx-auto px-4 lg:px-8">
 
             {{-- Header --}}
-            <div class="text-center mb-12">
-                <div class="w-14 h-14 bg-white shadow-sm border border-gray-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
-                    <svg class="w-7 h-7 -rotate-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="text-center mb-10">
+                <div class="w-16 h-16 bg-white shadow-sm border border-gray-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                    <svg class="w-8 h-8 -rotate-3 hover:rotate-0 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Lacak Pesanan</h1>
-                <p class="text-gray-500 text-sm max-w-md mx-auto leading-relaxed">Masukkan kode pesanan Anda untuk memantau status secara langsung.</p>
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">Lacak Pesanan</h1>
+                <p class="text-gray-500 dark:text-gray-400 text-sm max-w-md mx-auto leading-relaxed">Masukkan kode pesanan Anda untuk memantau status secara langsung.</p>
             </div>
 
             {{-- Search Form --}}
-            <form method="GET" action="{{ route('lacak.index') }}" class="mb-8">
+            <form method="GET" action="{{ route('lacak.index') }}" class="mb-12 max-w-2xl mx-auto">
                 <label for="kode_pesanan" class="sr-only">Nomor pesanan</label>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <div class="relative flex-1">
@@ -34,7 +34,7 @@
                             required
                         >
                     </div>
-                    <button type="submit" class="bg-[#0D3024] hover:bg-[#0a1f17] text-white font-bold px-6 py-3 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2">
+                    <button type="submit" class="bg-primary hover:bg-primary-container text-white font-bold px-6 py-3 rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
@@ -87,7 +87,7 @@
                     ? ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-700 border-rose-200/60']
                     : ($statusKey === 'selesai'
                         ? ['label' => 'Pesanan Selesai', 'color' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60']
-                        : ['label' => collect($timeline)->firstWhere('key', $statusKey)['label'] ?? 'Pesanan Diterima', 'color' => 'bg-blue-50 text-blue-700 border-blue-200/60']);
+                        : ['label' => collect($timeline)->firstWhere('key', $statusKey)['label'] ?? 'Pesanan Diterima', 'color' => 'bg-primary-soft text-primary border-primary/25']);
 
                 $total = (float) $pesanan->total_tagihan;
                 $dpTerbayar = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
@@ -97,7 +97,7 @@
                 $statusBayarKey = $dpTerbayar >= $total ? 'lunas' : ($statusVerifikasi === 'menunggu_verifikasi' ? 'menunggu_verifikasi' : ($statusVerifikasi === 'ditolak' ? 'ditolak' : ($dpTerbayar > 0 ? 'dp_terbayar' : 'belum_bayar')));
                 $statusBayarInfo = [
                     'belum_bayar'         => ['label' => 'Belum Bayar',         'color' => 'bg-amber-50 text-amber-700 border-amber-200/60'],
-                    'menunggu_verifikasi' => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-blue-50 text-blue-700 border-blue-200/60'],
+                    'menunggu_verifikasi' => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-primary-soft text-primary border-primary/25'],
                     'dp_terbayar'         => ['label' => 'DP Terbayar',         'color' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60'],
                     'lunas'               => ['label' => 'Lunas',               'color' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60'],
                     'ditolak'             => ['label' => 'Ditolak',             'color' => 'bg-red-50 text-red-700 border-red-200/60'],
@@ -114,7 +114,7 @@
 
                 {{-- Header Status --}}
                 <div class="text-center pb-8 border-b border-gray-100 mb-10">
-                    <span class="inline-block px-3 py-1 bg-gray-50 text-gray-500 font-['Anonymous_Pro'] text-[11px] font-bold uppercase tracking-widest rounded-full mb-4 border border-gray-200/60">
+                    <span class="inline-block px-3 py-1 bg-gray-50 text-gray-500 font-['Anonymous_Pro'] text-xs font-bold uppercase tracking-widest rounded-full mb-4 border border-gray-200/60">
                         {{ $jenisPesanan }}
                     </span>
 
@@ -186,7 +186,7 @@
                                 </div>
                                 @if($pesanan->detail_pesanan->count() > 1)
                                 <div class="flex justify-end -mt-2 pb-2.5 border-b border-gray-50">
-                                    <span class="text-[11px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">+ {{ $pesanan->detail_pesanan->count() - 1 }} item lainnya</span>
+                                    <span class="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">+ {{ $pesanan->detail_pesanan->count() - 1 }} item lainnya</span>
                                 </div>
                                 @endif
                                 @if($pesanan->pengiriman)
@@ -236,20 +236,20 @@
                         {{-- Action Buttons --}}
                         <div class="space-y-3 pt-2">
                             @if(in_array($statusBayarKey, ['belum_bayar', 'dp_terbayar']) && !$isCancelled)
-                                <a href="{{ route('pesanan.bayar', $pesanan->id_pesanan) }}" class="w-full flex items-center justify-center gap-2 bg-[#3B82F6] hover:bg-blue-600 text-white font-semibold py-3.5 px-6 rounded-xl text-[13px] transition-all shadow-sm shadow-blue-500/20 active:scale-[0.99]">
+                                <a href="{{ route('pesanan.bayar', $pesanan->id_pesanan) }}" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white font-semibold py-3.5 px-6 rounded-xl text-sm transition-all shadow-sm shadow-primary/20 active:scale-[0.99]">
                                     <span>{{ $statusBayarKey === 'dp_terbayar' ? 'Lanjutkan Pelunasan' : 'Bayar Sekarang' }}</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                                 </a>
                             @endif
 
                             @if($jenisPesanan !== 'Dine In')
-                                <a href="{{ route('pesanan.invoice', $pesanan->id_pesanan) }}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold py-3.5 px-6 rounded-xl text-[13px] transition-all border border-emerald-100">
+                                <a href="{{ route('pesanan.invoice', $pesanan->id_pesanan) }}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold py-3.5 px-6 rounded-xl text-sm transition-all border border-emerald-100">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 16l5 5 5-5M12 3v12"/></svg>
                                     <span>Unduh Bukti Pesanan</span>
                                 </a>
                             @endif
 
-                            <a href="{{ route('lacak.index') }}" class="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-700 font-semibold py-3.5 px-6 rounded-xl text-[13px] transition-all border border-gray-100">
+                            <a href="{{ route('lacak.index') }}" class="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-700 font-semibold py-3.5 px-6 rounded-xl text-sm transition-all border border-gray-100">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                 <span>Cari Pesanan Lain</span>
                             </a>
@@ -277,7 +277,7 @@
 
                                 {{-- Status Dot --}}
                                 <span class="absolute left-0 top-0 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-all
-                                    {{ $isCurrent ? 'bg-[#3B82F6] text-white ring-4 ring-blue-100 shadow-md shadow-blue-500/30' : ($isDone ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-300 border-2 border-gray-200') }}">
+                                    {{ $isCurrent ? 'bg-primary text-white ring-4 ring-primary/15 shadow-md shadow-primary/30' : ($isDone ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-300 border-2 border-gray-200') }}">
                                     @if($isDone)
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                     @elseif($isCurrent)
@@ -289,10 +289,10 @@
 
                                 {{-- Label --}}
                                 <div>
-                                    <p class="font-medium text-sm leading-tight {{ $isCurrent ? 'text-blue-600 font-bold' : ($isDone ? 'text-gray-900' : 'text-gray-400') }}">
+                                    <p class="font-medium text-sm leading-tight {{ $isCurrent ? 'text-primary font-bold' : ($isDone ? 'text-gray-900' : 'text-gray-400') }}">
                                         {{ $step['label'] }}
                                         @if($isCurrent)
-                                            <span class="inline-flex items-center gap-1 ml-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-wider align-middle">
+                                            <span class="inline-flex items-center gap-1 ml-2 text-[10px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full border border-primary/15 uppercase tracking-wider align-middle">
                                                 Saat Ini
                                             </span>
                                         @endif

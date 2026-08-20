@@ -16,12 +16,12 @@
             <i class="ph-bold ph-receipt text-primary"></i>
             <h2 class="text-sm font-bold text-body">Ringkasan Pesanan</h2>
         </div>
-        <p class="text-[11px] text-body/60 mb-3 pb-3 border-b border-primary/10">Periksa kembali detail pesanan sebelum melanjutkan pembayaran.</p>
+        <p class="text-xs text-body/60 mb-3 pb-3 border-b border-primary/10">Periksa kembali detail pesanan sebelum melanjutkan pembayaran.</p>
 
         {{-- DETAIL PESANAN --}}
         <div class="mb-3">
             <h3 class="text-[10px] font-bold text-primary/50 uppercase tracking-wider mb-1.5">Detail Pesanan</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 text-[11px]">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 text-xs">
                 <div class="flex justify-between items-start gap-3">
                     <span class="text-body/60 shrink-0">Jenis</span>
                     <span class="font-semibold text-body text-right">{{ $summaryCfg['jenisLabel'] }}</span>
@@ -48,7 +48,7 @@
         {{-- PENGIRIMAN PESANAN --}}
         <div class="mb-3 pt-3 border-t border-primary/10">
             <h3 class="text-[10px] font-bold text-primary/50 uppercase tracking-wider mb-1.5">Pengiriman</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 text-[11px]">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 text-xs">
                 <div class="flex justify-between items-start gap-3">
                     <span class="text-body/60 shrink-0">Metode</span>
                     <span id="summary-metode" class="font-semibold text-body text-right">Diambil (Pickup)</span>
@@ -71,7 +71,7 @@
         {{-- RINCIAN PEMBAYARAN --}}
         <div class="mb-3 pt-3 border-t border-primary/10">
             <h3 class="text-[10px] font-bold text-primary/50 uppercase tracking-wider mb-1.5">Rincian Pembayaran</h3>
-            <div class="space-y-1.5 text-[11px] mb-2">
+            <div class="space-y-1.5 text-xs mb-2">
                 <div class="flex justify-between items-center">
                     <span class="text-body/60 font-medium">Subtotal Menu</span>
                     <span id="subtotal-menu" class="font-bold text-body">Rp 0</span>
@@ -139,8 +139,8 @@
     {{-- STICKY SUBMIT BUTTON --}}
     <div class="p-4 sm:p-5 border-t border-primary/10 bg-surface rounded-b-2xl shrink-0">
         <button type="submit" id="submitBtn"
-                class="w-full bg-primary hover:bg-primary-container text-white font-semibold text-sm py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] shadow-sm shadow-primary/20">
-            Lanjut Pembayaran
+                class="w-full bg-primary hover:bg-primary-container text-white font-bold text-base py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] shadow-sm shadow-primary/20">
+            Bayar
         </button>
     </div>
 </div>

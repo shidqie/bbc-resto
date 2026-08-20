@@ -23,6 +23,9 @@
             @if(($paket->harga_jual ?? $paket->harga) > 0)
                 <span class="text-neutral-900 dark:text-neutral-100 font-semibold text-sm">Rp {{ number_format($paket->harga_jual ?? $paket->harga, 0, ',', '.') }}</span>
                 <span class="text-xs text-neutral-400 dark:text-neutral-400">/{{ $type === 'catering' ? 'porsi' : 'box' }}</span>
+                <div class="mt-1">
+                    <span class="text-xs font-medium text-warning dark:text-warning-300 bg-warning/10 px-2 py-0.5 rounded">Min. order: {{ $paket->minimal_pemesanan ?? ($type === 'catering' ? 50 : 20) }} {{ $type === 'catering' ? 'porsi' : 'box' }}</span>
+                </div>
             @else
                 <span class="text-sm font-medium text-neutral-500 dark:text-neutral-400">By request</span>
             @endif
@@ -36,13 +39,16 @@
             <ul class="mb-5 divide-y divide-neutral-100 dark:divide-neutral-700">
                 @foreach($paket->komponen_paket as $komp)
                     <li class="flex items-start justify-between gap-3 py-1.5 text-sm">
-                        <span class="line-clamp-1 text-neutral-500 dark:text-neutral-400">
-                            @if($type === 'nasi_box' && $komp->opsi && $komp->opsi->count() > 0)
-                                {{ $komp->opsi->pluck('nama_pilihan')->join(', ') }}
-                            @else
-                                {{ $komp->nama_komponen }}
-                            @endif
-                        </span>
+                            <div class="flex flex-col">
+                                <span class="text-neutral-500 dark:text-neutral-400 font-medium">
+                                    {{ $komp->nama_komponen }}
+                                </span>
+                                @if($komp->opsi && $komp->opsi->count() > 0)
+                                    <span class="text-[11px] text-neutral-400 dark:text-neutral-500 mt-0.5 leading-snug">
+                                        {{ $komp->opsi->pluck('nama_pilihan')->filter()->join(', ') }}
+                                    </span>
+                                @endif
+                            </div>
                     </li>
                 @endforeach
             </ul>

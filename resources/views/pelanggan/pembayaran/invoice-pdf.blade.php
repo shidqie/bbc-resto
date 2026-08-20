@@ -403,7 +403,7 @@
 
         @if(!$isLunas && $dpTerbayar > 0)
         <div class="alert-box">
-            <p><strong>Penting:</strong> Sisa pelunasan sebesar <strong>Rp {{ number_format($sisaPelunasan, 0, ',', '.') }}</strong> wajib dibayarkan selambat-lambatnya pada <strong>{{ $batasPelunasanStr }} (H-4)</strong> sebelum tanggal acara. Kegagalan melakukan pelunasan akan mengakibatkan pesanan dibatalkan secara otomatis.</p>
+            <p><strong>Penting:</strong> Sisa pelunasan sebesar <strong>Rp {{ number_format($sisaPelunasan, 0, ',', '.') }}</strong> wajib dibayarkan selambat-lambatnya pada <strong>{{ $batasPelunasanStr }} (H-3)</strong> sebelum tanggal acara. Kegagalan melakukan pelunasan akan mengakibatkan pesanan dibatalkan secara otomatis.</p>
         </div>
         @endif
         

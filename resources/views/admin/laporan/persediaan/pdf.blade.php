@@ -1,48 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Persediaan</title>
+    <title>Laporan Persediaan Bahan Baku</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
+        body { font-family: sans-serif; font-size: 12px; color: #333; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .header h2 { margin: 0 0 5px 0; font-size: 18px; text-transform: uppercase; }
+        .header h3 { margin: 0 0 5px 0; font-size: 14px; font-weight: normal; }
+        .header p { margin: 0; font-size: 11px; color: #666; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f3f4f6; }
+        th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; font-size: 11px; }
+        th { background-color: #f3f4f6; font-weight: bold; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h2 { margin: 0; }
+        .badge-aman { color: #16a34a; font-weight: bold; }
+        .badge-menipis { color: #d97706; font-weight: bold; }
+        .badge-habis { color: #dc2626; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h2>LAPORAN PERSEDIAAN BAHAN BAKU</h2>
-        <p>Per Tanggal: {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</p>
+        <h2>RUMAH MAKAN SAUNG BABAKAN CINTA</h2>
+        <h3>LAPORAN PERSEDIAAN BAHAN BAKU</h3>
+        <p>Dicetak Pada: {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }} WIB</p>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th class="text-center">No</th>
-                <th>Kode Bahan</th>
-                <th>Nama Bahan</th>
-                <th>Kategori</th>
-                <th>Jenis Stok</th>
-                <th class="text-right">Stok Saat Ini</th>
-                <th class="text-center">Status</th>
+                <th class="text-center" style="width: 30px;">No</th>
+                <th style="width: 80px;">Kode</th>
+                <th>Nama Bahan Baku</th>
+                <th class="text-center" style="width: 60px;">Satuan</th>
+                <th class="text-right" style="width: 90px;">Stok Saat Ini</th>
+                <th class="text-right" style="width: 90px;">Stok Minimum</th>
+                <th class="text-center" style="width: 80px;">Kondisi</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($laporanBahan as $index => $item)
+            @forelse($laporanBahan as $index => $item)
+            @php
+                $condClass = $item['status'] == 'Aman' ? 'badge-aman' : ($item['status'] == 'Menipis' ? 'badge-menipis' : 'badge-habis');
+            @endphp
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ explode('_', $item['id'])[0] }}</td>
+                <td>{{ $item['id_bahan_baku'] ?? '-' }}</td>
                 <td>{{ $item['nama_bahan'] }}</td>
-                <td>{{ $item['kategori'] ?? '—' }}</td>
-                <td>{{ $item['jenis_stok'] }}</td>
-                <td class="text-right">{{ number_format($item['stok_saat_ini'], 2, ',', '.') }} {{ $item['satuan'] }}</td>
-                <td class="text-center">{{ $item['status'] }}</td>
+                <td class="text-center">{{ $item['satuan'] }}</td>
+                <td class="text-right">{{ \App\Helpers\UnitHelper::formatQuantity($item['stok_saat_ini'], $item['satuan']) }}</td>
+                <td class="text-right">{{ \App\Helpers\UnitHelper::formatQuantity($item['stok_minimum'], $item['satuan']) }}</td>
+                <td class="text-center {{ $condClass }}">{{ $item['status'] }}</td>
             </tr>
-            @endforeach
+            @empty
+            <tr>
+                <td colspan="7" class="text-center">Data persediaan belum tersedia.</td>
+            </tr>
+            @endforelse
         </tbody>
     </table>
 </body>

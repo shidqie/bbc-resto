@@ -84,4 +84,16 @@ class PesananDineInController extends Controller
 
         return view('admin.pesanan.dine-in.index', compact('pesanans', 'stats', 'status'));
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status_pesanan_id' => 'required|integer|in:1,2,3,4,5,6',
+        ]);
+
+        $pesanan = Pesanan::where('jenis_pesanan_id', 1)->findOrFail($id);
+        $pesanan->update(['status_pesanan_id' => $request->status_pesanan_id]);
+
+        return redirect()->back()->with('success', "Status pesanan {$pesanan->id_pesanan} berhasil diperbarui.");
+    }
 }

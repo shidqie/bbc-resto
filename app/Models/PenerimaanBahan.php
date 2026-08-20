@@ -43,4 +43,13 @@ class PenerimaanBahan extends BaseModel
             default => ucwords(str_replace('_', ' ', (string) $this->status)),
         };
     }
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->nomor_penerimaan)) {
+                $model->nomor_penerimaan = \App\Helpers\IdCodeGenerator::generatePembelianId($model->diterima_pada ?? now());
+            }
+        });
+    }
 }

@@ -16,28 +16,19 @@ class KalkulasiPesananService
     {
         $pengaturan = PengaturanTransaksi::first();
         
-        $pajakAktif = $pengaturan ? $pengaturan->pajak_aktif : false;
-        $persentasePajak = $pajakAktif ? (float) $pengaturan->persentase_pajak : 0;
+        $persentasePajak = 0;
+        $nominalPajak = 0;
         
-        $layananAktif = $pengaturan ? $pengaturan->layanan_aktif : false;
-        $persentaseLayanan = $layananAktif ? (float) $pengaturan->persentase_layanan : 0;
+        $layananAktif = $pengaturan ? $pengaturan->layanan_aktif : true;
+        $nominalLayanan = ($layananAktif && $subtotal > 0) ? (float) ($pengaturan->nominal_layanan ?? 1000) : 0;
 
-        // Biaya Layanan = Subtotal × persentase biaya layanan
-        $nominalLayanan = $subtotal * ($persentaseLayanan / 100);
-
-        // Dasar Pajak = Subtotal + Biaya Layanan
-        $dasarPajak = $subtotal + $nominalLayanan;
-
-        // Pajak = Dasar Pajak × persentase pajak
-        $nominalPajak = $dasarPajak * ($persentasePajak / 100);
-
-        $totalTagihan = $subtotal + $nominalLayanan + $nominalPajak;
+        $totalTagihan = $subtotal + $nominalLayanan;
 
         return [
             'subtotal' => $subtotal,
-            'persentase_pajak' => $persentasePajak,
-            'nominal_pajak' => $nominalPajak,
-            'persentase_biaya_layanan' => $persentaseLayanan,
+            'persentase_pajak' => 0,
+            'nominal_pajak' => 0,
+            'persentase_biaya_layanan' => 0,
             'nominal_biaya_layanan' => $nominalLayanan,
             'total_tagihan' => $totalTagihan,
         ];

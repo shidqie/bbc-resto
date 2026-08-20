@@ -33,10 +33,9 @@
 
         {{-- Stat Cards (Only show in semua tab) --}}
         @if($tab == 'semua')
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <x-ui.stat-card label="Total Bahan Baku" :value="$totalBahan ?? 0" icon="cube" color="blue" />
             <x-ui.stat-card label="Total Kategori" :value="$totalKategori ?? 0" icon="tag" color="purple" />
-            <x-ui.stat-card label="Total Satuan" :value="$totalSatuan ?? 0" icon="scale" color="orange" />
             <x-ui.stat-card label="Bahan Aktif" :value="$bahanAktif ?? 0" icon="check-circle" color="emerald" />
         </div>
         @endif
@@ -272,28 +271,30 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kategori <span class="text-red-500">*</span></label>
-                        <select name="kategori_bahan_baku_id" id="bbKategori" required class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 transition-all">
-                            <option value="">— Pilih —</option>
-                            @foreach($kategoris as $kat)
-                                <option value="{{ $kat->id }}">{{ $kat->nama_kategori }}</option>
-                            @endforeach
-                        </select>
+                        @php
+                            $katOptionsBB = [];
+                            foreach($kategoris as $kat) {
+                                $katOptionsBB[$kat->id] = $kat->nama_kategori;
+                            }
+                        @endphp
+                        <x-ui.searchable-select id="bbKategori" name="kategori_bahan_baku_id" :options="$katOptionsBB" placeholder="— Pilih Kategori —" required="true" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Satuan <span class="text-red-500">*</span></label>
-                        <select name="satuan_id" id="bbSatuan" required class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 transition-all">
-                            <option value="">— Pilih —</option>
-                            @foreach($satuans as $sat)
-                                <option value="{{ $sat->id }}">{{ $sat->singkatan ?? $sat->nama_satuan }}</option>
-                            @endforeach
-                        </select>
+                        @php
+                            $satOptionsBB = [];
+                            foreach($satuans as $sat) {
+                                $satOptionsBB[$sat->id] = $sat->singkatan ?? $sat->nama_satuan;
+                            }
+                        @endphp
+                        <x-ui.searchable-select id="bbSatuan" name="satuan_id" :options="$satOptionsBB" placeholder="— Pilih Satuan —" required="true" />
                     </div>
                 </div>
 
                 <div id="bbStokAwalContainer">
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Stok Awal</label>
                     <x-ui.input-decimal id="bbStok" name="stok" value="0" />
-                    <p class="text-[11px] text-gray-400 mt-1">Hanya diisi saat membuat bahan baku baru.</p>
+                    <p class="text-xs text-gray-400 mt-1">Hanya diisi saat membuat bahan baku baru.</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -310,18 +311,11 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Peruntukan <span class="text-red-500">*</span></label>
-                        <select name="jenis_peruntukan" id="bbPeruntukan" required class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 transition-all">
-                            <option value="Semua">Semua</option>
-                            <option value="Reguler">Reguler / Dine In</option>
-                            <option value="Catering">Catering</option>
-                        </select>
+                        <x-ui.searchable-select id="bbPeruntukan" name="jenis_peruntukan" :options="['Semua' => 'Semua', 'Reguler' => 'Reguler / Dine In', 'Catering' => 'Catering']" placeholder="— Pilih Peruntukan —" required="true" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Status <span class="text-red-500">*</span></label>
-                        <select name="status_aktif" id="bbStatus" required class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 transition-all">
-                            <option value="1">Aktif</option>
-                            <option value="0">Nonaktif</option>
-                        </select>
+                        <x-ui.searchable-select id="bbStatus" name="status_aktif" :options="['1' => 'Aktif', '0' => 'Nonaktif']" placeholder="— Pilih Status —" required="true" />
                     </div>
                 </div>
             </div>
@@ -403,7 +397,7 @@
         <div id="drawerDetailContent" class="flex-1 overflow-y-auto">
             <!-- Content will be loaded here via AJAX -->
             <div class="flex items-center justify-center h-full">
-                <svg class="animate-spin h-8 w-8 text-[#D4A843]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-8 w-8 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -579,7 +573,7 @@
         // Show loading state
         content.innerHTML = `
             <div class="flex items-center justify-center h-full">
-                <svg class="animate-spin h-8 w-8 text-[#D4A843]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-8 w-8 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>

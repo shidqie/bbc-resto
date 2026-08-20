@@ -16,7 +16,7 @@
     <!-- Google Fonts Design System Tokens -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
 
@@ -28,16 +28,32 @@
             theme: {
                 extend: {
                     fontSize: {
-                        xs: ['13px', '1.45'],
-                        sm: ['15px', '1.5'],
-                        base: ['16px', '1.55'],
-                        lg: ['18px', '1.5'],
-                        xl: ['20px', '1.4'],
-                        '2xl': ['24px', '1.3'],
-                        '3xl': ['30px', '1.25'],
-                        '4xl': ['36px', '1.2'],
-                        '5xl': ['48px', '1.15'],
-                        '6xl': ['60px', '1.1'],
+                        xs: ['11px', '1.45'],
+                        sm: ['13px', '1.5'],
+                        base: ['14px', '1.55'],
+                        lg: ['16px', '1.5'],
+                        xl: ['18px', '1.4'],
+                        '2xl': ['21px', '1.3'],
+                        '3xl': ['26px', '1.25'],
+                        '4xl': ['32px', '1.2'],
+                        '5xl': ['40px', '1.15'],
+                        '6xl': ['48px', '1.1'],
+                    },
+                    colors: {
+                        primary: {
+                            DEFAULT: 'rgb(var(--color-primary-rgb) / <alpha-value>)',
+                            container: 'rgb(var(--color-primary-container-rgb) / <alpha-value>)',
+                            soft: 'rgb(var(--color-primary-soft-rgb) / <alpha-value>)',
+                        },
+                        secondary: {
+                            DEFAULT: 'rgb(var(--color-secondary-rgb) / <alpha-value>)',
+                            container: 'rgb(var(--color-secondary-container-rgb) / <alpha-value>)',
+                            soft: 'rgb(var(--color-secondary-soft-rgb) / <alpha-value>)',
+                        },
+                        accent: 'rgb(var(--color-accent-rgb) / <alpha-value>)',
+                        canvas: 'rgb(var(--color-canvas-rgb) / <alpha-value>)',
+                        surface: 'rgb(var(--color-surface-rgb) / <alpha-value>)',
+                        body: 'rgb(var(--color-body-rgb) / <alpha-value>)',
                     },
                 }
             }
@@ -51,21 +67,97 @@
 
     <style>
         :root {
-            --font-primary: 'Plus Jakarta Sans', 'Google Sans', sans-serif;
+            --font-primary: 'Outfit', 'Google Sans', sans-serif;
             --font-mono: 'Anonymous Pro', monospace;
             --color-primary: #0D3024;
-            --color-secondary: #3B82F6;
+            --color-primary-rgb: 13 48 36;
+            --color-primary-container: #0a2219;
+            --color-primary-container-rgb: 10 34 25;
+            --color-primary-soft: #E8F0EC;
+            --color-primary-soft-rgb: 232 240 236;
+            --color-secondary: #B8860B;
+            --color-secondary-rgb: 184 134 11;
+            --color-secondary-container: #d4a843;
+            --color-secondary-container-rgb: 212 168 67;
+            --color-secondary-soft: #F5F1E6;
+            --color-secondary-soft-rgb: 245 241 230;
+            --color-accent: #D4A843;
+            --color-accent-rgb: 212 168 67;
+            --color-canvas: #FAFAF7;
+            --color-canvas-rgb: 250 250 247;
             --color-surface: #FFFFFF;
+            --color-surface-rgb: 255 255 255;
+            --color-body: #111827;
+            --color-body-rgb: 17 24 39;
             --color-text: #111827;
             --radius-sm: 4px;
             --radius-md: 8px;
             --radius-lg: 12px;
         }
 
+        html.dark {
+            --color-primary: #d4a843;
+            --color-primary-rgb: 212 168 67;
+            --color-primary-container: #2a2e3c;
+            --color-primary-container-rgb: 42 46 60;
+            --color-primary-soft: rgba(212,168,67,0.12);
+            --color-primary-soft-rgb: 42 46 60;
+            --color-secondary: #f0c45e;
+            --color-secondary-rgb: 240 196 94;
+            --color-secondary-container: #B8860B;
+            --color-secondary-container-rgb: 184 134 11;
+            --color-secondary-soft: rgba(212,168,67,0.1);
+            --color-secondary-soft-rgb: 34 38 50;
+            --color-accent: #f0c45e;
+            --color-accent-rgb: 240 196 94;
+            --color-canvas: #0f1117;
+            --color-canvas-rgb: 15 17 23;
+            --color-surface: #1a1d27;
+            --color-surface-rgb: 26 29 39;
+            --color-body: #cbd5e1;
+            --color-body-rgb: 203 213 225;
+            --color-text: #f8fafc;
+        }
+
         body {
             font-family: var(--font-primary);
             color: var(--color-text);
-            background-color: #F8FAFC;
+            background-color: var(--color-canvas);
+        }
+
+        /* Admin headings use brand color (auto flips to gold in dark) */
+        .admin-shell h1,
+        .admin-shell h2,
+        .admin-shell h3,
+        .admin-shell h4,
+        .admin-shell h5,
+        .admin-shell h6 {
+            color: var(--color-primary) !important;
+        }
+        /* Preserve explicitly-colored headings */
+        .admin-shell h2.text-white,
+        .admin-shell h3.text-white {
+            color: #ffffff !important;
+        }
+        .admin-shell h2.text-amber-400,
+        .admin-shell h3.text-amber-400 {
+            color: #fbbf24 !important;
+        }
+        .admin-shell h3.text-red-800,
+        .admin-shell h4.text-red-800,
+        .admin-shell h4.text-red-900 {
+            color: #991b1b !important;
+        }
+        html.dark .admin-shell h3.text-red-800,
+        html.dark .admin-shell h4.text-red-800,
+        html.dark .admin-shell h4.text-red-900 {
+            color: var(--dark-danger) !important;
+        }
+        .admin-shell h4.text-yellow-800 {
+            color: #854d0e !important;
+        }
+        html.dark .admin-shell h4.text-yellow-800 {
+            color: #fbbf24 !important;
         }
 
         .font-mono-caps {
@@ -89,16 +181,16 @@
 
         /* NProgress custom styling */
         #nprogress .bar {
-            background: #0D3024 !important;
+            background: var(--color-primary) !important;
             height: 3px !important;
             z-index: 99999 !important;
         }
         #nprogress .peg {
-            box-shadow: 0 0 10px #0D3024, 0 0 5px #0D3024 !important;
+            box-shadow: 0 0 10px var(--color-primary), 0 0 5px var(--color-primary) !important;
         }
         #nprogress .spinner-icon {
-            border-top-color: #0D3024 !important;
-            border-left-color: #0D3024 !important;
+            border-top-color: var(--color-primary) !important;
+            border-left-color: var(--color-primary) !important;
         }
 
         .page-fade-in {
@@ -110,7 +202,7 @@
         }
     </style>
 </head>
-<body class="admin-shell antialiased bg-[#F8FAFC] text-[#111827] h-screen overflow-hidden flex" 
+<body class="admin-shell antialiased bg-canvas text-body h-screen overflow-hidden flex" 
       x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') !== null ? localStorage.getItem('sidebarOpen') === 'true' : window.innerWidth > 1024 }" 
       x-init="$watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val))"
       @resize.window="if(window.innerWidth <= 1024) sidebarOpen = false">
@@ -118,7 +210,7 @@
     @include('partials.sidebar')
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-w-0 relative z-10 transition-all duration-300 bg-[#F8FAFC] overflow-y-auto page-fade-in">
+    <main class="flex-1 flex flex-col min-w-0 relative z-10 transition-all duration-300 bg-canvas overflow-y-auto page-fade-in">
         @include('partials.topbar')
         @yield('content')
     </main>
@@ -169,25 +261,22 @@
             const form = e.target;
             if (form.hasAttribute('data-confirm-modal')) return; // sudah memakai modal komponen
 
-            const confirmMsg = form.getAttribute('onsubmit');
-            if (confirmMsg && confirmMsg.includes('confirm(')) {
+            const msg = form.getAttribute('data-confirm');
+            if (msg) {
                 e.preventDefault();
-                const match = confirmMsg.match(/confirm\(\s*['"](.*?)['"]\s*\)/);
-                const msg = match ? match[1] : 'Apakah Anda yakin?';
                 const name = msg.replace(/\?$/, '').replace(/^Hapus\s+/i, '');
 
                 if (window.confirmDialog) {
                     window.confirmDialog({
                         title: 'Konfirmasi Hapus',
                         name: name,
-                        message: 'Data yang dihapus tidak dapat dikembalikan.',
+                        message: msg,
                         form: form,
                         confirmText: 'Hapus',
                         cancelText: 'Batal',
                     });
                 } else {
                     form.setAttribute('data-confirm-modal', '');
-                    form.onsubmit = null;
                     form.submit();
                 }
             }

@@ -28,26 +28,24 @@ class PengaturanTransaksiController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'pajak_aktif' => 'boolean',
-            'persentase_pajak' => 'required_if:pajak_aktif,1|numeric|min:0|max:100',
-            'layanan_aktif' => 'boolean',
-            'persentase_layanan' => 'required_if:layanan_aktif,1|numeric|min:0|max:100',
+            'layanan_aktif' => 'nullable',
+            'nominal_layanan' => 'required_if:layanan_aktif,1|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($request) {
             $pengaturan = PengaturanTransaksi::first();
-            $pajak_aktif = $request->has('pajak_aktif');
             $layanan_aktif = $request->has('layanan_aktif');
             
             $dataBaru = [
-                'pajak_aktif' => $pajak_aktif,
-                'persentase_pajak' => $pajak_aktif ? $request->persentase_pajak : 0,
+                'pajak_aktif' => false,
+                'persentase_pajak' => 0,
                 'layanan_aktif' => $layanan_aktif,
-                'persentase_layanan' => $layanan_aktif ? $request->persentase_layanan : 0,
+                'persentase_layanan' => 0,
+                'nominal_layanan' => $layanan_aktif ? (float)$request->nominal_layanan : 0,
             ];
 
             if ($pengaturan) {
-                $dataLama = $pengaturan->only(['pajak_aktif', 'persentase_pajak', 'layanan_aktif', 'persentase_layanan']);
+                $dataLama = $pengaturan->only(['pajak_aktif', 'persentase_pajak', 'layanan_aktif', 'persentase_layanan', 'nominal_layanan']);
                 $pengaturan->update(array_merge($dataBaru, ['diperbarui_oleh' => auth()->id()]));
             } else {
                 $dataLama = [];

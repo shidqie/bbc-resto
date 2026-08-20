@@ -22,4 +22,14 @@ class DetailPesanan extends BaseModel
     {
         return $this->hasMany(PilihanPesananCatering::class, 'detail_pesanan_id');
     }
+
+    public function getIdDetailPesananAttribute(): string
+    {
+        return \App\Helpers\IdCodeGenerator::generateDetailPesananId($this->id);
+    }
+
+    public function getKodeDetailPesananAttribute(): string
+    {
+        return $this->id_detail_pesanan;
+    }
 }

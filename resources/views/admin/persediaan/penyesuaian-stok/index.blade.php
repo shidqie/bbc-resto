@@ -17,60 +17,51 @@
             </x-slot:actions>
         </x-ui.page-header>
 
-        {{-- Stat Cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Penyesuaian</span>
-                <span class="text-2xl font-bold text-gray-900">{{ $stats['total'] }}</span>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">Disetujui</span>
-                <span class="text-2xl font-bold text-gray-900">{{ $stats['disetujui'] }}</span>
-            </div>
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1">Menunggu</span>
-                <span class="text-2xl font-bold text-gray-900">{{ $stats['menunggu'] }}</span>
-            </div>
-        </div>
-
         {{-- Table --}}
         <x-ui.data-table :paginator="$penyesuaians">
             <x-ui.table class="min-w-[950px]">
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Tanggal</th>
-                    <th class="px-4 py-3.5 text-left">Nama Bahan</th>
-                    <th class="px-4 py-3.5 text-right">Stok Sistem</th>
-                    <th class="px-4 py-3.5 text-right">Stok Fisik</th>
+                    <th class="px-4 py-3.5 text-left">Bahan Baku</th>
+                    <th class="px-4 py-3.5 text-right">Stok Awal</th>
+                    <th class="px-4 py-3.5 text-right">Fisik</th>
                     <th class="px-4 py-3.5 text-right">Selisih</th>
                     <th class="px-4 py-3.5 text-left">Alasan</th>
-                    <th class="px-4 py-3.5 text-center">Aksi</th>
                 </x-ui.table.header>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($penyesuaians as $adj)
                     <x-ui.table.row>
-                        <td class="px-4 py-4 text-sm text-gray-500 font-medium">{{ $penyesuaians->firstItem() + $loop->index }}</td>
-                        <td class="px-4 py-4 text-sm text-gray-600">{{ \Carbon\Carbon::parse($adj->penyesuaian_stok->tanggal_penyesuaian)->format('d M Y') }}</td>
-                        <td class="px-4 py-4 font-medium text-gray-900">{{ $adj->bahan_baku->nama_bahan ?? '-' }}</td>
-                        <td class="px-4 py-4 text-right font-medium text-gray-600">{{ number_format($adj->jumlah_sistem, 2) }} <span class="text-xs text-gray-400">{{ $adj->bahan_baku->satuan->nama_satuan ?? '' }}</span></td>
-                        <td class="px-4 py-4 text-right font-medium text-gray-900">{{ number_format($adj->jumlah_fisik, 2) }} <span class="text-xs text-gray-400">{{ $adj->bahan_baku->satuan->nama_satuan ?? '' }}</span></td>
+                        <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">{{ $penyesuaians->firstItem() + $loop->index }}</td>
+                        <td class="px-4 py-4 text-sm text-gray-600 font-medium">{{ \Carbon\Carbon::parse($adj->penyesuaian_stok->tanggal_penyesuaian)->format('d/m/Y') }}</td>
+                        <td class="px-4 py-4">
+                            <p class="font-semibold text-gray-900 leading-tight">{{ $adj->bahan_baku->nama_bahan ?? '-' }}</p>
+                            @php
+                                $isCat = strtolower($adj->jenis_persediaan ?? '') === 'catering';
+                            @endphp
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium {{ $isCat ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800' }} mt-0.5">
+                                {{ $isCat ? 'Katering' : 'Harian' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 text-right font-medium text-gray-700">
+                            {{ \App\Helpers\UnitHelper::formatQuantity($adj->jumlah_sistem, $adj->bahan_baku->satuan->singkatan ?? $adj->bahan_baku->satuan->nama_satuan ?? 'gram') }}
+                        </td>
+                        <td class="px-4 py-4 text-right font-semibold text-gray-900">
+                            {{ \App\Helpers\UnitHelper::formatQuantity($adj->jumlah_fisik, $adj->bahan_baku->satuan->singkatan ?? $adj->bahan_baku->satuan->nama_satuan ?? 'gram') }}
+                        </td>
                         <td class="px-4 py-4 text-right font-bold {{ $adj->jumlah_selisih < 0 ? 'text-red-600' : ($adj->jumlah_selisih > 0 ? 'text-emerald-600' : 'text-gray-500') }}">
-                            {{ $adj->jumlah_selisih > 0 ? '+' : '' }}{{ number_format($adj->jumlah_selisih, 2) }}
+                            {{ $adj->jumlah_selisih > 0 ? '+' : '' }}{{ \App\Helpers\UnitHelper::formatQuantity($adj->jumlah_selisih, $adj->bahan_baku->satuan->singkatan ?? $adj->bahan_baku->satuan->nama_satuan ?? 'gram') }}
                         </td>
                         <td class="px-4 py-4">
-                            <span class="text-sm text-gray-700 max-w-xs line-clamp-1">{{ $adj->penyesuaian_stok->alasan ?? '-' }}</span>
-                        </td>
-                        <td class="px-4 py-4 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <x-ui.action-button href="{{ route('penyesuaian-stok.show', $adj->penyesuaian_stok_id) }}" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
-                                </x-ui.action-button>
-                            </div>
+                            <span class="text-sm font-medium text-gray-800">{{ $adj->penyesuaian_stok->alasan ?? '-' }}</span>
+                            @if(!empty($adj->catatan))
+                                <p class="text-xs text-gray-400 italic mt-0.5">{{ $adj->catatan }}</p>
+                            @endif
                         </td>
                     </x-ui.table.row>
                     @empty
                     <tr>
-                        <td colspan="8">
+                        <td colspan="7">
                             <x-ui.empty-state icon="clipboard-document-list" title="Belum ada penyesuaian stok" message="Penyesuaian akan muncul di sini setelah dibuat." />
                         </td>
                     </tr>

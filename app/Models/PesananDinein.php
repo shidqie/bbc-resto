@@ -27,12 +27,12 @@ class PesananDinein extends BaseModel
 
     public function getKodePesananAttribute()
     {
-        return $this->attributes['nomor_pesanan'] ?? ($this->attributes['kode_pesanan'] ?? null);
+        return $this->attributes['id_pesanan'] ?? ($this->attributes['kode_pesanan'] ?? null);
     }
 
     public function setKodePesananAttribute($value)
     {
-        $this->attributes['nomor_pesanan'] = $value;
+        $this->attributes['id_pesanan'] = $value;
     }
 
     public function setNamaKonsumenAttribute($value)

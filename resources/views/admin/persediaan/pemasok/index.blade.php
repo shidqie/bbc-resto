@@ -48,7 +48,7 @@
                     @forelse($pemasoks as $pemasok)
                     <x-ui.table.row>
                         <td class="px-4 py-4 align-middle">
-                            <span class="font-mono text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">{{ $pemasok->kode_pemasok }}</span>
+                            <span class="font-mono text-xs font-semibold text-primary bg-primary-soft px-2 py-1 rounded-lg">{{ $pemasok->kode_pemasok }}</span>
                         </td>
                         <td class="px-4 py-4 align-middle">
                             <p class="font-semibold text-gray-900 leading-tight text-sm">{{ $pemasok->nama_pemasok }}</p>
@@ -69,7 +69,7 @@
                                 <x-ui.action-button href="{{ route('pemasok.edit', $pemasok->id) }}" title="Ubah">
                                     <x-heroicon-o-pencil-square class="w-4 h-4" />
                                 </x-ui.action-button>
-                                <form action="{{ route('pemasok.destroy', $pemasok->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus pemasok ini?');">
+                                <form action="{{ route('pemasok.destroy', $pemasok->id) }}" method="POST" class="inline-block" data-confirm="Yakin ingin menghapus pemasok ini?">
                                     @csrf
                                     @method('DELETE')
                                     <x-ui.action-button type="submit" title="Hapus">
