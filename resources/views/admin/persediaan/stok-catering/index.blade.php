@@ -28,13 +28,13 @@
                          x-transition:leave-end="transform opacity-0 scale-95"
                          class="absolute right-0 mt-2 w-52 rounded-xl bg-white shadow-xl border border-gray-100 py-1.5 z-50 text-sm">
                         
-                        <a href="{{ route('pengadaan.po.create', ['tipe' => 'Operasional']) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-[#0D3024] font-medium transition-colors">
+                        <a href="{{ route('pengadaan.po.create', ['tipe' => 'Harian']) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-[#0D3024] font-medium transition-colors">
                             <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span>Harian (Dine-In & Nasi Box)</span>
+                            <span>PO Nasi Box & Harian</span>
                         </a>
                         <a href="{{ route('pengadaan.po.create', ['tipe' => 'Catering']) }}" class="flex items-center gap-2.5 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-[#0D3024] font-medium transition-colors">
                             <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.701 2.701 0 01-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18z"></path></svg>
-                            <span>Katering</span>
+                            <span>PO Katering</span>
                         </a>
                     </div>
                 </div>

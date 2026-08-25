@@ -16,9 +16,8 @@
                         Buat Permintaan
                         <x-heroicon-o-chevron-down class="w-4 h-4 ml-1 opacity-70" />
                     </button>
-                    <div x-show="openDropdown" x-transition.opacity style="display: none;" class="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-50">
-                        <a href="{{ route('pengadaan.harian.create') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">Permintaan Harian</a>
-                        <a href="{{ route('pengadaan.catering.create') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">Permintaan Catering</a>
+                        <a href="{{ route('pengadaan.harian.create') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">Permintaan Nasi Box & Harian</a>
+                        <a href="{{ route('pengadaan.catering.create') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">Permintaan Katering</a>
                     </div>
                 </div>
             </x-slot:actions>

@@ -55,69 +55,21 @@ class PurchaseOrderController extends Controller
             abort(403, 'Akses ditolak: Dapur hanya dapat menerima bahan baku.');
         }
 
-        $tipe = $request->input('tipe', 'Operasional');
+        $tipe = $request->input('tipe', 'Harian');
         $kodePo = $this->kodePo();
         $items = collect();
         $pesanan = null;
-
-        $suppliers = \App\Models\Pemasok::where('status_aktif', true)->orderBy('nama_pemasok')->get();
-
-        if ($tipe === 'Operasional' || $tipe === 'Harian') {
-            // Ambil SEMUA bahan baku beserta stok hariannya (menampilkan data master)
-            $rawItems = BahanBaku::with('satuan')->leftJoin('stok_bahan', function($join) {
-                $join->on('bahan_baku.id', '=', 'stok_bahan.bahan_baku_id')
-                     ->where('stok_bahan.jenis_persediaan', StokBahan::JENIS_HARIAN);
-            })
-            ->select('bahan_baku.*', 'stok_bahan.jumlah_stok as stok_saat_ini', 'stok_bahan.stok_minimal')
-            ->orderBy('bahan_baku.nama_bahan')
-            ->get();
-
-            // Hitung bahan baku yang masih dalam proses pesanan (PO pending)
-            $poPending = DetailPurchaseOrder::whereHas('purchase_order', function($q) {
-                $q->whereIn('status', [PurchaseOrder::MENUNGGU_BARANG, PurchaseOrder::DITERIMA_SEBAGIAN])
-                  ->whereIn('jenis_po', ['operasional', 'harian']);
-            })->select('bahan_baku_id', DB::raw('SUM(jumlah_dipesan - jumlah_diterima) as sisa_pesan'))
-              ->having('sisa_pesan', '>', 0)
-              ->groupBy('bahan_baku_id')
-              ->get()->keyBy('bahan_baku_id');
-
-            // Filter HANYA bahan baku yang stok saat ininya sama dengan 0 (stok <= 0)
-            $items = $rawItems->filter(function($item) {
-                $stokSaatIni = (float) ($item->stok_saat_ini ?? 0);
-                return $stokSaatIni <= 0;
-            })->values();
-
-            $items->transform(function($item) use ($poPending) {
-                $stokMinimal = (float) ($item->stok_minimal ?? 0);
-                if ($stokMinimal <= 0) {
-                    $stokMinimal = (float) ($item->stok_minimal_harian ?? 5);
-                }
-                if ($stokMinimal <= 0) {
-                    $stokMinimal = 5;
-                }
-
-                // Jumlah pesan otomatis sebesar stok minimum dikalikan 2 (dikonversi ke satuan beli: Kg, Liter, Pcs)
-                $suggestedBase = $stokMinimal * 2;
-                $item->satuan_beli = \App\Helpers\UnitHelper::getPurchasingUnit($item->satuan);
-                $item->satuan_beli_id = \App\Helpers\UnitHelper::getPurchasingSatuanId($item->satuan);
-                $item->satuan_dasar = \App\Helpers\UnitHelper::getBaseUnit($item->satuan);
-                $item->jumlah_beli = \App\Helpers\UnitHelper::toPurchasingQuantity($suggestedBase, $item->satuan);
-                $item->kebutuhan = $item->jumlah_beli;
-                $item->kebutuhan_bersih = $item->jumlah_beli;
-                $item->harga_satuan = \App\Helpers\UnitHelper::toPurchasingPrice($item->harga_satuan ?? 0, $item->satuan);
-
-                return $item;
-            });
-        }
-
-        $pesananKatering = collect();
+        $itemsCukup = collect();
         $resepBelumLengkap = false;
         $missingMenus = [];
-        $itemsCukup = collect();
 
-        if ($tipe === 'Catering' || $tipe === 'Katering') {
-            $pesananKatering = Pesanan::with(['pelanggan', 'detail_pesanan.menu'])
-                ->whereIn('jenis_pesanan_id', [2, 3])
+        $suppliers = \App\Models\Pemasok::where('status_aktif', true)->orderBy('nama_pemasok')->get();
+        $isCateringType = ($tipe === 'Catering' || $tipe === 'Katering');
+
+        if ($isCateringType) {
+            // KHUSUS KATERING (jenis_pesanan_id = 2)
+            $pesananList = Pesanan::with(['pelanggan', 'detail_pesanan.menu'])
+                ->where('jenis_pesanan_id', 2)
                 ->where('status_pesanan_id', '>=', 2)
                 ->where('status_pesanan_id', '!=', 6)
                 ->orderBy('dibuat_pada', 'desc')
@@ -125,18 +77,17 @@ class PurchaseOrderController extends Controller
 
             $kodePesanan = $request->filled('kode_pesanan') 
                 ? trim($request->kode_pesanan) 
-                : optional($pesananKatering->first())->id_pesanan;
+                : optional($pesananList->first())->id_pesanan;
 
             if ($kodePesanan) {
                 $pesanan = Pesanan::with(['pelanggan', 'detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket.menu'])
                     ->where('id_pesanan', $kodePesanan)
-                    ->whereIn('jenis_pesanan_id', [2, 3])
+                    ->where('jenis_pesanan_id', 2)
                     ->first();
 
                 if ($pesanan && $pesanan->status_pesanan_id != 6) {
                     $kebutuhanService = app(KebutuhanBahanService::class);
-                    $jenisPersediaan = ($pesanan->jenis_pesanan_id == 3) ? 'harian' : 'catering';
-                    $hasilPengadaan = $kebutuhanService->hitungPengadaanPesanan($pesanan, $jenisPersediaan);
+                    $hasilPengadaan = $kebutuhanService->hitungPengadaanPesanan($pesanan, 'catering');
 
                     $resepBelumLengkap = ! $hasilPengadaan['resep_lengkap'];
                     $missingMenus = $hasilPengadaan['missing_menus'];
@@ -144,11 +95,77 @@ class PurchaseOrderController extends Controller
                     $itemsCukup = $hasilPengadaan['items_cukup'];
                 }
             }
+        } else {
+            // KHUSUS NASI BOX & HARIAN (jenis_pesanan_id = 3 & Stok Harian)
+            $pesananList = Pesanan::with(['pelanggan', 'detail_pesanan.menu'])
+                ->where('jenis_pesanan_id', 3)
+                ->where('status_pesanan_id', '>=', 2)
+                ->where('status_pesanan_id', '!=', 6)
+                ->orderBy('dibuat_pada', 'desc')
+                ->get();
+
+            $kodePesanan = $request->filled('kode_pesanan') ? trim($request->kode_pesanan) : null;
+
+            if ($kodePesanan) {
+                // Ada pesanan Nasi Box yang dipilih
+                $pesanan = Pesanan::with(['pelanggan', 'detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket.menu'])
+                    ->where('id_pesanan', $kodePesanan)
+                    ->where('jenis_pesanan_id', 3)
+                    ->first();
+
+                if ($pesanan && $pesanan->status_pesanan_id != 6) {
+                    $kebutuhanService = app(KebutuhanBahanService::class);
+                    $hasilPengadaan = $kebutuhanService->hitungPengadaanPesanan($pesanan, 'harian');
+
+                    $resepBelumLengkap = ! $hasilPengadaan['resep_lengkap'];
+                    $missingMenus = $hasilPengadaan['missing_menus'];
+                    $items = $hasilPengadaan['items_kurang'];
+                    $itemsCukup = $hasilPengadaan['items_cukup'];
+                }
+            } else {
+                // Tanpa pesanan -> Restock operasional harian biasa (filter stok kosong/minim)
+                $rawItems = BahanBaku::with('satuan')->leftJoin('stok_bahan', function($join) {
+                    $join->on('bahan_baku.id', '=', 'stok_bahan.bahan_baku_id')
+                         ->where('stok_bahan.jenis_persediaan', StokBahan::JENIS_HARIAN);
+                })
+                ->select('bahan_baku.*', 'stok_bahan.jumlah_stok as stok_saat_ini', 'stok_bahan.stok_minimal')
+                ->orderBy('bahan_baku.nama_bahan')
+                ->get();
+
+                $items = $rawItems->filter(function($item) {
+                    $stokSaatIni = (float) ($item->stok_saat_ini ?? 0);
+                    return $stokSaatIni <= 0;
+                })->values();
+
+                $items->transform(function($item) {
+                    $stokMinimal = (float) ($item->stok_minimal ?? 0);
+                    if ($stokMinimal <= 0) {
+                        $stokMinimal = (float) ($item->stok_minimal_harian ?? 5);
+                    }
+                    if ($stokMinimal <= 0) {
+                        $stokMinimal = 5;
+                    }
+
+                    $suggestedBase = $stokMinimal * 2;
+                    $item->satuan_beli = \App\Helpers\UnitHelper::getPurchasingUnit($item->satuan);
+                    $item->satuan_beli_id = \App\Helpers\UnitHelper::getPurchasingSatuanId($item->satuan);
+                    $item->satuan_dasar = \App\Helpers\UnitHelper::getBaseUnit($item->satuan);
+                    $item->jumlah_beli = \App\Helpers\UnitHelper::toPurchasingQuantity($suggestedBase, $item->satuan);
+                    $item->kebutuhan = $item->jumlah_beli;
+                    $item->kebutuhan_bersih = $item->jumlah_beli;
+                    $item->harga_satuan = \App\Helpers\UnitHelper::toPurchasingPrice($item->harga_satuan ?? 0, $item->satuan);
+
+                    return $item;
+                });
+            }
         }
 
         $allBahanBaku = BahanBaku::with(['satuan', 'stok_catering_balance', 'stok_harian'])->orderBy('nama_bahan')->get();
 
-        return view('admin.pengadaan.purchase-order.create', compact('items', 'itemsCukup', 'kodePo', 'tipe', 'pesanan', 'suppliers', 'allBahanBaku', 'pesananKatering', 'resepBelumLengkap', 'missingMenus'));
+        return view('admin.pengadaan.purchase-order.create', compact(
+            'items', 'itemsCukup', 'kodePo', 'tipe', 'pesanan', 'suppliers', 'allBahanBaku',
+            'pesananList', 'resepBelumLengkap', 'missingMenus'
+        ));
     }
 
     public function storeUnified(Request $request)
