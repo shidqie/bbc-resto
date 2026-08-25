@@ -67,20 +67,33 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @foreach($semuaBahan as $idx => $stok)
-                                @php $bahan = $stok->bahan_baku; @endphp
-                                <tr class="hover:bg-gray-50/50 transition-colors">
+                                @php
+                                    $bahan = $stok->bahan_baku;
+                                    $stokMinimal = (float)($bahan->stok_minimal ?? 5);
+                                    $stokSaatIni = (float)$stok->jumlah_stok;
+                                    $isKritis = ($stokSaatIni <= $stokMinimal);
+                                    $targetStok = $stokMinimal * 2;
+                                    $defaultJumlah = $isKritis ? max($stokMinimal, $targetStok - $stokSaatIni) : 0;
+                                @endphp
+                                <tr class="hover:bg-gray-50/50 transition-colors {{ $isKritis ? 'bg-amber-50/40' : '' }}">
                                     <td class="px-2 py-3 text-center align-middle">
-                                        <input type="checkbox" name="bahan_id[]" value="{{ $bahan->id }}" class="bahan-checkbox rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" checked>
+                                        <input type="checkbox" name="bahan_id[]" value="{{ $bahan->id }}" class="bahan-checkbox rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" {{ $isKritis ? 'checked' : '' }}>
                                     </td>
                                     <td class="px-3 py-3 align-middle">
-                                        <p class="font-bold text-gray-900 text-sm">{{ $bahan->nama_bahan }}</p>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="font-bold text-gray-900 text-sm">{{ $bahan->nama_bahan }}</p>
+                                            @if($stokSaatIni <= 0)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold bg-red-100 text-red-700">Habis</span>
+                                            @elseif($isKritis)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-700">Menipis</span>
+                                            @endif
+                                        </div>
                                         <p class="text-xs text-gray-400 font-mono mt-0.5">{{ $bahan->id_bahan_baku }}</p>
                                     </td>
-                                    <td class="px-3 py-3 text-right align-middle font-medium {{ (float)$stok->jumlah_stok <= (float)$bahan->stok_minimal ? 'text-rose-600 font-bold' : 'text-gray-700' }}">{{ $stok->jumlah_stok }}</td>
+                                    <td class="px-3 py-3 text-right align-middle font-medium {{ $isKritis ? 'text-rose-600 font-bold' : 'text-gray-700' }}">{{ $stok->jumlah_stok }}</td>
                                     <td class="px-3 py-3 text-right align-middle text-gray-600">{{ $bahan->stok_minimal }}</td>
                                     <td class="px-3 py-3 align-middle">
-                                        @php $defaultJumlah = max(0, (float)$bahan->stok_minimal - (float)$stok->jumlah_stok); @endphp
-                                        <input type="text" name="jumlah[{{ $bahan->id }}]" value="{{ $defaultJumlah > 0 ? $defaultJumlah : '0' }}" class="jumlah-input w-28 text-right border border-gray-200 text-gray-900 text-sm rounded-lg px-2 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                                        <input type="text" name="jumlah[{{ $bahan->id }}]" value="{{ $defaultJumlah }}" class="jumlah-input w-28 text-right border border-gray-200 text-gray-900 text-sm rounded-lg px-2 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-semibold">
                                     </td>
                                     <td class="px-3 py-3 align-middle">
                                         <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{{ optional($bahan->satuan)->nama_satuan ?? '-' }}</span>

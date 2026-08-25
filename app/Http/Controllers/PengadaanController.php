@@ -132,12 +132,18 @@ class PengadaanController extends Controller
                 $stokMinimal = $maxKebutuhan;
             }
 
-            if ((float) $stok->jumlah_stok <= $stokMinimal) {
+            $stok->is_kritis = ((float) $stok->jumlah_stok <= $stokMinimal);
+
+            if ($stok->is_kritis) {
                 $bahanMenipisCount++;
             }
         }
 
-        // $semuaBahan is already queried above
+        // Urutkan bahan baku: yang kritis/menipis/habis berada di urutan teratas secara otomatis
+        $semuaBahan = $semuaBahan->sortBy([
+            ['is_kritis', 'desc'],
+            ['bahan_baku.nama_bahan', 'asc'],
+        ])->values();
 
         $formRoute = $jenis === 'harian' ? 'pengadaan.harian.store' : 'pengadaan.catering.store';
         $kodePreview = $this->kodePermintaan();

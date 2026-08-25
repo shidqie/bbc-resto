@@ -123,7 +123,7 @@ class PurchaseOrderController extends Controller
                     $itemsCukup = $hasilPengadaan['items_cukup'];
                 }
             } else {
-                // Tanpa pesanan -> Restock operasional harian biasa (filter stok kosong/minim)
+                // Tanpa pesanan -> Restock operasional harian otomatis (ketika stok habis atau berada di bawah/sama dengan batas minimum)
                 $rawItems = BahanBaku::with('satuan')->leftJoin('stok_bahan', function($join) {
                     $join->on('bahan_baku.id', '=', 'stok_bahan.bahan_baku_id')
                          ->where('stok_bahan.jenis_persediaan', StokBahan::JENIS_HARIAN);
@@ -134,10 +134,19 @@ class PurchaseOrderController extends Controller
 
                 $items = $rawItems->filter(function($item) {
                     $stokSaatIni = (float) ($item->stok_saat_ini ?? 0);
-                    return $stokSaatIni <= 0;
+                    $stokMinimal = (float) ($item->stok_minimal ?? 0);
+                    if ($stokMinimal <= 0) {
+                        $stokMinimal = (float) ($item->stok_minimal_harian ?? 5);
+                    }
+                    if ($stokMinimal <= 0) {
+                        $stokMinimal = 5;
+                    }
+                    // Otomatis masukkan jika stok habis (<= 0) atau berada di bawah/sama dengan batas minimum (<= stok_minimal)
+                    return $stokSaatIni <= $stokMinimal;
                 })->values();
 
                 $items->transform(function($item) {
+                    $stokSaatIni = (float) ($item->stok_saat_ini ?? 0);
                     $stokMinimal = (float) ($item->stok_minimal ?? 0);
                     if ($stokMinimal <= 0) {
                         $stokMinimal = (float) ($item->stok_minimal_harian ?? 5);
@@ -146,7 +155,9 @@ class PurchaseOrderController extends Controller
                         $stokMinimal = 5;
                     }
 
-                    $suggestedBase = $stokMinimal * 2;
+                    // Saran kuantiti pengadaan untuk mengembalikan saldo ke batas aman (target 2x batas minimum dikurangi stok saat ini)
+                    $targetStok = $stokMinimal * 2;
+                    $suggestedBase = max($stokMinimal, $targetStok - $stokSaatIni);
                     $item->satuan_beli = \App\Helpers\UnitHelper::getPurchasingUnit($item->satuan);
                     $item->satuan_beli_id = \App\Helpers\UnitHelper::getPurchasingSatuanId($item->satuan);
                     $item->satuan_dasar = \App\Helpers\UnitHelper::getBaseUnit($item->satuan);
