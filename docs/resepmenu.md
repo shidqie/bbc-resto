@@ -2305,7 +2305,7 @@ Dokumen ini merupakan panduan resmi standar resep dan komposisi bahan baku (Bill
 | 5 | Anggur | 10 | Gram |
 | 6 | Mayones | 15 | Gram |
 | 7 | Susu kental manis | 10 | Mililiter |
-| 8 | Keju parut | 5 | Gram |
+| 8 | Keju parut | 1 | Pcs |
 
 #### 36. Salad Sayuran
 - **ID / Kode Item**: `PKT-KT-259`
