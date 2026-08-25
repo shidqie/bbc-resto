@@ -5,8 +5,14 @@
 @section('content')
     <div class="doc-header">
         <div class="company-name">RUMAH MAKAN SAUNG BABAKAN CINTA</div>
-        <div class="doc-title">LAPORAN PERSEDIAAN BAHAN BAKU</div>
-        <div class="doc-subtitle">Per Tanggal: {{ \Carbon\Carbon::now()->format('d/m/Y') }}</div>
+        <div class="doc-title">{{ $judulLaporan ?? 'LAPORAN PERSEDIAAN BAHAN BAKU' }}</div>
+        <div class="doc-subtitle">
+            @if(($tab ?? 'harian') === 'katering')
+                Kategori: Stok Katering | Per Tanggal: {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+            @else
+                Kategori: Stok Harian (Dine-In & Nasi Box) | Per Tanggal: {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+            @endif
+        </div>
         <div class="header-divider"></div>
     </div>
 
@@ -17,9 +23,14 @@
                 <th style="width: 90px;">Kode</th>
                 <th>Nama Bahan Baku</th>
                 <th class="text-center" style="width: 70px;">Satuan</th>
-                <th class="text-right" style="width: 110px;">Stok Saat Ini</th>
-                <th class="text-right" style="width: 110px;">Stok Minimum</th>
-                <th class="text-center" style="width: 80px;">Status</th>
+                @if(($tab ?? 'harian') === 'katering')
+                    <th class="text-right" style="width: 120px;">Stok Sisa Katering</th>
+                    <th class="text-center" style="width: 90px;">Status</th>
+                @else
+                    <th class="text-right" style="width: 110px;">Stok Saat Ini</th>
+                    <th class="text-right" style="width: 110px;">Stok Minimum</th>
+                    <th class="text-center" style="width: 80px;">Status</th>
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -32,13 +43,18 @@
                 <td class="font-mono">{{ $item['id_bahan_baku'] ?? '-' }}</td>
                 <td><strong>{{ $item['nama_bahan'] }}</strong></td>
                 <td class="text-center">{{ $displayUnit }}</td>
-                <td class="text-right font-bold">{{ \App\Helpers\UnitHelper::formatQuantity($item['stok_saat_ini'], $item['satuan']) }}</td>
-                <td class="text-right">{{ \App\Helpers\UnitHelper::formatQuantity($item['stok_minimum'], $item['satuan']) }}</td>
-                <td class="text-center">{{ $item['status'] }}</td>
+                @if(($tab ?? 'harian') === 'katering')
+                    <td class="text-right font-bold">{{ \App\Helpers\UnitHelper::formatQuantity($item['stok_saat_ini'], $item['satuan']) }}</td>
+                    <td class="text-center">{{ $item['status'] }}</td>
+                @else
+                    <td class="text-right font-bold">{{ \App\Helpers\UnitHelper::formatQuantity($item['stok_saat_ini'], $item['satuan']) }}</td>
+                    <td class="text-right">{{ \App\Helpers\UnitHelper::formatQuantity($item['stok_minimum'], $item['satuan']) }}</td>
+                    <td class="text-center">{{ $item['status'] }}</td>
+                @endif
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center">Data persediaan belum tersedia.</td>
+                <td colspan="{{ ($tab ?? 'harian') === 'katering' ? 6 : 7 }}" class="text-center">Data persediaan belum tersedia.</td>
             </tr>
             @endforelse
         </tbody>

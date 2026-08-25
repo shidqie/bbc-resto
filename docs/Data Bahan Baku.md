@@ -1,192 +1,233 @@
-# Daftar Bahan Baku dan Stok Minimum Harian
+# Data Bahan Baku RM Saung Babakan Cinta
 
-> Digunakan untuk stok harian **Dine-In dan Nasi Box**.  
-> Nilai berikut merupakan rekomendasi stok minimum operasional awal dan dapat disesuaikan berdasarkan pemakaian aktual.
+Daftar seluruh bahan baku (**197 item**) terbagi dalam 6 kategori beserta satuan dan stok minimum harian.
+
+---
 
 ## 1. Sayuran & Buah
 
 | No | Bahan Baku | Satuan | Stok Minimum Harian |
 |---:|---|---|---:|
-| 1 | Asem | gram | 500 |
-| 2 | Bawang bombay | gram | 1.500 |
-| 3 | Bawang daun | gram | 1.000 |
-| 4 | Bawang merah | gram | 3.000 |
-| 5 | Bawang putih | gram | 2.000 |
-| 6 | Bonteng | gram | 2.000 |
-| 7 | Brokoli | gram | 1.500 |
-| 8 | Cabe tanjung | gram | 1.000 |
-| 9 | Cabe keriting | gram | 2.000 |
-| 10 | Cengek merah | gram | 1.000 |
-| 11 | Cengek hijau | gram | 750 |
-| 12 | Cikur | gram | 500 |
-| 13 | Daun jeruk | gram | 300 |
-| 14 | Jahe | gram | 1.000 |
-| 15 | Jengkol | gram | 2.000 |
-| 16 | Jeruk purut | gram | 500 |
-| 17 | Kacang panjang | gram | 2.000 |
-| 18 | Kangkung | gram | 2.000 |
-| 19 | Kentang | gram | 5.000 |
-| 20 | Kol | gram | 3.000 |
-| 21 | Kunyit | gram | 750 |
-| 22 | Laja | gram | 750 |
-| 23 | Pete | gram | 1.000 |
-| 24 | Seledri | gram | 500 |
-| 25 | Selada | gram | 1.500 |
-| 26 | Surawung | gram | 500 |
-| 27 | Toge | gram | 1.500 |
-| 28 | Tomat | gram | 3.000 |
-| 29 | Wortel | gram | 3.000 |
-| 30 | Buncis | gram | 2.000 |
-| 31 | Paprika | gram | 1.000 |
-| 32 | Daun salam | gram | 300 |
-| 33 | Sereh | gram | 750 |
-| 34 | Lemon | gram | 1.000 |
-| 35 | Jamur kuping | gram | 750 |
-| 36 | Jamur kancing | gram | 1.000 |
-| 37 | Alpukat | gram | 2.000 |
-| 38 | Buah naga | gram | 2.000 |
-| 39 | Jambu | gram | 2.000 |
-| 40 | Jeruk | gram | 3.000 |
-| 41 | Kaweni | gram | 2.000 |
-| 42 | Melon | gram | 3.000 |
-| 43 | Nanas | gram | 2.500 |
-| 44 | Sirsak | gram | 2.000 |
-| 45 | Strawberry | gram | 1.000 |
+| 1 | Alpukat | g | 2.000 |
+| 2 | Anggur | g | 2.000 |
+| 3 | Apel | g | 2.000 |
+| 4 | Asem | g | 500 |
+| 5 | Bawang bombay | g | 1.500 |
+| 6 | Bawang daun | g | 1.000 |
+| 7 | Bawang merah | g | 3.000 |
+| 8 | Bawang putih | g | 2.000 |
+| 9 | Bengkuang | g | 2.000 |
+| 10 | Bonteng | g | 2.000 |
+| 11 | Brokoli | g | 1.500 |
+| 12 | Buah naga | g | 2.000 |
+| 13 | Buncis | g | 2.000 |
+| 14 | Cabe keriting | g | 2.000 |
+| 15 | Cabe tanjung | g | 1.000 |
+| 16 | Cengek hijau | g | 750 |
+| 17 | Cengek merah | g | 1.000 |
+| 18 | Cikur | g | 500 |
+| 19 | Daun jeruk | g | 300 |
+| 20 | Daun kunyit | g | 500 |
+| 21 | Daun salam | g | 300 |
+| 22 | Jagung manis | g | 2.000 |
+| 23 | Jahe | g | 1.000 |
+| 24 | Jambu | g | 2.000 |
+| 25 | Jamur kancing | g | 1.000 |
+| 26 | Jamur kuping | g | 750 |
+| 27 | Jengkol | g | 2.000 |
+| 28 | Jeruk | g | 3.000 |
+| 29 | Jeruk limau | g | 3.000 |
+| 30 | Jeruk purut | g | 500 |
+| 31 | Kacang panjang | g | 2.000 |
+| 32 | Kangkung | g | 2.000 |
+| 33 | Kaweni | g | 2.000 |
+| 34 | Kedondong | g | 2.000 |
+| 35 | Kemangi | g | 500 |
+| 36 | Kentang | g | 5.000 |
+| 37 | Kol | g | 3.000 |
+| 38 | Kunyit | g | 750 |
+| 39 | Laja | g | 750 |
+| 40 | Lemon | g | 1.000 |
+| 41 | Melon | g | 3.000 |
+| 42 | Nanas | g | 2.500 |
+| 43 | Paprika | g | 1.000 |
+| 44 | Pepaya | g | 2.000 |
+| 45 | Pete | g | 1.000 |
+| 46 | Sawi | g | 2.000 |
+| 47 | Selada | g | 1.500 |
+| 48 | Seledri | g | 500 |
+| 49 | Semangka | g | 3.000 |
+| 50 | Sereh | g | 750 |
+| 51 | Sirsak | g | 2.000 |
+| 52 | Strawberry | g | 1.000 |
+| 53 | Surawung | g | 500 |
+| 54 | Toge | g | 1.500 |
+| 55 | Tomat | g | 3.000 |
+| 56 | Tomat ceri | g | 1.000 |
+| 57 | Wortel | g | 3.000 |
 
 ## 2. Daging, Ikan & Protein
 
 | No | Bahan Baku | Satuan | Stok Minimum Harian |
 |---:|---|---|---:|
-| 46 | Ayam Broiler | gram | 10.000 |
-| 47 | Ayam Kampung | gram | 6.000 |
-| 48 | Bebek | gram | 6.000 |
-| 49 | Daging Sapi | gram | 6.000 |
-| 50 | Ikan Nila | gram | 6.000 |
-| 51 | Ikan Lele | gram | 5.000 |
-| 52 | Ikan Gurame | gram | 6.000 |
-| 53 | Ikan Dori | gram | 5.000 |
-| 54 | Peda | gram | 1.500 |
-| 55 | Sepat | gram | 1.500 |
-| 56 | Ati Sapi | gram | 2.000 |
-| 57 | Ati Ayam | gram | 2.000 |
-| 58 | Kikil Sapi | gram | 2.000 |
-|  |  | pcs | 120 |
+| 58 | Ati ayam | kg | 2.000 |
+| 59 | Ati sapi | kg | 2.000 |
+| 60 | Ayam broiler | kg | 10.000 |
+| 61 | Ayam kampung | kg | 6.000 |
+| 62 | Bakso ikan | pcs | 50 |
+| 63 | Bebek | kg | 6.000 |
+| 64 | Daging campur / jeroan | g | 3.000 |
+| 65 | Daging kambing | g | 3.000 |
+| 66 | Daging sapi | g | 6.000 |
+| 67 | Iga sapi | g | 3.000 |
+| 68 | Ikan dori | g | 5.000 |
+| 69 | Ikan gurame | g | 6.000 |
+| 70 | Ikan lele | g | 5.000 |
+| 71 | Ikan nila | g | 6.000 |
+| 72 | Kikil sapi | g | 2.000 |
+| 73 | Kulit ayam | g | 2.000 |
+| 74 | Mangga | g | 500 |
+| 75 | Peda | g | 1.500 |
+| 76 | Sepat | g | 1.500 |
+| 77 | Telur | pcs | 50 |
+| 78 | Telur puyuh | pcs | 50 |
 
 ## 3. Bumbu & Saus
 
 | No | Bahan Baku | Satuan | Stok Minimum Harian |
 |---:|---|---|---:|
-| 60 | Cabe kering | gram | 750 |
-| 61 | Cengkeh | gram | 250 |
-| 62 | Jinten | gram | 250 |
-| 63 | Ketumbar | gram | 750 |
-| 64 | Muncang | gram | 750 |
-| 65 | Pala | gram | 250 |
-| 66 | Pedes | gram | 500 |
-| 67 | Peka | gram | 250 |
-| 68 | Ebi | gram | 500 |
-| 69 | Kapol | gram | 250 |
-| 70 | Terasi | gram | 750 |
-| 71 | Kayu manis | gram | 250 |
-| 72 | Oregano | gram | 250 |
-| 73 | Biji lada hitam | gram | 500 |
-| 74 | Bawang putih bubuk | gram | 750 |
-| 75 | Ladaku | gram | 500 |
-| 76 | Biji wijen | gram | 500 |
-| 77 | Paprika Powder | gram | 500 |
-| 78 | Garam halus | gram | 5.000 |
-| 79 | Garam krosok | gram | 3.000 |
-| 80 | Bumbu ayam BR | gram | 2.000 |
-| 81 | Bumbu kampung | gram | 2.000 |
-| 82 | Bumbu utama | gram | 2.000 |
-| 83 | Bumbu sate | gram | 1.000 |
-| 84 | Antaka keju | gram | 500 |
-| 85 | Antaka jagung manis | gram | 500 |
-| 86 | Antaka BBQ | gram | 500 |
-| 87 | Antaka balado | gram | 500 |
-| 88 | Antaka asin | gram | 500 |
-| 90 | Racik tempe | gram | 750 |
-| 91 | Racik ikan | gram | 750 |
-| 92 | Racik tumis | gram | 750 |
-| 93 | Royco ayam | gram | 1.000 |
-| 94 | Royco sapi | gram | 1.000 |
-| 95 | Bumbu pecak | gram | 1.000 |
-| 96 | Bumbu olesan | gram | 1.000 |
-| 97 | Bumbu asam manis | gram | 1.000 |
-| 98 | Kecap Inggris | ml | 1.000 |
-| 99 | Kecap ikan | ml | 1.000 |
-| 100 | Kecap asin | ml | 1.000 |
-| 101 | Kecap manis | ml | 4.000 |
-| 102 | Saus Mushroom | ml | 1.000 |
-| 103 | Saus Teriyaki | ml | 2.000 |
-| 104 | Saos Tomat | ml | 2.000 |
-| 105 | Saos Tiram | ml | 2.000 |
-| 106 | Saos Sambal | ml | 3.000 |
-| 107 | Yellow Mustard | ml | 1.000 |
-| 108 | Mayones | gram | 1.000 |
-| 109 | Sambal merah | gram | 2.000 |
-| 110 | Sambal penyet | gram | 2.000 |
-| 111 | Sambal korek | gram | 1.000 |
+| 79 | Antaka asin | g | 500 |
+| 80 | Antaka balado | g | 500 |
+| 81 | Antaka BBQ | g | 500 |
+| 82 | Antaka jagung manis | g | 500 |
+| 83 | Antaka keju | g | 500 |
+| 84 | Bawang putih bubuk | g | 750 |
+| 85 | Biji lada hitam | g | 500 |
+| 86 | Biji wijen | g | 500 |
+| 87 | Bumbu asam manis | g | 1.000 |
+| 88 | Bumbu ayam BR | g | 2.000 |
+| 89 | Bumbu kacang | g | 1.000 |
+| 90 | Bumbu kampung | g | 2.000 |
+| 91 | Bumbu olesan | g | 1.000 |
+| 92 | Bumbu pecak | g | 1.000 |
+| 93 | Bumbu sate | g | 1.000 |
+| 94 | Bumbu utama | g | 2.000 |
+| 95 | Cabe kering | g | 750 |
+| 96 | Cengkeh | g | 250 |
+| 97 | Cuka | ml | 1.000 |
+| 98 | Ebi | g | 500 |
+| 99 | Garam halus | g | 5.000 |
+| 100 | Garam krosok | g | 3.000 |
+| 101 | Gula cair | ml | 1.000 |
+| 102 | Jinten | g | 250 |
+| 103 | Kapol | g | 250 |
+| 104 | Kayu manis | g | 250 |
+| 105 | Kecap asin | ml | 1.000 |
+| 106 | Kecap ikan | ml | 1.000 |
+| 107 | Kecap Inggris | ml | 1.000 |
+| 108 | Kecap manis | ml | 4.000 |
+| 109 | Ketumbar | g | 750 |
+| 110 | Ladaku | g | 500 |
+| 111 | Mayones | g | 1.000 |
 | 112 | Minyak wijen | ml | 1.000 |
+| 113 | Muncang | g | 750 |
+| 114 | Oregano | g | 250 |
+| 115 | Pala | g | 250 |
+| 116 | Paprika powder | g | 500 |
+| 117 | Pedes | g | 500 |
+| 118 | Peka | g | 250 |
+| 119 | Racik ikan | g | 750 |
+| 120 | Racik tempe | g | 750 |
+| 121 | Racik tumis | g | 750 |
+| 122 | Royco ayam | g | 1.000 |
+| 123 | Royco sapi | g | 1.000 |
+| 124 | Sambal korek | g | 1.000 |
+| 125 | Sambal merah | g | 2.000 |
+| 126 | Sambal oncom pedas | g | 1.000 |
+| 127 | Sambal penyet | g | 2.000 |
+| 128 | Saos sambal | ml | 3.000 |
+| 129 | Saos tiram | ml | 2.000 |
+| 130 | Saos tomat | ml | 2.000 |
+| 131 | Saus mushroom | ml | 1.000 |
+| 132 | Saus teriyaki | ml | 2.000 |
+| 133 | Sirup gula aren | ml | 1.000 |
+| 134 | Sirup karamel | ml | 1.000 |
+| 135 | Sirup vanilla | ml | 1.000 |
+| 136 | Terasi | g | 750 |
+| 137 | Yellow mustard | ml | 1.000 |
 
 ## 4. Bahan Kering & Pokok
 
 | No | Bahan Baku | Satuan | Stok Minimum Harian |
 |---:|---|---|---:|
-| 113 | Beras | gram | 25.000 |
-| 114 | Gula kawung | gram | 2.000 |
-| 115 | Gula putih | gram | 5.000 |
-| 116 | Tepung terigu | gram | 5.000 |
-| 117 | Maizena | gram | 2.000 |
-| 118 | Tapioka | gram | 2.000 |
-| 119 | Tepung roti | gram | 2.000 |
-| 120 | Soda kue | gram | 500 |
-| 121 | Soun | gram | 2.000 |
-| 122 | Mi kuning | gram | 5.000 |
-| 123 | Jagung Popcorn | gram | 1.000 |
-| 124 | Kacang tanah | gram | 2.000 |
-| 125 | Kacang OH | gram | 1.000 |
-| 126 | Kelapa parut | gram | 2.000 |
-| 127 | Bawang goreng | gram | 1.000 |
-| 128 | Minyak | ml | 10.000 |
-| 129 | Mentega | gram | 2.000 |
-| 130 | Butter | gram | 1.000 |
+| 138 | Bawang goreng | g | 1.000 |
+| 139 | Beras | ml | 25.000 |
+| 140 | Beras pulen | ml | 10.000 |
+| 141 | Butter | g | 1.000 |
+| 142 | Gula kawung | g | 2.000 |
+| 143 | Gula putih | g | 5.000 |
+| 144 | Jagung popcorn | g | 1.000 |
+| 145 | Kacang OH | g | 1.000 |
+| 146 | Kacang tanah | g | 2.000 |
+| 147 | Kelapa parut | g | 2.000 |
+| 148 | Maizena | g | 2.000 |
+| 149 | Mentega | g | 2.000 |
+| 150 | Mi kuning | g | 5.000 |
+| 151 | Minyak | ml | 10.000 |
+| 152 | Soda kue | g | 500 |
+| 153 | Soun | g | 2.000 |
+| 154 | Tapioka | g | 2.000 |
+| 155 | Tepung beras | g | 2.000 |
+| 156 | Tepung bumbu serbaguna | g | 2.000 |
+| 157 | Tepung roti | g | 2.000 |
+| 158 | Tepung terigu | g | 5.000 |
 
 ## 5. Bahan Olahan & Produk Jadi
 
 | No | Bahan Baku | Satuan | Stok Minimum Harian |
 |---:|---|---|---:|
-|  |  | pcs | 120 |
-| 133 | Tempe | gram | 5.000 |
-| 134 | Oncom | gram | 2.000 |
-| 135 | Tauco | gram | 1.000 |
-|  |  | pcs | 120 |
-|  |  | pcs | 120 |
-| 138 | Kerupuk udang | gram | 2.000 |
-| 139 | Santan | ml | 4.000 |
-|  |  | pcs | 120 |
+| 159 | Bakso sapi | pcs | 50 |
+| 160 | Es krim | pcs | 50 |
+| 161 | Keju parut | pcs | 24 |
+| 162 | Kerupuk mentah | g | 2.000 |
+| 163 | Kerupuk udang | g | 2.000 |
+| 164 | Kerupuk udang mentah | g | 2.000 |
+| 165 | Oncom | g | 2.000 |
+| 166 | Puding | pcs | 50 |
+| 167 | Santan | ml | 4.000 |
+| 168 | Sosis ayam | pcs | 50 |
+| 169 | Tahu | pcs | 50 |
+| 170 | Tahu sumedang | pcs | 50 |
+| 171 | Tauco | g | 1.000 |
+| 172 | Tempe | g | 5.000 |
 
 ## 6. Bahan Minuman
 
 | No | Bahan Baku | Satuan | Stok Minimum Harian |
 |---:|---|---|---:|
-|  |  | pcs | 120 |
-|  |  | pcs | 120 |
-|  |  | pcs | 120 |
-|  |  | pcs | 120 |
-|  |  | pcs | 120 |
-|  |  | pcs | 120 |
-|  |  | pcs | 120 |
-|  |  | pcs | 120 |
-| 149 | Milo | gram | 1.000 |
-|  |  | pcs | 120 |
-| 151 | Susu putih | ml | 2.000 |
-| 152 | Susu coklat | ml | 2.000 |
-|  |  | pcs | 120 |
-| 154 | Teh tabur | gram | 1.000 |
-|  |  | pcs | 120 |
-| 156 | Air galon | ml | 20.000 |
-|  |  | pcs | 120 |
-| 158 | Es batu | gram | 10.000 |
-| 159 | Susu kental manis | ml | 2.000 |
+| 173 | ABC Susu | pcs | 50 |
+| 174 | Air galon | ml | 20.000 |
+| 175 | Air mineral kemasan | pcs | 50 |
+| 176 | Bajigur | pcs | 50 |
+| 177 | Bandrek | pcs | 50 |
+| 178 | Beng-Beng Drink | pcs | 50 |
+| 179 | Bubuk matcha | g | 1.000 |
+| 180 | Cappuccino | pcs | 50 |
+| 181 | Creamy Latte | pcs | 50 |
+| 182 | Es batu | g | 10.000 |
+| 183 | Good Day | pcs | 50 |
+| 184 | Indocafe | pcs | 50 |
+| 185 | Kapal Api | pcs | 50 |
+| 186 | Kopi bubuk arabika | g | 1.000 |
+| 187 | Kopi bubuk espresso | g | 1.000 |
+| 188 | Kopi bubuk robusta | g | 1.000 |
+| 189 | Kopi sachet | pcs | 50 |
+| 190 | Luwak | pcs | 50 |
+| 191 | Milo | g | 1.000 |
+| 192 | Susu bubuk | g | 1.000 |
+| 193 | Susu coklat | pcs | 50 |
+| 194 | Susu kental manis | ml | 2.000 |
+| 195 | Susu putih | pcs | 50 |
+| 196 | Teh celup | pcs | 50 |
+| 197 | Teh tabur | g | 1.000 |
 

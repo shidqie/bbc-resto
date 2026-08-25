@@ -248,9 +248,14 @@ class LaporanController extends Controller
     // ==========================================
     public function persediaan(Request $request)
     {
+        $tab = $request->input('tab', 'harian');
+        if (!in_array($tab, ['harian', 'katering'])) {
+            $tab = 'harian';
+        }
+
         $kategoriId = $request->input('kategori_id', []);
         $kategoriId = is_array($kategoriId) ? $kategoriId : (array) $kategoriId;
-        $kondisi = $request->input('kondisi', 'semua');
+        $kondisi = $request->input('kondisi', $request->input('status', 'semua'));
         $search = $request->input('search', '');
 
         $kategoris = KategoriBahanBaku::orderBy('nama_kategori')->get();
@@ -266,48 +271,89 @@ class LaporanController extends Controller
             });
         }
 
-        $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) {
-            $stokHarian = optional($bahan->stok_harian)->jumlah_stok ?? 0;
-            $stokMin = (float)($bahan->stok_minimal ?? optional($bahan->stok_harian)->stok_minimal ?? 5);
-            $stokSaatIni = (float) $stokHarian;
+        if ($tab === 'harian') {
+            $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) {
+                $stokHarian = optional($bahan->stok_harian)->jumlah_stok ?? 0;
+                $stokMin = (float)($bahan->stok_minimal ?? optional($bahan->stok_harian)->stok_minimal ?? 5);
+                $stokSaatIni = (float) $stokHarian;
 
-            // Logika promt.md:
-            // jika stok = 0 -> Habis
-            // jika stok > 0 dan stok <= stok_minimum -> Menipis
-            // jika stok > stok_minimum -> Aman
-            if ($stokSaatIni <= 0) {
-                $status = 'Habis';
-            } elseif ($stokSaatIni <= $stokMin) {
-                $status = 'Menipis';
-            } else {
-                $status = 'Aman';
+                // Logika Stok Harian (Dine-In & Nasi Box):
+                // jika stok = 0 -> Habis
+                // jika stok > 0 dan stok <= stok_minimum -> Menipis
+                // jika stok > stok_minimum -> Aman
+                if ($stokSaatIni <= 0) {
+                    $status = 'Habis';
+                } elseif ($stokSaatIni <= $stokMin) {
+                    $status = 'Menipis';
+                } else {
+                    $status = 'Aman';
+                }
+
+                return [
+                    'id' => $bahan->id,
+                    'id_bahan_baku' => $bahan->id_bahan_baku,
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'kategori' => optional($bahan->kategori_bahan_baku)->nama_kategori ?? '-',
+                    'satuan' => optional($bahan->satuan)->singkatan ?? optional($bahan->satuan)->nama_satuan ?? 'pcs',
+                    'stok_saat_ini' => $stokSaatIni,
+                    'stok_minimum' => $stokMin,
+                    'status' => $status
+                ];
+            });
+
+            // Filter berdasarkan Kondisi (Aman, Menipis, Habis)
+            if ($kondisi && $kondisi !== 'semua') {
+                $laporanBahan = $laporanBahan->filter(function($b) use ($kondisi) {
+                    return strtolower($b['status']) === strtolower($kondisi);
+                })->values();
             }
 
-            return [
-                'id' => $bahan->id,
-                'id_bahan_baku' => $bahan->id_bahan_baku,
-                'nama_bahan' => $bahan->nama_bahan,
-                'kategori' => optional($bahan->kategori_bahan_baku)->nama_kategori ?? '-',
-                'satuan' => optional($bahan->satuan)->singkatan ?? optional($bahan->satuan)->nama_satuan ?? 'pcs',
-                'stok_saat_ini' => $stokSaatIni,
-                'stok_minimum' => $stokMin,
-                'status' => $status
+            // KPI 3 Kartu Stok Harian
+            $stats = [
+                'total_bahan' => $laporanBahan->count(),
+                'total_menipis' => $laporanBahan->where('status', 'Menipis')->count(),
+                'total_habis' => $laporanBahan->where('status', 'Habis')->count(),
             ];
-        });
+        } else {
+            // Tab Katering: Sistem Make-to-Order (Tidak ada Stok Minimum)
+            $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) {
+                $stokCatering = optional($bahan->stok_catering)->jumlah_stok ?? 0;
+                $stokSaatIni = (float) $stokCatering;
 
-        // Filter berdasarkan Kondisi (Aman, Menipis, Habis)
-        if ($kondisi && $kondisi !== 'semua') {
-            $laporanBahan = $laporanBahan->filter(function($b) use ($kondisi) {
-                return strtolower($b['status']) === strtolower($kondisi);
-            })->values();
+                // Status Katering: Tersedia / Habis (Kosong)
+                $status = $stokSaatIni > 0 ? 'Tersedia' : 'Habis';
+
+                return [
+                    'id' => $bahan->id,
+                    'id_bahan_baku' => $bahan->id_bahan_baku,
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'kategori' => optional($bahan->kategori_bahan_baku)->nama_kategori ?? '-',
+                    'satuan' => optional($bahan->satuan)->singkatan ?? optional($bahan->satuan)->nama_satuan ?? 'pcs',
+                    'stok_saat_ini' => $stokSaatIni,
+                    'stok_minimum' => null,
+                    'status' => $status
+                ];
+            });
+
+            // Filter status katering (Tersedia, Habis/Kosong)
+            if ($kondisi && $kondisi !== 'semua') {
+                $laporanBahan = $laporanBahan->filter(function($b) use ($kondisi) {
+                    if (in_array(strtolower($kondisi), ['tersedia'])) {
+                        return $b['status'] === 'Tersedia';
+                    } elseif (in_array(strtolower($kondisi), ['habis', 'kosong'])) {
+                        return $b['status'] === 'Habis';
+                    }
+                    return true;
+                })->values();
+            }
+
+            // KPI 3 Kartu Stok Katering
+            $stats = [
+                'total_bahan' => $laporanBahan->count(),
+                'total_tersedia' => $laporanBahan->where('status', 'Tersedia')->count(),
+                'total_habis' => $laporanBahan->where('status', 'Habis')->count(),
+            ];
         }
-
-        // KPI 3 Kartu Sesuai Skripsi (promt.md): Total Bahan Baku, Stok Menipis, Stok Habis
-        $stats = [
-            'total_bahan' => $laporanBahan->count(),
-            'total_menipis' => $laporanBahan->where('status', 'Menipis')->count(),
-            'total_habis' => $laporanBahan->where('status', 'Habis')->count(),
-        ];
 
         $perPage = 15;
         $page = Paginator::resolveCurrentPage() ?: 1;
@@ -318,35 +364,70 @@ class LaporanController extends Controller
         );
 
         return view('admin.laporan.persediaan.index', compact(
-            'paginatedBahan', 'stats', 'kategoriId', 'kategoris', 'kondisi'
+            'tab', 'paginatedBahan', 'stats', 'kategoriId', 'kategoris', 'kondisi'
         ));
     }
 
-    public function detailPersediaan($id)
+    public function detailPersediaan($id, Request $request)
     {
-        $bahan = BahanBaku::with(['satuan', 'kategori_bahan_baku', 'stok_harian'])->findOrFail($id);
-        $stok = $bahan->stok_harian;
-        $stokHarian = (float)(optional($stok)->jumlah_stok ?? 0);
-        $jenisStok = 'harian';
+        $bahan = BahanBaku::with(['satuan', 'kategori_bahan_baku', 'stok_harian', 'stok_catering'])->findOrFail($id);
+        $jenisStok = $request->input('jenis', $request->input('tab', 'harian'));
+
+        if ($jenisStok === 'catering' || $jenisStok === 'katering') {
+            $stok = $bahan->stok_catering;
+            $stokSaatIni = (float)(optional($stok)->jumlah_stok ?? 0);
+            $jenisStokLabel = 'Katering (Pesanan Khusus)';
+            $stokMin = null;
+            $status = $stokSaatIni > 0 ? 'Tersedia' : 'Habis';
+        } else {
+            $stok = $bahan->stok_harian;
+            $stokSaatIni = (float)(optional($stok)->jumlah_stok ?? 0);
+            $jenisStokLabel = 'Harian (Dine-In & Nasi Box)';
+            $stokMin = (float)($bahan->stok_minimal ?? optional($stok)->stok_minimal ?? 5);
+            $status = $stokSaatIni <= 0 ? 'Habis' : ($stokSaatIni <= $stokMin ? 'Menipis' : 'Aman');
+        }
         
         // Ambil riwayat kartu stok dari mutasi_stok
-        $mutasis = MutasiStok::with(['jenis_mutasi_stok', 'pengguna'])
-            ->where('bahan_baku_id', $id)
-            ->orderByDesc('tanggal_mutasi')
+        $mutasiQuery = MutasiStok::with(['jenis_mutasi_stok', 'pengguna'])
+            ->where('bahan_baku_id', $id);
+
+        if ($jenisStok === 'catering' || $jenisStok === 'katering') {
+            $mutasiQuery->where(function($q) {
+                $q->where('jenis_persediaan', 'catering')
+                  ->orWhere('catatan', 'like', '%catering%')
+                  ->orWhere('catatan', 'like', '%katering%');
+            });
+        }
+
+        $mutasis = $mutasiQuery->orderByDesc('tanggal_mutasi')
             ->limit(20)
             ->get();
 
-        return view('admin.laporan.persediaan.detail', compact('bahan', 'stok', 'stokHarian', 'jenisStok', 'mutasis'));
+        // Jika mutasi khusus katering kosong, ambil riwayat mutasi umum
+        if ($mutasis->isEmpty()) {
+            $mutasis = MutasiStok::with(['jenis_mutasi_stok', 'pengguna'])
+                ->where('bahan_baku_id', $id)
+                ->orderByDesc('tanggal_mutasi')
+                ->limit(20)
+                ->get();
+        }
+
+        return view('admin.laporan.persediaan.detail', compact('bahan', 'stok', 'stokSaatIni', 'stokMin', 'status', 'jenisStok', 'jenisStokLabel', 'mutasis'));
     }
 
     public function cetakPersediaanPdf(Request $request)
     {
+        $tab = $request->input('tab', 'harian');
+        if (!in_array($tab, ['harian', 'katering'])) {
+            $tab = 'harian';
+        }
+
         $kategoriId = $request->input('kategori_id', []);
         $kategoriId = is_array($kategoriId) ? $kategoriId : (array) $kategoriId;
-        $kondisi = $request->input('kondisi', 'semua');
+        $kondisi = $request->input('kondisi', $request->input('status', 'semua'));
         $search = $request->input('search', '');
 
-        $queryBahan = BahanBaku::with(['satuan', 'kategori_bahan_baku', 'stok_harian'])->where('status_aktif', true);
+        $queryBahan = BahanBaku::with(['satuan', 'kategori_bahan_baku', 'stok_harian', 'stok_catering'])->where('status_aktif', true);
         if (!empty($kategoriId)) {
             $queryBahan->whereIn('kategori_bahan_baku_id', $kategoriId);
         }
@@ -357,47 +438,83 @@ class LaporanController extends Controller
             });
         }
 
-        $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) {
-            $stokHarian = optional($bahan->stok_harian)->jumlah_stok ?? 0;
-            $stokMin = (float)($bahan->stok_minimal ?? 5);
-            $stokSaatIni = (float) $stokHarian;
+        if ($tab === 'harian') {
+            $judulLaporan = 'LAPORAN PERSEDIAAN BAHAN BAKU (STOK HARIAN - DINE-IN & NASI BOX)';
+            $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) {
+                $stokHarian = optional($bahan->stok_harian)->jumlah_stok ?? 0;
+                $stokMin = (float)($bahan->stok_minimal ?? 5);
+                $stokSaatIni = (float) $stokHarian;
 
-            if ($stokSaatIni <= 0) {
-                $status = 'Habis';
-            } elseif ($stokSaatIni <= $stokMin) {
-                $status = 'Menipis';
-            } else {
-                $status = 'Aman';
+                if ($stokSaatIni <= 0) {
+                    $status = 'Habis';
+                } elseif ($stokSaatIni <= $stokMin) {
+                    $status = 'Menipis';
+                } else {
+                    $status = 'Aman';
+                }
+
+                return [
+                    'id_bahan_baku' => $bahan->id_bahan_baku,
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'satuan' => optional($bahan->satuan)->singkatan ?? 'pcs',
+                    'stok_saat_ini' => $stokSaatIni,
+                    'stok_minimum' => $stokMin,
+                    'status' => $status
+                ];
+            });
+
+            if ($kondisi && $kondisi !== 'semua') {
+                $laporanBahan = $laporanBahan->filter(function($b) use ($kondisi) {
+                    return strtolower($b['status']) === strtolower($kondisi);
+                })->values();
             }
+        } else {
+            $judulLaporan = 'LAPORAN PERSEDIAAN BAHAN BAKU (STOK KATERING)';
+            $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) {
+                $stokCatering = optional($bahan->stok_catering)->jumlah_stok ?? 0;
+                $stokSaatIni = (float) $stokCatering;
+                $status = $stokSaatIni > 0 ? 'Tersedia' : 'Habis';
 
-            return [
-                'id_bahan_baku' => $bahan->id_bahan_baku,
-                'nama_bahan' => $bahan->nama_bahan,
-                'satuan' => optional($bahan->satuan)->singkatan ?? 'pcs',
-                'stok_saat_ini' => $stokSaatIni,
-                'stok_minimum' => $stokMin,
-                'status' => $status
-            ];
-        });
+                return [
+                    'id_bahan_baku' => $bahan->id_bahan_baku,
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'satuan' => optional($bahan->satuan)->singkatan ?? 'pcs',
+                    'stok_saat_ini' => $stokSaatIni,
+                    'stok_minimum' => null,
+                    'status' => $status
+                ];
+            });
 
-        if ($kondisi && $kondisi !== 'semua') {
-            $laporanBahan = $laporanBahan->filter(function($b) use ($kondisi) {
-                return strtolower($b['status']) === strtolower($kondisi);
-            })->values();
+            if ($kondisi && $kondisi !== 'semua') {
+                $laporanBahan = $laporanBahan->filter(function($b) use ($kondisi) {
+                    if (in_array(strtolower($kondisi), ['tersedia'])) {
+                        return $b['status'] === 'Tersedia';
+                    } elseif (in_array(strtolower($kondisi), ['habis', 'kosong'])) {
+                        return $b['status'] === 'Habis';
+                    }
+                    return true;
+                })->values();
+            }
         }
 
-        $pdf = Pdf::loadView('pdf.laporan-persediaan', compact('laporanBahan'));
-        return $pdf->stream('Laporan_Persediaan.pdf');
+        $pdf = Pdf::loadView('pdf.laporan-persediaan', compact('laporanBahan', 'tab', 'judulLaporan'));
+        $filename = "Laporan_Persediaan_" . ucfirst($tab) . "_" . date('Ymd_His') . ".pdf";
+        return $pdf->stream($filename);
     }
 
     public function cetakPersediaanExcel(Request $request)
     {
+        $tab = $request->input('tab', 'harian');
+        if (!in_array($tab, ['harian', 'katering'])) {
+            $tab = 'harian';
+        }
+
         $kategoriId = $request->input('kategori_id', []);
         $kategoriId = is_array($kategoriId) ? $kategoriId : (array) $kategoriId;
-        $kondisi = $request->input('kondisi', 'semua');
+        $kondisi = $request->input('kondisi', $request->input('status', 'semua'));
         $search = $request->input('search', '');
 
-        $queryBahan = BahanBaku::with(['satuan', 'kategori_bahan_baku', 'stok_harian'])->where('status_aktif', true);
+        $queryBahan = BahanBaku::with(['satuan', 'kategori_bahan_baku', 'stok_harian', 'stok_catering'])->where('status_aktif', true);
         if (!empty($kategoriId)) {
             $queryBahan->whereIn('kategori_bahan_baku_id', $kategoriId);
         }
@@ -408,36 +525,70 @@ class LaporanController extends Controller
             });
         }
 
-        $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) {
-            $stokHarian = optional($bahan->stok_harian)->jumlah_stok ?? 0;
-            $stokMin = (float)($bahan->stok_minimal ?? 5);
-            $stokSaatIni = (float) $stokHarian;
+        if ($tab === 'harian') {
+            $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) {
+                $stokHarian = optional($bahan->stok_harian)->jumlah_stok ?? 0;
+                $stokMin = (float)($bahan->stok_minimal ?? 5);
+                $stokSaatIni = (float) $stokHarian;
 
-            if ($stokSaatIni <= 0) {
-                $status = 'Habis';
-            } elseif ($stokSaatIni <= $stokMin) {
-                $status = 'Menipis';
-            } else {
-                $status = 'Aman';
+                if ($stokSaatIni <= 0) {
+                    $status = 'Habis';
+                } elseif ($stokSaatIni <= $stokMin) {
+                    $status = 'Menipis';
+                } else {
+                    $status = 'Aman';
+                }
+
+                return [
+                    'id_bahan_baku' => $bahan->id_bahan_baku,
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'kategori' => optional($bahan->kategori_bahan_baku)->nama_kategori ?? '-',
+                    'satuan' => optional($bahan->satuan)->singkatan ?? 'pcs',
+                    'stok_saat_ini' => $stokSaatIni,
+                    'stok_minimum' => $stokMin,
+                    'status' => $status
+                ];
+            });
+
+            if ($kondisi && $kondisi !== 'semua') {
+                $laporanBahan = $laporanBahan->filter(function($b) use ($kondisi) {
+                    return strtolower($b['status']) === strtolower($kondisi);
+                })->values();
             }
 
-            return [
-                'id_bahan_baku' => $bahan->id_bahan_baku,
-                'nama_bahan' => $bahan->nama_bahan,
-                'satuan' => optional($bahan->satuan)->singkatan ?? 'pcs',
-                'stok_saat_ini' => $stokSaatIni,
-                'stok_minimum' => $stokMin,
-                'status' => $status
-            ];
-        });
+            $csvHeader = ['No', 'Kode Bahan', 'Nama Bahan Baku', 'Kategori', 'Satuan', 'Stok Saat Ini', 'Stok Minimum', 'Kondisi'];
+        } else {
+            $laporanBahan = $queryBahan->orderBy('nama_bahan')->get()->map(function ($bahan) {
+                $stokCatering = optional($bahan->stok_catering)->jumlah_stok ?? 0;
+                $stokSaatIni = (float) $stokCatering;
+                $status = $stokSaatIni > 0 ? 'Tersedia' : 'Habis';
 
-        if ($kondisi && $kondisi !== 'semua') {
-            $laporanBahan = $laporanBahan->filter(function($b) use ($kondisi) {
-                return strtolower($b['status']) === strtolower($kondisi);
-            })->values();
+                return [
+                    'id_bahan_baku' => $bahan->id_bahan_baku,
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'kategori' => optional($bahan->kategori_bahan_baku)->nama_kategori ?? '-',
+                    'satuan' => optional($bahan->satuan)->singkatan ?? 'pcs',
+                    'stok_saat_ini' => $stokSaatIni,
+                    'stok_minimum' => '-',
+                    'status' => $status
+                ];
+            });
+
+            if ($kondisi && $kondisi !== 'semua') {
+                $laporanBahan = $laporanBahan->filter(function($b) use ($kondisi) {
+                    if (in_array(strtolower($kondisi), ['tersedia'])) {
+                        return $b['status'] === 'Tersedia';
+                    } elseif (in_array(strtolower($kondisi), ['habis', 'kosong'])) {
+                        return $b['status'] === 'Habis';
+                    }
+                    return true;
+                })->values();
+            }
+
+            $csvHeader = ['No', 'Kode Bahan', 'Nama Bahan Baku', 'Kategori', 'Satuan', 'Stok Sisa Katering', 'Status'];
         }
 
-        $filename = "Laporan_Persediaan_" . date('Ymd_His') . ".csv";
+        $filename = "Laporan_Persediaan_" . ucfirst($tab) . "_" . date('Ymd_His') . ".csv";
         $headers = [
             "Content-type" => "text/csv; charset=UTF-8",
             "Content-Disposition" => "attachment; filename={$filename}",
@@ -446,21 +597,34 @@ class LaporanController extends Controller
             "Expires" => "0"
         ];
 
-        $callback = function() use ($laporanBahan) {
+        $callback = function() use ($laporanBahan, $csvHeader, $tab) {
             $file = fopen('php://output', 'w');
             fputs($file, "\xEF\xBB\xBF");
-            fputcsv($file, ['No', 'Kode Bahan', 'Nama Bahan Baku', 'Satuan', 'Stok Saat Ini', 'Stok Minimum', 'Kondisi']);
+            fputcsv($file, $csvHeader);
 
             foreach ($laporanBahan as $idx => $b) {
-                fputcsv($file, [
-                    $idx + 1,
-                    $b['id_bahan_baku'],
-                    $b['nama_bahan'],
-                    $b['satuan'],
-                    $b['stok_saat_ini'],
-                    $b['stok_minimum'],
-                    $b['status']
-                ]);
+                if ($tab === 'harian') {
+                    fputcsv($file, [
+                        $idx + 1,
+                        $b['id_bahan_baku'],
+                        $b['nama_bahan'],
+                        $b['kategori'],
+                        $b['satuan'],
+                        $b['stok_saat_ini'],
+                        $b['stok_minimum'],
+                        $b['status']
+                    ]);
+                } else {
+                    fputcsv($file, [
+                        $idx + 1,
+                        $b['id_bahan_baku'],
+                        $b['nama_bahan'],
+                        $b['kategori'],
+                        $b['satuan'],
+                        $b['stok_saat_ini'],
+                        $b['status']
+                    ]);
+                }
             }
             fclose($file);
         };
