@@ -147,6 +147,28 @@
 @endsection
 
 @push('scripts')
+@if(session('po_berhasil'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Purchase Order Berhasil Dibuat!',
+                html: '<div class="text-left bg-emerald-50/70 p-4 rounded-xl border border-emerald-100 text-xs text-emerald-950 space-y-1.5">' +
+                      '<p class="font-bold flex items-center gap-1.5 text-emerald-800"><svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Purchase Order Tersimpan</p>' +
+                      '<p class="text-gray-600">Purchase Order <b>{{ session('po_nomor') }}</b> telah berhasil diterbitkan dan masuk ke daftar PO.</p>' +
+                      '</div>',
+                confirmButtonColor: '#059669',
+                confirmButtonText: 'Selesai',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'rounded-xl px-6 py-2.5 font-bold text-sm shadow-xs'
+                }
+            });
+        }
+    });
+</script>
+@endif
 @if(session('penerimaan_berhasil'))
 <script>
     document.addEventListener('DOMContentLoaded', function() {

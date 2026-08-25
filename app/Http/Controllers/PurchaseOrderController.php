@@ -302,7 +302,10 @@ class PurchaseOrderController extends Controller
             return $po;
         });
 
-        return redirect()->route('pengadaan.po.index')->with('success', 'Purchase Order ' . $po->nomor_po . ' berhasil dibuat.');
+        return redirect()->route('pengadaan.po.index')
+            ->with('success', 'Purchase Order ' . $po->nomor_po . ' berhasil dibuat.')
+            ->with('po_berhasil', true)
+            ->with('po_nomor', $po->nomor_po);
     } catch (\Throwable $e) {
         \Illuminate\Support\Facades\Log::error('Error storing PO: ' . $e->getMessage());
         return back()->withInput()->with('error', 'Gagal membuat Purchase Order: ' . $e->getMessage());
