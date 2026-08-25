@@ -74,7 +74,7 @@
 | 59 | Ati sapi | 0 g | 2 kg | Rp 75.000 |
 | 60 | Ayam broiler | 0 g | 10 kg | Rp 43.000 |
 | 61 | Ayam kampung | 0 g | 6 kg | Rp 70.000 |
-| 62 | Bakso ikan | 0 pcs | 120 pcs | Rp 800 |
+| 62 | Bakso ikan | 120 pcs | 50 pcs | Rp 800 |
 | 63 | Bebek | 0 g | 6 kg | Rp 60.000 |
 | 64 | Daging campur / jeroan | 0 g | 3 kg | Rp 65.000 |
 | 65 | Daging kambing | 0 g | 3 kg | Rp 150.000 |
