@@ -107,7 +107,6 @@
                                         </td>
                                         <td class="px-4 py-3 align-middle">
                                             <p class="font-bold text-gray-900 text-sm">{{ $row['nama_bahan'] }}</p>
-                                            <p class="text-xs text-gray-400 font-medium mt-0.5">{{ $row['kode_bahan'] }}</p>
                                         </td>
                                         <td class="px-4 py-3 text-right align-middle font-bold text-gray-900" id="dipesan_{{ $row['detail_id'] }}" data-dipesan="{{ $dipesanVal }}">
                                             {{ \App\Helpers\UnitHelper::formatNumber($dipesanVal) }} <span class="text-xs font-normal text-gray-500">{{ $row['satuan'] }}</span>

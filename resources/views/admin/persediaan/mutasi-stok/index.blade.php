@@ -69,7 +69,6 @@
                         </td>
                         <td class="px-4 py-4">
                             <p class="font-semibold text-gray-900 leading-tight">{{ $mutasi->bahan_baku->nama_bahan ?? '-' }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5 font-mono">{{ $mutasi->bahan_baku->id_bahan_baku ?? '' }}</p>
                         </td>
                         <td class="px-4 py-4 text-center">
                             @php

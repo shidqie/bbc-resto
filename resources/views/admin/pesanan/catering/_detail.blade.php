@@ -578,7 +578,6 @@
                                             </td>
                                             <td class="py-2.5 px-4">
                                                 <p class="font-bold text-gray-900 text-sm">{{ $bb['nama_bahan'] }}</p>
-                                                <p class="text-xs text-gray-400 font-mono">{{ $bb['kode_bahan'] }}</p>
                                             </td>
                                             <td class="py-2.5 px-4 text-right">
                                                 <span class="font-bold text-emerald-700 font-mono text-sm">{{ $kebFormatted }}</span>

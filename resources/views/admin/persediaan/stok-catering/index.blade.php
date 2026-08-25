@@ -111,7 +111,6 @@
                             <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">{{ $bahanBakus->firstItem() + $i }}</td>
                             <td class="px-4 py-4">
                                 <p class="font-semibold text-gray-900 leading-tight">{{ $bahan->nama_bahan }}</p>
-                                <p class="text-xs text-gray-400 mt-0.5">{{ $bahan->id_bahan_baku }}</p>
                             </td>
                             <td class="px-4 py-4 text-right">
                                 <span class="font-bold text-lg {{ $isHabis ? 'text-red-600' : ($isMenipis ? 'text-amber-600' : 'text-emerald-600') }}">{{ \App\Helpers\UnitHelper::formatQuantity($stok, $bahan->satuan->singkatan ?? $bahan->satuan->nama_satuan ?? 'gram') }}</span>
