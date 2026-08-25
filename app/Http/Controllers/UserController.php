@@ -24,7 +24,7 @@ class UserController extends Controller
             ->orderBy('dibuat_pada', 'desc');
 
         // Data Pelanggan
-        $pelangganQuery = \App\Models\Pelanggan::query()->orderBy('dibuat_pada', 'desc');
+        $pelangganQuery = \App\Models\Pelanggan::withCount('pesanan')->orderBy('dibuat_pada', 'desc');
 
         if ($search !== '') {
             $penggunaQuery->where(function ($q) use ($search) {
@@ -35,7 +35,8 @@ class UserController extends Controller
             $pelangganQuery->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('nomor_telepon', 'like', "%{$search}%");
+                    ->orWhere('nomor_telepon', 'like', "%{$search}%")
+                    ->orWhere('alamat', 'like', "%{$search}%");
             });
         }
 
@@ -113,15 +114,14 @@ class UserController extends Controller
 
     public function showPelanggan(\App\Models\Pelanggan $pelanggan)
     {
-        $pesananCount = $pelanggan->pesanan()->count();
-        $pesananDineIn = $pelanggan->pesanan()->whereHas('jenis_pesanan', function($q) {
-            $q->where('kode_jenis', 'dine_in');
-        })->latest()->take(5)->get();
-        $pesananCatering = $pelanggan->pesanan()->whereHas('jenis_pesanan', function($q) {
-            $q->whereIn('kode_jenis', ['catering', 'nasi_box']);
-        })->latest()->take(5)->get();
+        $pelanggan->load(['pesanan.jenis_pesanan', 'pesanan.status_pesanan', 'pesanan.detail_pesanan.menu']);
+        $semuaPesanan = $pelanggan->pesanan()->with(['jenis_pesanan', 'status_pesanan', 'detail_pesanan.menu'])->latest('tanggal_pesanan')->get();
+        $pesananCount = $semuaPesanan->count();
+        $totalPengeluaran = $semuaPesanan->whereNotIn('status_pesanan_id', [6])->sum('total_tagihan');
+        $pesananCatering = $semuaPesanan->whereIn('jenis_pesanan_id', [2, 3]);
+        $pesananDineIn = $semuaPesanan->where('jenis_pesanan_id', 1);
 
-        return view('admin.pengguna.users.show-pelanggan', compact('pelanggan', 'pesananCount', 'pesananDineIn', 'pesananCatering'));
+        return view('admin.pengguna.users.show-pelanggan', compact('pelanggan', 'semuaPesanan', 'pesananCount', 'totalPengeluaran', 'pesananDineIn', 'pesananCatering'));
     }
 
     public function destroyPelanggan(\App\Models\Pelanggan $pelanggan)

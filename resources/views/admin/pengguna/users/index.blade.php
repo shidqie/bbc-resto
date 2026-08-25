@@ -148,9 +148,9 @@
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Nama Konsumen</th>
-                    <th class="px-4 py-3.5 text-left">Email</th>
-                    <th class="px-4 py-3.5 text-left">Nomor WhatsApp</th>
-                    <th class="px-4 py-3.5 text-left">Alamat</th>
+                    <th class="px-4 py-3.5 text-left">No. Telepon/WA</th>
+                    <th class="px-4 py-3.5 text-center">Status Akun</th>
+                    <th class="px-4 py-3.5 text-center">Jumlah Pesanan</th>
                     <th class="px-4 py-3.5 text-center">Aksi</th>
                 </x-ui.table.header>
                 <tbody class="divide-y divide-gray-100">
@@ -162,18 +162,34 @@
                         <td class="px-4 py-4 align-middle">
                             <div class="min-w-0">
                                 <div class="font-medium text-gray-900 text-sm truncate">{{ $user->nama }}</div>
+                                @if($user->alamat && $user->alamat !== '-')
+                                    <div class="text-xs text-gray-400 truncate max-w-xs">{{ $user->alamat }}</div>
+                                @endif
                             </div>
                         </td>
                         <td class="px-4 py-4 align-middle">
-                            <div class="text-sm text-gray-600 truncate max-w-xs">{{ $user->email ?? '-' }}</div>
-                        </td>
-                        <td class="px-4 py-4 align-middle">
-                            <div class="text-sm text-gray-600">{{ $user->nomor_telepon ? \App\Support\WhatsAppNumber::formatForDisplay($user->nomor_telepon) : '-' }}</div>
-                        </td>
-                        <td class="px-4 py-4 align-middle">
-                            <div class="text-sm text-gray-600 truncate max-w-xs">
-                                {{ $user->alamat ?? '-' }}
+                            <div class="text-sm text-gray-600">
+                                @if($user->nomor_telepon)
+                                    <a href="https://wa.me/{{ str_replace(['+', '-', ' '], '', $user->nomor_telepon) }}" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-medium inline-flex items-center gap-1">
+                                        {{ \App\Support\WhatsAppNumber::formatForDisplay($user->nomor_telepon) }}
+                                        <x-heroicon-o-arrow-top-right-on-square class="w-3 h-3 opacity-70" />
+                                    </a>
+                                @else
+                                    -
+                                @endif
                             </div>
+                        </td>
+                        <td class="px-4 py-4 align-middle text-center">
+                            @if($user->status_akun === 'Terdaftar')
+                                <x-ui.badge color="success" size="sm">Terdaftar</x-ui.badge>
+                            @else
+                                <x-ui.badge color="gray" size="sm">Tamu</x-ui.badge>
+                            @endif
+                        </td>
+                        <td class="px-4 py-4 align-middle text-center">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700">
+                                {{ $user->pesanan_count ?? 0 }} Pesanan
+                            </span>
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
@@ -193,7 +209,7 @@
                     @empty
                     <tr>
                         <td colspan="6">
-                            <x-ui.empty-state icon="users" title="Belum ada data konsumen" message="Data akan muncul setelah konsumen ditambahkan." />
+                            <x-ui.empty-state icon="users" title="Belum ada data konsumen" message="Data konsumen otomatis tersimpan saat pemesanan katering atau nasi box dilakukan." />
                         </td>
                     </tr>
                     @endforelse

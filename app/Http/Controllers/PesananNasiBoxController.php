@@ -146,12 +146,39 @@ class PesananNasiBoxController extends Controller
                         throw new \Exception($cekKapasitas['pesan']);
                     }
 
-                    $pelanggan = Auth::guard('pelanggan')->check()
-                        ? Auth::guard('pelanggan')->user()
-                        : Pelanggan::firstOrCreate(
-                            ['nomor_telepon' => $request->kontak],
-                            ['nama' => $request->nama_pemesan, 'alamat' => '-']
-                        );
+                    // Normalisasi: data pemesan disimpan di tabel pelanggan tanpa duplikasi
+                    $nomorTeleponNorm = \App\Support\WhatsAppNumber::normalize($request->kontak);
+                    $alamatInput = $request->alamat_pengiriman ?? $request->lokasi_pengiriman ?? $request->alamat ?? '-';
+
+                    if (Auth::guard('pelanggan')->check()) {
+                        $pelanggan = Auth::guard('pelanggan')->user();
+                        if ($alamatInput !== '-' && (empty($pelanggan->alamat) || $pelanggan->alamat === '-')) {
+                            $pelanggan->update(['alamat' => $alamatInput]);
+                        }
+                    } else {
+                        $pelanggan = Pelanggan::where('nomor_telepon', $nomorTeleponNorm)
+                            ->orWhere('nomor_telepon', $request->kontak)
+                            ->first();
+
+                        if ($pelanggan) {
+                            $updates = [];
+                            if (!empty($request->nama_pemesan) && (empty($pelanggan->nama) || $pelanggan->nama === 'Umum')) {
+                                $updates['nama'] = $request->nama_pemesan;
+                            }
+                            if ($alamatInput !== '-' && (empty($pelanggan->alamat) || $pelanggan->alamat === '-')) {
+                                $updates['alamat'] = $alamatInput;
+                            }
+                            if (!empty($updates)) {
+                                $pelanggan->update($updates);
+                            }
+                        } else {
+                            $pelanggan = Pelanggan::create([
+                                'nomor_telepon' => $nomorTeleponNorm,
+                                'nama' => $request->nama_pemesan,
+                                'alamat' => $alamatInput,
+                            ]);
+                        }
+                    }
 
                     $pesananBaru = Pesanan::create([
                         'jenis_pesanan_id' => 3, // Nasi Box
