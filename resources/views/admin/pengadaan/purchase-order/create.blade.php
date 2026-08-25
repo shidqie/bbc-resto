@@ -1,5 +1,13 @@
+@php
+    $isCatering = ($tipe === 'Catering' || $tipe === 'Katering');
+    $pageTitle = $isCatering ? 'BUAT PURCHASE ORDER (PO) KATERING' : 'BUAT PURCHASE ORDER (PO) NASI BOX & HARIAN';
+    $pageSubtitle = $isCatering 
+        ? 'Buat pesanan bahan baku ke supplier khusus pesanan katering berdasarkan kebutuhan BOM.' 
+        : 'Buat pesanan bahan baku ke supplier untuk pesanan nasi box dan restock operasional harian.';
+    $breadcrumbLabel = $isCatering ? 'Buat PO Katering' : 'Buat PO Nasi Box & Harian';
+@endphp
 @extends('layouts.pos')
-@section('title', 'Buat Purchase Order')
+@section('title', $isCatering ? 'Buat PO Katering' : 'Buat PO Nasi Box & Harian')
 
 @section('content')
 <div class="flex-1 bg-gray-50 text-gray-800 pb-12">
@@ -7,9 +15,9 @@
         
         {{-- PAGE HEADER --}}
         <x-ui.page-header
-            title="BUAT PURCHASE ORDER (PO)"
-            subtitle="Buat pesanan bahan baku kepada supplier berdasarkan kebutuhan produksi dan stok."
-            :breadcrumbs="['Pengadaan', 'Purchase Order', 'Buat PO']">
+            :title="$pageTitle"
+            :subtitle="$pageSubtitle"
+            :breadcrumbs="['Pengadaan', 'Purchase Order', $breadcrumbLabel]">
             <x-slot:actions>
                 <x-ui.button variant="secondary" href="{{ route('pengadaan.po.index') }}">
                     Batal
