@@ -44,7 +44,7 @@ return new class extends Migration
             1 => ['kode_status' => 'DIJADWALKAN', 'nama_status' => 'Dijadwalkan'],
             2 => ['kode_status' => 'SIAP_DIKIRIM', 'nama_status' => 'Siap Dikirim'],
             3 => ['kode_status' => 'DALAM_PENGANTARAN', 'nama_status' => 'Dalam Pengantaran'],
-            4 => ['kode_status' => 'TERKIRIM', 'nama_status' => 'Terkirim'],
+            4 => ['kode_status' => 'SELESAI', 'nama_status' => 'Selesai'],
             5 => ['kode_status' => 'DIBATALKAN', 'nama_status' => 'Dibatalkan'],
         ];
         foreach ($statusPengiriman as $id => $data) {

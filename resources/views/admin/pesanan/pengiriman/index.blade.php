@@ -159,11 +159,11 @@
                 </div>
             </div>
 
-            {{-- Terkirim --}}
+            {{-- Selesai --}}
             <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-2xs flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
-                        Terkirim
+                        Selesai
                     </p>
                     <p class="text-2xl font-black text-emerald-600 mt-1">{{ $terkirim }}</p>
                     <p class="text-[11px] text-gray-400 mt-0.5">Berhasil diantar</p>
@@ -204,7 +204,7 @@
                             '1' => 'Dijadwalkan',
                             '2' => 'Siap Dikirim',
                             '3' => 'Dalam Pengantaran',
-                            '4' => 'Terkirim',
+                            '4' => 'Selesai',
                             '5' => 'Dibatalkan'
                         ]"
                         :selected="request('status')"
@@ -222,7 +222,7 @@
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Konsumen</th>
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Jenis</th>
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Pesanan</th>
-                    <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Status</th>
+                    <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Status Pengiriman</th>
                     <th class="px-4 py-3.5 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500">Aksi</th>
                 </x-ui.table.header>
 
@@ -253,7 +253,7 @@
                                 $statusClass = 'bg-amber-50 text-amber-800 border-amber-200/90';
                                 $statusDot = 'bg-amber-500 animate-pulse';
                             } elseif ($statusId === 4) {
-                                $statusLabel = 'Terkirim';
+                                $statusLabel = 'Selesai';
                                 $statusClass = 'bg-emerald-50 text-emerald-800 border-emerald-200/90';
                                 $statusDot = 'bg-emerald-500';
                             } elseif ($statusId === 5) {
