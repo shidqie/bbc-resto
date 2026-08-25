@@ -1,270 +1,233 @@
-# Data Master Bahan Baku - Rumah Makan Saung Babakan Cinta (BBC Resto)
+# Data Bahan Baku untuk Sistem BBC Resto
 
-> Dokumen ini memuat seluruh data bahan baku yang terdaftar di database sistem BBC Resto, terbagi berdasarkan kategori, satuan, stok minimum, dan peruntukan operasional.
+**Total Bahan Baku: 198 item**
 
-## 📊 Ringkasan Kategori
+> Format disederhanakan untuk kebutuhan input/tampilan sistem. **Harga Pasar** diubah menjadi **Harga Satuan**. Kolom Harga Sistem/Unit, Basis, Status Acuan, Kode, dan Status dihapus.
 
-| No | Kategori Bahan Baku | Jumlah Item |
-|:--:|:--------------------|:-----------:|
-| 1 | [Sayuran & Buah](#sayuran-buah) | 57 item |
-| 2 | [Daging, Ikan & Protein](#daging-ikan-protein) | 21 item |
-| 3 | [Bumbu & Saus](#bumbu-saus) | 60 item |
-| 4 | [Bahan Kering & Pokok](#bahan-kering-pokok) | 21 item |
-| 5 | [Bahan Olahan & Produk Jadi](#bahan-olahan-produk-jadi) | 14 item |
-| 6 | [Bahan Minuman](#bahan-minuman) | 25 item |
-| | **Total Keseluruhan** | **198 item** |
+## Sayuran & Buah
 
----
+| No. | Nama Bahan | Stok Saat Ini | Stok Minimum | Harga Satuan |
+|---:|---|---:|---:|---:|
+| 1 | Alpukat | 0 g | 3 kg | Rp 35.000 |
+| 2 | Anggur | 0 g | 3 kg | Rp 90.000 |
+| 3 | Apel | 0 g | 3 kg | Rp 45.000 |
+| 4 | Asem | 0 g | 2 kg | Rp 40.000 |
+| 5 | Bawang bombay | 0 g | 2 kg | Rp 35.000 |
+| 6 | Bawang daun | 0 g | 2 kg | Rp 25.000 |
+| 7 | Bawang merah | 0 g | 2 kg | Rp 45.000 |
+| 8 | Bawang putih | 0 g | 2 kg | Rp 40.000 |
+| 9 | Bengkuang | 0 g | 2 kg | Rp 15.000 |
+| 10 | Bonteng | 0 g | 2 kg | Rp 12.000 |
+| 11 | Brokoli | 0 g | 2 kg | Rp 35.000 |
+| 12 | Buah naga | 0 g | 3 kg | Rp 25.000 |
+| 13 | Buncis | 0 g | 2 kg | Rp 18.000 |
+| 14 | Cabe keriting | 0 g | 2 kg | Rp 55.000 |
+| 15 | Cabe tanjung | 0 g | 2 kg | Rp 50.000 |
+| 16 | Cengek hijau | 0 g | 2 kg | Rp 45.000 |
+| 17 | Cengek merah | 0 g | 2 kg | Rp 60.000 |
+| 18 | Cikur | 0 g | 2 kg | Rp 60.000 |
+| 19 | Daun jeruk | 0 g | 2 kg | Rp 80.000 |
+| 20 | Daun kunyit | 0 g | 2 kg | Rp 25.000 |
+| 21 | Daun salam | 0 g | 2 kg | Rp 30.000 |
+| 22 | Jagung manis | 0 g | 2 kg | Rp 18.000 |
+| 23 | Jahe | 0 g | 2 kg | Rp 35.000 |
+| 24 | Jambu | 0 g | 3 kg | Rp 25.000 |
+| 25 | Jamur kancing | 0 g | 2 kg | Rp 80.000 |
+| 26 | Jamur kuping | 0 g | 2 kg | Rp 70.000 |
+| 27 | Jengkol | 0 g | 2 kg | Rp 40.000 |
+| 28 | Jeruk | 0 g | 3 kg | Rp 25.000 |
+| 29 | Jeruk limau | 0 g | 3 kg | Rp 50.000 |
+| 30 | Jeruk purut | 0 g | 2 kg | Rp 35.000 |
+| 31 | Kacang panjang | 0 g | 2 kg | Rp 18.000 |
+| 32 | Kangkung | 0 g | 2 kg | Rp 12.000 |
+| 33 | Kaweni | 0 g | 3 kg | Rp 20.000 |
+| 34 | Kedondong | 0 g | 3 kg | Rp 20.000 |
+| 35 | Kemangi | 0 g | 2 kg | Rp 25.000 |
+| 36 | Kentang | 0 g | 2 kg | Rp 20.000 |
+| 37 | Kol | 0 g | 2 kg | Rp 12.000 |
+| 38 | Kunyit | 0 g | 2 kg | Rp 25.000 |
+| 39 | Laja | 0 g | 2 kg | Rp 20.000 |
+| 40 | Lemon | 0 g | 3 kg | Rp 35.000 |
+| 41 | Melon | 0 g | 3 kg | Rp 18.000 |
+| 42 | Nanas | 0 g | 3 kg | Rp 12.000 |
+| 43 | Paprika | 0 g | 2 kg | Rp 80.000 |
+| 44 | Pepaya | 0 g | 3 kg | Rp 12.000 |
+| 45 | Pete | 0 g | 2 kg | Rp 80.000 |
+| 46 | Sawi | 0 g | 2 kg | Rp 15.000 |
+| 47 | Selada | 0 g | 2 kg | Rp 25.000 |
+| 48 | Seledri | 0 g | 2 kg | Rp 30.000 |
+| 49 | Semangka | 0 g | 3 kg | Rp 12.000 |
+| 50 | Sereh | 0 g | 2 kg | Rp 25.000 |
+| 51 | Sirsak | 0 g | 3 kg | Rp 20.000 |
+| 52 | Strawberry | 0 g | 3 kg | Rp 80.000 |
+| 53 | Surawung | 0 g | 2 kg | Rp 25.000 |
+| 54 | Toge | 0 g | 2 kg | Rp 12.000 |
+| 55 | Tomat | 0 g | 2 kg | Rp 18.000 |
+| 56 | Tomat ceri | 0 g | 2 kg | Rp 45.000 |
+| 57 | Wortel | 0 g | 2 kg | Rp 18.000 |
 
-## <a id="sayuran-buah"></a>Sayuran & Buah
+## Daging, Ikan & Protein
 
-Total: **57 item**
+| No. | Nama Bahan | Stok Saat Ini | Stok Minimum | Harga Satuan |
+|---:|---|---:|---:|---:|
+| 58 | Ati ayam | 0 g | 3 kg | Rp 30.000 |
+| 59 | Ati sapi | 0 g | 3 kg | Rp 75.000 |
+| 60 | Ayam broiler | 0 g | 3 kg | Rp 43.000 |
+| 61 | Ayam kampung | 0 g | 3 kg | Rp 70.000 |
+| 62 | Bakso ikan | 0 pcs | 24 pcs | Rp 800 |
+| 63 | Bebek | 0 g | 3 kg | Rp 60.000 |
+| 64 | Daging campur / jeroan | 0 g | 3 kg | Rp 65.000 |
+| 65 | Daging kambing | 0 g | 3 kg | Rp 150.000 |
+| 66 | Daging sapi | 0 g | 3 kg | Rp 140.000 |
+| 67 | Iga sapi | 0 g | 3 kg | Rp 135.000 |
+| 68 | Ikan dori | 0 g | 3 kg | Rp 60.000 |
+| 69 | Ikan gurame | 0 g | 3 kg | Rp 75.000 |
+| 70 | Ikan lele | 0 g | 3 kg | Rp 29.000 |
+| 71 | Ikan nila | 0 g | 3 kg | Rp 33.000 |
+| 72 | Kikil sapi | 0 g | 3 kg | Rp 75.000 |
+| 73 | Kulit ayam | 0 g | 3 kg | Rp 30.000 |
+| 74 | Mangga | 0 g | 3 kg | Rp 20.000 |
+| 75 | Peda | 0 g | 3 kg | Rp 70.000 |
+| 76 | Sepat | 0 g | 3 kg | Rp 65.000 |
+| 77 | Telur | 0 pcs | 24 pcs | Rp 1.600 |
+| 78 | Telur puyuh | 0 pcs | 24 pcs | Rp 450 |
 
-| No | Kode | Nama Bahan Baku | Satuan | Stok Minimal | Peruntukan | Status |
-|:--:|:----:|:----------------|:------:|:------------:|:----------:|:------:|
-| 1 | `BHB037` | **Alpukat** | g | 2.000 | Semua | Aktif |
-| 2 | `BHB193` | **Anggur** | g | 0 | Semua | Aktif |
-| 3 | `BHB192` | **Apel** | g | 0 | Semua | Aktif |
-| 4 | `BHB001` | **Asem** | g | 500 | Semua | Aktif |
-| 5 | `BHB002` | **Bawang bombay** | g | 1.500 | Semua | Aktif |
-| 6 | `BHB003` | **Bawang daun** | g | 1.000 | Semua | Aktif |
-| 7 | `BHB004` | **Bawang merah** | g | 3.000 | Semua | Aktif |
-| 8 | `BHB005` | **Bawang putih** | g | 2.000 | Semua | Aktif |
-| 9 | `BHB197` | **Bengkuang** | g | 0 | Semua | Aktif |
-| 10 | `BHB006` | **Bonteng** | g | 2.000 | Semua | Aktif |
-| 11 | `BHB007` | **Brokoli** | g | 1.500 | Semua | Aktif |
-| 12 | `BHB038` | **Buah naga** | g | 2.000 | Semua | Aktif |
-| 13 | `BHB030` | **Buncis** | g | 2.000 | Semua | Aktif |
-| 14 | `BHB009` | **Cabe keriting** | g | 2.000 | Semua | Aktif |
-| 15 | `BHB008` | **Cabe tanjung** | g | 1.000 | Semua | Aktif |
-| 16 | `BHB011` | **Cengek hijau** | g | 750 | Semua | Aktif |
-| 17 | `BHB010` | **Cengek merah** | g | 1.000 | Semua | Aktif |
-| 18 | `BHB012` | **Cikur** | g | 500 | Semua | Aktif |
-| 19 | `BHB013` | **Daun jeruk** | g | 300 | Semua | Aktif |
-| 20 | `BHB190` | **Daun kunyit** | g | 0 | Semua | Aktif |
-| 21 | `BHB032` | **Daun salam** | g | 300 | Semua | Aktif |
-| 22 | `BHB195` | **Jagung manis** | g | 0 | Semua | Aktif |
-| 23 | `BHB014` | **Jahe** | g | 1.000 | Semua | Aktif |
-| 24 | `BHB039` | **Jambu** | g | 2.000 | Semua | Aktif |
-| 25 | `BHB036` | **Jamur kancing** | g | 1.000 | Semua | Aktif |
-| 26 | `BHB035` | **Jamur kuping** | g | 750 | Semua | Aktif |
-| 27 | `BHB015` | **Jengkol** | g | 2.000 | Semua | Aktif |
-| 28 | `BHB040` | **Jeruk** | g | 3.000 | Semua | Aktif |
-| 29 | `BHB200` | **Jeruk limau** | g | 0 | Semua | Aktif |
-| 30 | `BHB016` | **Jeruk purut** | g | 500 | Semua | Aktif |
-| 31 | `BHB017` | **Kacang panjang** | g | 2.000 | Semua | Aktif |
-| 32 | `BHB018` | **Kangkung** | g | 2.000 | Semua | Aktif |
-| 33 | `BHB041` | **Kaweni** | g | 2.000 | Semua | Aktif |
-| 34 | `BHB198` | **Kedondong** | g | 0 | Semua | Aktif |
-| 35 | `BHB161` | **Kemangi** | g | 500 | Semua | Aktif |
-| 36 | `BHB019` | **Kentang** | g | 5.000 | Semua | Aktif |
-| 37 | `BHB020` | **Kol** | g | 3.000 | Semua | Aktif |
-| 38 | `BHB021` | **Kunyit** | g | 750 | Semua | Aktif |
-| 39 | `BHB022` | **Laja** | g | 750 | Semua | Aktif |
-| 40 | `BHB034` | **Lemon** | g | 1.000 | Semua | Aktif |
-| 41 | `BHB042` | **Melon** | g | 3.000 | Semua | Aktif |
-| 42 | `BHB043` | **Nanas** | g | 2.500 | Semua | Aktif |
-| 43 | `BHB031` | **Paprika** | g | 1.000 | Semua | Aktif |
-| 44 | `BHB201` | **Pepaya** | g | 0 | Semua | Aktif |
-| 45 | `BHB023` | **Pete** | g | 1.000 | Semua | Aktif |
-| 46 | `BHB187` | **Sawi** | g | 0 | Semua | Aktif |
-| 47 | `BHB025` | **Selada** | g | 1.500 | Semua | Aktif |
-| 48 | `BHB024` | **Seledri** | g | 500 | Semua | Aktif |
-| 49 | `BHB185` | **Semangka** | g | 0 | Semua | Aktif |
-| 50 | `BHB033` | **Sereh** | g | 750 | Semua | Aktif |
-| 51 | `BHB044` | **Sirsak** | g | 2.000 | Semua | Aktif |
-| 52 | `BHB045` | **Strawberry** | g | 1.000 | Semua | Aktif |
-| 53 | `BHB026` | **Surawung** | g | 500 | Semua | Aktif |
-| 54 | `BHB027` | **Toge** | g | 1.500 | Semua | Aktif |
-| 55 | `BHB028` | **Tomat** | g | 3.000 | Semua | Aktif |
-| 56 | `BHB196` | **Tomat ceri** | g | 0 | Semua | Aktif |
-| 57 | `BHB029` | **Wortel** | g | 3.000 | Semua | Aktif |
+## Bumbu & Saus
 
----
+| No. | Nama Bahan | Stok Saat Ini | Stok Minimum | Harga Satuan |
+|---:|---|---:|---:|---:|
+| 79 | Aida (Cabe Bubuk) | 0 g | 2 kg | Rp 85.000 |
+| 80 | Antaka asin | 0 g | 2 kg | Rp 55.000 |
+| 81 | Antaka balado | 0 g | 2 kg | Rp 55.000 |
+| 82 | Antaka BBQ | 0 g | 2 kg | Rp 55.000 |
+| 83 | Antaka jagung manis | 0 g | 2 kg | Rp 55.000 |
+| 84 | Antaka keju | 0 g | 2 kg | Rp 55.000 |
+| 85 | Bawang putih bubuk | 0 g | 2 kg | Rp 100.000 |
+| 86 | Biji lada hitam | 0 g | 2 kg | Rp 180.000 |
+| 87 | Biji wijen | 0 g | 2 kg | Rp 55.000 |
+| 88 | Bumbu asam manis | 0 g | 2 kg | Rp 60.000 |
+| 89 | Bumbu ayam BR | 0 g | 2 kg | Rp 60.000 |
+| 90 | Bumbu kacang | 0 g | 2 kg | Rp 60.000 |
+| 91 | Bumbu kampung | 0 g | 2 kg | Rp 60.000 |
+| 92 | Bumbu olesan | 0 g | 2 kg | Rp 60.000 |
+| 93 | Bumbu pecak | 0 g | 2 kg | Rp 60.000 |
+| 94 | Bumbu sate | 0 g | 2 kg | Rp 60.000 |
+| 95 | Bumbu utama | 0 g | 2 kg | Rp 60.000 |
+| 96 | Cabe kering | 0 g | 2 kg | Rp 100.000 |
+| 97 | Cengkeh | 0 g | 2 kg | Rp 200.000 |
+| 98 | Cuka | 0 ml | 2.000 ml | Rp 20.000 |
+| 99 | Ebi | 0 g | 2 kg | Rp 200.000 |
+| 100 | Garam halus | 0 g | 2 kg | Rp 8.000 |
+| 101 | Garam krosok | 0 g | 2 kg | Rp 5.000 |
+| 102 | Gula cair | 0 ml | 2.000 ml | Rp 25.000 |
+| 103 | Jinten | 0 g | 2 kg | Rp 80.000 |
+| 104 | Kapol | 0 g | 2 kg | Rp 200.000 |
+| 105 | Kayu manis | 0 g | 2 kg | Rp 130.000 |
+| 106 | Kecap asin | 0 ml | 2.000 ml | Rp 45.000 |
+| 107 | Kecap ikan | 0 ml | 2.000 ml | Rp 70.000 |
+| 108 | Kecap Inggris | 0 ml | 2.000 ml | Rp 80.000 |
+| 109 | Kecap manis | 0 ml | 2.000 ml | Rp 45.000 |
+| 110 | Ketumbar | 0 g | 2 kg | Rp 40.000 |
+| 111 | Ladaku | 0 g | 2 kg | Rp 400.000 |
+| 112 | Mayones | 0 g | 2 kg | Rp 30.000 |
+| 113 | Minyak wijen | 0 ml | 2.000 ml | Rp 120.000 |
+| 114 | Muncang | 0 g | 2 kg | Rp 85.000 |
+| 115 | Oregano | 0 g | 2 kg | Rp 180.000 |
+| 116 | Pala | 0 g | 2 kg | Rp 250.000 |
+| 117 | Paprika powder | 0 g | 2 kg | Rp 150.000 |
+| 118 | Pedes | 0 g | 2 kg | Rp 180.000 |
+| 119 | Peka | 0 g | 2 kg | Rp 200.000 |
+| 120 | Racik ikan | 0 g | 2 kg | Rp 100.000 |
+| 121 | Racik tempe | 0 g | 2 kg | Rp 90.000 |
+| 122 | Racik tumis | 0 g | 2 kg | Rp 90.000 |
+| 123 | Royco ayam | 0 g | 2 kg | Rp 48.000 |
+| 124 | Royco sapi | 0 g | 2 kg | Rp 48.000 |
+| 125 | Sambal korek | 0 g | 2 kg | Rp 40.000 |
+| 126 | Sambal merah | 0 g | 2 kg | Rp 40.000 |
+| 127 | Sambal oncom pedas | 0 g | 2 kg | Rp 50.000 |
+| 128 | Sambal penyet | 0 g | 2 kg | Rp 40.000 |
+| 129 | Saos sambal | 0 ml | 2.000 ml | Rp 25.000 |
+| 130 | Saos tiram | 0 ml | 2.000 ml | Rp 55.000 |
+| 131 | Saos tomat | 0 ml | 2.000 ml | Rp 20.000 |
+| 132 | Saus mushroom | 0 ml | 2.000 ml | Rp 55.000 |
+| 133 | Saus teriyaki | 0 ml | 2.000 ml | Rp 55.000 |
+| 134 | Sirup gula aren | 0 ml | 2.000 ml | Rp 70.000 |
+| 135 | Sirup karamel | 0 ml | 2.000 ml | Rp 100.000 |
+| 136 | Sirup vanilla | 0 ml | 2.000 ml | Rp 100.000 |
+| 137 | Terasi | 0 g | 2 kg | Rp 60.000 |
+| 138 | Yellow mustard | 0 ml | 2.000 ml | Rp 100.000 |
 
-## <a id="daging-ikan-protein"></a>Daging, Ikan & Protein
+## Bahan Kering & Pokok
 
-Total: **21 item**
+| No. | Nama Bahan | Stok Saat Ini | Stok Minimum | Harga Satuan |
+|---:|---|---:|---:|---:|
+| 139 | Bawang goreng | 0 g | 2 kg | Rp 100.000 |
+| 140 | Beras | 0 g | 2 kg | Rp 14.000 |
+| 141 | Beras pulen | 0 g | 2 kg | Rp 16.000 |
+| 142 | Butter | 0 g | 2 kg | Rp 150.000 |
+| 143 | Gula kawung | 0 g | 2 kg | Rp 40.000 |
+| 144 | Gula putih | 0 g | 2 kg | Rp 18.000 |
+| 145 | Jagung popcorn | 0 g | 2 kg | Rp 35.000 |
+| 146 | Kacang OH | 0 g | 2 kg | Rp 45.000 |
+| 147 | Kacang tanah | 0 g | 2 kg | Rp 35.000 |
+| 148 | Kelapa parut | 0 g | 2 kg | Rp 30.000 |
+| 149 | Maizena | 0 g | 2 kg | Rp 25.000 |
+| 150 | Mentega | 0 g | 2 kg | Rp 45.000 |
+| 151 | Mi kuning | 0 g | 2 kg | Rp 25.000 |
+| 152 | Minyak | 0 ml | 2.000 ml | Rp 20.000 |
+| 153 | Soda kue | 0 g | 2 kg | Rp 35.000 |
+| 154 | Soun | 0 g | 2 kg | Rp 40.000 |
+| 155 | Tapioka | 0 g | 2 kg | Rp 18.000 |
+| 156 | Tepung beras | 0 g | 2 kg | Rp 18.000 |
+| 157 | Tepung bumbu serbaguna | 0 g | 2 kg | Rp 25.000 |
+| 158 | Tepung roti | 0 g | 2 kg | Rp 35.000 |
+| 159 | Tepung terigu | 0 g | 2 kg | Rp 15.000 |
 
-| No | Kode | Nama Bahan Baku | Satuan | Stok Minimal | Peruntukan | Status |
-|:--:|:----:|:----------------|:------:|:------------:|:----------:|:------:|
-| 1 | `BHB057` | **Ati ayam** | g | 2.000 | Semua | Aktif |
-| 2 | `BHB056` | **Ati sapi** | g | 2.000 | Semua | Aktif |
-| 3 | `BHB046` | **Ayam broiler** | g | 10.000 | Semua | Aktif |
-| 4 | `BHB047` | **Ayam kampung** | g | 6.000 | Semua | Aktif |
-| 5 | `BHB188` | **Bakso ikan** | pcs | 0 | Semua | Aktif |
-| 6 | `BHB048` | **Bebek** | g | 6.000 | Semua | Aktif |
-| 7 | `BHB166` | **Daging campur / jeroan** | g | 0 | Semua | Aktif |
-| 8 | `BHB165` | **Daging kambing** | g | 0 | Semua | Aktif |
-| 9 | `BHB049` | **Daging sapi** | g | 6.000 | Semua | Aktif |
-| 10 | `BHB168` | **Iga sapi** | g | 0 | Semua | Aktif |
-| 11 | `BHB053` | **Ikan dori** | g | 5.000 | Semua | Aktif |
-| 12 | `BHB052` | **Ikan gurame** | g | 6.000 | Semua | Aktif |
-| 13 | `BHB051` | **Ikan lele** | g | 5.000 | Semua | Aktif |
-| 14 | `BHB050` | **Ikan nila** | g | 6.000 | Semua | Aktif |
-| 15 | `BHB058` | **Kikil sapi** | g | 2.000 | Semua | Aktif |
-| 16 | `BHB169` | **Kulit ayam** | g | 0 | Semua | Aktif |
-| 17 | `BHB162` | **Mangga** | g | 500 | Semua | Aktif |
-| 18 | `BHB054` | **Peda** | g | 1.500 | Semua | Aktif |
-| 19 | `BHB055` | **Sepat** | g | 1.500 | Semua | Aktif |
-| 20 | `BHB059` | **Telur** | pcs | 60 | Semua | Aktif |
-| 21 | `BHB189` | **Telur puyuh** | pcs | 0 | Semua | Aktif |
+## Bahan Olahan & Produk Jadi
 
----
+| No. | Nama Bahan | Stok Saat Ini | Stok Minimum | Harga Satuan |
+|---:|---|---:|---:|---:|
+| 160 | Bakso sapi | 0 pcs | 24 pcs | Rp 1.500 |
+| 161 | Es krim | 0 pcs | 24 pcs | Rp 4.000 |
+| 162 | Keju parut | 0 g | 2 kg | Rp 120.000 |
+| 163 | Kerupuk mentah | 0 g | 2 kg | Rp 30.000 |
+| 164 | Kerupuk udang | 0 g | 2 kg | Rp 50.000 |
+| 165 | Kerupuk udang mentah | 0 g | 2 kg | Rp 40.000 |
+| 166 | Oncom | 0 g | 2 kg | Rp 25.000 |
+| 167 | Puding | 0 pcs | 24 pcs | Rp 3.000 |
+| 168 | Santan | 0 ml | 2.000 ml | Rp 30.000 |
+| 169 | Sosis ayam | 0 pcs | 24 pcs | Rp 2.000 |
+| 170 | Tahu | 0 pcs | 24 pcs | Rp 1.000 |
+| 171 | Tahu sumedang | 0 pcs | 24 pcs | Rp 700 |
+| 172 | Tauco | 0 g | 2 kg | Rp 35.000 |
+| 173 | Tempe | 0 g | 2 kg | Rp 20.000 |
 
-## <a id="bumbu-saus"></a>Bumbu & Saus
+## Bahan Minuman
 
-Total: **60 item**
-
-| No | Kode | Nama Bahan Baku | Satuan | Stok Minimal | Peruntukan | Status |
-|:--:|:----:|:----------------|:------:|:------------:|:----------:|:------:|
-| 1 | `BHB089` | **Aida** | g | 750 | Semua | Aktif |
-| 2 | `BHB088` | **Antaka asin** | g | 500 | Semua | Aktif |
-| 3 | `BHB087` | **Antaka balado** | g | 500 | Semua | Aktif |
-| 4 | `BHB086` | **Antaka BBQ** | g | 500 | Semua | Aktif |
-| 5 | `BHB085` | **Antaka jagung manis** | g | 500 | Semua | Aktif |
-| 6 | `BHB084` | **Antaka keju** | g | 500 | Semua | Aktif |
-| 7 | `BHB074` | **Bawang putih bubuk** | g | 750 | Semua | Aktif |
-| 8 | `BHB073` | **Biji lada hitam** | g | 500 | Semua | Aktif |
-| 9 | `BHB076` | **Biji wijen** | g | 500 | Semua | Aktif |
-| 10 | `BHB097` | **Bumbu asam manis** | g | 1.000 | Semua | Aktif |
-| 11 | `BHB080` | **Bumbu ayam BR** | g | 2.000 | Semua | Aktif |
-| 12 | `BHB163` | **Bumbu kacang** | g | 0 | Semua | Aktif |
-| 13 | `BHB081` | **Bumbu kampung** | g | 2.000 | Semua | Aktif |
-| 14 | `BHB096` | **Bumbu olesan** | g | 1.000 | Semua | Aktif |
-| 15 | `BHB095` | **Bumbu pecak** | g | 1.000 | Semua | Aktif |
-| 16 | `BHB083` | **Bumbu sate** | g | 1.000 | Semua | Aktif |
-| 17 | `BHB082` | **Bumbu utama** | g | 2.000 | Semua | Aktif |
-| 18 | `BHB060` | **Cabe kering** | g | 750 | Semua | Aktif |
-| 19 | `BHB061` | **Cengkeh** | g | 250 | Semua | Aktif |
-| 20 | `BHB191` | **Cuka** | ml | 0 | Semua | Aktif |
-| 21 | `BHB068` | **Ebi** | g | 500 | Semua | Aktif |
-| 22 | `BHB078` | **Garam halus** | g | 5.000 | Semua | Aktif |
-| 23 | `BHB079` | **Garam krosok** | g | 3.000 | Semua | Aktif |
-| 24 | `BHB174` | **Gula cair** | ml | 0 | Semua | Aktif |
-| 25 | `BHB062` | **Jinten** | g | 250 | Semua | Aktif |
-| 26 | `BHB069` | **Kapol** | g | 250 | Semua | Aktif |
-| 27 | `BHB071` | **Kayu manis** | g | 250 | Semua | Aktif |
-| 28 | `BHB100` | **Kecap asin** | ml | 1.000 | Semua | Aktif |
-| 29 | `BHB099` | **Kecap ikan** | ml | 1.000 | Semua | Aktif |
-| 30 | `BHB098` | **Kecap Inggris** | ml | 1.000 | Semua | Aktif |
-| 31 | `BHB101` | **Kecap manis** | ml | 4.000 | Semua | Aktif |
-| 32 | `BHB063` | **Ketumbar** | g | 750 | Semua | Aktif |
-| 33 | `BHB075` | **Ladaku** | g | 500 | Semua | Aktif |
-| 34 | `BHB108` | **Mayones** | g | 1.000 | Semua | Aktif |
-| 35 | `BHB112` | **Minyak wijen** | ml | 1.000 | Semua | Aktif |
-| 36 | `BHB064` | **Muncang** | g | 750 | Semua | Aktif |
-| 37 | `BHB072` | **Oregano** | g | 250 | Semua | Aktif |
-| 38 | `BHB065` | **Pala** | g | 250 | Semua | Aktif |
-| 39 | `BHB077` | **Paprika powder** | g | 500 | Semua | Aktif |
-| 40 | `BHB066` | **Pedes** | g | 500 | Semua | Aktif |
-| 41 | `BHB067` | **Peka** | g | 250 | Semua | Aktif |
-| 42 | `BHB091` | **Racik ikan** | g | 750 | Semua | Aktif |
-| 43 | `BHB090` | **Racik tempe** | g | 750 | Semua | Aktif |
-| 44 | `BHB092` | **Racik tumis** | g | 750 | Semua | Aktif |
-| 45 | `BHB093` | **Royco ayam** | g | 1.000 | Semua | Aktif |
-| 46 | `BHB094` | **Royco sapi** | g | 1.000 | Semua | Aktif |
-| 47 | `BHB111` | **Sambal korek** | g | 1.000 | Semua | Aktif |
-| 48 | `BHB109` | **Sambal merah** | g | 2.000 | Semua | Aktif |
-| 49 | `BHB167` | **Sambal oncom pedas** | g | 0 | Semua | Aktif |
-| 50 | `BHB110` | **Sambal penyet** | g | 2.000 | Semua | Aktif |
-| 51 | `BHB106` | **Saos sambal** | ml | 3.000 | Semua | Aktif |
-| 52 | `BHB105` | **Saos tiram** | ml | 2.000 | Semua | Aktif |
-| 53 | `BHB104` | **Saos tomat** | ml | 2.000 | Semua | Aktif |
-| 54 | `BHB102` | **Saus mushroom** | ml | 1.000 | Semua | Aktif |
-| 55 | `BHB103` | **Saus teriyaki** | ml | 2.000 | Semua | Aktif |
-| 56 | `BHB179` | **Sirup gula aren** | ml | 0 | Semua | Aktif |
-| 57 | `BHB182` | **Sirup karamel** | ml | 0 | Semua | Aktif |
-| 58 | `BHB178` | **Sirup vanilla** | ml | 0 | Semua | Aktif |
-| 59 | `BHB070` | **Terasi** | g | 750 | Semua | Aktif |
-| 60 | `BHB107` | **Yellow mustard** | ml | 1.000 | Semua | Aktif |
-
----
-
-## <a id="bahan-kering-pokok"></a>Bahan Kering & Pokok
-
-Total: **21 item**
-
-| No | Kode | Nama Bahan Baku | Satuan | Stok Minimal | Peruntukan | Status |
-|:--:|:----:|:----------------|:------:|:------------:|:----------:|:------:|
-| 1 | `BHB127` | **Bawang goreng** | g | 1.000 | Semua | Aktif |
-| 2 | `BHB113` | **Beras** | ml | 25.000 | Semua | Aktif |
-| 3 | `BHB171` | **Beras pulen** | ml | 0 | Semua | Aktif |
-| 4 | `BHB130` | **Butter** | g | 1.000 | Semua | Aktif |
-| 5 | `BHB114` | **Gula kawung** | g | 2.000 | Semua | Aktif |
-| 6 | `BHB115` | **Gula putih** | g | 5.000 | Semua | Aktif |
-| 7 | `BHB123` | **Jagung popcorn** | g | 1.000 | Semua | Aktif |
-| 8 | `BHB125` | **Kacang OH** | g | 1.000 | Semua | Aktif |
-| 9 | `BHB124` | **Kacang tanah** | g | 2.000 | Semua | Aktif |
-| 10 | `BHB126` | **Kelapa parut** | g | 2.000 | Semua | Aktif |
-| 11 | `BHB117` | **Maizena** | g | 2.000 | Semua | Aktif |
-| 12 | `BHB129` | **Mentega** | g | 2.000 | Semua | Aktif |
-| 13 | `BHB122` | **Mi kuning** | g | 5.000 | Semua | Aktif |
-| 14 | `BHB128` | **Minyak** | ml | 10.000 | Semua | Aktif |
-| 15 | `BHB120` | **Soda kue** | g | 500 | Semua | Aktif |
-| 16 | `BHB121` | **Soun** | g | 2.000 | Semua | Aktif |
-| 17 | `BHB118` | **Tapioka** | g | 2.000 | Semua | Aktif |
-| 18 | `BHB173` | **Tepung beras** | g | 0 | Semua | Aktif |
-| 19 | `BHB170` | **Tepung bumbu serbaguna** | g | 0 | Semua | Aktif |
-| 20 | `BHB119` | **Tepung roti** | g | 2.000 | Semua | Aktif |
-| 21 | `BHB116` | **Tepung terigu** | g | 5.000 | Semua | Aktif |
-
----
-
-## <a id="bahan-olahan-produk-jadi"></a>Bahan Olahan & Produk Jadi
-
-Total: **14 item**
-
-| No | Kode | Nama Bahan Baku | Satuan | Stok Minimal | Peruntukan | Status |
-|:--:|:----:|:----------------|:------:|:------------:|:----------:|:------:|
-| 1 | `BHB136` | **Bakso sapi** | pcs | 100 | Semua | Aktif |
-| 2 | `BHB140` | **Es krim** | pcs | 40 | Semua | Aktif |
-| 3 | `BHB194` | **Keju parut** | g | 0 | Semua | Aktif |
-| 4 | `BHB184` | **Kerupuk mentah** | g | 0 | Semua | Aktif |
-| 5 | `BHB138` | **Kerupuk udang** | g | 2.000 | Semua | Aktif |
-| 6 | `BHB199` | **Kerupuk udang mentah** | g | 0 | Semua | Aktif |
-| 7 | `BHB134` | **Oncom** | g | 2.000 | Semua | Aktif |
-| 8 | `BHB186` | **Puding** | pcs | 0 | Semua | Aktif |
-| 9 | `BHB139` | **Santan** | ml | 4.000 | Semua | Aktif |
-| 10 | `BHB137` | **Sosis ayam** | pcs | 60 | Semua | Aktif |
-| 11 | `BHB132` | **Tahu** | pcs | 100 | Semua | Aktif |
-| 12 | `BHB172` | **Tahu sumedang** | pcs | 0 | Semua | Aktif |
-| 13 | `BHB135` | **Tauco** | g | 1.000 | Semua | Aktif |
-| 14 | `BHB133` | **Tempe** | g | 5.000 | Semua | Aktif |
-
----
-
-## <a id="bahan-minuman"></a>Bahan Minuman
-
-Total: **25 item**
-
-| No | Kode | Nama Bahan Baku | Satuan | Stok Minimal | Peruntukan | Status |
-|:--:|:----:|:----------------|:------:|:------------:|:----------:|:------:|
-| 1 | `BHB141` | **ABC Susu** | pcs | 20 | Semua | Aktif |
-| 2 | `BHB160` | **Air galon** | ml | 20.000 | Semua | Aktif |
-| 3 | `BHB156` | **Air mineral kemasan** | pcs | 48 | Semua | Aktif |
-| 4 | `BHB142` | **Bajigur** | pcs | 20 | Semua | Aktif |
-| 5 | `BHB143` | **Bandrek** | pcs | 20 | Semua | Aktif |
-| 6 | `BHB150` | **Beng-Beng Drink** | pcs | 20 | Semua | Aktif |
-| 7 | `BHB183` | **Bubuk matcha** | g | 0 | Semua | Aktif |
-| 8 | `BHB144` | **Cappuccino** | pcs | 20 | Semua | Aktif |
-| 9 | `BHB145` | **Creamy Latte** | pcs | 20 | Semua | Aktif |
-| 10 | `BHB157` | **Es batu** | g | 10.000 | Semua | Aktif |
-| 11 | `BHB146` | **Good Day** | pcs | 20 | Semua | Aktif |
-| 12 | `BHB155` | **Indocafe** | pcs | 20 | Semua | Aktif |
-| 13 | `BHB147` | **Kapal Api** | pcs | 20 | Semua | Aktif |
-| 14 | `BHB180` | **Kopi bubuk arabika** | g | 0 | Semua | Aktif |
-| 15 | `BHB177` | **Kopi bubuk espresso** | g | 0 | Semua | Aktif |
-| 16 | `BHB181` | **Kopi bubuk robusta** | g | 0 | Semua | Aktif |
-| 17 | `BHB176` | **Kopi sachet** | pcs | 0 | Semua | Aktif |
-| 18 | `BHB148` | **Luwak** | pcs | 20 | Semua | Aktif |
-| 19 | `BHB149` | **Milo** | g | 1.000 | Semua | Aktif |
-| 20 | `BHB175` | **Susu bubuk** | g | 0 | Semua | Aktif |
-| 21 | `BHB152` | **Susu coklat** | pcs | 2.000 | Semua | Aktif |
-| 22 | `BHB158` | **Susu kental manis** | ml | 2.000 | Semua | Aktif |
-| 23 | `BHB151` | **Susu putih** | pcs | 2.000 | Semua | Aktif |
-| 24 | `BHB153` | **Teh celup** | pcs | 40 | Semua | Aktif |
-| 25 | `BHB154` | **Teh tabur** | g | 1.000 | Semua | Aktif |
-
----
-
+| No. | Nama Bahan | Stok Saat Ini | Stok Minimum | Harga Satuan |
+|---:|---|---:|---:|---:|
+| 174 | ABC Susu | 0 pcs | 24 pcs | Rp 2.000 |
+| 175 | Air galon | 0 ml | 2.000 ml | Rp 20.000 |
+| 176 | Air mineral kemasan | 0 pcs | 24 pcs | Rp 3.000 |
+| 177 | Bajigur | 0 pcs | 24 pcs | Rp 3.000 |
+| 178 | Bandrek | 0 pcs | 24 pcs | Rp 3.000 |
+| 179 | Beng-Beng Drink | 0 pcs | 24 pcs | Rp 3.000 |
+| 180 | Bubuk matcha | 0 g | 2 kg | Rp 180.000 |
+| 181 | Cappuccino | 0 pcs | 24 pcs | Rp 3.000 |
+| 182 | Creamy Latte | 0 pcs | 24 pcs | Rp 3.000 |
+| 183 | Es batu | 0 g | 2 kg | Rp 3.000 |
+| 184 | Good Day | 0 pcs | 24 pcs | Rp 2.500 |
+| 185 | Indocafe | 0 pcs | 24 pcs | Rp 2.500 |
+| 186 | Kapal Api | 0 pcs | 24 pcs | Rp 2.000 |
+| 187 | Kopi bubuk arabika | 0 g | 0 kg | Rp 180.000 |
+| 188 | Kopi bubuk espresso | 0 g | 0 kg | Rp 200.000 |
+| 189 | Kopi bubuk robusta | 0 g | 0 kg | Rp 120.000 |
+| 190 | Kopi sachet | 0 pcs | 24 pcs | Rp 2.500 |
+| 191 | Luwak | 0 pcs | 24 pcs | Rp 2.500 |
+| 192 | Milo | 0 pcs | 24 pcs | Rp 3.000 |
+| 193 | Susu bubuk | 0 g | 2 kg | Rp 100.000 |
+| 194 | Susu coklat | 0 pcs | 24 pcs | Rp 3.000 |
+| 195 | Susu kental manis | 0 ml | 2.000 ml | Rp 35.000 |
+| 196 | Susu putih | 0 pcs | 24 pcs | Rp 3.000 |
+| 197 | Teh celup | 0 pcs | 24 pcs | Rp 500 |
+| 198 | Teh tabur | 0 g | 2 kg | Rp 60.000 |
