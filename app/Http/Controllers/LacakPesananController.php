@@ -24,8 +24,15 @@ class LacakPesananController extends Controller
                 $isDineInError = true;
             } else {
                 // Hanya izinkan pelacakan khusus Katering (2) dan Nasi Box (3)
-                $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengiriman', 'pembayaran', 'pelanggan', 'jenis_pesanan'])
-                    ->whereIn('jenis_pesanan_id', [2, 3]);
+                $query = Pesanan::with([
+                    'detail_pesanan.menu', 
+                    'jadwal_pesanan', 
+                    'pengiriman.status_pengiriman', 
+                    'pengiriman.ditugaskan_kepada_pengguna', 
+                    'pembayaran', 
+                    'pelanggan', 
+                    'jenis_pesanan'
+                ])->whereIn('jenis_pesanan_id', [2, 3]);
 
                 if (auth('pelanggan')->check()) {
                     // Jika login, pelanggan dapat mencari pesanan Nasi Box/Katering miliknya

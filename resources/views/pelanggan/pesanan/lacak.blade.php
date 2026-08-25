@@ -254,6 +254,52 @@
                 <div class="border-t border-gray-200"></div>
                 @endif
 
+                {{-- Bukti Foto Pengiriman (Jika Sudah Selesai / Dikirim) --}}
+                @if($pesanan->pengiriman && $pesanan->pengiriman->foto_bukti_pengiriman)
+                <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 shadow-xs">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-emerald-950 flex items-center gap-2">
+                                    Pesanan Telah Diterima
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-200/80 text-emerald-800 border border-emerald-300">
+                                        Selesai
+                                    </span>
+                                </h3>
+                                <p class="text-xs text-emerald-800/90 mt-0.5 leading-relaxed">
+                                    Pesanan telah berhasil diantarkan ke lokasi tujuan
+                                    @if($pesanan->pengiriman->diterima_pada)
+                                        pada <strong>{{ \Carbon\Carbon::parse($pesanan->pengiriman->diterima_pada)->translatedFormat('d F Y, H:i') }} WIB</strong>
+                                    @endif
+                                    @if(optional($pesanan->pengiriman->ditugaskan_kepada_pengguna)->nama)
+                                        oleh kurir <strong>{{ $pesanan->pengiriman->ditugaskan_kepada_pengguna->nama }}</strong>
+                                    @endif.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 shrink-0">
+                            <div class="relative group cursor-pointer" @click="openBukti('{{ asset('storage/' . $pesanan->pengiriman->foto_bukti_pengiriman) }}', 'Bukti Pengiriman - {{ $pesanan->id_pesanan }}', '0', 'Bukti Foto Pengiriman')">
+                                <img src="{{ asset('storage/' . $pesanan->pengiriman->foto_bukti_pengiriman) }}" alt="Bukti Pengiriman" class="w-14 h-14 rounded-xl object-cover border-2 border-emerald-300 group-hover:scale-105 transition-transform shadow-xs bg-white" />
+                                <div class="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg class="w-5 h-5 text-white drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                </div>
+                            </div>
+
+                            <button type="button" 
+                                    @click="openBukti('{{ asset('storage/' . $pesanan->pengiriman->foto_bukti_pengiriman) }}', 'Bukti Pengiriman - {{ $pesanan->id_pesanan }}', '0', 'Bukti Foto Pengiriman')"
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-all shadow-xs cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <span>Lihat Foto Bukti</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 {{-- 3. Grid Dua Kolom: Informasi & Pembayaran --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-start">
 
@@ -323,7 +369,17 @@
                                             $rawKirim = strtolower($pesanan->pengiriman->metode_pengiriman ?? $pesanan->metode_pengiriman ?? '');
                                             $isKirimDiantar = in_array($rawKirim, ['delivery', 'diantar', 'kurir']) || $pesanan->pengiriman || ((float)($pesanan->ongkir ?? 0) > 0);
                                         @endphp
-                                        {{ $isKirimDiantar ? 'Diantar' : 'Diambil di Resto' }}
+                                        <div class="flex items-center justify-between">
+                                            <span>{{ $isKirimDiantar ? 'Diantar' : 'Diambil di Resto' }}</span>
+                                            @if($pesanan->pengiriman && $pesanan->pengiriman->foto_bukti_pengiriman)
+                                                <button type="button" 
+                                                        @click="openBukti('{{ asset('storage/' . $pesanan->pengiriman->foto_bukti_pengiriman) }}', 'Bukti Pengiriman - {{ $pesanan->id_pesanan }}', '0', 'Bukti Foto Pengiriman')"
+                                                        class="text-emerald-700 hover:text-emerald-900 font-semibold underline text-[11px] cursor-pointer inline-flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    <span>Foto Bukti</span>
+                                                </button>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                                 @php
@@ -629,7 +685,7 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </div>
                         <div>
-                            <h3 class="text-sm font-bold text-gray-900">Bukti Pembayaran</h3>
+                            <h3 class="text-sm font-bold text-gray-900" x-text="buktiHeader"></h3>
                             <p class="text-xs text-gray-500 font-mono" x-text="buktiTitle"></p>
                         </div>
                     </div>
@@ -648,7 +704,7 @@
                 {{-- Content View --}}
                 <div class="p-5 flex-1 overflow-y-auto flex items-center justify-center bg-gray-100/50">
                     <template x-if="isPdf !== '1'">
-                        <img :src="buktiUrl" alt="Foto Bukti Pembayaran" class="max-h-[65vh] max-w-full rounded-lg shadow-xs object-contain border border-gray-200 bg-white" />
+                        <img :src="buktiUrl" alt="Foto Bukti" class="max-h-[65vh] max-w-full rounded-lg shadow-xs object-contain border border-gray-200 bg-white" />
                     </template>
                     <template x-if="isPdf === '1'">
                         <iframe :src="buktiUrl" class="w-full h-[65vh] rounded-lg border border-gray-200 bg-white"></iframe>
@@ -671,11 +727,13 @@
                 buktiModal: false,
                 buktiUrl: '',
                 buktiTitle: '',
+                buktiHeader: 'Bukti Pembayaran',
                 isPdf: '0',
-                openBukti(url, title, isPdf) {
+                openBukti(url, title, isPdf, header = 'Bukti Pembayaran') {
                     this.buktiUrl = url;
                     this.buktiTitle = title;
                     this.isPdf = isPdf;
+                    this.buktiHeader = header;
                     this.buktiModal = true;
                 }
             };
