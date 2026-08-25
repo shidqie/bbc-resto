@@ -17,13 +17,11 @@
         $stokTotal = $stokHarian + $stokCatering;
         
         $stokMinHarian = (float) ($bahanBaku->stok_harian?->stok_minimal ?? $bahanBaku->stok_minimal ?? 0);
-        $stokMinCatering = (float) ($bahanBaku->stok_catering_balance?->stok_minimal ?? 0);
-        $stokMinTotal = $stokMinHarian + $stokMinCatering;
 
         $satuanNama = $bahanBaku->satuan->nama_satuan ?? $bahanBaku->satuan->singkatan ?? '';
 
         $isHabis = $stokTotal <= 0;
-        $isMenipis = !$isHabis && $stokTotal <= $stokMinTotal;
+        $isMenipis = !$isHabis && $stokHarian <= $stokMinHarian;
         $hargaSatuan = (float) ($bahanBaku->harga_satuan ?? 0);
     @endphp
 
@@ -60,26 +58,29 @@
             {{-- 5. Stok Saat Ini --}}
             <div class="p-3.5 flex items-center justify-between bg-slate-50/70">
                 <div>
-                    <span class="text-slate-700 font-bold block">Stok Saat Ini</span>
-                    <span class="text-[11px] text-slate-400">Resto: {{ \App\Helpers\UnitHelper::formatQuantity($stokHarian, $satuanNama) }} • Catering: {{ \App\Helpers\UnitHelper::formatQuantity($stokCatering, $satuanNama) }}</span>
+                    <span class="text-slate-700 font-bold block">Total Stok</span>
+                    <span class="text-[11px] text-slate-400">Resto: {{ \App\Helpers\UnitHelper::formatQuantity($stokHarian, $satuanNama) }} • Sisa Katering: {{ \App\Helpers\UnitHelper::formatQuantity($stokCatering, $satuanNama) }}</span>
                 </div>
                 <span class="font-black text-slate-900 text-base">
                     {{ \App\Helpers\UnitHelper::formatQuantity($stokTotal, $satuanNama) }}
                 </span>
             </div>
 
-            {{-- 6. Stok Minimal --}}
+            {{-- 6. Stok Minimal Harian --}}
             <div class="p-3.5 flex items-center justify-between">
-                <span class="text-slate-500 font-medium">Stok Minimal</span>
-                <div class="text-right">
-                    <span class="font-bold text-slate-800">{{ \App\Helpers\UnitHelper::formatQuantity($stokMinHarian, $satuanNama) }}</span>
-                    @if($stokMinCatering > 0)
-                        <span class="text-[10px] text-slate-400 block font-normal">(Min Catering: {{ \App\Helpers\UnitHelper::formatQuantity($stokMinCatering, $satuanNama) }})</span>
-                    @endif
-                </div>
+                <span class="text-slate-500 font-medium">Stok Minimal Harian</span>
+                <span class="font-bold text-slate-800 text-sm">{{ \App\Helpers\UnitHelper::formatQuantity($stokMinHarian, $satuanNama) }}</span>
             </div>
 
-            {{-- 7. Harga Satuan --}}
+            {{-- 7. Stok Sisa Katering --}}
+            <div class="p-3.5 flex items-center justify-between">
+                <span class="text-slate-500 font-medium">Stok Sisa Katering</span>
+                <span class="font-bold {{ $stokCatering > 0 ? 'text-amber-700' : 'text-slate-500' }} text-sm">
+                    {{ \App\Helpers\UnitHelper::formatQuantity($stokCatering, $satuanNama) }}
+                </span>
+            </div>
+
+            {{-- 8. Harga Satuan --}}
             <div class="p-3.5 flex items-center justify-between">
                 <span class="text-slate-500 font-medium">Harga Satuan</span>
                 <span class="font-mono font-bold text-emerald-700 text-sm">
@@ -87,7 +88,7 @@
                 </span>
             </div>
 
-            {{-- 8. Status Stok --}}
+            {{-- 9. Status Stok --}}
             <div class="p-3.5 flex items-center justify-between">
                 <span class="text-slate-500 font-medium">Status Stok</span>
                 <div>

@@ -57,22 +57,18 @@
 
         @if($tab === 'stok')
             {{-- Stat Cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Bahan</span>
                     <span class="text-2xl font-bold text-gray-900">{{ $stats['total_bahan'] }}</span>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                    <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">Stok Aman</span>
-                    <span class="text-2xl font-bold text-gray-900">{{ $stats['total_aman'] }}</span>
+                    <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">Stok Sisa Tersedia</span>
+                    <span class="text-2xl font-bold text-emerald-700">{{ $stats['total_tersedia'] }}</span>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                    <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1">Stok Menipis</span>
-                    <span class="text-2xl font-bold text-gray-900">{{ $stats['total_menipis'] }}</span>
-                </div>
-                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                    <span class="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">Stok Habis</span>
-                    <span class="text-2xl font-bold text-gray-900">{{ $stats['total_habis'] }}</span>
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Stok Kosong</span>
+                    <span class="text-2xl font-bold text-gray-700">{{ $stats['total_habis'] }}</span>
                 </div>
             </div>
 
@@ -83,19 +79,18 @@
                         <input type="hidden" name="tab" value="stok">
                         <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari bahan baku..." />
                         <x-ui.multi-select name="kategori" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori')" label="Kategori" type="radio" />
-                        <x-ui.multi-select name="status" :options="['aman' => 'Aman', 'menipis' => 'Menipis', 'habis' => 'Habis']" :selected="request('status')" label="Status" type="radio" />
+                        <x-ui.multi-select name="status" :options="['tersedia' => 'Stok Tersedia', 'habis' => 'Stok Kosong']" :selected="request('status')" label="Status" type="radio" />
                         @if(request()->hasAny(['search', 'kategori', 'status']))
                             <x-ui.button href="{{ route('stok-catering.index', ['tab' => 'stok']) }}" variant="danger" size="sm">Reset</x-ui.button>
                         @endif
                     </form>
                 </x-slot:toolbar>
 
-                <x-ui.table class="min-w-[850px]">
+                <x-ui.table class="min-w-[750px]">
                     <x-ui.table.header>
                         <th class="px-4 py-3.5 text-left w-12">No</th>
                         <th class="px-4 py-3.5 text-left">Nama Bahan</th>
-                        <th class="px-4 py-3.5 text-right">Stok Saat Ini</th>
-                        <th class="px-4 py-3.5 text-right">Stok Minimum</th>
+                        <th class="px-4 py-3.5 text-right">Stok Sisa Katering</th>
                         <th class="px-4 py-3.5 text-left">Status</th>
                         <th class="px-4 py-3.5 text-center">Aksi</th>
                     </x-ui.table.header>
@@ -103,28 +98,21 @@
                         @forelse($bahanBakus as $i => $bahan)
                         @php
                             $stok = (float)$bahan->stok;
-                            $min = (float)$bahan->stok_minimal;
-                            $isHabis = $stok <= 0;
-                            $isMenipis = !$isHabis && $stok <= $min;
+                            $isTersedia = $stok > 0;
                         @endphp
-                        <x-ui.table.row class="{{ $isHabis ? 'bg-red-50/30' : ($isMenipis ? 'bg-amber-50/30' : '') }}">
+                        <x-ui.table.row class="{{ !$isTersedia ? 'bg-gray-50/50' : '' }}">
                             <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">{{ $bahanBakus->firstItem() + $i }}</td>
                             <td class="px-4 py-4">
                                 <p class="font-semibold text-gray-900 leading-tight">{{ $bahan->nama_bahan }}</p>
                             </td>
                             <td class="px-4 py-4 text-right">
-                                <span class="font-bold text-lg {{ $isHabis ? 'text-red-600' : ($isMenipis ? 'text-amber-600' : 'text-emerald-600') }}">{{ \App\Helpers\UnitHelper::formatQuantity($stok, $bahan->satuan->singkatan ?? $bahan->satuan->nama_satuan ?? 'gram') }}</span>
-                            </td>
-                            <td class="px-4 py-4 text-right text-sm text-gray-500 font-medium">
-                                {{ \App\Helpers\UnitHelper::formatQuantity($min, $bahan->satuan->singkatan ?? $bahan->satuan->nama_satuan ?? 'gram') }}
+                                <span class="font-bold text-lg {{ $isTersedia ? 'text-emerald-700' : 'text-gray-400' }}">{{ \App\Helpers\UnitHelper::formatQuantity($stok, $bahan->satuan->singkatan ?? $bahan->satuan->nama_satuan ?? 'gram') }}</span>
                             </td>
                             <td class="px-4 py-4">
-                                @if($isHabis)
-                                    <x-ui.badge color="danger">Habis</x-ui.badge>
-                                @elseif($isMenipis)
-                                    <x-ui.badge color="warning">Menipis</x-ui.badge>
+                                @if($isTersedia)
+                                    <x-ui.badge color="success">Tersedia</x-ui.badge>
                                 @else
-                                    <x-ui.badge color="success">Aman</x-ui.badge>
+                                    <x-ui.badge color="secondary">Kosong</x-ui.badge>
                                 @endif
                             </td>
                             <td class="px-4 py-4 text-center">

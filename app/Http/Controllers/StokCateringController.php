@@ -75,12 +75,10 @@ class StokCateringController extends Controller
         }
 
         if ($request->has('status') && $request->status != '') {
-            if ($request->status == 'habis') {
+            if ($request->status == 'habis' || $request->status == 'kosong') {
                 $query->whereRaw('stok_bahan.jumlah_stok <= 0');
-            } elseif ($request->status == 'menipis') {
-                $query->whereRaw('stok_bahan.jumlah_stok > 0 AND stok_bahan.jumlah_stok <= stok_bahan.stok_minimal');
-            } elseif ($request->status == 'aman') {
-                $query->whereRaw('stok_bahan.jumlah_stok > stok_bahan.stok_minimal');
+            } elseif ($request->status == 'tersedia' || $request->status == 'aman') {
+                $query->whereRaw('stok_bahan.jumlah_stok > 0');
             }
         }
 
@@ -91,9 +89,7 @@ class StokCateringController extends Controller
 
         $stats = [
             'total_bahan' => StokBahan::catering()->count(),
-            'total_aman' => StokBahan::catering()->whereColumn('jumlah_stok', '>', 'stok_minimal')->count(),
-            'total_menipis' => StokBahan::catering()->where('jumlah_stok', '>', 0)
-                ->whereColumn('jumlah_stok', '<=', 'stok_minimal')->count(),
+            'total_tersedia' => StokBahan::catering()->where('jumlah_stok', '>', 0)->count(),
             'total_habis' => StokBahan::catering()->where('jumlah_stok', '<=', 0)->count(),
         ];
 
