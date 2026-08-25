@@ -38,14 +38,17 @@ class BOMService
         }
 
         return DB::transaction(function () use ($menuId, $jumlahPesan, $pesananId, $jenisPersediaan) {
-            $menu = Menu::with('resep_menu.bahanBaku')->findOrFail($menuId);
+            $menu = Menu::with(['resep_menu.bahanBaku.satuan', 'resep_menu.satuan'])->findOrFail($menuId);
             $resepList = $menu->resep_menu;
             $stockService = app(StockService::class);
             $userId = auth()->check() ? auth()->id() : 1;
 
             if ($resepList) {
                 foreach ($resepList as $resep) {
-                    $kebutuhanTotal = $resep->jumlah_kebutuhan * $jumlahPesan;
+                    $rawKebutuhan = (float) $resep->jumlah_kebutuhan * $jumlahPesan;
+                    $resepSatuan = optional($resep->satuan)->singkatan ?? optional($resep->satuan)->nama_satuan;
+                    $bahanSatuan = optional(optional($resep->bahanBaku)->satuan)->singkatan ?? optional(optional($resep->bahanBaku)->satuan)->nama_satuan;
+                    $kebutuhanTotal = KebutuhanBahanService::convertUnit($rawKebutuhan, $resepSatuan, $bahanSatuan);
 
                     $stockService->deductStock(
                         $resep->bahan_baku_id,
@@ -70,7 +73,7 @@ class BOMService
     public static function kembalikanStokBahan($menuId, $jumlahPesan = 1, $pesananId = null, $jenisPersediaan = StokBahan::JENIS_HARIAN)
     {
         return DB::transaction(function () use ($menuId, $jumlahPesan, $pesananId, $jenisPersediaan) {
-            $menu = Menu::with('resep_menu.bahanBaku')->find($menuId);
+            $menu = Menu::with(['resep_menu.bahanBaku.satuan', 'resep_menu.satuan'])->find($menuId);
             if (! $menu) {
                 return true;
             }
@@ -81,7 +84,10 @@ class BOMService
 
             if ($resepList) {
                 foreach ($resepList as $resep) {
-                    $kebutuhanTotal = $resep->jumlah_kebutuhan * $jumlahPesan;
+                    $rawKebutuhan = (float) $resep->jumlah_kebutuhan * $jumlahPesan;
+                    $resepSatuan = optional($resep->satuan)->singkatan ?? optional($resep->satuan)->nama_satuan;
+                    $bahanSatuan = optional(optional($resep->bahanBaku)->satuan)->singkatan ?? optional(optional($resep->bahanBaku)->satuan)->nama_satuan;
+                    $kebutuhanTotal = KebutuhanBahanService::convertUnit($rawKebutuhan, $resepSatuan, $bahanSatuan);
 
                     $stockService->addStock(
                         $resep->bahan_baku_id,
