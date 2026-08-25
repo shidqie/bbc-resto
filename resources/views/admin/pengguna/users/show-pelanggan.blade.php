@@ -24,27 +24,21 @@
 
             <!-- Profile Card -->
             <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
-                    <!-- Profile Header Banner -->
-                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white relative">
-                        <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center font-extrabold text-2xl border border-white/15 text-white shadow-inner">
-                                {{ strtoupper(substr($pelanggan->nama, 0, 1)) }}
-                            </div>
-                            <div class="min-w-0">
-                                <h2 class="text-lg font-extrabold tracking-tight truncate">{{ $pelanggan->nama }}</h2>
-                                <div class="flex items-center gap-2 mt-1.5">
-                                    @if($pelanggan->status_akun === 'Terdaftar')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                            Terdaftar
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-500/20 text-gray-300 border border-gray-500/30">
-                                            Tamu
-                                        </span>
-                                    @endif
-                                    <span class="text-xs text-gray-400 font-mono">{{ $pelanggan->kode_pelanggan }}</span>
-                                </div>
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+                    <!-- Profile Header -->
+                    <div class="p-6 border-b border-gray-100 flex items-center gap-4 bg-gradient-to-r from-emerald-50/80 via-white to-teal-50/40">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-sm shrink-0">
+                            {{ strtoupper(substr($pelanggan->nama, 0, 1)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <h2 class="text-lg font-bold text-gray-900 truncate tracking-tight" style="color: #111827 !important;">{{ $pelanggan->nama }}</h2>
+                            <div class="flex items-center gap-2 mt-1">
+                                @if($pelanggan->status_akun === 'Terdaftar')
+                                    <x-ui.badge color="success" size="sm">Terdaftar</x-ui.badge>
+                                @else
+                                    <x-ui.badge color="gray" size="sm">Tamu</x-ui.badge>
+                                @endif
+                                <span class="text-xs text-gray-500 font-mono font-medium">{{ $pelanggan->kode_pelanggan }}</span>
                             </div>
                         </div>
                     </div>
@@ -112,7 +106,7 @@
                 @endphp
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs flex items-center justify-between">
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Pesanan</p>
                             <p class="text-2xl font-black text-gray-900 mt-1">{{ $totalCount }}</p>
@@ -122,7 +116,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs flex items-center justify-between">
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pesanan Selesai</p>
                             <p class="text-2xl font-black text-emerald-600 mt-1">{{ $selesaiCount }}</p>
@@ -132,7 +126,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs flex items-center justify-between">
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs flex items-center justify-between">
                         <div>
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Belanja</p>
                             <p class="text-xl font-black text-gray-900 mt-1">Rp {{ number_format($totalNominal, 0, ',', '.') }}</p>
@@ -144,7 +138,7 @@
                 </div>
 
                 <!-- Riwayat Pesanan Table -->
-                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                         <div>
                             <h3 class="text-xs font-extrabold text-gray-700 uppercase tracking-wider">Riwayat Pemesanan</h3>
