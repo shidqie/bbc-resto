@@ -178,6 +178,8 @@ Route::middleware('auth')->group(function () {
 
     // ─── STOK BAHAN BAKU & RIWAYAT (Persediaan: Admin, Manajer, Pemilik, Dapur, Tim Dapur) ───
     Route::middleware(['role:Admin,Manajer,Pemilik,Dapur,Tim Dapur'])->group(function () {
+        Route::get('/bahan-baku/{id}/drawer', [BahanBakuController::class, 'drawer']);
+        Route::get('/persediaan/bahan-baku/{id}/drawer', [BahanBakuController::class, 'drawer']);
         Route::get('/mutasi-stok', [MutasiStokController::class, 'index'])->name('mutasi-stok.index');
         Route::get('/riwayat-stok', [MutasiStokController::class, 'index'])->name('riwayat-stok.index');
         Route::get('/stok-operasional', [StokOperasionalController::class, 'index'])->name('stok-operasional.index');

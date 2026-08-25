@@ -352,7 +352,7 @@
             overlay.classList.add('opacity-100');
         });
 
-        fetch(`${BASE_URL}/bahan-baku/${id}/drawer`)
+        fetch(`{{ url('/bahan-baku') }}/${id}/drawer`)
             .then(res => res.text())
             .then(html => {
                 content.innerHTML = html;
