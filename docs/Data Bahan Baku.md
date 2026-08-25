@@ -105,7 +105,6 @@
 | 86 | Antaka BBQ | gram | 500 |
 | 87 | Antaka balado | gram | 500 |
 | 88 | Antaka asin | gram | 500 |
-| 89 | Aida | gram | 750 |
 | 90 | Racik tempe | gram | 750 |
 | 91 | Racik ikan | gram | 750 |
 | 92 | Racik tumis | gram | 750 |
