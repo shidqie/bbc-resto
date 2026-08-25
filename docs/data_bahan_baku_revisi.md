@@ -206,29 +206,29 @@
 
 | No. | Nama Bahan | Stok Saat Ini | Stok Minimum | Harga Satuan |
 |---:|---|---:|---:|---:|
-| 174 | ABC Susu | 0 pcs | 120 pcs | Rp 2.000 |
+| 174 | ABC Susu | 120 pcs | 20 pcs | Rp 2.000 |
 | 175 | Air galon | 0 ml | 20 liter | Rp 20.000 |
-| 176 | Air mineral kemasan | 0 pcs | 120 pcs | Rp 3.000 |
-| 177 | Bajigur | 0 pcs | 120 pcs | Rp 3.000 |
-| 178 | Bandrek | 0 pcs | 120 pcs | Rp 3.000 |
-| 179 | Beng-Beng Drink | 0 pcs | 120 pcs | Rp 3.000 |
+| 176 | Air mineral kemasan | 120 pcs | 48 pcs | Rp 3.000 |
+| 177 | Bajigur | 120 pcs | 20 pcs | Rp 3.000 |
+| 178 | Bandrek | 120 pcs | 20 pcs | Rp 3.000 |
+| 179 | Beng-Beng Drink | 120 pcs | 20 pcs | Rp 3.000 |
 | 180 | Bubuk matcha | 0 g | 1 kg | Rp 180.000 |
-| 181 | Cappuccino | 0 pcs | 120 pcs | Rp 3.000 |
-| 182 | Creamy Latte | 0 pcs | 120 pcs | Rp 3.000 |
+| 181 | Cappuccino | 120 pcs | 20 pcs | Rp 3.000 |
+| 182 | Creamy Latte | 120 pcs | 20 pcs | Rp 3.000 |
 | 183 | Es batu | 0 g | 10 kg | Rp 3.000 |
-| 184 | Good Day | 0 pcs | 120 pcs | Rp 2.500 |
-| 185 | Indocafe | 0 pcs | 120 pcs | Rp 2.500 |
-| 186 | Kapal Api | 0 pcs | 120 pcs | Rp 2.000 |
+| 184 | Good Day | 120 pcs | 20 pcs | Rp 2.500 |
+| 185 | Indocafe | 120 pcs | 20 pcs | Rp 2.500 |
+| 186 | Kapal Api | 120 pcs | 20 pcs | Rp 2.000 |
 | 187 | Kopi bubuk arabika | 0 g | 1 kg | Rp 180.000 |
 | 188 | Kopi bubuk espresso | 0 g | 1 kg | Rp 200.000 |
 | 189 | Kopi bubuk robusta | 0 g | 1 kg | Rp 120.000 |
-| 190 | Kopi sachet | 0 pcs | 120 pcs | Rp 2.500 |
-| 191 | Luwak | 0 pcs | 120 pcs | Rp 2.500 |
+| 190 | Kopi sachet | 120 pcs | 20 pcs | Rp 2.500 |
+| 191 | Luwak | 120 pcs | 20 pcs | Rp 2.500 |
 | 192 | Milo | 0 g | 1 kg | Rp 3.000 |
 | 193 | Susu bubuk | 0 g | 1 kg | Rp 100.000 |
-| 194 | Susu coklat | 0 pcs | 120 pcs | Rp 3.000 |
+| 194 | Susu coklat | 120 pcs | 20 pcs | Rp 3.000 |
 | 195 | Susu kental manis | 0 ml | 2 liter | Rp 35.000 |
-| 196 | Susu putih | 0 pcs | 120 pcs | Rp 3.000 |
-| 197 | Teh celup | 0 pcs | 120 pcs | Rp 500 |
+| 196 | Susu putih | 120 pcs | 20 pcs | Rp 3.000 |
+| 197 | Teh celup | 120 pcs | 40 pcs | Rp 500 |
 | 198 | Teh tabur | 0 g | 1 kg | Rp 60.000 |
 
