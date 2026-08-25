@@ -140,7 +140,6 @@
                                     <x-heroicon-o-chevron-down class="w-4 h-4" />
                                 </span>
                             </div>
-                            <p class="text-[11px] text-gray-500 mt-1.5">Pilih pesanan nasi box untuk otomatis menghitung kekurangan bahan BOM, atau pilih tanpa pesanan untuk restock operasional harian umum.</p>
                         </div>
 
                         @if($pesanan)
