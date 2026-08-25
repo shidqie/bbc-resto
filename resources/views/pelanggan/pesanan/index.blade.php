@@ -91,10 +91,10 @@
                                     <tr class="hover:bg-primary/[0.01] transition-colors">
                                         <td class="py-4 px-5">
                                             <div class="font-mono font-bold text-primary">{{ $o->id_pesanan }}</div>
-                                            <div class="text-xs text-body/50 mt-1 font-medium">{{ $o->dibuat_pada ? \Carbon\Carbon::parse($o->dibuat_pada)->format('d M Y H:i') : '-' }}</div>
+                                            <div class="text-xs text-body/50 mt-1 font-medium">{{ $o->dibuat_pada ? \Carbon\Carbon::parse($o->dibuat_pada)->translatedFormat('d M Y H:i') : '-' }}</div>
                                         </td>
                                         <td class="py-4 px-5 font-medium text-gray-800">
-                                            {{ $o->jadwal_pesanan?->tanggal_acara ? \Carbon\Carbon::parse($o->jadwal_pesanan->tanggal_acara)->format('d M Y') : '-' }}
+                                            {{ $o->jadwal_pesanan?->tanggal_acara ? \Carbon\Carbon::parse($o->jadwal_pesanan->tanggal_acara)->translatedFormat('d M Y') : '-' }}
                                         </td>
                                         <td class="py-4 px-5">
                                             <div class="font-medium text-gray-900">{{ $paket->menu->nama_menu ?? 'Paket' }}</div>

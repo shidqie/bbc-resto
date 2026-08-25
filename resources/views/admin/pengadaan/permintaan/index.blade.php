@@ -74,7 +74,7 @@
                         <td class="px-4 py-4 align-middle">
                             <a href="{{ route('pengadaan.permintaan.show', $p->id) }}" class="font-mono font-bold text-gray-900 text-xs hover:text-emerald-600">{{ $p->id_pengadaan }}</a>
                         </td>
-                        <td class="px-4 py-4 align-middle font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->tanggal_pengadaan)->format('d M Y') }}</td>
+                        <td class="px-4 py-4 align-middle font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->tanggal_pengadaan)->translatedFormat('d M Y') }}</td>
                         <td class="px-4 py-4 align-middle">
                             @if($p->jenis_pengadaan == 'harian')
                                 <x-ui.badge color="primary" size="sm">Harian</x-ui.badge>

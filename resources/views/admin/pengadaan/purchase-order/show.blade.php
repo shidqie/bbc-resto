@@ -14,7 +14,7 @@
                     <x-heroicon-o-printer class="w-4 h-4" />
                     Cetak Surat PO
                 </a>
-                @if($po->status === \App\Models\PurchaseOrder::MENUNGGU_BARANG)
+                @if(app(\App\Services\PengadaanStatusService::class)->poMasihBisaDiterima($po))
                     <a href="{{ route('pengadaan.penerimaan.create', $po->id) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-emerald-600 rounded-lg px-4 py-2 hover:bg-emerald-700 transition-colors">
                         <x-heroicon-o-inbox-arrow-down class="w-4 h-4" />
                         Terima Barang
@@ -35,10 +35,10 @@
             </x-ui.card>
             <x-ui.card>
                 <p class="text-xs font-semibold text-gray-500">Tanggal PO</p>
-                <p class="font-bold text-gray-900 mt-1">{{ \Carbon\Carbon::parse($po->tanggal_po)->format('d M Y') }}</p>
+                <p class="font-bold text-gray-900 mt-1">{{ \Carbon\Carbon::parse($po->tanggal_po)->translatedFormat('d M Y') }}</p>
             </x-ui.card>
             <x-ui.card>
-                <p class="text-xs font-semibold text-gray-500">Supplier/Toko</p>
+                <p class="text-xs font-semibold text-gray-500">Nama Supplier</p>
                 <p class="font-bold text-gray-900 mt-1 text-sm">{{ $po->supplier }}</p>
             </x-ui.card>
             <x-ui.card>
@@ -55,18 +55,24 @@
                     @endif
                 </div>
             </x-ui.card>
-            @if($po->kode_pesanan_catering)
+            @if($po->kode_pesanan_catering || optional($po->pengadaan_bahan)->pesanan_id)
             <x-ui.card>
                 <p class="text-xs font-semibold text-gray-500">Sumber Pengadaan</p>
                 @php
-                    $pesanan = \App\Models\Pesanan::find($po->kode_pesanan_catering);
+                    $pesanan = null;
+                    if ($po->kode_pesanan_catering) {
+                        $pesanan = \App\Models\Pesanan::where('id_pesanan', $po->kode_pesanan_catering)->first() ?: \App\Models\Pesanan::find($po->kode_pesanan_catering);
+                    }
+                    if (!$pesanan && optional($po->pengadaan_bahan)->pesanan) {
+                        $pesanan = $po->pengadaan_bahan->pesanan;
+                    }
                 @endphp
                 @if($pesanan)
                     <a href="{{ route('admin.pesanan.catering.show', $pesanan->id) }}" class="font-mono font-bold text-emerald-600 hover:text-emerald-700 mt-1 block text-sm">
                         {{ $pesanan->id_pesanan }}
                     </a>
                 @else
-                    <p class="font-mono font-bold text-gray-900 mt-1 text-sm">-</p>
+                    <p class="font-mono font-bold text-gray-900 mt-1 text-sm">{{ $po->kode_pesanan_catering ?: '-' }}</p>
                 @endif
             </x-ui.card>
             @endif
@@ -82,7 +88,7 @@
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
             <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                 <h3 class="font-bold text-gray-900 text-sm tracking-tight">Daftar Bahan PO</h3>
-                <span class="text-xs text-gray-500 font-medium">Dibuat oleh {{ optional($po->dibuat_oleh_pengguna)->nama ?? '-' }} pada {{ optional($po->dibuat_pada)->format('d M Y H:i') }}</span>
+                <span class="text-xs text-gray-500 font-medium">Dibuat oleh {{ optional($po->dibuat_oleh_pengguna)->nama ?? '-' }} pada {{ optional($po->dibuat_pada)->translatedFormat('d M Y H:i') }}</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -97,6 +103,9 @@
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         @forelse($items as $i => $detail)
+                        @php
+                            $satuanBeli = optional($detail->satuan)->singkatan ?? optional($detail->satuan)->nama_satuan ?? \App\Helpers\UnitHelper::getPurchasingUnit($detail->bahan_baku?->satuan);
+                        @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-4 py-3 text-sm text-gray-500 font-medium align-middle">{{ $items->firstItem() + $i }}</td>
                             <td class="px-4 py-3 align-middle font-medium text-gray-900 text-sm">
@@ -104,13 +113,13 @@
                                 <div class="text-xs text-gray-500 font-normal">{{ optional($detail->bahan_baku)->id_bahan_baku ?? '-' }}</div>
                             </td>
                             <td class="px-4 py-3 align-middle text-right font-bold text-gray-900">
-                                {{ rtrim(rtrim(number_format($detail->jumlah_dipesan, 2), '0'), '.') }} {{ optional($detail->bahan_baku->satuan)->singkatan ?? '' }}
+                                {{ \App\Helpers\UnitHelper::formatNumber($detail->jumlah_dipesan) }} {{ $satuanBeli }}
                             </td>
                             <td class="px-4 py-3 align-middle text-right text-gray-600">
-                                {{ rtrim(rtrim(number_format($detail->sudah_diterima, 2), '0'), '.') }} {{ optional($detail->bahan_baku->satuan)->singkatan ?? '' }}
+                                {{ \App\Helpers\UnitHelper::formatNumber($detail->sudah_diterima) }} {{ $satuanBeli }}
                             </td>
                             <td class="px-4 py-3 align-middle text-right font-bold {{ $detail->sisa > 0 ? 'text-amber-600' : 'text-emerald-600' }}">
-                                {{ rtrim(rtrim(number_format($detail->sisa, 2), '0'), '.') }} {{ optional($detail->bahan_baku->satuan)->singkatan ?? '' }}
+                                {{ \App\Helpers\UnitHelper::formatNumber($detail->sisa) }} {{ $satuanBeli }}
                             </td>
                         </tr>
                         @empty
@@ -131,9 +140,29 @@
 
     </div>
 </div>
-
-
-
-    </div>
-</div>
 @endsection
+
+@push('scripts')
+@if(session('penerimaan_berhasil'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Bahan Baku Berhasil Diterima!',
+                html: '<div class="text-left bg-emerald-50/70 p-4 rounded-xl border border-emerald-100 text-xs text-emerald-950 space-y-1.5">' +
+                      '<p class="font-bold flex items-center gap-1.5 text-emerald-800"><svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Stok Bahan Otomatis Bertambah</p>' +
+                      '<p class="text-gray-600">Penerimaan nomor <b>{{ session('penerimaan_nomor') }}</b> telah berhasil dicatat ke dalam sistem persediaan.</p>' +
+                      '</div>',
+                confirmButtonColor: '#059669',
+                confirmButtonText: 'Selesai',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'rounded-xl px-6 py-2.5 font-bold text-sm shadow-xs'
+                }
+            });
+        }
+    });
+</script>
+@endif
+@endpush

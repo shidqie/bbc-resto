@@ -9,6 +9,12 @@
             title="Penerimaan Bahan Baku"
             subtitle="Kelola barang yang diterima berdasarkan Purchase Order."
             :breadcrumbs="['Pengadaan', 'Penerimaan Bahan Baku']">
+            <x-slot:actions>
+                <a href="{{ route('pengadaan.po.index', ['status' => 'menunggu_barang']) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0D3024] hover:bg-[#0D3024]/90 text-white font-semibold text-sm rounded-lg shadow-sm transition-all duration-150">
+                    <x-heroicon-o-inbox-arrow-down class="w-4 h-4" />
+                    <span>Terima dari Purchase Order</span>
+                </a>
+            </x-slot:actions>
         </x-ui.page-header>
 
         <x-ui.alert />
@@ -20,9 +26,9 @@
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari kode penerimaan / kode PO..." />
                 </div>
                 <x-ui.multi-select name="status" :options="$statuses" :selected="request('status')" label="Status" type="radio" />
-                <div class="flex-1">
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Supplier/Toko</label>
-                    <input type="text" name="supplier" value="{{ request('supplier') }}" placeholder="Cari supplier/toko..." class="w-full border border-gray-200 text-gray-900 text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Nama Supplier</label>
+                    <input type="text" name="supplier" value="{{ request('supplier') }}" placeholder="Cari nama supplier..." class="w-full border border-gray-200 text-gray-900 text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">Dari Tanggal</label>
@@ -32,26 +38,23 @@
                     <label class="block text-xs font-semibold text-gray-500 mb-1">Sampai Tanggal</label>
                     <input type="date" name="sampai" value="{{ request('sampai') }}" class="w-full border border-gray-200 text-gray-900 text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <button type="submit" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-emerald-600 rounded-lg px-4 py-2 hover:bg-emerald-700 transition-colors">
-                        <x-heroicon-o-funnel class="w-4 h-4" />
-                        Terapkan Filter
-                    </button>
-                    @if(request()->hasAny(['search', 'status', 'supplier', 'dari', 'sampai']))
-                        <x-ui.button href="{{ route('pengadaan.penerimaan.index') }}" variant="danger" size="sm">Reset</x-ui.button>
+                <div class="flex items-end gap-2">
+                    <x-ui.button type="submit" variant="primary" icon="magnifying-glass">Cari</x-ui.button>
+                    @if(request()->hasAny(['search', 'supplier', 'dari', 'sampai']))
+                        <x-ui.button href="{{ route('pengadaan.penerimaan.index') }}" variant="danger">Reset</x-ui.button>
                     @endif
                 </div>
             </form>
         </div>
 
         <x-ui.data-table :paginator="$penerimaans">
-            <x-ui.table class="min-w-[950px]">
+            <x-ui.table class="min-w-[900px]">
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Kode Penerimaan</th>
                     <th class="px-4 py-3.5 text-left">Tanggal</th>
                     <th class="px-4 py-3.5 text-left">Kode PO</th>
-                    <th class="px-4 py-3.5 text-left">Supplier/Toko</th>
+                    <th class="px-4 py-3.5 text-left">Nama Supplier</th>
                     <th class="px-4 py-3.5 text-center">Jumlah Item</th>
                     <th class="px-4 py-3.5 text-center">Status</th>
                     <th class="px-4 py-3.5 text-center">Aksi</th>
@@ -63,7 +66,7 @@
                         <td class="px-4 py-4 align-middle">
                             <a href="{{ route('pengadaan.penerimaan.show', $pnr->id) }}" class="font-mono font-bold text-gray-900 text-xs hover:text-emerald-600">{{ $pnr->nomor_penerimaan }}</a>
                         </td>
-                        <td class="px-4 py-4 align-middle font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($pnr->diterima_pada)->format('d M Y H:i') }}</td>
+                        <td class="px-4 py-4 align-middle font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($pnr->diterima_pada)->translatedFormat('d M Y H:i') }}</td>
                         <td class="px-4 py-4 align-middle">
                             <span class="font-mono font-bold text-gray-500 text-xs">{{ optional($pnr->purchase_order)->nomor_po ?? '-' }}</span>
                         </td>

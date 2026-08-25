@@ -14,7 +14,7 @@
     <div class="px-4 sm:px-5 pt-4 pb-3 bg-gradient-to-br from-primary/[0.07] to-primary/[0.02] border-b border-primary/10">
         <div class="flex items-center justify-between gap-3 mb-3">
             <div class="flex items-center gap-2.5">
-                <span class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center shadow-sm shadow-primary/20"><i class="ph-bold ph-receipt"></i></span>
+                <span class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center shadow-sm shadow-primary/20"><x-heroicon-o-document-text class="w-5 h-5 text-white" /></span>
                 <div>
                     <h2 class="text-sm font-bold text-body leading-tight">Ringkasan Pesanan</h2>
                     <p class="text-[10px] text-body/60">Periksa kembali sebelum pembayaran</p>
@@ -64,7 +64,7 @@
             <div class="grid grid-cols-2 gap-x-5 gap-y-2.5 text-xs">
                 <div>
                     <p class="text-body/50 mb-0.5">Metode</p>
-                    <p id="summary-metode" class="font-bold text-body">Diambil (Pickup)</p>
+                    <p id="summary-metode" class="font-bold text-body">Diambil di Resto</p>
                 </div>
                 <div>
                     <p class="text-body/50 mb-0.5" id="summary-jam-kirim-label">Jam Ambil</p>
@@ -134,10 +134,10 @@
             <details class="group border border-primary/10 rounded-xl overflow-hidden">
                 <summary class="flex items-center justify-between gap-2 px-3.5 py-2.5 cursor-pointer select-none list-none bg-primary/[0.02] hover:bg-primary/[0.05] transition-colors">
                     <span class="text-[10px] font-bold text-body flex items-center gap-1.5">
-                        <i class="ph-bold ph-list-checks text-primary"></i>
+                        <x-heroicon-o-clipboard-document-check class="w-4 h-4 text-primary" />
                         Syarat &amp; Ketentuan {{ $summaryCfg['jenisLabel'] }}
                     </span>
-                    <i class="ph-bold ph-caret-down text-body/50 text-sm transition-transform duration-200 group-open:rotate-180"></i>
+                    <x-heroicon-o-chevron-down class="w-4 h-4 text-body/50 transition-transform duration-200 group-open:rotate-180" />
                 </summary>
                 <div class="px-3.5 py-2.5 border-t border-primary/10 text-[9px] text-body/70 space-y-1 leading-relaxed bg-surface">
                     <ul class="list-disc pl-3 space-y-1">

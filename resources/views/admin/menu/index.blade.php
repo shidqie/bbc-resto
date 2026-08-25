@@ -317,20 +317,30 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Layanan <span class="text-red-500">*</span></label>
-                            <select name="jenis_menu_id" id="mnJenis" required onchange="filterKat(this.value)" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all">
-                                <option value="1">Dine in</option>
-                                <option value="2">Katering</option>
-                                <option value="3">Nasi Box</option>
-                            </select>
+                            <div class="relative">
+                                <select name="jenis_menu_id" id="mnJenis" required onchange="filterKat(this.value)" class="w-full appearance-none px-3.5 py-2.5 pr-9 text-sm font-semibold border border-gray-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs cursor-pointer">
+                                    <option value="1">Dine in</option>
+                                    <option value="2">Katering</option>
+                                    <option value="3">Nasi Box</option>
+                                </select>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                                    <x-heroicon-o-chevron-down class="w-4 h-4" />
+                                </span>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kategori <span class="text-red-500">*</span></label>
-                            <select name="kategori_menu_id" id="mnKategori" required class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all">
-                                <option value="">— Pilih Kategori —</option>
-                                @foreach($allKategoris ?? $kategoris as $kat)
-                                    <option value="{{ $kat->id }}" data-jenis="{{ $kat->jenis_menu_id ?? '' }}">{{ $kat->nama_kategori }}</option>
-                                @endforeach
-                            </select>
+                            <div class="relative">
+                                <select name="kategori_menu_id" id="mnKategori" required class="w-full appearance-none px-3.5 py-2.5 pr-9 text-sm font-semibold border border-gray-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs cursor-pointer">
+                                    <option value="">— Pilih Kategori —</option>
+                                    @foreach($allKategoris ?? $kategoris as $kat)
+                                        <option value="{{ $kat->id }}" data-jenis="{{ $kat->jenis_menu_id ?? '' }}">{{ $kat->nama_kategori }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                                    <x-heroicon-o-chevron-down class="w-4 h-4" />
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -341,11 +351,16 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Status <span class="text-red-500">*</span></label>
-                            <select name="status" id="mnStatus" required class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-all">
-                                <option value="tersedia">Aktif (Tersedia)</option>
-                                <option value="habis">Stok Habis</option>
-                                <option value="nonaktif">Nonaktif</option>
-                            </select>
+                            <div class="relative">
+                                <select name="status" id="mnStatus" required class="w-full appearance-none px-3.5 py-2.5 pr-9 text-sm font-semibold border border-gray-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs cursor-pointer">
+                                    <option value="tersedia">Aktif (Tersedia)</option>
+                                    <option value="habis">Stok Habis</option>
+                                    <option value="nonaktif">Nonaktif</option>
+                                </select>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                                    <x-heroicon-o-chevron-down class="w-4 h-4" />
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -370,7 +385,7 @@
                         </div>
 
                         <div id="komponenPaketContainerView" class="hidden border-t border-gray-100 pt-4 space-y-2">
-                            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Item / Komponen Paket</div>
+                            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Item Menu</div>
                             <div id="viewKomponenList"></div>
                         </div>
                         <div class="grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
@@ -564,7 +579,7 @@
                 
                 {{-- Mode Read-Only (Tree / Hierarchy Resep Menu Paket) --}}
                 <div id="paketResepViewOnlyMode" class="hidden space-y-4">
-                    <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 space-y-4" id="paketTreeViewContainer">
+                    <div id="paketTreeViewContainer">
                         <!-- Injected via JS -->
                     </div>
                 </div>
@@ -683,50 +698,77 @@ function closeDeleteModal() {
 }
 
 function deleteResep(menuId) {
-    if (confirm('Apakah Anda yakin ingin menghapus resep untuk menu ini? Semua bahan baku yang tersimpan akan dihapus.')) {
-        fetch(`${BASE_URL}/menu/${menuId}/resep`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
-            }
-        }).then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  window.location.reload();
-              } else {
-                  alert(data.message || 'Gagal menghapus resep');
-              }
-          })
-          .catch(error => {
-              console.error('Error:', error);
-              alert('Terjadi kesalahan sistem saat menghubungi server.');
-          });
-    }
+    window.confirmDialog({
+        title: 'Hapus Resep Menu',
+        name: 'Hapus seluruh bahan baku pada resep ini?',
+        message: 'Semua takaran bahan baku yang tersimpan pada menu ini akan dihapus.',
+        confirmText: 'Hapus Resep',
+        cancelText: 'Batal',
+        type: 'danger',
+        onConfirm: function () {
+            fetch(`${BASE_URL}/menu/${menuId}/resep`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      window.location.reload();
+                  } else if (typeof Swal !== 'undefined') {
+                      Swal.fire('Gagal', data.message || 'Gagal menghapus resep', 'error');
+                  } else {
+                      alert(data.message || 'Gagal menghapus resep');
+                  }
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  if (typeof Swal !== 'undefined') {
+                      Swal.fire('Error', 'Terjadi kesalahan sistem saat menghubungi server.', 'error');
+                  } else {
+                      alert('Terjadi kesalahan sistem saat menghubungi server.');
+                  }
+              });
+        }
+    });
 }
 
 function createMenuForOption(opsiId, namaPilihan) {
-    if (confirm(`Menu "${namaPilihan}" belum ada di daftar menu sistem. Apakah Anda ingin membuatnya secara otomatis sekarang agar bisa ditambahkan resepnya?`)) {
-        fetch(`${BASE_URL}/menu/create-from-option`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ opsi_id: opsiId, nama_menu: namaPilihan })
-        }).then(res => res.json()).then(data => {
-            if (data.success) {
-                // Setelah dibuat, buka modal resep untuk menu baru ini
-                window.location.reload();
-            } else {
-                alert(data.message || 'Gagal membuat menu otomatis.');
-            }
-        }).catch(err => {
-            console.error(err);
-            alert('Terjadi kesalahan sistem saat menghubungi server.');
-        });
-    }
+    window.confirmDialog({
+        title: 'Buat Menu Otomatis',
+        name: `Menu "${namaPilihan}"`,
+        message: 'Menu ini belum ada di daftar menu sistem. Buat otomatis sekarang agar bisa ditambahkan resepnya?',
+        confirmText: 'Buat Menu',
+        cancelText: 'Batal',
+        type: 'warning',
+        onConfirm: function () {
+            fetch(`${BASE_URL}/menu/create-from-option`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ opsi_id: opsiId, nama_menu: namaPilihan })
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else if (typeof Swal !== 'undefined') {
+                    Swal.fire('Gagal', data.message || 'Gagal membuat menu otomatis.', 'error');
+                } else {
+                    alert(data.message || 'Gagal membuat menu otomatis.');
+                }
+            }).catch(err => {
+                console.error(err);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'Terjadi kesalahan sistem.', 'error');
+                } else {
+                    alert('Terjadi kesalahan sistem.');
+                }
+            });
+        }
+    });
 }
 
 // ═══ MENU DRAWER ═══
@@ -1110,33 +1152,19 @@ function renderPaketResepTree(menu) {
     const menuNama = menu ? (menu.nama_menu || menu.nama || 'Paket') : 'Paket';
     const isBancakan = menuNama.toLowerCase().includes('bancakan');
     const subtitleText = isBancakan 
-        ? 'Komposisi resep bahan baku per porsi paket (5 Porsi)' 
+        ? 'Komposisi resep bahan baku per porsi paket (Porsi 5 Orang)' 
         : 'Komposisi resep bahan baku per porsi menu paket';
 
-    let html = `
-        <div class="space-y-5 font-sans">
-            {{-- Minimalist Header --}}
-            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-                <div>
-                    <h3 class="font-bold text-gray-900 text-base tracking-tight">${menuNama} ${isBancakan ? '<span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 ml-2">Porsi 5 Orang</span>' : ''}</h3>
-                    <p class="text-xs text-gray-400 font-medium">${subtitleText}</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
-                    ${menu && menu.komponen_paket ? menu.komponen_paket.length : 0} Item Menu
-                </span>
-            </div>
+    let totalItems = 0;
+    let siapCount = 0;
+    let nodesHtml = '';
 
-            {{-- Minimalist List --}}
-            <div class="space-y-3">
-    `;
-
-    let menuCount = 0;
     if (menu && menu.komponen_paket && menu.komponen_paket.length > 0) {
         menu.komponen_paket.forEach((komp) => {
             const isTetap = komp.tipe_item === 'tetap' || komp.tipe_item === 'wajib';
 
             let renderNode = (targetMenuId, namaItem, categoryBadge) => {
-                menuCount++;
+                totalItems++;
                 let foundMenu = null;
                 if (targetMenuId) {
                     foundMenu = allMenusData.find(m => m.id === targetMenuId);
@@ -1146,26 +1174,30 @@ function renderPaketResepTree(menu) {
 
                 let resepList = foundMenu ? (foundMenu.resep_menu || []) : [];
                 let hasResep = resepList.length > 0;
+                if (hasResep) siapCount++;
 
                 let nodeHtml = `
-                    <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-2xs space-y-2.5">
-                        {{-- Menu Header --}}
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full ${hasResep ? 'bg-emerald-500' : 'bg-amber-400'} shrink-0"></span>
-                                <span class="font-bold text-gray-900 text-sm">${namaItem}</span>
-                                <span class="text-xs text-gray-400 font-normal">(${categoryBadge})</span>
+                    <div class="bg-white border border-gray-200/80 hover:border-gray-300 rounded-2xl p-4 shadow-xs transition-all flex flex-col justify-between">
+                        <div>
+                            {{-- Card Header --}}
+                            <div class="flex items-center justify-between pb-3 border-b border-gray-100 gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-2.5 h-2.5 rounded-full ${hasResep ? 'bg-emerald-500 ring-4 ring-emerald-50' : 'bg-amber-400 ring-4 ring-amber-50'} shrink-0"></span>
+                                    <h4 class="font-bold text-gray-900 text-sm truncate">${namaItem}</h4>
+                                    <span class="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md shrink-0">${categoryBadge}</span>
+                                </div>
+                                <span class="text-[11px] font-bold shrink-0 ${hasResep ? 'text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100' : 'text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-100'}">
+                                    ${hasResep ? `${resepList.length} Bahan` : 'Belum Ada Resep'}
+                                </span>
                             </div>
-                            <span class="text-[11px] font-semibold ${hasResep ? 'text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60' : 'text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60'}">
-                                ${hasResep ? 'Resep Ada' : 'Belum Ada Resep'}
-                            </span>
-                        </div>
+
+                            {{-- Resep Ingredients List --}}
+                            <div class="pt-3">
                 `;
 
                 if (hasResep) {
                     nodeHtml += `
-                        <div class="pt-2 border-t border-gray-50">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 pl-3 border-l-2 border-gray-100">
+                                <div class="space-y-1">
                     `;
                     resepList.forEach(r => {
                         let namaBahan = r.bahan_baku ? (r.bahan_baku.nama_bahan || r.bahan_baku.nama) : 'Bahan Baku';
@@ -1179,28 +1211,33 @@ function renderPaketResepTree(menu) {
                         let formattedJumlah = parseFloat(jumlah).toLocaleString('id-ID');
 
                         nodeHtml += `
-                            <div class="flex items-center justify-between py-0.5 text-xs">
-                                <span class="text-gray-600 font-medium flex items-center gap-1.5">
-                                    <span class="text-gray-300">•</span>
-                                    ${namaBahan}
-                                </span>
-                                <span class="font-bold text-gray-900">${formattedJumlah} ${satStr}</span>
-                            </div>
+                                    <div class="flex items-center justify-between py-1 px-2 rounded-lg text-xs hover:bg-gray-50/80 transition-colors border border-transparent hover:border-gray-100">
+                                        <span class="text-gray-700 font-medium flex items-center gap-2 truncate pr-2">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0"></span>
+                                            <span class="truncate">${namaBahan}</span>
+                                        </span>
+                                        <span class="font-mono text-xs font-bold text-gray-900 bg-gray-100/90 px-2 py-0.5 rounded-md border border-gray-200/60 shrink-0">
+                                            ${formattedJumlah} <span class="font-sans text-[11px] font-semibold text-gray-500">${satStr}</span>
+                                        </span>
+                                    </div>
                         `;
                     });
                     nodeHtml += `
-                            </div>
-                        </div>
+                                </div>
                     `;
                 } else {
                     nodeHtml += `
-                        <div class="pl-3 border-l-2 border-amber-100 pt-1">
-                            <span class="text-xs text-amber-500 font-medium italic">Belum ada rincian bahan baku</span>
-                        </div>
+                                <div class="py-4 text-center bg-amber-50/50 rounded-xl border border-dashed border-amber-200">
+                                    <span class="text-xs text-amber-600 font-medium italic">Belum ada rincian bahan baku untuk menu ini</span>
+                                </div>
                     `;
                 }
 
-                nodeHtml += `</div>`;
+                nodeHtml += `
+                            </div>
+                        </div>
+                    </div>
+                `;
                 return nodeHtml;
             };
 
@@ -1208,24 +1245,44 @@ function renderPaketResepTree(menu) {
                 let targetMenuId = komp.menu_terkait ? komp.menu_terkait.id : null;
                 let namaMenu = komp.menu_terkait ? (komp.menu_terkait.nama_menu || komp.nama_item) : komp.nama_item;
                 let kat = komp.menu_terkait && komp.menu_terkait.kategori_menu ? komp.menu_terkait.kategori_menu.nama_kategori : 'Wajib';
-                html += renderNode(targetMenuId, namaMenu, kat);
+                nodesHtml += renderNode(targetMenuId, namaMenu, kat);
             } else if (komp.opsi && komp.opsi.length > 0) {
                 komp.opsi.forEach(opsi => {
                     let targetMenuId = opsi.menu_id;
                     let namaMenu = opsi.menu ? (opsi.menu.nama_menu || opsi.nama_pilihan) : opsi.nama_pilihan;
                     let kat = opsi.menu && opsi.menu.kategori_menu ? opsi.menu.kategori_menu.nama_kategori : 'Pilihan';
-                    html += renderNode(targetMenuId, namaMenu, kat);
+                    nodesHtml += renderNode(targetMenuId, namaMenu, kat);
                 });
             }
         });
     }
 
-    if (menuCount === 0) {
-        html += `<div class="text-center py-6 text-gray-400 text-sm">Belum ada menu dalam paket ini.</div>`;
-    }
-
-    html += `
+    let html = `
+        <div class="space-y-4 font-sans">
+            {{-- Header Card --}}
+            <div class="bg-white border border-gray-200/90 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold text-gray-900 text-base sm:text-lg tracking-tight">${menuNama}</h3>
+                        ${isBancakan ? '<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Porsi 5 Orang</span>' : ''}
+                    </div>
+                    <p class="text-xs text-gray-500 font-medium mt-0.5">${subtitleText}</p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <span class="px-3 py-1 rounded-xl bg-gray-50 text-gray-700 text-xs font-bold border border-gray-200">
+                        ${totalItems} Item Menu
+                    </span>
+                    <span class="px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                        ${siapCount} Resep Lengkap
+                    </span>
+                </div>
             </div>
+
+            {{-- 2-Column Responsive Grid --}}
+            ${totalItems > 0 
+                ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${nodesHtml}</div>`
+                : `<div class="bg-white border border-gray-200 rounded-2xl p-8 text-center text-gray-400 text-sm">Belum ada menu dalam paket ini.</div>`
+            }
         </div>
     `;
 

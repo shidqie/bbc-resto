@@ -49,6 +49,20 @@ class Menu extends BaseModel
         return $this->hasOne(KetentuanPaket::class, 'menu_id');
     }
 
+    public function getFotoUrlAttribute()
+    {
+        if (!$this->foto) {
+            return null;
+        }
+        if (str_starts_with($this->foto, 'http://') || str_starts_with($this->foto, 'https://') || str_starts_with($this->foto, '/')) {
+            return $this->foto;
+        }
+        if (str_starts_with($this->foto, 'images/')) {
+            return asset($this->foto);
+        }
+        return \Illuminate\Support\Facades\Storage::url($this->foto);
+    }
+
     protected static function booted()
     {
         static::creating(function ($model) {

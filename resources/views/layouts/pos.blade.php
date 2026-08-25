@@ -13,12 +13,68 @@
 
     <title>{{ config('app.name', 'Saung Babakan Cinta') }} - @yield('title', 'Point of Sale')</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-saung.png') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo-saung.png') }}">
+
     <!-- Google Fonts Design System Tokens -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('vendor/phosphor/phosphor.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .flatpickr-calendar {
+            font-family: 'Outfit', sans-serif !important;
+            border-radius: 1rem !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid #e5e7eb !important;
+            padding: 8px !important;
+            background: #ffffff !important;
+        }
+        .flatpickr-months {
+            padding: 4px 0 8px 0 !important;
+        }
+        .flatpickr-current-month {
+            font-weight: 700 !important;
+            font-size: 105% !important;
+            color: #111827 !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            font-weight: 700 !important;
+            color: #111827 !important;
+        }
+        span.flatpickr-weekday {
+            color: #6b7280 !important;
+            font-weight: 700 !important;
+            font-size: 85% !important;
+        }
+        .flatpickr-day {
+            border-radius: 0.5rem !important;
+            font-weight: 500 !important;
+            color: #1f2937 !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+            background: #059669 !important;
+            border-color: #059669 !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+        .flatpickr-day.today {
+            border-color: #059669 !important;
+            color: #059669 !important;
+            font-weight: 700 !important;
+        }
+        .flatpickr-day:hover {
+            background: #ecfdf5 !important;
+        }
+        .flatpickr-day.selected:hover {
+            background: #047857 !important;
+        }
+    </style>
 
     <!-- Tailwind CSS CDN Fallback for LAN/Wi-Fi Access -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -27,6 +83,11 @@
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        serif: ['Outfit', 'sans-serif'],
+                        mono: ['Outfit', 'sans-serif'],
+                    },
                     fontSize: {
                         xs: ['11px', '1.45'],
                         sm: ['13px', '1.5'],
@@ -67,8 +128,8 @@
 
     <style>
         :root {
-            --font-primary: 'Outfit', 'Google Sans', sans-serif;
-            --font-mono: 'Anonymous Pro', monospace;
+            --font-primary: 'Outfit', sans-serif;
+            --font-mono: 'Outfit', sans-serif;
             --color-primary: #0D3024;
             --color-primary-rgb: 13 48 36;
             --color-primary-container: #0a2219;
@@ -120,7 +181,7 @@
         }
 
         body {
-            font-family: var(--font-primary);
+            font-family: 'Outfit', sans-serif !important;
             color: var(--color-text);
             background-color: var(--color-canvas);
         }
@@ -133,6 +194,7 @@
         .admin-shell h5,
         .admin-shell h6 {
             color: var(--color-primary) !important;
+            font-family: 'Outfit', sans-serif !important;
         }
         /* Preserve explicitly-colored headings */
         .admin-shell h2.text-white,
@@ -161,10 +223,62 @@
         }
 
         .font-mono-caps {
-            font-family: var(--font-mono);
+            font-family: 'Outfit', sans-serif !important;
             font-size: 0.875rem; /* 14px */
             letter-spacing: 0.05em;
             text-transform: uppercase;
+        }
+
+        /* ── Universal Table Typography (Outfit Font & Consistent Scale) ── */
+        table,
+        .data-table,
+        .admin-table {
+            font-family: 'Outfit', sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        table th,
+        thead th,
+        .table-header th {
+            font-family: 'Outfit', sans-serif !important;
+            font-size: 0.8125rem !important; /* 13px */
+            font-weight: 700 !important;
+            line-height: 1.25rem !important;
+            letter-spacing: 0.015em;
+        }
+
+        table td,
+        tbody td,
+        .table-cell td {
+            font-family: 'Outfit', sans-serif !important;
+            font-size: 0.875rem !important; /* 14px */
+            line-height: 1.35rem !important;
+        }
+
+        table code,
+        table .font-mono,
+        table [class*="font-mono"] {
+            font-family: 'Outfit', monospace, sans-serif !important;
+            font-size: 0.8125rem !important; /* 13px */
+            font-weight: 700 !important;
+            letter-spacing: 0.02em;
+        }
+
+        table .badge,
+        table [class*="rounded-full"],
+        table [class*="rounded-lg"],
+        table [class*="rounded-md"] {
+            font-family: 'Outfit', sans-serif !important;
+            font-size: 0.75rem !important; /* 12px */
+            font-weight: 600 !important;
+        }
+
+        table button,
+        table a.button,
+        table .btn {
+            font-family: 'Outfit', sans-serif !important;
+            font-size: 0.75rem !important; /* 12px */
+            font-weight: 700 !important;
         }
 
         .no-scrollbar::-webkit-scrollbar {
@@ -279,9 +393,36 @@
                     form.setAttribute('data-confirm-modal', '');
                     form.submit();
                 }
-            }
         });
     });
+    </script>
+
+    <!-- Flatpickr JS & Indonesian Locale -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+    <script>
+        function initAppDatepickers() {
+            if (typeof flatpickr !== 'undefined') {
+                flatpickr.localize(flatpickr.l10ns.id);
+                document.querySelectorAll('input[type="date"], input.datepicker').forEach(function(el) {
+                    if (!el._flatpickr) {
+                        const currentVal = el.value;
+                        flatpickr(el, {
+                            locale: 'id',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            dateFormat: 'Y-m-d',
+                            defaultDate: currentVal || null,
+                            allowInput: true,
+                            disableMobile: true
+                        });
+                    }
+                });
+            }
+        }
+        document.addEventListener('DOMContentLoaded', initAppDatepickers);
+        // Also re-check when dynamically loaded / Alpine updates
+        window.initAppDatepickers = initAppDatepickers;
     </script>
 
     @stack('scripts')

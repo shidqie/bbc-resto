@@ -12,10 +12,37 @@
     <title>{{ $title ?? 'Saung Babakan Cinta' }}</title>
     <meta name="description" content="{{ $description ?? 'Saung Babakan Cinta — Rumah Makan Sunda. Dine-in, Katering & Nasi Box.' }}">
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-saung.png') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo-saung.png') }}">
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Icons: Phosphor Icons (Local) & Font Awesome -->
+    <link rel="stylesheet" href="{{ asset('vendor/phosphor/phosphor.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .flatpickr-calendar {
+            font-family: 'Outfit', sans-serif !important;
+            border-radius: 1rem !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid #e5e7eb !important;
+            padding: 8px !important;
+            background: #ffffff !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+            background: #059669 !important;
+            border-color: #059669 !important;
+        }
+        .flatpickr-day.today {
+            border-color: #059669 !important;
+        }
+    </style>
 
     <!-- Tailwind CSS CDN Fallback for Wi-Fi LAN Access -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,8 +52,11 @@
             theme: {
                 extend: {
                     fontFamily: {
+                        'sans': ['Outfit', 'sans-serif'],
+                        'serif': ['Outfit', 'sans-serif'],
+                        'mono': ['Outfit', 'sans-serif'],
                         'Google_Sans': ['Outfit', 'sans-serif'],
-                        'Anonymous_Pro': ['Anonymous Pro', 'monospace'],
+                        'Anonymous_Pro': ['Outfit', 'sans-serif'],
                     },
                     fontSize: {
                         xs: ['11px', '1.45'],
@@ -158,8 +188,35 @@
 
     <x-landing.footer />
 
-    @stack('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof flatpickr !== 'undefined') {
+                flatpickr.localize(flatpickr.l10ns.id);
+                document.querySelectorAll('input[type="date"], input.datepicker').forEach(function(el) {
+                    if (!el._flatpickr) {
+                        const currentVal = el.value;
+                        const minDateVal = el.getAttribute('min') || null;
+                        const maxDateVal = el.getAttribute('max') || null;
+                        flatpickr(el, {
+                            locale: 'id',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            dateFormat: 'Y-m-d',
+                            defaultDate: currentVal || null,
+                            minDate: minDateVal,
+                            maxDate: maxDateVal,
+                            allowInput: true,
+                            disableMobile: true
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+    @stack('scripts')
     <script>
         const isLoggedIn = {{ Auth::guard('pelanggan')->check() ? 'true' : 'false' }};
         function handleOrderClick(event, url) {

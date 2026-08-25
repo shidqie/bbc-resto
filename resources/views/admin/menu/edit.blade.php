@@ -131,18 +131,23 @@
                             @forelse($menu->resep_menu as $resep)
                                 <div class="flex gap-3 items-start bahan-baku-row">
                                     <div class="flex-1">
-                                        <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-white transition-all">
-                                            <option value="">Pilih Bahan Baku</option>
-                                            @foreach($bahanBakus as $bb)
-                                                <option value="{{ $bb->id }}" {{ $resep->bahan_baku_id == $bb->id ? 'selected' : '' }}>{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
-                                            @endforeach
-                                        </select>
+                                        <div class="relative">
+                                            <select name="bahan_baku_id[]" class="w-full appearance-none px-4 py-2.5 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white text-sm font-semibold shadow-xs cursor-pointer transition-all">
+                                                <option value="">Pilih Bahan Baku</option>
+                                                @foreach($bahanBakus as $bb)
+                                                    <option value="{{ $bb->id }}" {{ $resep->bahan_baku_id == $bb->id ? 'selected' : '' }}>{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                                                @endforeach
+                                            </select>
+                                            <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400">
+                                                <x-heroicon-o-chevron-down class="w-4 h-4" />
+                                            </span>
+                                        </div>
                                     </div>
                                     <div class="w-32">
-                                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" value="{{ (float)($resep->jumlah_kebutuhan ?? $resep->jumlah) }}" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none transition-all">
+                                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" value="{{ (float)($resep->jumlah_kebutuhan ?? $resep->jumlah) }}" placeholder="Takaran" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none text-sm font-medium transition-all shadow-xs">
                                     </div>
                                     <div>
-                                        <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
+                                        <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0 cursor-pointer">
                                             <x-heroicon-o-trash class="w-5 h-5" />
                                         </button>
                                     </div>
@@ -150,18 +155,23 @@
                             @empty
                                 <div class="flex gap-3 items-start bahan-baku-row">
                                     <div class="flex-1">
-                                        <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-white transition-all">
-                                            <option value="">Pilih Bahan Baku</option>
-                                            @foreach($bahanBakus as $bb)
-                                                <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
-                                            @endforeach
-                                        </select>
+                                        <div class="relative">
+                                            <select name="bahan_baku_id[]" class="w-full appearance-none px-4 py-2.5 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white text-sm font-semibold shadow-xs cursor-pointer transition-all">
+                                                <option value="">Pilih Bahan Baku</option>
+                                                @foreach($bahanBakus as $bb)
+                                                    <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                                                @endforeach
+                                            </select>
+                                            <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400">
+                                                <x-heroicon-o-chevron-down class="w-4 h-4" />
+                                            </span>
+                                        </div>
                                     </div>
                                     <div class="w-32">
-                                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none transition-all">
+                                        <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none text-sm font-medium transition-all shadow-xs">
                                     </div>
                                     <div>
-                                        <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
+                                        <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0 cursor-pointer">
                                             <x-heroicon-o-trash class="w-5 h-5" />
                                         </button>
                                     </div>
@@ -214,19 +224,24 @@
         container.insertAdjacentHTML('beforeend', `
             <div class="flex gap-3 items-start bahan-baku-row">
                 <div class="flex-1">
-                    <select name="bahan_baku_id[]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-white transition-all">
-                        <option value="">Pilih Bahan Baku</option>
-                        @foreach($bahanBakus as $bb)
-                            <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
-                        @endforeach
-                    </select>
+                    <div class="relative">
+                        <select name="bahan_baku_id[]" class="w-full appearance-none px-4 py-2.5 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white text-sm font-semibold shadow-xs cursor-pointer transition-all">
+                            <option value="">Pilih Bahan Baku</option>
+                            @foreach($bahanBakus as $bb)
+                                <option value="{{ $bb->id }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                            @endforeach
+                        </select>
+                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </span>
+                    </div>
                 </div>
                 <div class="w-32">
-                    <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none transition-all">
+                    <input type="number" step="0.01" name="jumlah_kebutuhan[]" placeholder="Takaran" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none text-sm font-medium transition-all shadow-xs">
                 </div>
                 <div>
-                    <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0">
-                        <x-heroicon-o-trash class="w-5 h-5" />
+                    <button type="button" onclick="this.closest('.bahan-baku-row').remove()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors mt-0 cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                 </div>
             </div>

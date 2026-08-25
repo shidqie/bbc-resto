@@ -147,7 +147,7 @@
                                     <span class="text-success font-bold">Rp {{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</span>
                                 </div>
                                 <div class="text-xs text-gray-500">
-                                    {{ \Carbon\Carbon::parse($pembayaran->dibayar_pada)->format('d M Y H:i') }} ({{ optional($pembayaran->jenis_pembayaran)->nama_jenis ?? 'Pembayaran Penuh' }})
+                                    {{ \Carbon\Carbon::parse($pembayaran->dibayar_pada)->translatedFormat('d M Y H:i') }} ({{ optional($pembayaran->jenis_pembayaran)->nama_jenis ?? 'Pembayaran Penuh' }})
                                 </div>
                             </div>
                         @endforeach

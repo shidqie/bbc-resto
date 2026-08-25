@@ -19,10 +19,17 @@ class StokOperasionalController extends Controller
         $kategoris = KategoriBahanBaku::all();
 
         if ($tab === 'riwayat') {
-            $riwayatQuery = \App\Models\MutasiStok::with(['bahan_baku', 'bahan_baku.satuan'])
+            $riwayatQuery = \App\Models\MutasiStok::with([
+                'bahan_baku.satuan',
+                'detail_pesanan.pesanan.pelanggan',
+                'detail_pesanan.pesanan.jenis_pesanan',
+                'detail_pesanan.pesanan.meja',
+                'detail_penyesuaian_stok.penyesuaian_stok',
+            ])
                 ->where('jenis_persediaan', 'harian')
                 ->where('jenis_mutasi_stok_id', 2) // Keluar
-                ->orderBy('tanggal_mutasi', 'desc');
+                ->orderBy('tanggal_mutasi', 'desc')
+                ->orderBy('id', 'desc');
 
             if ($request->has('search') && $request->search != '') {
                 $search = $request->search;
@@ -37,16 +44,26 @@ class StokOperasionalController extends Controller
             if ($request->has('jenis_penggunaan') && $request->jenis_penggunaan != '') {
                 // Filter by type: Dine-In, Nasi Box, Penyesuaian
                 if ($request->jenis_penggunaan == 'Dine-In') {
-                    $riwayatQuery->where('catatan', 'like', '%Dine-In%');
+                    $riwayatQuery->where(function($q) {
+                        $q->where('catatan', 'like', '%Dine-In%')
+                          ->orWhereHas('detail_pesanan.pesanan', function($sub) {
+                              $sub->where('jenis_pesanan_id', 1);
+                          });
+                    });
                 } elseif ($request->jenis_penggunaan == 'Nasi Box') {
-                    $riwayatQuery->where('catatan', 'like', '%Nasi Box%');
+                    $riwayatQuery->where(function($q) {
+                        $q->where('catatan', 'like', '%Nasi Box%')
+                          ->orWhereHas('detail_pesanan.pesanan', function($sub) {
+                              $sub->where('jenis_pesanan_id', 3);
+                          });
+                    });
                 } elseif ($request->jenis_penggunaan == 'Penyesuaian') {
                     $riwayatQuery->whereNotNull('detail_penyesuaian_stok_id')
                                  ->orWhere('catatan', 'like', '%Penyesuaian%');
                 }
             }
 
-            $riwayats = $riwayatQuery->paginate(50)->withQueryString();
+            $riwayats = $riwayatQuery->paginate(100)->withQueryString();
             
             return view('admin.persediaan.stok-operasional.index', compact('tab', 'riwayats', 'kategoris'));
         }

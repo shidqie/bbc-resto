@@ -13,9 +13,9 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Outfit', ...defaultTheme.fontFamily.sans],
-                serif: ['Outfit', ...defaultTheme.fontFamily.serif],
-                mono: ['"Anonymous Pro"', ...defaultTheme.fontFamily.mono],
+                sans: ['Outfit', 'sans-serif'],
+                serif: ['Outfit', 'sans-serif'],
+                mono: ['Outfit', 'sans-serif'],
             },
             fontSize: {
                 xs: ['11px', '1.45'],

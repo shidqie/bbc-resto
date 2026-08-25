@@ -33,7 +33,6 @@ class BahanBakuController extends Controller
         $sortMap = [
             'nama' => ['bahan_baku.nama_bahan', 'asc'],
             'kategori' => ['kategori.nama_kategori', 'asc'],
-            'harga' => ['bahan_baku.harga_satuan', 'asc'],
             'terbaru' => ['bahan_baku.id', 'desc'],
         ];
         $sortCol = $sortMap[$sort][0] ?? $sortMap['nama'][0];

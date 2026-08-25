@@ -18,6 +18,11 @@ class Pelanggan extends BaseModel implements AuthenticatableContract, CanResetPa
 
     protected $hidden = ['kata_sandi', 'remember_token'];
 
+    public function getAuthPassword()
+    {
+        return $this->kata_sandi;
+    }
+
     public function pesanan()
     {
         return $this->hasMany(Pesanan::class, 'pelanggan_id');

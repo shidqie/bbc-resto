@@ -88,7 +88,7 @@
                         <label class="block text-sm font-medium text-gray-500 mb-1">Bergabung</label>
                         <div class="text-gray-900">
                             @if($user->dibuat_pada)
-                                {{ is_string($user->dibuat_pada) ? \Carbon\Carbon::parse($user->dibuat_pada)->format('d M Y') : $user->dibuat_pada->format('d M Y') }}
+                                {{ is_string($user->dibuat_pada) ? \Carbon\Carbon::parse($user->dibuat_pada)->translatedFormat('d M Y') : $user->dibuat_pada->translatedFormat('d M Y') }}
                             @else
                                 -
                             @endif
@@ -99,7 +99,7 @@
                         <label class="block text-sm font-medium text-gray-500 mb-1">Terakhir Masuk</label>
                         <div class="text-gray-900">
                             @if($user->terakhir_masuk)
-                                {{ is_string($user->terakhir_masuk) ? \Carbon\Carbon::parse($user->terakhir_masuk)->format('d M Y H:i') : $user->terakhir_masuk->format('d M Y H:i') }}
+                                {{ is_string($user->terakhir_masuk) ? \Carbon\Carbon::parse($user->terakhir_masuk)->translatedFormat('d M Y H:i') : $user->terakhir_masuk->translatedFormat('d M Y H:i') }}
                             @else
                                 Belum pernah masuk
                             @endif
@@ -110,7 +110,7 @@
                         <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Daftar</label>
                         <div class="text-gray-900">
                             @if($user->dibuat_pada)
-                                {{ is_string($user->dibuat_pada) ? \Carbon\Carbon::parse($user->dibuat_pada)->format('d M Y') : $user->dibuat_pada->format('d M Y') }}
+                                {{ is_string($user->dibuat_pada) ? \Carbon\Carbon::parse($user->dibuat_pada)->translatedFormat('d M Y') : $user->dibuat_pada->translatedFormat('d M Y') }}
                             @else
                                 -
                             @endif
@@ -182,7 +182,7 @@
                                 <td class="px-4 py-3">
                                     <div class="text-gray-900">
                                         @if($pesanan->tanggal_pesanan)
-                                            {{ is_string($pesanan->tanggal_pesanan) ? \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->format('d M Y') : $pesanan->tanggal_pesanan->format('d M Y') }}
+                                            {{ is_string($pesanan->tanggal_pesanan) ? \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->translatedFormat('d M Y') : $pesanan->tanggal_pesanan->translatedFormat('d M Y') }}
                                         @else
                                             -
                                         @endif

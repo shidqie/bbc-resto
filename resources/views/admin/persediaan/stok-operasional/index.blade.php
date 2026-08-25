@@ -172,69 +172,130 @@
                     
                     @php
                         $groupedRiwayat = [];
-                            foreach($riwayats as $riwayat) {
-                                $key = $riwayat->catatan . '|' . $riwayat->tanggal_mutasi->format('Y-m-d H:i');
-                                if (!isset($groupedRiwayat[$key])) {
-                                    $groupedRiwayat[$key] = [
-                                        'tanggal' => $riwayat->tanggal_mutasi,
-                                        'catatan' => $riwayat->catatan,
-                                        'referensi' => $riwayat->referensi_id,
-                                        'items' => []
-                                    ];
-                                }
-                                $groupedRiwayat[$key]['items'][] = $riwayat;
+                        foreach($riwayats as $riwayat) {
+                            $pesanan = $riwayat->detail_pesanan?->pesanan;
+                            if ($pesanan) {
+                                $key = 'pesanan_' . $pesanan->id;
+                                $judul = 'Pesanan #' . $pesanan->id_pesanan;
+                                $tipe = $pesanan->jenis_pesanan?->nama_jenis ?? 'Dine In';
+                                $pelanggan = $pesanan->pelanggan?->nama ?? null;
+                                $meja = $pesanan->meja?->nomor_meja ?? null;
+                            } elseif (preg_match('/Pesanan\s*#?([A-Z0-9\-]+)/i', $riwayat->catatan, $m)) {
+                                $key = 'pesanan_' . $m[1];
+                                $judul = 'Pesanan #' . $m[1];
+                                $tipe = str_contains($riwayat->catatan, 'Nasi Box') ? 'Nasi Box' : 'Dine In';
+                                $pelanggan = null;
+                                $meja = null;
+                            } elseif ($riwayat->detail_penyesuaian_stok) {
+                                $penyesuaian = $riwayat->detail_penyesuaian_stok->penyesuaian_stok;
+                                $nomorAdj = $penyesuaian?->nomor_penyesuaian ?? $riwayat->referensi_id;
+                                $key = 'penyesuaian_' . ($penyesuaian?->id ?? $riwayat->detail_penyesuaian_stok_id);
+                                $judul = 'Penyesuaian Stok' . ($nomorAdj ? ' #' . $nomorAdj : '');
+                                $tipe = 'Penyesuaian';
+                                $pelanggan = null;
+                                $meja = null;
+                            } else {
+                                $key = 'other_' . md5($riwayat->catatan . $riwayat->tanggal_mutasi->format('Y-m-d H:i'));
+                                $judul = $riwayat->catatan ?: 'Penggunaan Stok';
+                                $tipe = 'Lainnya';
+                                $pelanggan = null;
+                                $meja = null;
                             }
-                            $noGroup = $riwayats->firstItem();
-                        @endphp
 
-                        @forelse($groupedRiwayat as $groupKey => $group)
-                            <tbody x-data="{ expanded: false }" class="divide-y divide-gray-100">
-                                <tr class="hover:bg-gray-50/80 transition-colors cursor-pointer group" @click="expanded = !expanded">
-                                    <td class="px-4 py-4 text-sm text-gray-500">{{ $noGroup++ }}</td>
-                                    <td class="px-4 py-4">
+                            if (!isset($groupedRiwayat[$key])) {
+                                $groupedRiwayat[$key] = [
+                                    'key' => $key,
+                                    'judul' => $judul,
+                                    'tipe' => $tipe,
+                                    'pelanggan' => $pelanggan,
+                                    'meja' => $meja,
+                                    'tanggal' => $riwayat->tanggal_mutasi,
+                                    'referensi' => $riwayat->referensi_id,
+                                    'items' => [],
+                                ];
+                            }
+
+                            $bId = $riwayat->bahan_baku_id;
+                            if (!isset($groupedRiwayat[$key]['items'][$bId])) {
+                                $groupedRiwayat[$key]['items'][$bId] = [
+                                    'nama_bahan' => $riwayat->bahan_baku?->nama_bahan ?? '-',
+                                    'kode_bahan' => $riwayat->bahan_baku?->id_bahan_baku ?? '',
+                                    'satuan' => $riwayat->bahan_baku?->satuan?->singkatan ?? $riwayat->bahan_baku?->satuan?->nama_satuan ?? '',
+                                    'jumlah' => 0,
+                                    'stok_sesudah' => $riwayat->stok_sesudah,
+                                ];
+                            }
+                            $groupedRiwayat[$key]['items'][$bId]['jumlah'] += (float) $riwayat->jumlah;
+                            $groupedRiwayat[$key]['items'][$bId]['stok_sesudah'] = $riwayat->stok_sesudah;
+                        }
+                        $noGroup = $riwayats->firstItem();
+                    @endphp
+
+                    @forelse($groupedRiwayat as $groupKey => $group)
+                        <tbody x-data="{ expanded: false }" class="divide-y divide-gray-100">
+                            <tr class="hover:bg-gray-50/80 transition-colors cursor-pointer group" @click="expanded = !expanded">
+                                <td class="px-4 py-4 text-sm text-gray-500 font-medium">{{ $noGroup++ }}</td>
+                                <td class="px-4 py-4">
+                                    <div class="space-y-0.5">
                                         <div class="font-bold text-gray-900 text-sm flex items-center gap-2">
-                                            <span>{{ $group['catatan'] ?: 'Tanpa Keterangan' }}</span>
-                                            @if($group['referensi'])
-                                                <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md border border-gray-200">Ref: {{ $group['referensi'] }}</span>
+                                            <span>{{ $group['judul'] }}</span>
+                                            @if($group['tipe'])
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border {{ $group['tipe'] === 'Nasi Box' ? 'bg-blue-50 text-blue-700 border-blue-200' : ($group['tipe'] === 'Penyesuaian' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200') }}">
+                                                    {{ $group['tipe'] }}
+                                                </span>
                                             @endif
                                         </div>
-                                    </td>
-                                    <td class="px-4 py-4 text-sm text-gray-600">
-                                        {{ $group['tanggal']->format('d M Y, H:i') }}
-                                    </td>
-                                    <td class="px-4 py-4 text-sm">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-soft text-primary font-bold border border-primary/20">
-                                            {{ count($group['items']) }} Bahan Keluar
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-4 text-center">
-                                        <button type="button" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
-                                            <x-heroicon-o-chevron-down class="w-5 h-5 transition-transform duration-200" x-bind:class="expanded ? 'rotate-180' : ''" />
-                                        </button>
-                                    </td>
-                                </tr>
-                                
-                                {{-- Expanded Details --}}
-                                <tr x-show="expanded" x-cloak class="bg-white border-b border-gray-100">
-                                    <td colspan="5" class="p-0 border-t-0">
-                                        <div class="px-6 py-4 md:px-14 md:py-5 bg-white">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-3">
-                                                @foreach($group['items'] as $item)
-                                                    <div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
-                                                        <div>
-                                                            <p class="text-sm font-bold text-gray-800 leading-none">{{ $item->bahan_baku->nama_bahan ?? '-' }}</p>
-                                                            <p class="text-[10px] text-gray-400 mt-1.5 font-medium">Sisa: {{ rtrim(rtrim(number_format($item->stok_sesudah ?? 0, 2), '0'), '.') }} {{ $item->bahan_baku->satuan->singkatan ?? '' }}</p>
-                                                        </div>
-                                                        <div class="text-right">
-                                                            <p class="text-sm font-black text-red-500">-{{ rtrim(rtrim(number_format($item->jumlah, 2), '0'), '.') }} <span class="text-xs font-bold text-red-400">{{ $item->bahan_baku->satuan->singkatan ?? '' }}</span></p>
-                                                        </div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
+                                        @if($group['pelanggan'] || $group['meja'])
+                                            <p class="text-xs text-gray-500 font-medium">
+                                                @if($group['pelanggan']) Pemesan: <span class="text-gray-700 font-semibold">{{ $group['pelanggan'] }}</span> @endif
+                                                @if($group['meja']) • Meja {{ $group['meja'] }} @endif
+                                            </p>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-600 font-medium">
+                                    {{ $group['tanggal']->translatedFormat('d M Y, H:i') }} WIB
+                                </td>
+                                <td class="px-4 py-4 text-sm">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-xs shadow-2xs">
+                                        {{ count($group['items']) }} Bahan Keluar
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-center">
+                                    <button type="button" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer">
+                                        <x-heroicon-o-chevron-down class="w-5 h-5 transition-transform duration-200" x-bind:class="expanded ? 'rotate-180' : ''" />
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            {{-- Expanded Details --}}
+                            <tr x-show="expanded" x-cloak class="bg-gray-50/40 border-b border-gray-100">
+                                <td colspan="5" class="p-0 border-t-0">
+                                    <div class="px-6 py-4 md:px-12 md:py-4 bg-gray-50/70 border-y border-gray-100">
+                                        <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                                            Rincian Bahan Baku Terpotong ({{ count($group['items']) }} Bahan)
                                         </div>
-                                    </td>
-                                </tr>
-                            </tbody>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                            @foreach($group['items'] as $item)
+                                                <div class="flex justify-between items-center p-2.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+                                                    <div class="min-w-0 pr-2">
+                                                        <p class="text-xs font-bold text-gray-900 truncate leading-tight">{{ $item['nama_bahan'] }}</p>
+                                                        <p class="text-[10px] text-gray-400 mt-0.5 font-medium">
+                                                            Sisa Stok: {{ \App\Helpers\UnitHelper::formatQuantity($item['stok_sesudah'] ?? 0, $item['satuan']) }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="text-right shrink-0">
+                                                        <span class="text-xs font-extrabold text-red-600 font-mono">
+                                                            -{{ \App\Helpers\UnitHelper::formatQuantity($item['jumlah'], $item['satuan']) }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
                         @empty
                             <tbody>
                                 <tr>

@@ -65,7 +65,7 @@
                 <li class="px-4 py-3 flex justify-between items-center">
                     <div>
                         <p class="text-sm font-semibold text-gray-900">{{ optional($mutasi->jenis_mutasi_stok)->nama_jenis_mutasi ?? '-' }}</p>
-                        <p class="text-xs font-medium text-gray-500 mt-0.5">{{ \Carbon\Carbon::parse($mutasi->tanggal_mutasi)->format('d M Y, H:i') }} | {{ optional($mutasi->pengguna)->nama ?? 'Sistem' }}</p>
+                        <p class="text-xs font-medium text-gray-500 mt-0.5">{{ \Carbon\Carbon::parse($mutasi->tanggal_mutasi)->translatedFormat('d M Y, H:i') }} | {{ optional($mutasi->pengguna)->nama ?? 'Sistem' }}</p>
                         @if($mutasi->keterangan)
                             <p class="text-xs text-gray-400 mt-0.5 italic">{{ $mutasi->keterangan }}</p>
                         @endif

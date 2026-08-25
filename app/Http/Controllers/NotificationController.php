@@ -33,7 +33,7 @@ class NotificationController extends Controller
                 'id' => $notif->id,
                 'data' => $notif->data,
                 'read_at' => $notif->read_at,
-                'created_at_human' => $notif->created_at->diffForHumans()
+                'created_at_human' => $notif->created_at->locale('id')->diffForHumans()
             ];
         });
 

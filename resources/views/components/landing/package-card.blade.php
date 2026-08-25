@@ -10,7 +10,7 @@
             } else if ($type === 'catering') {
                 $defaultImg = asset('images/catering.webp');
             }
-            $imgSrc = $paket->foto ? Storage::url($paket->foto) : $defaultImg;
+            $imgSrc = $paket->foto_url ?? ($paket->foto ? (str_starts_with($paket->foto, 'images/') ? asset($paket->foto) : Storage::url($paket->foto)) : $defaultImg);
         @endphp
         <img src="{{ $imgSrc }}" alt="{{ $paket->nama_paket ?? $paket->nama }}" class="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-90">
     </div>

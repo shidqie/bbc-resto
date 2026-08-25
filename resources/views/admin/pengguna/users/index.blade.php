@@ -237,12 +237,17 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Peran</label>
-                        <select name="peran_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                            <option value="">Pilih Peran</option>
-                            @foreach($roles as $role)
-                                <option value="{{ $role->id }}">{{ $role->nama_peran }}</option>
-                            @endforeach
-                        </select>
+                        <div class="relative">
+                            <select name="peran_id" required class="w-full appearance-none px-3.5 py-2.5 pr-9 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm font-semibold bg-white shadow-xs cursor-pointer">
+                                <option value="">Pilih Peran</option>
+                                @foreach($roles as $role)
+                                    <option value="{{ $role->id }}">{{ $role->nama_peran }}</option>
+                                @endforeach
+                            </select>
+                            <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                                <x-heroicon-o-chevron-down class="w-4 h-4" />
+                            </span>
+                        </div>
                     </div>
 
                     <div>

@@ -17,32 +17,49 @@ class IdCodeGenerator
         $appUrl = config('app.url');
         $appEnv = config('app.env');
 
-        // Jika dipasang di hosting / domain publik, otomatis gunakan URL domain utama
-        if ($appEnv === 'production' || (!empty($appUrl) && !str_contains($appUrl, 'localhost') && !str_contains($appUrl, '127.0.0.1'))) {
-            return url('/');
+        // 1. Jika production atau domain publik (bukan localhost/127.0.0.1), gunakan domain publik
+        if ($appEnv === 'production' && !empty($appUrl) && !str_contains($appUrl, 'localhost') && !str_contains($appUrl, '127.0.0.1')) {
+            return rtrim($appUrl, '/');
         }
 
-        // Detect local Wi-Fi IP address on Mac/Linux
+        // 2. Jika request saat ini sudah menggunakan IP LAN (misal admin buka dari http://192.168.x.x:8000), gunakan host tersebut
+        if (request() && request()->getHost() && !in_array(request()->getHost(), ['localhost', '127.0.0.1', '::1', '0.0.0.0'])) {
+            $scheme = request()->getScheme() ?: 'http';
+            $port = request()->getPort();
+            $portSuffix = ($port && !in_array($port, [80, 443])) ? ":{$port}" : "";
+            return "{$scheme}://" . request()->getHost() . $portSuffix;
+        }
+
+        // 3. Jika APP_URL di .env sudah diset ke IP LAN (192.168.x.x, 10.x.x.x, 172.x.x.x), gunakan APP_URL
+        if (!empty($appUrl) && preg_match('/https?:\/\/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)(:[0-9]+)?/', $appUrl, $m)) {
+            if (!in_array($m[1], ['127.0.0.1', '0.0.0.0'])) {
+                return rtrim($appUrl, '/');
+            }
+        }
+
+        // 4. Deteksi otomatis IP Wi-Fi / Ethernet aktif pada OS (Mac / Linux)
         try {
-            $output = shell_exec("ifconfig 2>&1 | grep 'inet ' | grep -v '127.0.0.1'");
-            if ($output && preg_match('/inet\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/', $output, $matches)) {
-                $lanIp = $matches[1];
-                $scheme = (request()->getScheme() && request()->getScheme() !== 'cli') ? request()->getScheme() : 'http';
-                $port = request()->getPort();
-                $portSuffix = ($port && !in_array($port, [80, 443])) ? ":{$port}" : ":8000";
-                return "{$scheme}://{$lanIp}{$portSuffix}";
+            $output = @shell_exec("ifconfig 2>&1 | grep 'inet ' | grep -v '127.0.0.1' | awk '{print $2}'");
+            if ($output) {
+                $ips = array_filter(array_map('trim', explode("\n", $output)));
+                foreach ($ips as $ip) {
+                    if (preg_match('/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/', $ip)) {
+                        $port = (request() && request()->getPort()) ? request()->getPort() : 8000;
+                        $portSuffix = ($port && !in_array($port, [80, 443])) ? ":{$port}" : ":8000";
+                        return "http://{$ip}{$portSuffix}";
+                    }
+                }
             }
         } catch (\Throwable $e) {}
 
-        // Fallback hostname IP
+        // 5. Fallback hostname IP
         try {
             $host = gethostname();
             $ip = gethostbyname($host);
             if (filter_var($ip, FILTER_VALIDATE_IP) && !in_array($ip, ['127.0.0.1', '::1', '127.0.1.1'])) {
-                $scheme = request()->getScheme() ?: 'http';
-                $port = request()->getPort();
+                $port = (request() && request()->getPort()) ? request()->getPort() : 8000;
                 $portSuffix = ($port && !in_array($port, [80, 443])) ? ":{$port}" : ":8000";
-                return "{$scheme}://{$ip}{$portSuffix}";
+                return "http://{$ip}{$portSuffix}";
             }
         } catch (\Throwable $e) {}
 
@@ -94,7 +111,14 @@ class IdCodeGenerator
     public static function generatePesananId($date = null): string
     {
         $now = $date ? Carbon::parse($date) : Carbon::now();
-        return 'PSN-' . $now->format('Ymd-His');
+        $base = 'PSN-' . $now->format('Ymd-His');
+        $code = $base;
+        $counter = 1;
+        while (DB::table('pesanan')->where('id_pesanan', $code)->exists()) {
+            $code = $base . '-' . str_pad($counter, 2, '0', STR_PAD_LEFT);
+            $counter++;
+        }
+        return $code;
     }
 
     /**

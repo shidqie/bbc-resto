@@ -65,6 +65,7 @@ Route::post('/pesan/catering/preview', [PesananCateringController::class, 'previ
 // Nasi Box
 Route::get('/pesan/nasi-box', [PesananNasiBoxController::class, 'create'])->name('pesan.nasibox');
 Route::post('/pesan/nasi-box', [PesananNasiBoxController::class, 'store'])->name('pesan.nasibox.store');
+Route::get('/pesan/nasi-box/komponen/{paketId}', [PesananCateringController::class, 'getKomponen'])->name('pesan.nasibox.komponen');
 Route::post('/pesan/nasi-box/preview', [PesananNasiBoxController::class, 'preview'])->name('pesan.nasibox.preview');
 Route::get('/pesan/nasi-box/cek-kapasitas', [PesananNasiBoxController::class, 'checkCapacity'])->name('pesan.nasibox.cek_kapasitas');
 
@@ -104,9 +105,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('roles', RoleController::class)->except(['create', 'show', 'edit']);
     });
 
-    // ─── MASTER DATA (Menu, Bahan Baku, Paket, Meja) ───
+    // ─── PENGADAAN: BUAT & BATALKAN PO/PERMINTAAN (Admin, Manajer, Pemilik) ───
     Route::middleware(['role:Admin,Manajer,Pemilik'])->group(function () {
-        // Pengadaan Bahan
+        // Pengadaan Permintaan Bahan
         Route::get('pengadaan/create', function (Illuminate\Http\Request $request) {
             return redirect()->route('pengadaan.permintaan.index', ['pesanan_id' => $request->query('pesanan_id')]);
         })->name('pengadaan.create');
@@ -118,22 +119,31 @@ Route::middleware('auth')->group(function () {
         Route::post('pengadaan/permintaan/{pengadaan}/batal', [\App\Http\Controllers\PengadaanController::class, 'cancel'])->name('pengadaan.permintaan.cancel');
         Route::get('pengadaan/permintaan/{pengadaan}', [\App\Http\Controllers\PengadaanController::class, 'show'])->name('pengadaan.permintaan.show');
         
-        Route::get('pengadaan/po', [\App\Http\Controllers\PurchaseOrderController::class, 'index'])->name('pengadaan.po.index');
+        // Buat, Batal, & Hapus PO
         Route::get('pengadaan/po/create', [\App\Http\Controllers\PurchaseOrderController::class, 'create'])->name('pengadaan.po.create');
         Route::post('pengadaan/po/store', [\App\Http\Controllers\PurchaseOrderController::class, 'storeUnified'])->name('pengadaan.po.store-unified');
-        
-        Route::get('pengadaan/po/{po}/print', [\App\Http\Controllers\PurchaseOrderController::class, 'print'])->name('pengadaan.po.print');
         Route::post('pengadaan/po/{po}/batal', [\App\Http\Controllers\PurchaseOrderController::class, 'cancel'])->name('pengadaan.po.cancel');
         Route::delete('pengadaan/po/{po}', [\App\Http\Controllers\PurchaseOrderController::class, 'destroy'])->name('pengadaan.po.destroy');
+        Route::post('pengadaan/penerimaan/{penerimaan}/batal', [\App\Http\Controllers\PenerimaanBahanController::class, 'cancel'])->name('pengadaan.penerimaan.cancel');
+    });
+
+    // ─── PENGADAAN: LIHAT PO & PENERIMAAN BAHAN (Admin, Manajer, Pemilik, Dapur) ───
+    Route::middleware(['role:Admin,Manajer,Pemilik,Dapur'])->group(function () {
+        // Purchase Order (Lihat & Cetak)
+        Route::get('pengadaan/po', [\App\Http\Controllers\PurchaseOrderController::class, 'index'])->name('pengadaan.po.index');
         Route::get('pengadaan/po/{po}', [\App\Http\Controllers\PurchaseOrderController::class, 'show'])->name('pengadaan.po.show');
+        Route::get('pengadaan/po/{po}/print', [\App\Http\Controllers\PurchaseOrderController::class, 'print'])->name('pengadaan.po.print');
         Route::post('pengadaan/po/{po}/terima', [\App\Http\Controllers\PurchaseOrderController::class, 'terimaBarang'])->name('pengadaan.po.terima');
         
-        // Penerimaan Bahan
+        // Penerimaan Bahan Baku
         Route::get('pengadaan/penerimaan', [\App\Http\Controllers\PenerimaanBahanController::class, 'index'])->name('pengadaan.penerimaan.index');
         Route::get('pengadaan/po/{po}/terima-barang', [\App\Http\Controllers\PenerimaanBahanController::class, 'create'])->name('pengadaan.penerimaan.create');
         Route::post('pengadaan/po/{po}/terima-barang', [\App\Http\Controllers\PenerimaanBahanController::class, 'store'])->name('pengadaan.penerimaan.store');
         Route::get('pengadaan/penerimaan/{penerimaan}', [\App\Http\Controllers\PenerimaanBahanController::class, 'show'])->name('pengadaan.penerimaan.show');
-        Route::post('pengadaan/penerimaan/{penerimaan}/batal', [\App\Http\Controllers\PenerimaanBahanController::class, 'cancel'])->name('pengadaan.penerimaan.cancel');
+    });
+
+    // ─── MASTER DATA (Menu, Bahan Baku, Paket, Meja) ───
+    Route::middleware(['role:Admin,Manajer,Pemilik,Dapur'])->group(function () {
 
 
         Route::get('bahan-baku/{id}/drawer', [BahanBakuController::class, 'drawer'])->name('bahan-baku.drawer');
@@ -287,7 +297,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/pos/dinein', [DineInController::class, 'index'])->name('pos.dinein.index');
         Route::get('/pos/dinein/table-status', [DineInController::class, 'tableStatusApi'])->name('pos.dinein.table-status');
         Route::post('/pos/dinein/pesanan/{pesanan}/konfirmasi', [DineInController::class, 'konfirmasi'])->name('pos.dinein.konfirmasi');
+        Route::post('/pos/dinein/pesanan/{pesanan}/hidangkan', [DineInController::class, 'hidangkan'])->name('pos.dinein.hidangkan');
         Route::get('/pos/dinein/pesanan/{pesananId}/print-meja', [DineInController::class, 'printMeja'])->name('pos.dinein.print-meja');
+        Route::get('/pos/dinein/pesanan/{pesananId}/print-bukti', [DineInController::class, 'printBukti'])->name('pos.dinein.print-bukti');
         Route::get('/pos/dinein/pesanan/{pesananId}/print-gabungan', [DineInController::class, 'printGabungan'])->name('pos.dinein.print-gabungan');
         Route::patch('/pos/dinein/item/{itemId}/toggle-sajian', [DineInController::class, 'toggleStatusSajian'])->name('pos.dinein.toggle-sajian');
     });
@@ -317,6 +329,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'index'])->name('index');
             Route::post('/{id}/process', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'process'])->name('process');
         });
+        Route::get('/admin/pembayaran/verifikasi', [\App\Http\Controllers\Admin\VerifikasiPembayaranController::class, 'index'])->name('admin.pembayaran.verifikasi');
     });
 
     // ─── MIDTRANS PAYMENT API ROUTES ───

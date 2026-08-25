@@ -90,15 +90,18 @@
                         <input type="hidden" name="bahan_baku_id" id="bahan_baku_id" :value="selectedId" required>
 
                         <div class="relative">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
                             <input type="text"
                                    x-model="search"
                                    @focus="open = true"
                                    @click="open = true"
                                    @input="open = true; selectedId = ''; window.updateFormStateFromItem(null);"
-                                   placeholder="-- Cari atau Pilih Bahan Baku --"
-                                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white font-medium pr-10 cursor-pointer">
+                                   placeholder="Cari & pilih bahan baku..."
+                                   class="w-full h-10 border border-gray-200 rounded-xl pl-10 pr-9 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white font-medium cursor-pointer shadow-sm outline-none">
                             
-                            <button type="button" @click.prevent="toggleOpen()" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-gray-600 focus:outline-none">
+                            <button type="button" @click.prevent="toggleOpen()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer">
                                 <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>

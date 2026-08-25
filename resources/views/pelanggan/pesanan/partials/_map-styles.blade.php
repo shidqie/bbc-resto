@@ -16,13 +16,17 @@
     .leaflet-tooltip.address-tooltip::before, .leaflet-tooltip.resto-tooltip::before {
         border-top-color: white;
     }
-    #map-container { position: relative; }
+    #map-container {
+        position: relative;
+        isolation: isolate;
+        z-index: 10;
+    }
     #map-address-card {
         position: absolute;
         bottom: 16px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 1000;
+        z-index: 30;
         background: white;
         border-radius: 12px;
         padding: 10px 16px;

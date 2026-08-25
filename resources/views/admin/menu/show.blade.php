@@ -101,7 +101,7 @@
                 @if(in_array(strtolower($menu->jenis_menu->kode_jenis ?? ''), ['nasi_box', 'catering']) || $menu->komponen_paket->count() > 0)
                 <div x-show="activeTab === 'paket'" style="display: none;">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-gray-900">Komponen Paket</h3>
+                        <h3 class="text-lg font-bold text-gray-900">Item Menu</h3>
                         <a href="{{ route('menu.edit', $menu->id) }}" class="inline-flex items-center gap-2 bg-primary-soft text-primary hover:bg-primary/10 px-4 py-2 rounded-xl font-medium text-sm transition-colors">
                             <x-heroicon-o-pencil-square class="w-5 h-5 inline-block shrink-0" /> Edit Paket
                         </a>
@@ -123,7 +123,7 @@
                             </div>
                         @else
                             <div class="text-center py-6">
-                                <p class="text-sm font-medium text-gray-500">Belum ada komponen paket.</p>
+                                <p class="text-sm font-medium text-gray-500">Belum ada item menu.</p>
                             </div>
                         @endif
                     </div>

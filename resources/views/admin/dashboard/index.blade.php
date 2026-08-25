@@ -92,7 +92,7 @@
                                 {{ $p->jenis }}
                             </td>
                             <td class="px-4 py-4 align-middle text-gray-500">
-                                {{ \Carbon\Carbon::parse($p->tanggal)->diffForHumans() }}
+                                {{ \Carbon\Carbon::parse($p->tanggal)->locale('id')->diffForHumans() }}
                             </td>
                             <td class="px-4 py-4 align-middle font-semibold text-gray-900">
                                 Rp {{ number_format($p->total, 0, ',', '.') }}

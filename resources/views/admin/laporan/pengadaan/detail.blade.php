@@ -31,7 +31,7 @@
                 </div>
                 <div>
                     <span class="block text-xs font-semibold text-gray-500 mb-1">Tanggal</span>
-                    <span class="block text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($po->tanggal_po)->format('d F Y') }}</span>
+                    <span class="block text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($po->tanggal_po)->translatedFormat('d F Y') }}</span>
                 </div>
                 <div>
                     <span class="block text-xs font-semibold text-gray-500 mb-1">Supplier</span>

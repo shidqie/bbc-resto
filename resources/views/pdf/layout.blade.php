@@ -4,6 +4,31 @@
     <meta charset="utf-8">
     <title>@yield('title', 'Dokumen Cetak - RM Saung Babakan Cinta')</title>
     <style>
+        @font-face {
+            font-family: 'Outfit';
+            src: url('{{ public_path("fonts/Outfit-Regular.ttf") }}') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Outfit';
+            src: url('{{ public_path("fonts/Outfit-Medium.ttf") }}') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Outfit';
+            src: url('{{ public_path("fonts/Outfit-SemiBold.ttf") }}') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Outfit';
+            src: url('{{ public_path("fonts/Outfit-Bold.ttf") }}') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+
         @page {
             size: A4 @yield('orientation', 'portrait');
             margin: 25mm 20mm 20mm 20mm;
@@ -13,10 +38,11 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Outfit', sans-serif !important;
         }
 
         body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-family: 'Outfit', sans-serif !important;
             font-size: 10pt;
             color: #111827;
             background: #ffffff;
@@ -117,7 +143,7 @@
         .text-right { text-align: right !important; }
         .text-left { text-align: left !important; }
         .font-bold { font-weight: bold !important; }
-        .font-mono { font-family: 'Courier', monospace !important; }
+        .font-mono { font-family: 'Outfit', sans-serif !important; }
 
         /* Footer Counter */
         footer {

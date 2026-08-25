@@ -45,7 +45,7 @@
                         @if($pesanan->jadwal_pesanan)
                         <div class="flex justify-between items-center">
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Tanggal Acara</p>
-                            <p class="text-sm font-medium text-gray-800">{{ \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->format('d F Y') }}</p>
+                            <p class="text-sm font-medium text-gray-800">{{ \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->translatedFormat('d F Y') }}</p>
                         </div>
                         @endif
                         <div class="flex justify-between items-center">

@@ -6,6 +6,7 @@ use App\Models\KategoriMenu;
 use App\Models\Meja;
 use App\Models\Menu;
 use App\Services\DineInService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -93,9 +94,21 @@ class QrMenuController extends Controller
             ];
         });
 
+        // Cek apakah meja memiliki sesi pesanan aktif (Dine-in belum lunas/selesai)
+        $activePesanan = \App\Models\Pesanan::with(['detail_pesanan.menu'])
+            ->where('meja_id', $selectedMeja->id)
+            ->where('jenis_pesanan_id', 1)
+            ->whereNotIn('status_pesanan_id', [5, 6])
+            ->where(function ($q) {
+                $q->whereNull('status_pembayaran_id')
+                    ->orWhereNotIn('status_pembayaran_id', [2, 5]);
+            })
+            ->latest('id')
+            ->first();
+
         $pengaturan = \App\Models\PengaturanTransaksi::first();
 
-        return view('admin.menu.qr.index', compact('kategoris', 'menus', 'selectedMeja', 'pengaturan'));
+        return view('admin.menu.qr.index', compact('kategoris', 'menus', 'selectedMeja', 'pengaturan', 'activePesanan'));
     }
 
     /**
@@ -137,6 +150,16 @@ class QrMenuController extends Controller
 
             $staffId = null; // Self-order by customer → tidak ada pelayan_id
 
+            // Cek apakah sebelumnya sudah ada pesanan aktif
+            $hadActiveBefore = \App\Models\Pesanan::where('meja_id', $request->meja_id)
+                ->where('jenis_pesanan_id', 1)
+                ->whereNotIn('status_pesanan_id', [5, 6])
+                ->where(function ($q) {
+                    $q->whereNull('status_pembayaran_id')
+                        ->orWhereNotIn('status_pembayaran_id', [2, 5]);
+                })
+                ->exists();
+
             $pesanan = $this->dineInService->createOrder(
                 $request->meja_id,
                 $request->nama_konsumen,
@@ -147,27 +170,34 @@ class QrMenuController extends Controller
                 $request->nomor_hp
             );
 
+            $kodePesananFinal = $pesanan->id_pesanan ?? $pesanan->kode_pesanan;
+
             // Kirim notifikasi ke kasir/manajer/pemilik/dapur
             $meja = \App\Models\Meja::find($request->meja_id);
-            $pesananNorm = \App\Models\Pesanan::where('id_pesanan', $pesanan->kode_pesanan)->first();
-            if ($pesananNorm && $meja) {
+            if ($pesanan && $meja) {
                 $users = \App\Models\Pengguna::whereHas('peran', function ($q) {
                     $q->whereIn('nama_peran', ['Pemilik', 'Admin', 'Manajer', 'Kasir', 'Dapur']);
                 })->get();
                 $qty = collect($request->items)->sum('qty');
-                if (! $qty && $pesananNorm->detail_pesanan) {
-                    $qty = $pesananNorm->detail_pesanan->sum('jumlah');
+                if (! $qty && $pesanan->detail_pesanan) {
+                    $qty = $pesanan->detail_pesanan->sum('jumlah');
                 }
-                $pesananMessage = "Pesanan Dine-In #{$pesanan->kode_pesanan} sebanyak {$qty} porsi telah masuk dari Meja {$meja->nomor_meja} atas nama {$request->nama_konsumen}.";
-                \Illuminate\Support\Facades\Notification::send($users, new \App\Notifications\PesananBaru($pesananNorm, "Pesanan Baru", $pesananMessage, route('pos.dinein.index')));
+                $notifTitle = $hadActiveBefore ? "Pesanan Tambahan Masuk" : "Pesanan Baru Masuk";
+                $pesananMessage = $hadActiveBefore
+                    ? "Pesanan Tambahan #{$kodePesananFinal} sebanyak {$qty} porsi telah masuk dari Meja {$meja->nomor_meja}."
+                    : "Pesanan Dine-In #{$kodePesananFinal} sebanyak {$qty} porsi telah masuk dari Meja {$meja->nomor_meja} atas nama {$request->nama_konsumen}.";
+
+                \Illuminate\Support\Facades\Notification::send($users, new \App\Notifications\PesananBaru($pesanan, $notifTitle, $pesananMessage, route('pos.dinein.index')));
             }
 
             DB::commit();
             return response()->json([
                 'success' => true,
-                'message' => 'Pesanan berhasil dikirim. Anda dapat melihat detail pesanan atau melakukan pembayaran kasir.',
-                'pesanan_id' => $pesananNorm ? $pesananNorm->id : $pesanan->id,
-                'kode_pesanan' => $pesanan->kode_pesanan,
+                'message' => $hadActiveBefore ? 'Pesanan tambahan berhasil ditambahkan ke sesi pesanan Anda.' : 'Pesanan berhasil dikirim.',
+                'pesanan_id' => $pesanan->id,
+                'kode_pesanan' => $kodePesananFinal,
+                'total_tagihan' => $pesanan->total_tagihan,
+                'is_tambahan' => $hadActiveBefore,
                 'status' => 'pending'
             ]);
 
@@ -185,7 +215,7 @@ class QrMenuController extends Controller
     /**
      * Unduh / Cetak Struk Bukti Pesanan Self-Order QR (Public)
      */
-    public function downloadReceipt($id)
+    public function downloadReceipt(Request $request, $id)
     {
         $pesanan = \App\Models\Pesanan::with(['meja', 'pelanggan', 'detail_pesanan.menu', 'kasir'])->find($id);
         if (!$pesanan) {
@@ -194,6 +224,16 @@ class QrMenuController extends Controller
 
         $pengaturan = \App\Models\PengaturanTransaksi::first();
 
-        return view('admin.pos.pesanan.print-nota', compact('pesanan', 'pengaturan'));
+        if ($request->query('preview') === '1') {
+            return view('admin.menu.qr.bukti-pesanan', compact('pesanan', 'pengaturan'));
+        }
+
+        $itemCount = $pesanan->detail_pesanan ? $pesanan->detail_pesanan->count() : 1;
+        $height = max(340, 280 + ($itemCount * 24));
+
+        $pdf = Pdf::loadView('admin.menu.qr.bukti-pesanan-pdf', compact('pesanan', 'pengaturan'))
+            ->setPaper([0, 0, 226.77, $height], 'portrait');
+
+        return $pdf->download('Bukti-Pesanan-' . $pesanan->id_pesanan . '.pdf');
     }
 }

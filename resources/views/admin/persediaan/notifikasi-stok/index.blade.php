@@ -71,7 +71,7 @@
                     <tr class="{{ $n->dibaca ? 'opacity-60' : 'bg-amber-50/30' }} transition-colors">
                         <td class="px-4 py-3">
                             <p class="text-sm text-gray-800 {{ $n->dibaca ? '' : 'font-semibold' }}">{{ $n->pesan }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($n->dibuat_pada)->format('d M Y H:i') }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($n->dibuat_pada)->translatedFormat('d M Y H:i') }}</p>
                         </td>
                         <td class="px-4 py-3 text-gray-600">{{ $n->bahan_baku?->nama_bahan ?? '-' }}</td>
                         <td class="px-4 py-3 text-right text-gray-600">{{ number_format($n->stok_saat_ini, 3, ',', '.') }} / {{ number_format($n->stok_minimal, 3, ',', '.') }}</td>

@@ -42,7 +42,35 @@ class MenuController extends Controller
         if ($jenisId == 'nasi_box') $jenisId = 3;
         
         if ($jenisId !== 'all') {
-            $query->where('jenis_menu_id', $jenisId);
+            if ($jenisId == 2) {
+                // Paket Katering: HANYA tampilkan paket katering (memiliki komponen/item paket atau berada di kategori Catering)
+                $query->where('jenis_menu_id', 2)->where(function($q) {
+                    $q->has('item_paket')
+                      ->orWhere('kategori_menu_id', 16);
+                });
+            } elseif ($jenisId == 3) {
+                // Paket Nasi Box: HANYA tampilkan paket nasi box (memiliki komponen/item paket atau berada di kategori Nasi Box)
+                $query->where('jenis_menu_id', 3)->where(function($q) {
+                    $q->has('item_paket')
+                      ->orWhere('kategori_menu_id', 17);
+                });
+            } else {
+                $query->where('jenis_menu_id', $jenisId);
+            }
+        } else {
+            // Semua Menu: Tampilkan semua menu utama (Dine In, Paket Katering, Paket Nasi Box) dan kecualikan item komponen opsi jika bukan show_komponen
+            if ($request->input('show_komponen') != '1') {
+                $query->where(function($q) {
+                    $q->where('jenis_menu_id', 1)
+                      ->orWhere(function($sub) {
+                          $sub->whereIn('jenis_menu_id', [2, 3])
+                              ->where(function($p) {
+                                  $p->has('item_paket')
+                                    ->orWhereIn('kategori_menu_id', [16, 17]);
+                              });
+                      });
+                });
+            }
         }
 
         $kategoriFilter = $request->input('kategori_id', $request->input('kategori'));
@@ -64,7 +92,7 @@ class MenuController extends Controller
             }
         }
 
-        if ($request->input('show_komponen') != '1') {
+        if ($request->input('show_komponen') != '1' && $jenisId != 2 && $jenisId != 3) {
             $query->where('harga_jual', '>', 0);
         }
 
@@ -97,13 +125,30 @@ class MenuController extends Controller
             return $kat;
         });
 
+        if ($jenisId == 2) {
+            $allKategoris = $allKategoris->filter(fn($k) => $k->id == 16 || $k->jenis_menu_id == 2);
+        } elseif ($jenisId == 3) {
+            $allKategoris = $allKategoris->filter(fn($k) => $k->id == 17 || $k->jenis_menu_id == 3);
+        } elseif ($jenisId == 1) {
+            $allKategoris = $allKategoris->filter(fn($k) => !in_array($k->id, [16, 17]));
+        }
+
         $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
 
         $stats = [
-            'total' => Menu::count(),
+            'total' => Menu::where(function($q) {
+                $q->where('jenis_menu_id', 1)
+                  ->orWhere(function($sub) {
+                      $sub->whereIn('jenis_menu_id', [2, 3])
+                          ->where(function($p) {
+                              $p->has('item_paket')
+                                ->orWhereIn('kategori_menu_id', [16, 17]);
+                          });
+                  });
+            })->count(),
             'dine_in' => Menu::where('jenis_menu_id', 1)->count(),
-            'catering' => Menu::where('jenis_menu_id', 2)->count(),
-            'nasi_box' => Menu::where('jenis_menu_id', 3)->count(),
+            'catering' => Menu::where('jenis_menu_id', 2)->where(fn($q) => $q->has('item_paket')->orWhere('kategori_menu_id', 16))->count(),
+            'nasi_box' => Menu::where('jenis_menu_id', 3)->where(fn($q) => $q->has('item_paket')->orWhere('kategori_menu_id', 17))->count(),
         ];
 
         $stokBahan = StokBahan::harian()->pluck('jumlah_stok', 'bahan_baku_id');

@@ -66,44 +66,54 @@
                     @forelse($menu->resep_menu as $resep)
                         <div class="flex gap-3 items-start bahan-baku-row">
                             <div class="flex-1">
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Pilih Bahan Baku</label>
-                                <select name="bahan_baku_id[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-select" required onchange="calculateHPP()">
-                                    <option value="" disabled>-- Pilih Bahan --</option>
-                                    @foreach($bahanBakus as $bb)
-                                        <option value="{{ $bb->id }}" data-harga="{{ $bb->harga_satuan }}" {{ $resep->bahan_baku_id == $bb->id ? 'selected' : '' }}>
-                                            {{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Pilih Bahan Baku</label>
+                                <div class="relative">
+                                    <select name="bahan_baku_id[]" class="w-full appearance-none px-3.5 py-2.5 pr-9 text-sm font-semibold border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white shadow-xs cursor-pointer hpp-select" required onchange="calculateHPP()">
+                                        <option value="" disabled>-- Pilih Bahan --</option>
+                                        @foreach($bahanBakus as $bb)
+                                            <option value="{{ $bb->id }}" data-harga="{{ $bb->harga_satuan }}" {{ $resep->bahan_baku_id == $bb->id ? 'selected' : '' }}>
+                                                {{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                                        <x-heroicon-o-chevron-down class="w-4 h-4" />
+                                    </span>
+                                </div>
                             </div>
                             <div class="w-32">
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Jml. Kebutuhan</label>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Jml. Kebutuhan</label>
                                 <x-ui.input-decimal name="jumlah_kebutuhan[]" value="{{ (float)$resep->jumlah_kebutuhan }}" class="hpp-qty" required="true" oninput="calculateHPP()" />
                             </div>
                             <div class="pt-6">
-                                <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors cursor-pointer">
+                                    <x-heroicon-o-trash class="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
                     @empty
                         <div class="flex gap-3 items-start bahan-baku-row">
                             <div class="flex-1">
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Pilih Bahan Baku</label>
-                                <select name="bahan_baku_id[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-select" required onchange="calculateHPP()">
-                                    <option value="" disabled selected data-harga="0">-- Pilih Bahan --</option>
-                                    @foreach($bahanBakus as $bb)
-                                        <option value="{{ $bb->id }}" data-harga="{{ $bb->harga_satuan }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
-                                    @endforeach
-                                </select>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Pilih Bahan Baku</label>
+                                <div class="relative">
+                                    <select name="bahan_baku_id[]" class="w-full appearance-none px-3.5 py-2.5 pr-9 text-sm font-semibold border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white shadow-xs cursor-pointer hpp-select" required onchange="calculateHPP()">
+                                        <option value="" disabled selected data-harga="0">-- Pilih Bahan --</option>
+                                        @foreach($bahanBakus as $bb)
+                                            <option value="{{ $bb->id }}" data-harga="{{ $bb->harga_satuan }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                                        @endforeach
+                                    </select>
+                                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                                        <x-heroicon-o-chevron-down class="w-4 h-4" />
+                                    </span>
+                                </div>
                             </div>
                             <div class="w-32">
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Jml. Kebutuhan</label>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Jml. Kebutuhan</label>
                                 <x-ui.input-decimal name="jumlah_kebutuhan[]" class="hpp-qty" required="true" oninput="calculateHPP()" />
                             </div>
                             <div class="pt-6">
-                                <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
-                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors cursor-pointer">
+                                    <x-heroicon-o-trash class="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
@@ -111,8 +121,8 @@
                 </div>
 
                 <div class="mt-8 pt-5 border-t border-gray-100 flex justify-end gap-2">
-                    <a href="{{ route('resep.index') }}" class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Batal</a>
-                    <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">Simpan Resep</button>
+                    <a href="{{ route('resep.index') }}" class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">Batal</a>
+                    <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-primary-container rounded-xl transition-colors cursor-pointer shadow-sm">Simpan Resep</button>
                 </div>
             </form>
         </div>
@@ -122,18 +132,23 @@
 <template id="bahanBakuTemplate">
     <div class="flex gap-3 items-start bahan-baku-row mt-3">
         <div class="flex-1">
-            <select name="bahan_baku_id[]" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white hpp-select" required onchange="calculateHPP()">
-                <option value="" disabled selected data-harga="0">-- Pilih Bahan --</option>
-                @foreach($bahanBakus as $bb)
-                    <option value="{{ $bb->id }}" data-harga="{{ $bb->harga_satuan }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
-                @endforeach
-            </select>
+            <div class="relative">
+                <select name="bahan_baku_id[]" class="w-full appearance-none px-3.5 py-2.5 pr-9 text-sm font-semibold border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white shadow-xs cursor-pointer hpp-select" required onchange="calculateHPP()">
+                    <option value="" disabled selected data-harga="0">-- Pilih Bahan --</option>
+                    @foreach($bahanBakus as $bb)
+                        <option value="{{ $bb->id }}" data-harga="{{ $bb->harga_satuan }}">{{ $bb->nama_bahan }} ({{ $bb->satuan->nama_satuan ?? '-' }})</option>
+                    @endforeach
+                </select>
+                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </span>
+            </div>
         </div>
         <div class="w-32">
             <x-ui.input-decimal name="jumlah_kebutuhan[]" class="hpp-qty" required="true" oninput="calculateHPP()" />
         </div>
         <div class="pt-2">
-            <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
+            <button type="button" onclick="this.closest('.bahan-baku-row').remove(); calculateHPP()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors cursor-pointer">
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </button>
         </div>

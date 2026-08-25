@@ -8,6 +8,12 @@ class DetailPesanan extends BaseModel
 
     protected $guarded = [];
 
+    protected $casts = [
+        'is_tambahan' => 'boolean',
+        'batch_pesanan' => 'integer',
+        'waktu_dipesan' => 'datetime',
+    ];
+
     public function pesanan()
     {
         return $this->belongsTo(Pesanan::class, 'pesanan_id');

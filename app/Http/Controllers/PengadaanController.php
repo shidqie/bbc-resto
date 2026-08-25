@@ -69,42 +69,32 @@ class PengadaanController extends Controller
     {
         $pesanan = null;
         $items = collect();
+        $itemsCukup = collect();
+        $resepBelumLengkap = false;
+        $missingMenus = [];
         $error = null;
-        $jenisCateringId = JenisPesanan::where('kode_jenis', 'CAT')->value('id');
-        $jenisNasiBoxId = JenisPesanan::where('kode_jenis', 'BOX')->value('id');
+        $jenisCateringId = JenisPesanan::whereIn('kode_jenis', ['KT', 'CAT', 'CATERING'])->value('id') ?? 2;
+        $jenisNasiBoxId = JenisPesanan::whereIn('kode_jenis', ['NB', 'BOX', 'NASI_BOX'])->value('id') ?? 3;
 
         if ($request->filled('pesanan_id') || $request->filled('kode_pesanan')) {
-            $query = Pesanan::with(['detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering'])
+            $query = Pesanan::with(['pelanggan', 'detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket.menu'])
                 ->whereIn('jenis_pesanan_id', [$jenisCateringId, $jenisNasiBoxId])
                 ->whereNotIn('status_pesanan_id', [1, 6]);
 
             if ($request->filled('pesanan_id')) {
                 $pesanan = (clone $query)->find($request->pesanan_id);
-            } else {
-                $pesanan = (clone $query)->where('id_pesanan', trim($request->kode_pesanan))->first();
+            } elseif ($request->filled('kode_pesanan')) {
+                $pesanan = (clone $query)->where('id_pesanan', $request->kode_pesanan)->first();
             }
 
             if (! $pesanan) {
-                $error = 'Kode pesanan katering tidak ditemukan atau belum dapat dibuatkan permintaan.';
+                $error = 'Pesanan tidak ditemukan atau status pesanan tidak valid untuk pengadaan.';
             } else {
-                $kebutuhan = app(KebutuhanBahanService::class)->kebutuhanBahanPesanan($pesanan);
-                $bahanIds = $kebutuhan->pluck('bahan_baku_id')->unique();
-                $bahans = BahanBaku::with('satuan')->whereIn('id', $bahanIds)->get()->keyBy('id');
-                $stoks = StokBahan::where('jenis_persediaan', StokBahan::JENIS_CATERING)
-                    ->whereIn('bahan_baku_id', $bahanIds)
-                    ->get()->keyBy('bahan_baku_id');
-
-                $items = $kebutuhan->map(function ($row) use ($bahans, $stoks) {
-                    $bahan = $bahans->get($row['bahan_baku_id']);
-                    $stok = $stoks->get($row['bahan_baku_id']);
-
-                    return [
-                        'bahan_baku' => $bahan,
-                        'kebutuhan' => (float) $row['kebutuhan'],
-                        'stok_saat_ini' => (float) ($stok->jumlah_stok ?? 0),
-                        'stok_minimum' => (float) ($bahan->stok_minimal ?? $stok->stok_minimal ?? 0),
-                    ];
-                })->values();
+                $hasil = app(KebutuhanBahanService::class)->hitungPengadaanPesanan($pesanan, 'catering');
+                $items = $hasil['items_kurang'];
+                $itemsCukup = $hasil['items_cukup'];
+                $resepBelumLengkap = ! $hasil['resep_lengkap'];
+                $missingMenus = $hasil['missing_menus'];
             }
         }
 
@@ -115,7 +105,7 @@ class PengadaanController extends Controller
 
         $kodePreview = $this->kodePermintaan();
 
-        return view('admin.pengadaan.permintaan.catering-create', compact('pesanan', 'items', 'daftarPesanan', 'kodePreview', 'error'));
+        return view('admin.pengadaan.permintaan.catering-create', compact('pesanan', 'items', 'itemsCukup', 'daftarPesanan', 'kodePreview', 'error', 'resepBelumLengkap', 'missingMenus'));
     }
 
     protected function formPermintaan(string $jenis)
@@ -161,8 +151,8 @@ class PengadaanController extends Controller
 
     public function storeCatering(Request $request)
     {
-        $jenisCateringId = JenisPesanan::where('kode_jenis', 'CAT')->value('id');
-        $jenisNasiBoxId = JenisPesanan::where('kode_jenis', 'BOX')->value('id');
+        $jenisCateringId = JenisPesanan::whereIn('kode_jenis', ['KT', 'CAT', 'CATERING'])->value('id') ?? 2;
+        $jenisNasiBoxId = JenisPesanan::whereIn('kode_jenis', ['NB', 'BOX', 'NASI_BOX'])->value('id') ?? 3;
         $pesanan = $request->filled('pesanan_id')
             ? Pesanan::whereIn('jenis_pesanan_id', [$jenisCateringId, $jenisNasiBoxId])->find($request->pesanan_id)
             : null;

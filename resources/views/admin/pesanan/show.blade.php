@@ -8,7 +8,7 @@
     <div class="px-6 py-5 border-b border-gray-100 shrink-0 bg-white sticky top-0 z-10 shadow-sm">
         <x-ui.page-header
             title="{{ $pesanan->id_pesanan ?? 'DIN-'.$pesanan->id }}"
-            subtitle="Dibuat {{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('d F Y, H:i') }} &bull; {{ optional($pesanan->jenis_pesanan)->nama_jenis ?? '-' }}"
+            subtitle="Dibuat {{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->translatedFormat('d F Y, H:i') }} &bull; {{ optional($pesanan->jenis_pesanan)->nama_jenis ?? '-' }}"
             :breadcrumbs="['Penjualan', 'Semua Pesanan', 'Detail']">
             <x-slot:actions>
                 <div class="flex items-center gap-2">
@@ -51,7 +51,7 @@
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-5 py-3 font-semibold text-gray-500">Tanggal dan Waktu</td>
-                            <td class="px-5 py-3 text-gray-900">{{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('j F Y, H:i') }} WIB</td>
+                            <td class="px-5 py-3 text-gray-900">{{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->translatedFormat('j F Y, H:i') }} WIB</td>
                         </tr>
                         @php
                             $nama = 'Tamu';
@@ -100,17 +100,9 @@
                             <td class="px-5 py-3 text-gray-900 font-bold">{{ $payStatus }}</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
-                            <td class="px-5 py-3 font-semibold text-gray-500">Kasir/Pelayan</td>
-                            <td class="px-5 py-3 text-gray-900">
-                                @if($pesanan->kasir)
-                                    Kasir: {{ $pesanan->kasir->nama }}
-                                @endif
-                                @if($pesanan->pelayan)
-                                    @if($pesanan->kasir) | @endif Pelayan: {{ $pesanan->pelayan->nama }}
-                                @endif
-                                @if(!$pesanan->kasir && !$pesanan->pelayan)
-                                    -
-                                @endif
+                            <td class="px-5 py-3 font-semibold text-gray-500">Kasir</td>
+                            <td class="px-5 py-3 text-gray-900 font-medium">
+                                {{ $pesanan->kasir->nama ?? ($pesanan->pembayaran->whereNotNull('diverifikasi_oleh')->first()?->diverifikasi_oleh_pengguna?->nama ?? '-') }}
                             </td>
                         </tr>
                         <tr class="hover:bg-slate-50">
@@ -161,17 +153,21 @@
                     <div class="flex items-center text-xs font-bold gap-2 text-gray-400 flex-wrap">
                         @php
                             $steps = [
-                                1 => 'Pesanan Masuk',
+                                1 => 'Menunggu Konfirmasi',
                                 2 => 'Dikonfirmasi',
-                                3 => 'Diproses Dapur',
-                                4 => 'Siap Disajikan',
+                                3 => 'Sedang Diproses',
+                                4 => 'Pesanan Siap',
+                                8 => 'Pesanan Telah Dihidangkan',
                                 5 => 'Selesai'
                             ];
-                            $current = $pesanan->status_pesanan_id;
+                            $current = (int) $pesanan->status_pesanan_id;
+                            $orderRank = [1 => 1, 2 => 2, 3 => 3, 4 => 4, 8 => 5, 5 => 6];
+                            $currentRank = $orderRank[$current] ?? 0;
                         @endphp
                         @foreach($steps as $k => $label)
+                            @php $thisRank = $orderRank[$k] ?? 0; @endphp
                             <div class="flex items-center gap-2 mb-2">
-                                <span class="px-2 py-1 rounded {{ $k == $current ? 'bg-primary text-white' : ($k < $current ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400') }}">{{ $label }}</span>
+                                <span class="px-2 py-1 rounded {{ $k == $current ? 'bg-primary text-white' : ($thisRank < $currentRank ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400') }}">{{ $label }}</span>
                                 @if(!$loop->last)
                                     <x-heroicon-o-arrow-right class="w-3 h-3" />
                                 @endif
@@ -181,12 +177,13 @@
                 </div>
 
                 <div class="border-t border-gray-100 pt-4 flex gap-3 flex-wrap">
-                    <button onclick="window.showToast('info', 'Cetak KOT segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Cetak KOT</button>
+                    <button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-dapur', '_blank')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm cursor-pointer">Cetak Struk Dapur Checker</button>
+                    <button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-meja', '_blank')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm cursor-pointer">Cetak Meja Checker</button>
                     <button onclick="window.showToast('info', 'Ubah Pesanan segera hadir')" class="px-4 py-2 border border-gray-200 text-gray-700 font-bold text-sm rounded-lg hover:bg-gray-50 shadow-sm">Ubah Pesanan</button>
                     <button onclick="window.showToast('info', 'Proses Pembayaran segera hadir')" class="px-4 py-2 bg-primary-soft text-primary font-bold text-sm rounded-lg hover:bg-primary/10 shadow-sm">Proses Pembayaran</button>
                     <button onclick="window.showToast('info', 'Batalkan segera hadir')" class="px-4 py-2 bg-red-50 text-red-600 font-bold text-sm rounded-lg hover:bg-red-100 shadow-sm">Batalkan Pesanan</button>
                     @if($pesanan->status_pesanan_id == 5)
-                        <button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" class="px-4 py-2 bg-primary text-white font-bold text-sm rounded-lg hover:bg-primary-container shadow-sm">Cetak Bukti Transaksi</button>
+                        <button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" class="px-4 py-2 bg-primary text-white font-bold text-sm rounded-lg hover:bg-primary-container shadow-sm cursor-pointer">Cetak Struk Pembayaran</button>
                         <button onclick="window.showToast('info', 'Selesaikan Pesanan segera hadir')" class="px-4 py-2 bg-emerald-50 text-emerald-700 font-bold text-sm rounded-lg hover:bg-emerald-100 shadow-sm">Selesaikan Pesanan</button>
                     @endif
                 </div>
@@ -208,7 +205,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Tanggal Acara</p>
-                        <p class="text-sm font-bold text-gray-900">{{ $pesanan->jadwal_pesanan ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->format('d F Y') : '-' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $pesanan->jadwal_pesanan ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->translatedFormat('d F Y') : '-' }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Waktu Acara</p>
@@ -254,8 +251,8 @@
                                     $totalBayar = $pesanan->pembayaran->sum('jumlah_dibayar');
                                     $dpPaid = $totalBayar >= $dpAmount;
                                     $lunasPaid = $totalBayar >= $pesanan->total_tagihan;
-                                    $jtDp = \Carbon\Carbon::parse($pesanan->dibuat_pada)->format('d F Y');
-                                    $jtLunas = $pesanan->jadwal_pesanan ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->subDays(3)->format('d F Y') : '-';
+                                    $jtDp = \Carbon\Carbon::parse($pesanan->dibuat_pada)->translatedFormat('d F Y');
+                                    $jtLunas = $pesanan->jadwal_pesanan ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->subDays(3)->translatedFormat('d F Y') : '-';
                                 @endphp
                                 <tr class="border-b border-gray-100">
                                     <td class="px-4 py-2 font-medium text-gray-900">DP 50%</td>
@@ -331,7 +328,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Tanggal Dibutuhkan</p>
-                        <p class="text-sm font-bold text-gray-900">{{ $pesanan->jadwal_pesanan ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->format('d F Y') : '-' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $pesanan->jadwal_pesanan ? \Carbon\Carbon::parse($pesanan->jadwal_pesanan->tanggal_acara)->translatedFormat('d F Y') : '-' }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 font-medium">Waktu Dibutuhkan</p>
@@ -565,7 +562,7 @@
                             <div>
                                 <span class="block text-sm font-bold text-gray-900">{{ optional($bayar->metode_pembayaran)->nama_metode ?? 'CASH' }}</span>
                                 <span class="block text-xs text-gray-500 font-medium mt-0.5">
-                                    {{ \Carbon\Carbon::parse($bayar->dibayar_pada)->format('d M Y, H:i') }} &bull; {{ optional($bayar->jenis_pembayaran)->nama_jenis ?? 'Lunas' }}
+                                    {{ \Carbon\Carbon::parse($bayar->dibayar_pada)->translatedFormat('d M Y, H:i') }} &bull; {{ optional($bayar->jenis_pembayaran)->nama_jenis ?? 'Lunas' }}
                                 </span>
                             </div>
                         </div>

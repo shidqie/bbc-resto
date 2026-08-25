@@ -412,10 +412,15 @@ function addBahanBakuRowResep(selId = '', qty = '', readOnly = false, keterangan
     row.innerHTML = `
         <div>
             <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">Bahan Baku *</label>
-            <select name="bahan_baku_id[]" required ${selDisabled} class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">
-                <option value="" disabled ${selId ? '' : 'selected'}>-- Pilih Bahan --</option>
-                ${bahanOptionHtml(selId)}
-            </select>
+            <div class="relative">
+                <select name="bahan_baku_id[]" required ${selDisabled} class="w-full appearance-none px-2.5 py-1.5 pr-7 text-xs font-semibold border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white shadow-xs cursor-pointer">
+                    <option value="" disabled ${selId ? '' : 'selected'}>-- Pilih Bahan --</option>
+                    ${bahanOptionHtml(selId)}
+                </select>
+                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </span>
+            </div>
         </div>
         <div>
             <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">Takaran *</label>
@@ -570,8 +575,14 @@ function menuSatuanHtml(selId, name) {
         const st = m.resep_lengkap ? ' ✓' : (m.resep_menu_count > 0 ? ` (${m.resep_menu_count} bahan)` : '');
         return `<option value="${m.id}" ${m.id == selId ? 'selected' : ''}>${m.nama_menu}${st}</option>`;
     }).join('');
-    return `<select name="${name}" required class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none bg-white">` +
-        `<option value="" disabled ${selId ? '' : 'selected'}>-- Pilih Menu --</option>${opts}</select>`;
+    return `<div class="relative">
+        <select name="${name}" required class="w-full appearance-none px-2.5 py-1.5 pr-7 text-xs font-semibold border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white shadow-xs cursor-pointer">
+            <option value="" disabled ${selId ? '' : 'selected'}>-- Pilih Menu --</option>${opts}
+        </select>
+        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </span>
+    </div>`;
 }
 
 let tetapIdx = 0;
@@ -594,7 +605,12 @@ function addTetapRow(data = null) {
         </div>
         <div>
             <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">Satuan Sajian</label>
-            <select name="tetap[${idx}][satuan_sajian]" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none bg-white">${satuanSajianHtml(satuan)}</select>
+            <div class="relative">
+                <select name="tetap[${idx}][satuan_sajian]" class="w-full appearance-none px-2.5 py-1.5 pr-7 text-xs font-semibold border border-gray-200 rounded-xl outline-none bg-white shadow-xs cursor-pointer">${satuanSajianHtml(satuan)}</select>
+                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </span>
+            </div>
         </div>
         <div class="pt-4">
             <button type="button" onclick="this.closest('.tetap-row').remove()" class="w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="Hapus">
@@ -660,7 +676,12 @@ function opsiHtml(kelIdx, o = null) {
                 </div>
             </div>
             <div>
-                <select name="kelompok[${kelIdx}][opsi][][satuan_sajian]" class="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg outline-none bg-white">${satuanSajianHtml(satuan)}</select>
+                <div class="relative">
+                    <select name="kelompok[${kelIdx}][opsi][][satuan_sajian]" class="w-full appearance-none px-2.5 py-1.5 pr-7 text-xs font-semibold border border-gray-200 rounded-xl outline-none bg-white shadow-xs cursor-pointer">${satuanSajianHtml(satuan)}</select>
+                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </div>
             </div>
             <button type="button" onclick="this.closest('.opsi-row').remove()" class="w-6 h-6 flex items-center justify-center rounded-full text-red-500 hover:bg-red-50 transition-colors" title="Hapus">
                 <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>

@@ -3,7 +3,9 @@
 <head>
     <title>Laporan Persediaan Bahan Baku</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; color: #333; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
+        * { font-family: 'Outfit', sans-serif !important; }
+        body { font-family: 'Outfit', sans-serif !important; font-size: 12px; color: #333; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .header h2 { margin: 0 0 5px 0; font-size: 18px; text-transform: uppercase; }
         .header h3 { margin: 0 0 5px 0; font-size: 14px; font-weight: normal; }

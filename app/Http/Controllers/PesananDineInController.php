@@ -18,20 +18,26 @@ class PesananDineInController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('id_pesanan', 'like', "%{$search}%")
+                  ->orWhere('catatan', 'like', "%{$search}%")
                   ->orWhereHas('pelanggan', function ($p) use ($search) {
                       $p->where('nama', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('meja', function ($m) use ($search) {
+                      $m->where('nomor_meja', 'like', "%{$search}%");
                   });
             });
         }
 
         $status = $request->status ?? 'all';
         $statusFilter = match ($status) {
-            'ditinjau' => 1,
-            'terkonfirmasi' => 2,
-            'diproses' => 3,
-            'selesai' => 5,
-            'dibatalkan' => 6,
-            default => null,
+            '1', 'ditinjau', 'baru', 'menunggu', 'menunggu_konfirmasi' => 1,
+            '2', 'terkonfirmasi', 'dikonfirmasi' => 2,
+            '3', 'diproses', 'sedang_diproses' => 3,
+            '4', 'siap', 'siap_disajikan', 'pesanan_siap' => 4,
+            '8', 'dihidangkan', 'telah_dihidangkan', 'pesanan_telah_dihidangkan' => 8,
+            '5', 'selesai' => 5,
+            '6', 'dibatalkan' => 6,
+            default => is_numeric($status) ? (int) $status : null,
         };
 
         if ($statusFilter !== null) {
@@ -77,9 +83,11 @@ class PesananDineInController extends Controller
         $pesanans = $query->paginate(10)->withQueryString();
 
         $stats = [
-            'baru'     => Pesanan::where('jenis_pesanan_id', 1)->where('status_pesanan_id', 1)->count(),
-            'diproses' => Pesanan::where('jenis_pesanan_id', 1)->whereIn('status_pesanan_id', [2, 3, 4])->count(),
-            'selesai'  => Pesanan::where('jenis_pesanan_id', 1)->where('status_pesanan_id', 5)->count(),
+            'baru'           => Pesanan::where('jenis_pesanan_id', 1)->where('status_pesanan_id', 1)->count(),
+            'diproses'       => Pesanan::where('jenis_pesanan_id', 1)->whereIn('status_pesanan_id', [2, 3])->count(),
+            'siap_disajikan' => Pesanan::where('jenis_pesanan_id', 1)->where('status_pesanan_id', 4)->count(),
+            'dihidangkan'    => Pesanan::where('jenis_pesanan_id', 1)->where('status_pesanan_id', 8)->count(),
+            'selesai'        => Pesanan::where('jenis_pesanan_id', 1)->where('status_pesanan_id', 5)->count(),
         ];
 
         return view('admin.pesanan.dine-in.index', compact('pesanans', 'stats', 'status'));
@@ -88,12 +96,42 @@ class PesananDineInController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status_pesanan_id' => 'required|integer|in:1,2,3,4,5,6',
+            'status_pesanan_id' => 'required|integer|in:1,2,3,4,5,6,8',
         ]);
 
-        $pesanan = Pesanan::where('jenis_pesanan_id', 1)->findOrFail($id);
-        $pesanan->update(['status_pesanan_id' => $request->status_pesanan_id]);
+        $roleName = auth()->user()->peran?->nama_peran ?? '';
+        $isKasir = in_array($roleName, ['Kasir', 'Pelayan', 'Pemilik', 'Admin', 'Super Admin']);
+        $isDapur = in_array($roleName, ['Dapur', 'Tim Dapur', 'Pemilik', 'Admin', 'Super Admin']);
+        $isManajer = in_array($roleName, ['Manajer', 'Manager']);
 
-        return redirect()->back()->with('success', "Status pesanan {$pesanan->id_pesanan} berhasil diperbarui.");
+        if ($isManajer) {
+            return redirect()->back()->with('error', 'Aktor Manajer tidak memiliki hak untuk mengubah status pesanan konsumen.');
+        }
+
+        $pesanan = Pesanan::where('jenis_pesanan_id', 1)->findOrFail($id);
+        $newStatus = (int) $request->status_pesanan_id;
+
+        // Role check
+        if (in_array($newStatus, [2, 5, 6, 8]) && !$isKasir) {
+            return redirect()->back()->with('error', 'Hanya Kasir/Pelayan yang dapat mengonfirmasi, menghidangkan, menyelesaikan, atau membatalkan pesanan Dine-In.');
+        }
+        if (in_array($newStatus, [3, 4]) && !$isDapur) {
+            return redirect()->back()->with('error', 'Hanya Tim Dapur yang dapat memproses dan menyiapkan pesanan.');
+        }
+
+        $pesanan->update(['status_pesanan_id' => $newStatus]);
+
+        $statusName = match ($newStatus) {
+            1 => 'Menunggu Konfirmasi',
+            2 => 'Dikonfirmasi',
+            3 => 'Sedang Diproses',
+            4 => 'Pesanan Siap',
+            8 => 'Pesanan Telah Dihidangkan',
+            5 => 'Selesai',
+            6 => 'Dibatalkan',
+            default => 'Diperbarui',
+        };
+
+        return redirect()->back()->with('success', "Status pesanan {$pesanan->id_pesanan} berhasil diubah menjadi {$statusName}.");
     }
 }

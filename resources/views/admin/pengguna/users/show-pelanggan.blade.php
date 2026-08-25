@@ -68,7 +68,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Daftar</label>
-                        <div class="text-gray-900">{{ $pelanggan->dibuat_pada ? $pelanggan->dibuat_pada->format('d M Y') : '-' }}</div>
+                        <div class="text-gray-900">{{ $pelanggan->dibuat_pada ? $pelanggan->dibuat_pada->translatedFormat('d M Y') : '-' }}</div>
                     </div>
                 </div>
             </div>
@@ -106,7 +106,7 @@
                                     <div class="text-xs text-gray-500">{{ optional($pesanan->jenis_pesanan)->nama_jenis ?? 'Pesanan' }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-gray-900">{{ $pesanan->tanggal_pesanan ? \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->format('d M Y') : '-' }}</div>
+                                    <div class="text-gray-900">{{ $pesanan->tanggal_pesanan ? \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->translatedFormat('d M Y') : '-' }}</div>
                                     <div class="text-xs text-gray-500">{{ $pesanan->tanggal_pesanan ? \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->format('H:i') : '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3">

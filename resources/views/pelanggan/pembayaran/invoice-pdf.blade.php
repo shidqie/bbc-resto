@@ -1,421 +1,696 @@
+@php
+    \Carbon\Carbon::setLocale('id');
+
+    $logoPath = public_path('images/logo-saung.png');
+    $logoBase64 = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : '';
+
+    $fontRegularPath = public_path('fonts/Outfit-Regular.ttf');
+    $fontBoldPath = public_path('fonts/Outfit-Bold.ttf');
+
+    $outfitRegular = file_exists($fontRegularPath) ? base64_encode(file_get_contents($fontRegularPath)) : '';
+    $outfitBold = file_exists($fontBoldPath) ? base64_encode(file_get_contents($fontBoldPath)) : $outfitRegular;
+
+    $namaPemesan = $namaPemesan ?? optional($pesanan->pelanggan)->nama
+        ?? optional($pesanan->jadwal_pesanan)->nama_penerima
+        ?? optional($pesanan->pengiriman)->nama_penerima
+        ?? \App\Models\PesananDinein::find($pesanan->id)?->nama_konsumen
+        ?? '-';
+    $kontak = $kontak ?? optional($pesanan->pelanggan)->nomor_telepon
+        ?? optional($pesanan->jadwal_pesanan)->nomor_telepon_penerima
+        ?? optional($pesanan->pengiriman)->nomor_telepon_penerima
+        ?? '-';
+    $emailPemesan = optional($pesanan->pelanggan)->email;
+    $type = $type ?? (match ($pesanan->jenis_pesanan_id) { 2 => 'catering', 3 => 'nasi_box', default => 'dine_in' });
+    $layananTitle = $type === 'nasi_box' ? 'BUKTI PEMESANAN NASI BOX' : ($type === 'catering' ? 'BUKTI PEMESANAN KATERING' : 'BUKTI PEMESANAN');
+
+    $dpTerbayar = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
+    $totalTagihan = (float) $pesanan->total_tagihan;
+    $dpPersen = $pesanan->persentaseDP();
+    $isLunas = $dpTerbayar >= $totalTagihan;
+    $sisaPembayaran = max(0, $totalTagihan - $dpTerbayar);
+
+    $statusText = $isLunas ? 'LUNAS' : ($dpTerbayar > 0 ? 'DP TERVERIFIKASI' : 'MENUNGGU PEMBAYARAN');
+    $statusClass = $isLunas ? 'status-lunas' : ($dpTerbayar > 0 ? 'status-dp' : 'status-pending');
+
+    $pembayaranTerakhir = $pesanan->pembayaran->where('status_verifikasi', 'diterima')->last() 
+        ?? $pesanan->pembayaran->last();
+    $tglBayar = $pembayaranTerakhir ? \Carbon\Carbon::parse($pembayaranTerakhir->tanggal_pembayaran ?? $pembayaranTerakhir->created_at)->locale('id')->translatedFormat('d F Y') : '-';
+    $wktBayar = $pembayaranTerakhir ? \Carbon\Carbon::parse($pembayaranTerakhir->tanggal_pembayaran ?? $pembayaranTerakhir->created_at)->format('H:i') . ' WIB' : '-';
+
+    $metodeBayarList = $pesanan->pembayaran
+        ->where('status_verifikasi', 'diterima')
+        ->filter(fn($p) => !empty($p->metode_pembayaran))
+        ->map(function($p) {
+            return match(strtolower($p->metode_pembayaran)) {
+                'transfer_bank', 'transfer' => 'Transfer Bank',
+                'qris' => 'QRIS',
+                'tunai', 'cash' => 'Tunai',
+                default => ucwords(str_replace('_', ' ', $p->metode_pembayaran))
+            };
+        })
+        ->unique()
+        ->values();
+
+    if ($metodeBayarList->isEmpty()) {
+        $metodeBayarList = $pesanan->pembayaran
+            ->filter(fn($p) => !empty($p->metode_pembayaran))
+            ->map(function($p) {
+                return match(strtolower($p->metode_pembayaran)) {
+                    'transfer_bank', 'transfer' => 'Transfer Bank',
+                    'qris' => 'QRIS',
+                    'tunai', 'cash' => 'Tunai',
+                    default => ucwords(str_replace('_', ' ', $p->metode_pembayaran))
+                };
+            })
+            ->unique()
+            ->values();
+    }
+
+    $metodeBayarFormatted = $metodeBayarList->isNotEmpty() 
+        ? $metodeBayarList->join(', ')
+        : (match(strtolower($pesanan->metode_pembayaran ?? '')) {
+            'transfer_bank', 'transfer' => 'Transfer Bank',
+            'qris' => 'QRIS',
+            'tunai', 'cash' => 'Tunai',
+            default => (!empty($pesanan->metode_pembayaran) ? ucwords(str_replace('_', ' ', $pesanan->metode_pembayaran)) : 'Transfer Bank')
+        });
+
+    $tglAcaraRaw = $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->tanggal_acara : null;
+    $tglAcaraStr = $tglAcaraRaw ? \Carbon\Carbon::parse($tglAcaraRaw)->locale('id')->translatedFormat('d F Y') : '-';
+    
+    $waktuAcaraRaw = optional($pesanan->jadwal_pesanan)->waktu_pengiriman 
+        ?? optional($pesanan->jadwal_pesanan)->waktu_acara 
+        ?? ($tglAcaraRaw && strlen($tglAcaraRaw) > 10 ? \Carbon\Carbon::parse($tglAcaraRaw)->format('H:i') : null);
+    $waktuAcaraStr = $waktuAcaraRaw ? (\Carbon\Carbon::parse($waktuAcaraRaw)->format('H:i') . ' WIB') : '-';
+
+    $batasPelunasanStr = '-';
+    if($tglAcaraRaw) {
+        $batasPelunasanStr = \Carbon\Carbon::parse($tglAcaraRaw)->subDays(3)->locale('id')->translatedFormat('d F Y');
+    }
+
+    $tglPesanStr = \Carbon\Carbon::parse($pesanan->dibuat_pada ?? $pesanan->created_at)->locale('id')->translatedFormat('d F Y');
+    $tglCetakStr = \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y');
+
+    $ongkirNominal = (float) ($pesanan->ongkir ?? optional($pesanan->pengiriman)->biaya_pengiriman ?? 0);
+    $alamatRaw = optional($pesanan->pengiriman)->alamat_pengiriman ?? optional($pesanan->jadwal_pesanan)->alamat_pengiriman ?? '';
+    $isPickupAddress = in_array(strtolower(trim($alamatRaw)), ['-', 'diambil di toko (pickup)', 'diambil di resto (pickup)', 'pickup', 'ambil_sendiri', 'diambil']);
+
+    $rawMetodeKirim = strtolower($pesanan->metode_pengiriman ?? optional($pesanan->pengiriman)->metode_pengiriman ?? '');
+    $isDelivery = in_array($rawMetodeKirim, ['delivery', 'diantar', 'kurir'])
+        || !empty($pesanan->pengiriman)
+        || $ongkirNominal > 0
+        || (!empty($alamatRaw) && !$isPickupAddress);
+
+    $metodeKirim = $isDelivery ? 'Diantar' : 'Diambil di Resto';
+    $alamatKirim = $isDelivery 
+        ? ($alamatRaw ?: (optional($pesanan->pelanggan)->alamat ?: '-'))
+        : 'Diambil di Resto';
+    $catatanPesanan = $pesanan->catatan ?? optional($pesanan->jadwal_pesanan)->catatan ?? null;
+
+    $statusPesananText = optional($pesanan->status_pesanan)->nama_status 
+        ?? match($pesanan->status_pesanan_id) {
+            1 => 'Menunggu Konfirmasi',
+            2 => 'Pesanan Dikonfirmasi',
+            3, 4 => 'Sedang Diproses',
+            5 => 'Siap Dikirim / Diambil',
+            6 => 'Selesai',
+            default => 'Pesanan Dikonfirmasi'
+        };
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Bukti Pembayaran - {{ $pesanan->id_pesanan }}</title>
+    <meta charset="utf-8">
+    <title>Bukti Pemesanan - {{ $pesanan->id_pesanan }}</title>
     <style>
-        @page {
-            size: A4;
-            margin: 0;
+        @if($outfitRegular)
+        @font-face {
+            font-family: 'Outfit';
+            font-style: normal;
+            font-weight: normal;
+            src: url('data:font/truetype;charset=utf-8;base64,{{ $outfitRegular }}') format('truetype');
         }
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #111827;
-            font-size: 13px;
-            line-height: 1.6;
+        @font-face {
+            font-family: 'Outfit';
+            font-style: normal;
+            font-weight: 400;
+            src: url('data:font/truetype;charset=utf-8;base64,{{ $outfitRegular }}') format('truetype');
+        }
+        @endif
+
+        @if($outfitBold)
+        @font-face {
+            font-family: 'Outfit';
+            font-style: normal;
+            font-weight: bold;
+            src: url('data:font/truetype;charset=utf-8;base64,{{ $outfitBold }}') format('truetype');
+        }
+        @font-face {
+            font-family: 'Outfit';
+            font-style: normal;
+            font-weight: 700;
+            src: url('data:font/truetype;charset=utf-8;base64,{{ $outfitBold }}') format('truetype');
+        }
+        @endif
+
+        @page {
+            size: A4 portrait;
+            margin: 18mm 20mm 18mm 20mm;
+        }
+
+        * {
             margin: 0;
             padding: 0;
-            background: #F3F4F6;
-        }
-        .a4-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 210mm;
-            min-height: 297mm;
-            margin: 20px auto;
-            background: #fff;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .bg-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        .container {
-            width: 100%;
-            padding: 40mm 25mm 30mm 25mm;
             box-sizing: border-box;
-            position: relative;
-            z-index: 10;
+            font-family: 'Outfit', sans-serif !important;
         }
-        .header {
-            margin-bottom: 40px;
+
+        html, body, table, td, th, tr, div, span, p, b, strong, small, h1, h2, h3, a, label, tbody, thead, tfoot {
+            font-family: 'Outfit', sans-serif !important;
         }
-        .header-title {
-            font-size: 28px;
-            font-weight: 800;
-            color: #064E3B; /* Emerald-900 */
-            margin: 0 0 5px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+
+        body {
+            font-family: 'Outfit', sans-serif !important;
+            font-size: 8.5pt;
+            color: #1f2937;
+            background: #ffffff;
+            line-height: 1.4;
+            padding: 18mm 20mm 18mm 20mm;
         }
-        .header-subtitle {
-            font-size: 16px;
-            color: #4B5563;
-            margin: 0;
-            font-weight: 500;
-            letter-spacing: 0.5px;
+
+        @media print {
+            body {
+                padding: 0;
+            }
         }
-        
-        .info-grid {
+
+        /* ─── HEADER KOP ─── */
+        .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 8px;
         }
-        .info-grid td {
-            vertical-align: top;
-            width: 50%;
+        .header-table td {
+            vertical-align: middle;
         }
-        .meta-table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        .meta-table td {
-            padding: 4px 0;
-        }
-        .meta-label {
-            color: #6B7280;
-            font-weight: 600;
-            width: 130px;
-        }
-        
-        .section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #111827;
-            text-transform: uppercase;
+        .brand-title {
+            font-size: 12.5pt;
+            font-weight: bold;
+            color: #0D3024;
             letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+        .brand-address {
+            font-size: 7.8pt;
+            color: #4b5563;
+            line-height: 1.35;
+        }
+
+        .divider-line {
+            border-bottom: 2px solid #0D3024;
             margin-bottom: 12px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid #E5E7EB;
         }
 
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
+        /* ─── JUDUL DOKUMEN TENGAH ─── */
+        .doc-title-centered {
+            text-align: center;
+            margin-bottom: 14px;
         }
-        .items-table th {
-            background-color: #F9FAFB;
-            color: #4B5563;
-            font-size: 12px;
-            font-weight: 700;
+        .doc-title-main {
+            font-size: 11.5pt;
+            font-weight: bold;
+            color: #111827;
             text-transform: uppercase;
-            padding: 10px 12px;
-            border-bottom: 1px solid #D1D5DB;
-            text-align: left;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
         }
-        .items-table td {
-            padding: 12px;
-            border-bottom: 1px solid #E5E7EB;
-            color: #111827;
-        }
-        .text-right { text-align: right !important; }
-        .text-center { text-align: center !important; }
-        .font-bold { font-weight: bold; }
-
-        .summary-grid {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 40px;
-        }
-        .summary-grid td {
-            vertical-align: top;
-        }
-        .payment-info {
-            width: 55%;
-            padding-right: 30px;
-        }
-        .payment-info-table td {
-            padding: 4px 0;
-            font-size: 12px;
-        }
-        .payment-info-table .label {
-            color: #6B7280;
-            font-weight: 600;
-            width: 130px;
-        }
-        .totals-table {
-            width: 45%;
-            border-collapse: collapse;
-            background-color: #F9FAFB;
-            border-radius: 8px;
-        }
-        .totals-table td {
-            padding: 8px 16px;
-        }
-        .totals-table .label {
-            color: #4B5563;
-            font-weight: 600;
-        }
-        .totals-table .value {
-            text-align: right;
-            font-weight: 700;
-            color: #111827;
-        }
-        .balance-row td {
-            border-top: 1px solid #D1D5DB;
-            padding-top: 12px;
-            font-size: 14px;
-        }
-        .balance-row .value {
-            color: #DC2626;
+        .doc-meta-main {
+            font-size: 8pt;
+            color: #4b5563;
+            margin-bottom: 5px;
         }
 
         .status-badge {
             display: inline-block;
-            padding: 4px 12px;
-            background: #ECFDF5;
-            color: #065F46;
-            border: 1px solid #6EE7B7;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 800;
+            padding: 2px 8px;
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
             letter-spacing: 0.5px;
+            border: 1px solid #111827;
+            color: #111827;
+            background: #ffffff;
+            border-radius: 2px;
+        }
+        .status-lunas {
+            border-color: #0D3024;
+            color: #0D3024;
+            background-color: #f2f7f4;
+        }
+        .status-dp {
+            border-color: #1E40AF;
+            color: #1E40AF;
+            background-color: #eff6ff;
+        }
+        .status-pending {
+            border-color: #92400E;
+            color: #92400E;
+            background-color: #fefce8;
         }
 
-        .alert-box {
-            background-color: #FEF2F2;
-            border-left: 4px solid #DC2626;
-            padding: 12px 16px;
-            margin-bottom: 30px;
+        /* ─── DATA PEMESANAN (2 KOLOM) ─── */
+        .section-title {
+            font-size: 8.2pt;
+            font-weight: bold;
+            color: #0D3024;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #e5e7eb;
         }
-        .alert-box p {
-            margin: 0;
-            color: #991B1B;
-            font-size: 12px;
-            line-height: 1.5;
+        .info-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
         }
-        
-        .footer {
-            margin-top: 50px;
+        .info-grid > tbody > tr > td {
+            vertical-align: top;
+            width: 50%;
+        }
+        .info-grid > tbody > tr > td:first-child {
+            padding-right: 14px;
+        }
+        .info-grid > tbody > tr > td:last-child {
+            padding-left: 14px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table td {
+            padding: 2px 0;
+            font-size: 8pt;
+            vertical-align: top;
+            line-height: 1.35;
+        }
+        .data-label {
+            width: 125px;
+            color: #4b5563;
+        }
+        .data-colon {
+            width: 10px;
+            text-align: center;
+            color: #9ca3af;
+        }
+        .data-value {
+            color: #111827;
+            font-weight: bold;
+        }
+
+        /* ─── TABEL RINCIAN PEMESANAN ─── */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            margin-bottom: 12px;
+            font-size: 8pt;
+        }
+        .items-table th {
+            background-color: #0D3024;
+            color: #ffffff;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 7.5pt;
+            letter-spacing: 0.5px;
+            padding: 5px 8px;
             text-align: left;
-            color: #4B5563;
-            font-size: 12px;
-            line-height: 1.6;
+            border: 1px solid #0D3024;
         }
-        .signature-area {
-            margin-top: 40px;
-            width: 200px;
-            border-top: 1px solid #9CA3AF;
-            padding-top: 8px;
+        .items-table td {
+            padding: 5px 8px;
+            border: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+        .items-table tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        .item-name {
             font-weight: bold;
             color: #111827;
+            font-size: 8.2pt;
         }
-        
-        .preview-toolbar {
-            background-color: #1F2937;
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 9999;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        .item-desc {
+            font-size: 7.2pt;
+            color: #4b5563;
+            font-style: italic;
+            margin-top: 2px;
+            line-height: 1.3;
         }
-        .preview-toolbar h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 500;
-        }
-        .btn-print {
-            background-color: #10B981;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            transition: background 0.2s;
-        }
-        .btn-print:hover {
-            background-color: #059669;
+        .table-total-row td {
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            font-size: 8.2pt;
+            padding: 6px 8px;
         }
 
-        @media print {
-            .a4-wrapper { padding: 0; margin: 0; max-width: 100%; min-height: auto; box-shadow: none; overflow: visible; }
-            .container { padding: 30mm 20mm; margin: 0; max-width: 100%; min-height: auto; }
-            .preview-toolbar { display: none !important; }
-            body { background: #fff; }
+        /* ─── RINCIAN PEMBAYARAN (2 KOLOM) ─── */
+        .payment-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
         }
+        .payment-grid > tbody > tr > td {
+            vertical-align: top;
+            width: 50%;
+        }
+        .payment-grid > tbody > tr > td:first-child {
+            padding-right: 14px;
+        }
+        .payment-grid > tbody > tr > td:last-child {
+            padding-left: 14px;
+        }
+
+        /* ─── KETENTUAN & CATATAN (PALING BAWAH) ─── */
+        .notes-box {
+            margin-top: 4px;
+            margin-bottom: 12px;
+            padding: 6px 10px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 3px;
+        }
+        .notes-title {
+            font-size: 7.5pt;
+            font-weight: bold;
+            color: #0D3024;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .notes-list {
+            font-size: 7.2pt;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+        .notes-list p {
+            margin-bottom: 2px;
+        }
+        .notes-list p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ─── FOOTER ─── */
+        .doc-footer {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 6px;
+            font-size: 7pt;
+            color: #6b7280;
+            display: table;
+            width: 100%;
+            line-height: 1.35;
+        }
+        .doc-footer-left {
+            display: table-cell;
+            text-align: left;
+            font-weight: bold;
+            color: #374151;
+            width: 40%;
+            vertical-align: top;
+        }
+        .doc-footer-right {
+            display: table-cell;
+            text-align: right;
+            font-style: italic;
+            width: 60%;
+            vertical-align: top;
+        }
+
+        /* ─── UTILS ─── */
+        .text-center { text-align: center !important; }
+        .text-right { text-align: right !important; }
+        .font-bold { font-weight: bold !important; }
+        .nowrap { white-space: nowrap !important; }
     </style>
 </head>
 <body>
 
-    @php
-        $dpTerbayar = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
-        $totalTagihan = $pesanan->total_tagihan;
-        $dpPersen = $pesanan->persentaseDP();
-        $sisaPelunasan = max(0, $totalTagihan - $dpTerbayar);
-        
-        $pembayaranTerakhir = $pesanan->pembayaran->where('status_verifikasi', 'diterima')->last();
-        $tglBayar = $pembayaranTerakhir ? \Carbon\Carbon::parse($pembayaranTerakhir->created_at)->translatedFormat('d F Y') : '-';
-        $wktBayar = $pembayaranTerakhir ? \Carbon\Carbon::parse($pembayaranTerakhir->created_at)->format('H.i') . ' WIB' : '-';
-        
-        $isLunas = $dpTerbayar >= $totalTagihan;
-        $statusText = $isLunas ? 'LUNAS' : ($dpTerbayar > 0 ? 'DP TELAH DIBAYAR' : 'BELUM DIBAYAR');
-        
-        $tglAcaraRaw = $pesanan->jadwal_pesanan ? $pesanan->jadwal_pesanan->tanggal_acara : null;
-        $tglAcaraStr = $tglAcaraRaw ? \Carbon\Carbon::parse($tglAcaraRaw)->translatedFormat('d F Y') : '-';
-        
-        $batasPelunasanStr = '-';
-        if($tglAcaraRaw) {
-            $batasPelunasanStr = \Carbon\Carbon::parse($tglAcaraRaw)->subDays(4)->translatedFormat('d F Y');
-        }
-        
-        $bgPath = public_path('images/buktipembayaran.png');
-        $bgBase64 = base64_encode(file_get_contents($bgPath));
-        $bgSrc = 'data:image/png;base64,' . $bgBase64;
-    @endphp
+    {{-- ── HEADER KOP RESTORAN ── --}}
+    <table class="header-table">
+        <tr>
+            @if($logoBase64)
+            <td style="width: 52px; padding-right: 12px;">
+                <img src="{{ $logoBase64 }}" style="width: 48px; height: auto;" alt="Logo Saung Babakan Cinta" />
+            </td>
+            @endif
+            <td>
+                <div class="brand-title">RUMAH MAKAN SAUNG BABAKAN CINTA</div>
+                <div class="brand-address">
+                    Jl. Ciloa No. KM 6, Pasirhalang, Kec. Cisarua, Kabupaten Bandung Barat, Jawa Barat 40551
+                </div>
+            </td>
+        </tr>
+    </table>
 
-    <div class="preview-toolbar">
-        <h3>Preview Bukti Pembayaran</h3>
-        <button class="btn-print" onclick="window.print()">
-            <svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-            Unduh PDF / Cetak
-        </button>
+    <div class="divider-line"></div>
+
+    {{-- ── JUDUL DOKUMEN DI TENGAH ── --}}
+    <div class="doc-title-centered">
+        <div class="doc-title-main">{{ $layananTitle }}</div>
+        <div class="doc-meta-main">
+            No. Pesanan : <strong>{{ $pesanan->id_pesanan }}</strong> &bull; Tanggal Pemesanan : {{ $tglPesanStr }}
+        </div>
+        <div>
+            <span class="status-badge {{ $statusClass }}">{{ $statusText }}</span>
+        </div>
     </div>
 
-    <div class="a4-wrapper">
-        <img src="{{ $bgSrc }}" class="bg-image" />
-    
-        <div class="container">
-        
-        <div class="header">
-            <h1 class="header-title">SAUNG BABAKAN CINTA</h1>
-            <p class="header-subtitle">{{ $isLunas ? 'Bukti Pembayaran Lunas' : 'Bukti Pembayaran DP' }}</p>
-        </div>
-        
-        <table class="info-grid">
-            <tr>
-                <td>
-                    <table class="meta-table">
-                        <tr>
-                            <td class="meta-label">Kode Pesanan</td>
-                            <td class="font-bold">: {{ $pesanan->id_pesanan }}</td>
-                        </tr>
-                        <tr>
-                            <td class="meta-label">Tanggal Pesanan</td>
-                            <td>: {{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->translatedFormat('d F Y') }}</td>
-                        </tr>
-                        <tr>
-                            <td class="meta-label">Jenis Pesanan</td>
-                            <td>: {{ $type === 'nasi_box' ? 'Nasi Box' : ($type === 'catering' ? 'Katering' : 'Resto / Dine In') }}</td>
-                        </tr>
-                    </table>
-                </td>
-                <td>
-                    <table class="meta-table">
-                        <tr>
-                            <td class="meta-label">Nama Pemesan</td>
-                            <td class="font-bold">: {{ $namaPemesan }}</td>
-                        </tr>
-                        <tr>
-                            <td class="meta-label">Tanggal Acara</td>
-                            <td>: {{ $tglAcaraStr }}</td>
-                        </tr>
-                        <tr>
-                            <td class="meta-label">Status</td>
-                            <td>: <span class="status-badge">{{ $statusText }}</span></td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
+    {{-- ── DATA PEMESANAN (2 KOLOM) ── --}}
+    <div class="section-title">Data Pemesanan</div>
 
-        <div class="section-title">Rincian Pemesanan</div>
-        
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th style="width: 50%;">Deskripsi Layanan</th>
-                    <th class="text-right" style="width: 25%;">Harga Satuan</th>
-                    <th class="text-right" style="width: 25%;">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($pesanan->detail_pesanan as $detail)
-                    @php
-                        $hargaSatuan = $detail->harga_satuan ?? optional($detail->menu)->harga_jual ?? 0;
-                        $amountLine = $detail->jumlah * $hargaSatuan;
-                    @endphp
+    <table class="info-grid">
+        <tr>
+            <td>
+                <table class="data-table">
                     <tr>
-                        <td>
-                            <div class="font-bold">{{ $detail->menu->nama_menu ?? 'Paket Menu' }}</div>
-                            <div style="font-size: 11px; color: #6B7280; margin-top: 4px;">Kuantitas: {{ $detail->jumlah }} {{ $type === 'nasi_box' ? 'Box' : 'Porsi' }}</div>
-                        </td>
-                        <td class="text-right">Rp {{ number_format($hargaSatuan, 0, ',', '.') }}</td>
-                        <td class="text-right font-bold">Rp {{ number_format($amountLine, 0, ',', '.') }}</td>
+                        <td class="data-label">Nama Pemesan</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value">{{ $namaPemesan }}</td>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                    <tr>
+                        <td class="data-label">No. Telepon</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value">{{ $kontak }}</td>
+                    </tr>
+                    @if($emailPemesan)
+                    <tr>
+                        <td class="data-label">Email</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value">{{ $emailPemesan }}</td>
+                    </tr>
+                    @endif
+                    @if($catatanPesanan)
+                    <tr>
+                        <td class="data-label">Catatan Pesanan</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value">{{ $catatanPesanan }}</td>
+                    </tr>
+                    @endif
+                </table>
+            </td>
+            <td>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-label">Tanggal Acara</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value nowrap">{{ $tglAcaraStr }}</td>
+                    </tr>
+                    <tr>
+                        <td class="data-label">Waktu Acara</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value">{{ $waktuAcaraStr }}</td>
+                    </tr>
+                    <tr>
+                        <td class="data-label">Metode Pengiriman</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value">{{ $metodeKirim }}</td>
+                    </tr>
+                    @if($isDelivery && $alamatKirim !== '-')
+                    <tr>
+                        <td class="data-label">Alamat Pengiriman</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value" style="word-break: break-word;">{{ $alamatKirim }}</td>
+                    </tr>
+                    @endif
+                </table>
+            </td>
+        </tr>
+    </table>
 
-        <table class="summary-grid">
+    {{-- ── RINCIAN PEMESANAN ── --}}
+    <div class="section-title">Rincian Pemesanan</div>
+
+    <table class="items-table">
+        <thead>
             <tr>
-                <td class="payment-info">
-                    <div class="section-title">Informasi Pembayaran</div>
-                    <table class="payment-info-table">
-                        <tr>
-                            <td class="label">Metode Pembayaran</td>
-                            <td>: Transfer Bank</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Tanggal Bayar</td>
-                            <td>: {{ $tglBayar }}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Waktu Bayar</td>
-                            <td>: {{ $wktBayar }}</td>
-                        </tr>
-                    </table>
-                </td>
-                <td>
-                    <table class="totals-table">
-                        <tr>
-                            <td class="label">Total Pesanan</td>
-                            <td class="value">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">{{ $isLunas ? 'Total Dibayar' : 'Telah Dibayar (DP '.$dpPersen.'%)' }}</td>
-                            <td class="value" style="color: #059669;">Rp {{ number_format($dpTerbayar, 0, ',', '.') }}</td>
-                        </tr>
-                        @if(!$isLunas)
-                        <tr class="balance-row">
-                            <td class="label">Sisa Pelunasan</td>
-                            <td class="value font-bold">Rp {{ number_format($sisaPelunasan, 0, ',', '.') }}</td>
-                        </tr>
-                        @endif
-                    </table>
-                </td>
+                <th style="width: 5%;" class="text-center">NO.</th>
+                <th style="width: 47%;">PESANAN</th>
+                <th style="width: 14%;" class="text-center">JUMLAH</th>
+                <th style="width: 16%;" class="text-right">HARGA SATUAN</th>
+                <th style="width: 18%;" class="text-right">TOTAL</th>
             </tr>
-        </table>
+        </thead>
+        <tbody>
+            @php
+                $no = 1;
+                $subtotalItems = 0;
+            @endphp
+            @foreach($pesanan->detail_pesanan as $detail)
+                @php
+                    $qty = (int) $detail->jumlah;
+                    $hargaSatuan = (float) ($detail->harga_satuan ?? optional($detail->menu)->harga_jual ?? 0);
+                    $lineTotal = $qty * $hargaSatuan;
+                    $subtotalItems += $lineTotal;
 
-        @if(!$isLunas && $dpTerbayar > 0)
-        <div class="alert-box">
-            <p><strong>Penting:</strong> Sisa pelunasan sebesar <strong>Rp {{ number_format($sisaPelunasan, 0, ',', '.') }}</strong> wajib dibayarkan selambat-lambatnya pada <strong>{{ $batasPelunasanStr }} (H-3)</strong> sebelum tanggal acara. Kegagalan melakukan pelunasan akan mengakibatkan pesanan dibatalkan secara otomatis.</p>
-        </div>
-        @endif
-        
-        <div class="footer">
-            <p>Pembayaran {{ $isLunas ? 'telah lunas' : 'DP' }} telah kami terima dengan baik. Terima kasih atas kepercayaan Anda memilih layanan Saung Babakan Cinta.<br>Silakan simpan dokumen ini sebagai bukti transaksi dan pemesanan yang sah.</p>
-            
-            <div class="signature-area">
-                Saung Babakan Cinta
-            </div>
-        </div>
+                    $komponenList = [];
+                    if ($detail->pilihan_pesanan_catering && $detail->pilihan_pesanan_catering->count() > 0) {
+                        foreach ($detail->pilihan_pesanan_catering as $pilihan) {
+                            $namaKomp = optional($pilihan->komponen_paket)->nama_komponen;
+                            $namaPilihan = optional($pilihan->pilihan_komponen_paket)->nama_pilihan;
+                            if ($namaPilihan) {
+                                $komponenList[] = ($namaKomp ? $namaKomp . ': ' : '') . $namaPilihan;
+                            }
+                        }
+                    }
+                @endphp
+                <tr>
+                    <td class="text-center">{{ $no++ }}</td>
+                    <td>
+                        <div class="item-name">{{ $detail->menu->nama_menu ?? 'Paket Menu' }}</div>
+                        @if(count($komponenList) > 0)
+                            <div class="item-desc">Item Pilihan: {{ implode(' • ', $komponenList) }}</div>
+                        @endif
+                    </td>
+                    <td class="text-center">{{ $qty }} {{ $type === 'nasi_box' ? 'Box' : 'Porsi' }}</td>
+                    <td class="text-right nowrap">Rp{{ number_format($hargaSatuan, 0, ',', '.') }}</td>
+                    <td class="text-right font-bold nowrap">Rp{{ number_format($lineTotal, 0, ',', '.') }}</td>
+                </tr>
+            @endforeach
 
+            @if($ongkirNominal > 0)
+            <tr>
+                <td class="text-center">{{ $no++ }}</td>
+                <td>
+                    <div class="item-name">Biaya Pengiriman</div>
+                    @if(optional($pesanan->pengiriman)->jarak_pengiriman)
+                        <div class="item-desc">Estimasi Jarak: {{ optional($pesanan->pengiriman)->jarak_pengiriman }} km</div>
+                    @endif
+                </td>
+                <td class="text-center">-</td>
+                <td class="text-right">-</td>
+                <td class="text-right font-bold nowrap">Rp{{ number_format($ongkirNominal, 0, ',', '.') }}</td>
+            </tr>
+            @else
+            <tr>
+                <td class="text-center">{{ $no++ }}</td>
+                <td>
+                    <div class="item-name">Biaya Pengiriman</div>
+                </td>
+                <td class="text-center">-</td>
+                <td class="text-right">-</td>
+                <td class="text-right font-bold nowrap">Rp0</td>
+            </tr>
+            @endif
+        </tbody>
+        <tfoot>
+            <tr class="table-total-row">
+                <td colspan="4" class="text-right font-bold">TOTAL PESANAN</td>
+                <td class="text-right font-bold nowrap">Rp{{ number_format($totalTagihan, 0, ',', '.') }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    {{-- ── RINCIAN PEMBAYARAN (2 KOLOM) ── --}}
+    <div class="section-title">Rincian Pembayaran</div>
+
+    <table class="payment-grid">
+        <tr>
+            <td>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-label">Total Pesanan</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value nowrap">Rp{{ number_format($totalTagihan, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="data-label">DP Terbayar</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value nowrap">Rp{{ number_format($dpTerbayar, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="data-label">Sisa Pembayaran</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value nowrap" style="{{ $sisaPembayaran > 0 ? 'color: #991b1b;' : '' }}">Rp{{ number_format($sisaPembayaran, 0, ',', '.') }}</td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table class="data-table">
+                    @if($tglAcaraRaw && !$isLunas)
+                    <tr>
+                        <td class="data-label">Batas Pelunasan</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value nowrap">{{ $batasPelunasanStr }}</td>
+                    </tr>
+                    @endif
+                    <tr>
+                        <td class="data-label">Metode Pembayaran</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value">{{ $metodeBayarFormatted }}</td>
+                    </tr>
+                    <tr>
+                        <td class="data-label">Status Pembayaran</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value">
+                            @if($isLunas)
+                                Lunas Terverifikasi
+                            @elseif($dpTerbayar > 0)
+                                DP Terverifikasi
+                            @else
+                                Menunggu Pembayaran
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="data-label">Status Pesanan</td>
+                        <td class="data-colon">:</td>
+                        <td class="data-value">{{ $statusPesananText }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    {{-- ── KETENTUAN & CATATAN (PALING BAWAH) ── --}}
+    <div class="notes-box">
+        <div class="notes-title">Ketentuan & Catatan:</div>
+        <div class="notes-list">
+            <p>• Dokumen ini merupakan bukti resmi pemesanan dari Rumah Makan Saung Babakan Cinta.</p>
+            <p>• Harga dan dokumen ini menjadi referensi pengambilan atau serah terima pesanan.</p>
+            <p>• Uang muka (DP) yang telah disetorkan tidak dapat dikembalikan apabila terjadi pembatalan oleh pemesan.</p>
+        </div>
     </div>
+
+    {{-- ── FOOTER ── --}}
+    <div class="doc-footer">
+        <div class="doc-footer-left">Rumah Makan Saung Babakan Cinta</div>
+        <div class="doc-footer-right">
+            Bukti ini merupakan tanda bahwa pesanan katering telah tercatat pada sistem.<br>
+            Harap simpan dokumen ini dengan baik sebagai bukti pemesanan.
+        </div>
     </div>
 
 </body>

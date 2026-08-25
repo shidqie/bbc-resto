@@ -13,7 +13,7 @@
     <div class="p-4 sm:p-5 flex-1">
 
         <div class="flex items-center gap-2 mb-1">
-            <i class="ph-bold ph-receipt text-primary"></i>
+            <x-heroicon-o-document-text class="w-4 h-4 text-primary" />
             <h2 class="text-sm font-bold text-body">Ringkasan Pesanan</h2>
         </div>
         <p class="text-xs text-body/60 mb-3 pb-3 border-b border-primary/10">Periksa kembali detail pesanan sebelum melanjutkan pembayaran.</p>
@@ -51,7 +51,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 text-xs">
                 <div class="flex justify-between items-start gap-3">
                     <span class="text-body/60 shrink-0">Metode</span>
-                    <span id="summary-metode" class="font-semibold text-body text-right">Diambil (Pickup)</span>
+                    <span id="summary-metode" class="font-semibold text-body text-right">Diambil di Resto</span>
                 </div>
                 <div class="flex justify-between items-start gap-3">
                     <span class="text-body/60 shrink-0" id="summary-jam-kirim-label">Jam Ambil</span>
@@ -120,10 +120,10 @@
             <details class="group border border-primary/10 rounded-xl overflow-hidden">
                 <summary class="flex items-center justify-between gap-2 px-3 py-2.5 cursor-pointer select-none list-none bg-primary/[0.02] hover:bg-primary/[0.05] transition-colors">
                     <span class="text-[10px] font-bold text-body flex items-center gap-1.5">
-                        <i class="ph-bold ph-list-checks text-primary"></i>
+                        <x-heroicon-o-clipboard-document-check class="w-4 h-4 text-primary" />
                         Syarat &amp; Ketentuan {{ $summaryCfg['jenisLabel'] }}
                     </span>
-                    <i class="ph-bold ph-caret-down text-body/50 text-sm transition-transform duration-200 group-open:rotate-180"></i>
+                    <x-heroicon-o-chevron-down class="w-4 h-4 text-body/50 transition-transform duration-200 group-open:rotate-180" />
                 </summary>
                 <div class="px-3 py-2.5 border-t border-primary/10 text-[9px] text-body/70 space-y-1 leading-relaxed bg-surface">
                     <ul class="list-disc pl-3 space-y-1">

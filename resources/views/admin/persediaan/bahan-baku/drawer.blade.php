@@ -115,7 +115,7 @@
                 @php
                     $isMasuk = $mutasi->jenis_mutasi_stok_id == 1;
                     $jenisPers = $mutasi->jenis_persediaan === \App\Models\StokBahan::JENIS_CATERING ? 'Stok Catering' : 'Stok Harian Resto';
-                    $tanggal = \Carbon\Carbon::parse($mutasi->tanggal_mutasi)->format('d M Y');
+                    $tanggal = \Carbon\Carbon::parse($mutasi->tanggal_mutasi)->translatedFormat('d M Y');
                 @endphp
                 
                 <div class="p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-2xs hover:border-slate-300 transition-all flex items-start justify-between gap-3">

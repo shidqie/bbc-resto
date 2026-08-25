@@ -43,7 +43,7 @@
                 </form>
             </x-slot:toolbar>
 
-            <x-ui.table class="min-w-[1000px]">
+            <x-ui.table class="min-w-[1100px]">
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
@@ -54,6 +54,7 @@
                     <th class="px-4 py-3.5 text-right">Total Tagihan</th>
                     <th class="px-4 py-3.5 text-center">Status Pesanan</th>
                     <th class="px-4 py-3.5 text-center">Status Pembayaran</th>
+                    <th class="px-4 py-3.5 text-center">Status Pengiriman</th>
                     <th class="px-4 py-3.5 text-center">Aksi</th>
                 </x-ui.table.header>
                 <tbody class="divide-y divide-gray-100">
@@ -62,10 +63,10 @@
                         <td class="px-4 py-4 text-sm text-gray-500 font-medium">
                             {{ ($pesanans->firstItem() ?? 1) + $index }}
                         </td>
-                        <td class="px-4 py-4 text-sm text-gray-700">
+                        <td class="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">
                             {{ \Carbon\Carbon::parse($pesanan->dibuat_pada)->translatedFormat('d M Y, H.i') }} WIB
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-4 py-4 whitespace-nowrap">
                             <div class="flex items-center gap-2">
                                 <span class="font-mono text-xs font-bold text-gray-900">{{ $pesanan->id_pesanan ?? 'DIN-'.$pesanan->id }}</span>
                                 @if(\Carbon\Carbon::parse($pesanan->dibuat_pada)->diffInMinutes(now()) < 15)
@@ -73,7 +74,7 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-4 py-4 text-sm text-gray-600">
+                        <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
                             {{ optional($pesanan->jenis_pesanan)->nama_jenis ?? 'Dine In' }}
                         </td>
                         <td class="px-4 py-4">
@@ -92,42 +93,76 @@
                                         $nama = trim(explode('|', $pesanan->catatan)[0]);
                                     }
                                 }
-                                // Remove phone number if it was appended with a dash
                                 $nama = trim(explode('–', $nama)[0]);
                                 $nama = trim(explode('-', $nama)[0]);
                             @endphp
                             <p class="font-medium text-gray-900 text-sm">{{ $nama }}</p>
                         </td>
 
-                        <td class="px-4 py-4 text-right font-bold text-gray-900">
+                        <td class="px-4 py-4 text-right font-bold text-gray-900 whitespace-nowrap">
                             Rp{{ number_format($pesanan->total_tagihan, 0, ',', '.') }}
                         </td>
-                        <td class="px-4 py-4 text-center">
+                        {{-- 1. STATUS PESANAN --}}
+                        <td class="px-4 py-4 text-center align-middle whitespace-nowrap">
                             @php
-                                $statusColor = 'gray';
-                                if($pesanan->status_pesanan_id == 5) $statusColor = 'success';
-                                elseif($pesanan->status_pesanan_id == 1) $statusColor = 'warning';
-                                elseif($pesanan->status_pesanan_id == 6) $statusColor = 'danger';
-                                else $statusColor = 'primary';
+                                $stId = (int) $pesanan->status_pesanan_id;
+                                $stConfig = match($stId) {
+                                    1 => ['label' => 'Menunggu Konfirmasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500'],
+                                    2 => ['label' => 'Dikonfirmasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
+                                    3 => ['label' => 'Sedang Diproses', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500 animate-pulse'],
+                                    4 => ['label' => 'Pesanan Siap', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90', 'dot' => 'bg-purple-500'],
+                                    8 => ['label' => 'Pesanan Telah Dihidangkan', 'color' => 'bg-teal-50 text-teal-800 border-teal-200/90', 'dot' => 'bg-teal-500'],
+                                    5 => ['label' => 'Selesai', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
+                                    6 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                    7 => ['label' => 'Terjadwal', 'color' => 'bg-sky-50 text-sky-800 border-sky-200/90', 'dot' => 'bg-sky-500'],
+                                    default => ['label' => optional($pesanan->status_pesanan)->nama_status ?? 'Status #'.$stId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
+                                };
                             @endphp
-                            <x-ui.badge :color="$statusColor" size="sm">
-                                {{ optional($pesanan->status_pesanan)->nama_status ?? 'Unknown' }}
-                            </x-ui.badge>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $stConfig['color'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $stConfig['dot'] }}"></span>
+                                <span>{{ $stConfig['label'] }}</span>
+                            </span>
                         </td>
-                        <td class="px-4 py-4 text-center">
+                        {{-- 2. STATUS PEMBAYARAN --}}
+                        <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
                             @php
-                                $statusPembayaran = \App\Models\StatusPembayaran::find($pesanan->status_pembayaran_id);
-                                $payStatus = $statusPembayaran ? $statusPembayaran->nama_status : 'Unknown';
-                                
-                                $payColor = 'gray';
-                                if($pesanan->status_pembayaran_id == 5) $payColor = 'success';
-                                elseif(in_array($pesanan->status_pembayaran_id, [2, 4])) $payColor = 'warning';
-                                elseif($pesanan->status_pembayaran_id == 6) $payColor = 'danger';
-                                elseif(in_array($pesanan->status_pembayaran_id, [1, 3])) $payColor = 'primary';
+                                $payId = (int) $pesanan->status_pembayaran_id;
+                                $payConfig = match($payId) {
+                                    1 => ['label' => 'Belum Bayar', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                    2 => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
+                                    3 => ['label' => 'DP Terverifikasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
+                                    4 => ['label' => 'Menunggu Pelunasan', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500'],
+                                    5 => ['label' => 'Lunas', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
+                                    6 => ['label' => 'Pembayaran Ditolak', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                    default => ['label' => optional($pesanan->status_pembayaran)->nama_status ?? 'Status #'.$payId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
+                                };
                             @endphp
-                            <x-ui.badge :color="$payColor" size="sm">
-                                {{ $payStatus }}
-                            </x-ui.badge>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $payConfig['color'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $payConfig['dot'] }}"></span>
+                                <span>{{ $payConfig['label'] }}</span>
+                            </span>
+                        </td>
+                        {{-- 3. STATUS PENGIRIMAN (HANYA JIKA DIANTAR) --}}
+                        <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
+                            @if($pesanan->pengiriman)
+                                @php
+                                    $shipId = (int) ($pesanan->pengiriman->status_pengiriman_id ?? 1);
+                                    $shipConfig = match($shipId) {
+                                        1 => ['label' => 'Dijadwalkan', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
+                                        2 => ['label' => 'Siap Dikirim', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90', 'dot' => 'bg-purple-500'],
+                                        3 => ['label' => 'Dalam Pengantaran', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
+                                        4 => ['label' => 'Terkirim', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
+                                        5 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                        default => ['label' => optional($pesanan->pengiriman->status_pengiriman)->nama_status ?? 'Status #'.$shipId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
+                                    };
+                                @endphp
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $shipConfig['color'] }}">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $shipConfig['dot'] }}"></span>
+                                    <span>{{ $shipConfig['label'] }}</span>
+                                </span>
+                            @else
+                                <span class="text-xs text-gray-400 font-medium">-</span>
+                            @endif
                         </td>
                         <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
@@ -142,8 +177,8 @@
                     </x-ui.table.row>
                     @empty
                     <tr>
-                        <td colspan="9">
-                            <x-ui.empty-state icon="document-text" title="Belum ada pesanan" message="Belum ada pesanan yang sesuai kriteria pencarian." />
+                        <td colspan="10">
+                            <x-ui.empty-state icon="document-text" title="Tidak ada data pesanan." message="Belum ada pesanan yang sesuai kriteria pencarian." />
                         </td>
                     </tr>
                     @endforelse
@@ -154,73 +189,101 @@
     </div>
 </div>
 
-{{-- DRAWER: DETAIL PESANAN (SLIDE-IN RIGHT) --}}
-<div id="drawerDetail" class="fixed inset-0 z-[100] hidden">
-    <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300" id="drawerDetailOverlay" onclick="closeDetailDrawer()"></div>
-    <div class="absolute right-0 top-0 h-full w-screen md:w-[50vw] md:min-w-[680px] md:max-w-[820px] bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300" id="drawerDetailPanel">
-        <div id="drawerDetailContent" class="flex-1 overflow-y-auto">
-            <div class="flex items-center justify-center h-full">
-                <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+{{-- Detail Pesanan Drawer --}}
+<div x-data="pesananDrawerApp()"
+     @open-detail-drawer.window="openDrawer($event.detail.url)"
+     @close-detail-drawer.window="open = false"
+     @keydown.escape.window="open = false"
+     id="drawerDetailApp">
+    
+    {{-- Overlay --}}
+    <div x-show="open" 
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-900/50 z-[9990] backdrop-blur-xs" 
+         @click="open = false" 
+         style="display: none;"></div>
+    
+    {{-- Drawer Panel (Slide-Over Panel) --}}
+    <div x-show="open"
+         x-cloak
+         x-transition:enter="transform transition ease-in-out duration-300"
+         x-transition:enter-start="translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transform transition ease-in-out duration-300"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="translate-x-full"
+         class="fixed inset-y-0 right-0 max-w-4xl w-full bg-white shadow-2xl z-[9999] border-l border-gray-200 flex flex-col"
+         style="display: none;">
+        
+        {{-- Body --}}
+        <div class="flex-1 overflow-y-auto bg-white relative">
+            <div x-show="loading" class="absolute inset-0 flex flex-col justify-center items-center bg-white/90 backdrop-blur-xs z-20">
+                <svg class="animate-spin mb-3 h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
+                <span class="text-sm font-medium text-gray-500">Memuat detail pesanan...</span>
             </div>
+            <div x-show="!loading" x-html="content" class="h-full"></div>
         </div>
     </div>
 </div>
 
 <script>
+    function pesananDrawerApp() {
+        return {
+            open: false,
+            content: '',
+            loading: false,
+            openDrawer(url) {
+                this.open = true;
+                this.loading = true;
+                this.content = '';
+                fetch(url, { 
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    } 
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.text();
+                })
+                .then(html => {
+                    this.content = html;
+                    this.loading = false;
+                    this.$nextTick(() => {
+                        const container = this.$el.querySelector('[x-html]');
+                        if (container) {
+                            container.querySelectorAll('[x-cloak]').forEach(el => el.removeAttribute('x-cloak'));
+                            if (window.Alpine) {
+                                window.Alpine.initTree(container);
+                            }
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.error('Drawer error:', err);
+                    this.loading = false;
+                    this.content = '<div class="p-8 text-center text-red-500 font-medium">Gagal memuat detail pesanan.</div>';
+                });
+            }
+        };
+    }
+
     function openDetailDrawer(id) {
-        const drawer = document.getElementById('drawerDetail');
-        const overlay = document.getElementById('drawerDetailOverlay');
-        const panel = document.getElementById('drawerDetailPanel');
-        const content = document.getElementById('drawerDetailContent');
-
-        content.innerHTML = `
-            <div class="flex items-center justify-center h-full">
-                <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </div>
-        `;
-
-        drawer.classList.remove('hidden');
-        drawer.style.display = 'block';
-
-        requestAnimationFrame(() => {
-            panel.classList.remove('translate-x-full');
-            panel.classList.add('translate-x-0');
-            overlay.classList.remove('opacity-0');
-            overlay.classList.add('opacity-100');
-        });
-
-        fetch(`/admin/pesanan/detail/${id}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(res => res.text())
-        .then(html => {
-            content.innerHTML = html;
-        })
-        .catch(err => {
-            content.innerHTML = '<div class="p-6 text-center text-red-500">Gagal memuat detail pesanan.</div>';
-        });
+        window.dispatchEvent(new CustomEvent('open-detail-drawer', {
+            detail: { url: `/admin/pesanan/detail/${id}` }
+        }));
     }
 
     function closeDetailDrawer() {
-        const drawer = document.getElementById('drawerDetail');
-        const overlay = document.getElementById('drawerDetailOverlay');
-        const panel = document.getElementById('drawerDetailPanel');
-
-        panel.classList.remove('translate-x-0');
-        panel.classList.add('translate-x-full');
-        overlay.classList.remove('opacity-100');
-        overlay.classList.add('opacity-0');
-
-        setTimeout(() => {
-            drawer.classList.add('hidden');
-            drawer.style.display = '';
-        }, 300);
+        window.dispatchEvent(new CustomEvent('close-detail-drawer'));
     }
 </script>
 @endsection

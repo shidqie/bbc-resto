@@ -97,11 +97,22 @@ class DineInPaymentController extends Controller
                 // Potong stok via OrderService
                 app(OrderService::class)->completeOrder($pesanan);
 
-                // Update status pesanan & meja
-                $pesanan->update(['status_pesanan_id' => 5]); // Selesai
+                // Update status pesanan & status pembayaran & meja & kasir
+                $updatePesanan = [
+                    'status_pesanan_id' => 5, // Selesai
+                    'status_pembayaran_id' => 5, // Lunas
+                ];
+                if (!$pesanan->kasir_id && $diverifikasiOleh) {
+                    $updatePesanan['kasir_id'] = $diverifikasiOleh;
+                }
+                $pesanan->update($updatePesanan);
 
                 if ($pesanan->meja) {
-                    $pesanan->meja->update(['status_meja_id' => 1]); // Tersedia
+                    $updateMeja = ['status_meja_id' => 1]; // Tersedia
+                    if (DB::getSchemaBuilder()->hasColumn('meja', 'status')) {
+                        $updateMeja['status'] = 'tersedia';
+                    }
+                    $pesanan->meja->update($updateMeja);
                 }
             } else {
                 // Keep order open but note it's waiting for verification
@@ -126,7 +137,7 @@ class DineInPaymentController extends Controller
 
     public function success($pesananId)
     {
-        $pesanan = Pesanan::with(['detail_pesanan.menu', 'meja', 'pembayaran'])->findOrFail($pesananId);
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'meja', 'pembayaran', 'pelanggan', 'kasir'])->findOrFail($pesananId);
 
         if ($pesanan->status_pesanan_id !== 5) {
             return redirect()->route('pos.dinein.index')->with('error', 'Pesanan belum lunas.');

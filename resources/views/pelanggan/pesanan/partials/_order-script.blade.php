@@ -39,7 +39,7 @@
         }).addTo(map);
 
         const restoIcon = L.divIcon({
-            html: '<div class="w-8 h-8 bg-white border border-primary/10 shadow-sm rounded-full flex items-center justify-center text-primary"><i class="ph-bold ph-storefront text-lg"></i></div>',
+            html: '<div class="w-8 h-8 bg-white border border-primary/10 shadow-sm rounded-full flex items-center justify-center text-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>',
             className: '',
             iconSize: [32, 32],
             iconAnchor: [16, 16],
@@ -117,7 +117,7 @@
             }
 
             try {
-                btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i>';
+                btn.innerHTML = '<svg class="w-4 h-4 animate-spin inline-block text-primary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>';
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=id`);
                 const data = await res.json();
                 
@@ -201,130 +201,267 @@
     /* ============================================================
        METODE PENGIRIMAN
        ============================================================ */
-    document.querySelectorAll('.metode-radio').forEach(r => {
-        r.addEventListener('change', (e) => {
-            metodePengiriman = e.target.value;
+    function setMetodePengiriman(metode) {
+        metodePengiriman = metode;
 
-            document.querySelectorAll('.metode-card').forEach(c => {
-                const selected = c.querySelector('.metode-radio').checked;
+        document.querySelectorAll('.metode-card').forEach(c => {
+            const radio = c.querySelector('.metode-radio');
+            if (radio) {
+                radio.checked = (radio.value === metode);
+                const selected = radio.checked;
                 c.classList.toggle('border-primary', selected);
                 c.classList.toggle('bg-primary/5', selected);
                 c.classList.toggle('ring-1', selected);
                 c.classList.toggle('ring-primary', selected);
                 c.classList.toggle('border-primary/10', !selected);
                 c.classList.toggle('bg-surface', !selected);
-            });
-
-            if (metodePengiriman === 'delivery') {
-                document.getElementById('deliverySection').classList.remove('hidden');
-                document.getElementById('alamatDelivery').required = true;
-                document.getElementById('alamatDelivery').name = 'lokasi_acara';
-                setTimeout(initMap, 200);
-            } else {
-                document.getElementById('deliverySection').classList.add('hidden');
-                document.getElementById('alamatDelivery').required = false;
-                document.getElementById('alamatDelivery').name = '';
             }
-            hitungTotalPreview();
+        });
+
+        const delSection = document.getElementById('deliverySection');
+        const alamatInput = document.getElementById('alamatDelivery');
+        if (metode === 'delivery') {
+            if (delSection) delSection.classList.remove('hidden');
+            if (alamatInput) {
+                alamatInput.required = true;
+                alamatInput.name = 'lokasi_acara';
+            }
+            setTimeout(initMap, 200);
+        } else {
+            if (delSection) delSection.classList.add('hidden');
+            if (alamatInput) {
+                alamatInput.required = false;
+                alamatInput.name = '';
+            }
+        }
+        saveOrderDraft();
+        hitungTotalPreview();
+        checkFormValidity();
+        updateStepper();
+    }
+
+    document.querySelectorAll('.metode-radio').forEach(r => {
+        r.addEventListener('change', (e) => {
+            setMetodePengiriman(e.target.value);
         });
     });
 
     /* ============================================================
        PILIH PAKET
        ============================================================ */
+    function selectPaket(paketId, customKomponen = null) {
+        const card = document.querySelector(`.paket-card[data-paket-id="${paketId}"]`);
+        if (!card) return;
+
+        document.querySelectorAll('.paket-card').forEach(c => {
+            c.classList.remove('border-primary', 'bg-primary/5', 'ring-1', 'ring-primary');
+            c.classList.add('border-primary/10', 'bg-surface');
+            const ind = c.querySelector('.selected-indicator');
+            if (ind) ind.style.opacity = '0';
+        });
+
+        card.classList.add('border-primary', 'bg-primary/5', 'ring-1', 'ring-primary');
+        card.classList.remove('border-primary/10', 'bg-surface');
+        const ind = card.querySelector('.selected-indicator');
+        if (ind) ind.style.opacity = '1';
+
+        const radio = card.querySelector('.paket-radio');
+        if (radio) radio.checked = true;
+
+        selectedPaketId = card.dataset.paketId;
+        hargaSatuan = parseInt(card.dataset.harga) || 0;
+
+        const pName = card.querySelector('div h3') ? card.querySelector('div h3').textContent : 'Paket Terpilih';
+        const sumPaket = document.getElementById('summary-paket');
+        if (sumPaket) sumPaket.textContent = pName;
+
+        loadKomponen(selectedPaketId, customKomponen);
+        saveOrderDraft();
+        hitungTotalPreview();
+    }
+
     document.querySelectorAll('.paket-card').forEach(card => {
         card.addEventListener('click', () => {
-            document.querySelectorAll('.paket-card').forEach(c => {
-                c.classList.remove('border-primary', 'bg-primary/5', 'ring-1', 'ring-primary');
-                c.classList.add('border-primary/10', 'bg-surface');
-                c.querySelector('.selected-indicator').style.opacity = '0';
-            });
-            card.classList.add('border-primary', 'bg-primary/5', 'ring-1', 'ring-primary');
-            card.classList.remove('border-primary/10', 'bg-surface');
-            card.querySelector('.selected-indicator').style.opacity = '1';
-            card.querySelector('.paket-radio').checked = true;
-
-            selectedPaketId = card.dataset.paketId;
-            hargaSatuan = parseInt(card.dataset.harga);
-
-            const pName = card.querySelector('div h3') ? card.querySelector('div h3').textContent : 'Paket Terpilih';
-            document.getElementById('summary-paket').textContent = pName;
-
-            loadKomponen(selectedPaketId);
-            hitungTotalPreview();
+            selectPaket(card.dataset.paketId);
         });
     });
+    const preloadedKomponen = (cfg && cfg.komponenMap) ? cfg.komponenMap : {};
 
-    async function loadKomponen(paketId) {
-        const sec = document.getElementById('sec-komponen');
+    function renderKomponenDOM(komponens, selectedChoices = null) {
         const container = document.getElementById('komponen-container');
-        sec.classList.remove('hidden');
-        container.innerHTML = '<p class="text-body/50 text-xs font-medium">Memuat komponen menu...</p>';
+        if (!container) return;
 
-        try {
-            const res = await fetch(cfg.komponenUrl.replace(':id', paketId));
-            const komponens = await res.json();
+        if (!Array.isArray(komponens) || komponens.length === 0) {
+            container.innerHTML = '<p class="text-body/50 text-xs py-2">Tidak ada pilihan komponen tambahan untuk paket ini.</p>';
+            checkFormValidity();
+            updateStepper();
+            return;
+        }
 
-            container.innerHTML = '';
-            komponens.forEach(komp => {
-                const div = document.createElement('div');
-                div.className = 'border border-primary/10 rounded-xl p-3.5 bg-primary/[0.02]';
+        function resolveMenuImgUrl(foto) {
+            if (!foto) return null;
+            if (foto.startsWith('http://') || foto.startsWith('https://') || foto.startsWith('data:')) return foto;
+            if (foto.startsWith('/')) return foto;
+            if (foto.startsWith('images/')) return '/' + foto;
+            return '/storage/' + foto;
+        }
 
-                if (komp.tipe === 'fixed') {
-                    div.innerHTML = `
-                        <p class="text-xs font-bold text-body mb-3">${komp.nama_komponen}</p>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                            ${komp.opsi.map(o => {
-                                const imgHtml = o.menu.foto 
-                                    ? '<img src="/storage/' + o.menu.foto + '" alt="' + o.menu.nama + '" class="w-full aspect-[4/3] object-cover">'
-                                    : '<div class="w-full aspect-[4/3] bg-canvas flex items-center justify-center text-body/20"><i class="ph-light ph-image text-4xl"></i></div>';
-                                
-                                return `
-                                <div class="flex flex-col bg-surface rounded-xl border border-primary/20 overflow-hidden relative shadow-sm ring-1 ring-primary/10">
-                                    <div class="absolute top-2.5 right-2.5 bg-primary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center z-10 shadow-sm ring-2 ring-white">
-                                        <i class="ph-bold ph-check"></i>
+        container.innerHTML = '';
+        komponens.forEach(komp => {
+            const div = document.createElement('div');
+            div.className = 'border border-primary/10 rounded-xl p-3.5 bg-primary/[0.02]';
+            const opsis = Array.isArray(komp.opsi) ? komp.opsi : [];
+
+            if (komp.tipe === 'fixed') {
+                div.innerHTML = `
+                    <p class="text-xs font-bold text-body mb-3">${komp.nama_komponen || 'Komponen'}</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        ${opsis.map(o => {
+                            const m = o.menu || o;
+                            const nama = m.nama || m.nama_pilihan || m.nama_menu || 'Menu';
+                            const foto = m.foto || o.foto || null;
+                            const imgUrl = resolveMenuImgUrl(foto);
+                            const imgHtml = imgUrl 
+                                ? `<img src="${imgUrl}" alt="${nama}" class="w-full aspect-[4/3] object-cover" onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src='/storage/${foto || ''}';}">`
+                                : `<div class="w-full aspect-[4/3] bg-canvas flex items-center justify-center text-body/20"><svg class="w-8 h-8 text-body/30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`;
+                            
+                            return `
+                            <div class="flex flex-col bg-surface rounded-xl border border-primary/20 overflow-hidden relative shadow-sm ring-1 ring-primary/10">
+                                <div class="absolute top-2.5 right-2.5 bg-primary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center z-10 shadow-sm ring-2 ring-white">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                ${imgHtml}
+                                <div class="p-3 bg-primary/5 border-t border-primary/10">
+                                    <span class="block text-sm font-bold text-primary truncate">${nama}</span>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>`;
+            } else {
+                const savedVal = selectedChoices ? (selectedChoices[komp.id] || selectedChoices[String(komp.id)]) : null;
+                div.innerHTML = `
+                    <p class="text-xs font-bold text-body mb-3">${komp.nama_komponen || 'Komponen'} <span class="text-warning font-medium text-xs">(pilih 1)</span></p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        ${opsis.map((o, idx) => {
+                            const m = o.menu || o;
+                            const menuId = m.id || o.id;
+                            const nama = m.nama || m.nama_pilihan || m.nama_menu || 'Menu';
+                            const foto = m.foto || o.foto || null;
+                            const isChecked = (savedVal !== null && savedVal !== undefined) ? (String(savedVal) === String(menuId)) : (opsis.length === 1);
+                            const imgUrl = resolveMenuImgUrl(foto);
+                            const imgHtml = imgUrl 
+                                ? `<img src="${imgUrl}" alt="${nama}" class="w-full aspect-[4/3] object-cover group-hover:opacity-90 transition-opacity" onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src='/storage/${foto || ''}';}">`
+                                : `<div class="w-full aspect-[4/3] bg-canvas flex items-center justify-center text-body/20"><svg class="w-8 h-8 text-body/30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`;
+                            
+                            return `
+                            <label class="cursor-pointer group relative">
+                                <input type="radio" name="komponen[${komp.id}]" value="${menuId}" ${isChecked ? 'checked' : ''} class="opacity-0 absolute w-0 h-0 peer" required>
+                                <div class="flex flex-col bg-surface rounded-xl border border-primary/10 overflow-hidden peer-checked:border-primary peer-checked:ring-1 peer-checked:ring-primary transition-all duration-200 group-hover:border-primary/50 shadow-sm relative">
+                                    <div class="absolute top-2.5 right-2.5 w-5 h-5 rounded-full border-2 border-white/50 bg-black/20 flex items-center justify-center opacity-0 peer-checked:opacity-100 peer-checked:border-white peer-checked:bg-primary transition-all z-10 shadow-sm backdrop-blur-sm">
+                                        <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                     </div>
                                     ${imgHtml}
-                                    <div class="p-3 bg-primary/5 border-t border-primary/10">
-                                        <span class="block text-sm font-bold text-primary truncate">${o.menu.nama}</span>
+                                    <div class="p-3 border-t border-primary/5 peer-checked:bg-primary/5 transition-colors">
+                                        <span class="block text-sm font-bold text-body peer-checked:text-primary truncate">${nama}</span>
                                     </div>
-                                </div>`;
-                            }).join('')}
-                        </div>`;
-                } else {
-                    div.innerHTML = `
-                        <p class="text-xs font-bold text-body mb-3">${komp.nama_komponen} <span class="text-warning font-medium text-xs">(pilih 1)</span></p>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                            ${komp.opsi.map(o => {
-                                const imgHtml = o.menu.foto 
-                                    ? '<img src="/storage/' + o.menu.foto + '" alt="' + o.menu.nama + '" class="w-full aspect-[4/3] object-cover group-hover:opacity-90 transition-opacity">'
-                                    : '<div class="w-full aspect-[4/3] bg-canvas flex items-center justify-center text-body/20"><i class="ph-light ph-image text-4xl"></i></div>';
-                                
-                                return `
-                                <label class="cursor-pointer group relative">
-                                    <input type="radio" name="komponen[${komp.id}]" value="${o.menu.id}" class="opacity-0 absolute w-0 h-0 peer" required>
-                                    <div class="flex flex-col bg-surface rounded-xl border border-primary/10 overflow-hidden peer-checked:border-primary peer-checked:ring-1 peer-checked:ring-primary transition-all duration-200 group-hover:border-primary/50 shadow-sm relative">
-                                        <div class="absolute top-2.5 right-2.5 w-5 h-5 rounded-full border-2 border-white/50 bg-black/20 flex items-center justify-center opacity-0 peer-checked:opacity-100 peer-checked:border-white peer-checked:bg-primary transition-all z-10 shadow-sm backdrop-blur-sm">
-                                            <i class="ph-bold ph-check text-white text-[10px]"></i>
-                                        </div>
-                                        ${imgHtml}
-                                        <div class="p-3 border-t border-primary/5 peer-checked:bg-primary/5 transition-colors">
-                                            <span class="block text-sm font-bold text-body peer-checked:text-primary truncate">${o.menu.nama}</span>
-                                        </div>
-                                    </div>
-                                </label>`;
-                            }).join('')}
-                        </div>`;
-                }
-                container.appendChild(div);
-            });
+                                </div>
+                            </label>`;
+                        }).join('')}
+                    </div>`;
+            }
+            container.appendChild(div);
+        });
 
-            container.querySelectorAll('input').forEach(el => {
-                el.addEventListener('change', () => { checkFormValidity(); updateStepper(); });
+        container.querySelectorAll('input').forEach(el => {
+            el.addEventListener('change', () => { 
+                saveOrderDraft();
+                checkFormValidity(); 
+                updateStepper(); 
             });
+        });
+
+        checkFormValidity();
+        updateStepper();
+    }
+
+    async function loadKomponen(paketId, selectedChoices = null) {
+        if (!paketId || paketId === 'null' || paketId === 'undefined' || isNaN(parseInt(paketId))) {
+            const sec = document.getElementById('sec-komponen');
+            if (sec) sec.classList.add('hidden');
+            return;
+        }
+
+        const sec = document.getElementById('sec-komponen');
+        const container = document.getElementById('komponen-container');
+        if (!sec || !container) return;
+
+        sec.classList.remove('hidden');
+
+        // Check preloaded cache first (0 network latency, 100% reliable)
+        let komponens = preloadedKomponen[paketId] || preloadedKomponen[String(paketId)] || null;
+
+        if (komponens && Array.isArray(komponens) && komponens.length > 0) {
+            renderKomponenDOM(komponens, selectedChoices);
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="flex items-center gap-2 py-4 text-body/50 text-xs font-medium">
+                <svg class="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Memuat komponen menu...</span>
+            </div>
+        `;
+
+        try {
+            const cleanPath = window.location.pathname.replace(/\/+$/, '');
+            const candidateUrls = [
+                cfg.komponenUrl ? cfg.komponenUrl.replace(':id', encodeURIComponent(paketId)).replace('%3Aid', encodeURIComponent(paketId)) : null,
+                `${cleanPath}/komponen/${encodeURIComponent(paketId)}`,
+                `/pesan/nasi-box/komponen/${encodeURIComponent(paketId)}`,
+                `/pesan/catering/komponen/${encodeURIComponent(paketId)}`
+            ].filter(Boolean);
+
+            const uniqueUrls = [...new Set(candidateUrls)];
+            let lastError = null;
+
+            for (const url of uniqueUrls) {
+                try {
+                    const res = await fetch(url, {
+                        headers: { 
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            komponens = data;
+                            break;
+                        }
+                    }
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+
+            if (!komponens) {
+                throw lastError || new Error('Gagal memuat komponen menu dari server.');
+            }
+
+            renderKomponenDOM(komponens, selectedChoices);
         } catch (e) {
-            console.error(e);
-            container.innerHTML = '<p class="text-danger text-xs font-medium">Gagal memuat komponen menu. Coba lagi.</p>';
+            console.error('Error loadKomponen:', e);
+            container.innerHTML = `
+                <div class="p-4 bg-danger/5 border border-danger/20 rounded-xl flex items-center justify-between gap-3">
+                    <p class="text-danger text-xs font-medium">Gagal memuat pilihan menu untuk paket ini.</p>
+                    <button type="button" onclick="loadKomponen('${paketId}')" class="px-3 py-1 bg-danger text-white text-xs font-bold rounded-lg hover:bg-danger/90 transition-colors">
+                        Coba Lagi
+                    </button>
+                </div>
+            `;
         }
     }
 
@@ -335,28 +472,72 @@
         return 'Rp ' + Math.round(n || 0).toLocaleString('id-ID');
     }
 
-    function updatePaymentLabel(val) {
-        const label = document.getElementById('label-payment');
-        const amount = document.getElementById('dp-amount');
-        if (val === 'lunas') {
-            label.innerHTML = 'Bayar Lunas <span class="text-amber-700/70 text-[10px] font-normal">(100%)</span>';
-            amount.textContent = formatRp(currentTotal);
-        } else {
-            label.innerHTML = `DP Pembayaran <span class="text-amber-700/70 text-[10px] font-normal">(${cfg.dpPersen}%)</span>`;
-            amount.textContent = formatRp(currentDp);
-        }
-
+    function setOpsiPembayaran(val) {
         document.querySelectorAll('input[name="opsi_pembayaran"]').forEach(el => {
+            el.checked = (el.value === val);
             const parent = el.closest('label');
-            if (el.checked) {
-                parent.classList.add('border-primary', 'bg-primary/5');
-                parent.classList.remove('border-primary/10', 'bg-surface');
-            } else {
-                parent.classList.remove('border-primary', 'bg-primary/5');
-                parent.classList.add('border-primary/10', 'bg-surface');
+            if (parent) {
+                const isSelected = (el.value === val);
+                parent.classList.toggle('border-primary', isSelected);
+                parent.classList.toggle('bg-primary/5', isSelected);
+                parent.classList.toggle('ring-1', isSelected);
+                parent.classList.toggle('ring-primary', isSelected);
+                parent.classList.toggle('border-primary/10', !isSelected);
+                parent.classList.toggle('bg-surface', !isSelected);
+
+                const outerDot = parent.querySelector('.radio-dot');
+                const innerDot = parent.querySelector('.radio-dot span');
+                if (outerDot) {
+                    outerDot.classList.toggle('border-primary', isSelected);
+                    outerDot.classList.toggle('border-body/20', !isSelected);
+                }
+                if (innerDot) {
+                    innerDot.classList.toggle('bg-primary', isSelected);
+                    innerDot.classList.toggle('bg-transparent', !isSelected);
+                }
             }
         });
+
+        const label = document.getElementById('label-payment');
+        const amount = document.getElementById('dp-amount');
+        if (label && amount) {
+            if (val === 'lunas') {
+                label.innerHTML = 'Bayar Lunas <span class="text-amber-700/70 text-[10px] font-normal">(100%)</span>';
+                amount.textContent = formatRp(currentTotal);
+            } else {
+                label.innerHTML = `DP Pembayaran <span class="text-amber-700/70 text-[10px] font-normal">(${cfg.dpPersen}%)</span>`;
+                amount.textContent = formatRp(currentDp);
+            }
+        }
+
+        const sisaContainer = document.getElementById('sisa-pelunasan-container');
+        if (sisaContainer) {
+            sisaContainer.style.display = (val === 'lunas') ? 'none' : 'flex';
+        }
+
+        saveOrderDraft();
+        checkFormValidity();
+        updateStepper();
     }
+
+    function updatePaymentLabel(val) {
+        setOpsiPembayaran(val);
+    }
+
+    document.querySelectorAll('.metode-bayar-card').forEach(card => {
+        card.addEventListener('click', function (e) {
+            const radio = this.querySelector('input[name="opsi_pembayaran"]');
+            if (radio) {
+                setOpsiPembayaran(radio.value);
+            }
+        });
+    });
+
+    document.querySelectorAll('input[name="opsi_pembayaran"]').forEach(el => {
+        el.addEventListener('change', function () {
+            setOpsiPembayaran(this.value);
+        });
+    });
 
     /* ============================================================
        RINGKASAN & TOTAL
@@ -381,7 +562,21 @@
         document.getElementById('summary-jam-acara').textContent = document.getElementById('jamAcara').value || '-';
         document.getElementById('summary-jam-kirim').textContent = document.getElementById('jamPengambilan').value || '-';
 
-        if (!selectedPaketId) return;
+        const opsiBayarEl = document.querySelector('input[name="opsi_pembayaran"]:checked');
+        const opsiBayar = opsiBayarEl ? opsiBayarEl.value : 'dp';
+
+        if (!selectedPaketId) {
+            currentTotal = subtotalMenu;
+            currentDp = Math.round(subtotalMenu * (cfg.dpPersen / 100));
+            document.getElementById('total-tagihan').textContent = formatRp(currentTotal);
+            const totalBigEl = document.getElementById('total-tagihan-big');
+            if (totalBigEl) totalBigEl.textContent = formatRp(currentTotal);
+            document.getElementById('summary-sisa-pelunasan').textContent = formatRp(currentTotal - currentDp);
+            setOpsiPembayaran(opsiBayar);
+            checkFormValidity();
+            updateStepper();
+            return;
+        }
 
         try {
             const body = {
@@ -392,21 +587,48 @@
             };
             if (cfg.type === 'catering') body.layanan_tambahan = [];
 
-            const res = await fetch(cfg.previewUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify(body)
-            });
-            const data = await res.json();
+            const cleanPath = window.location.pathname.replace(/\/+$/, '');
+            const candidateUrls = [
+                cfg.previewUrl,
+                `${cleanPath}/preview`,
+                `/pesan/${cfg.type === 'nasibox' ? 'nasi-box' : 'catering'}/preview`,
+                `/pesan/catering/preview`
+            ].filter(Boolean);
 
-            if (res.ok) {
+            const uniqueUrls = [...new Set(candidateUrls)];
+            let res = null;
+            let data = null;
+
+            for (const url of uniqueUrls) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    if (response.ok) {
+                        res = response;
+                        data = await response.json();
+                        break;
+                    }
+                } catch (err) {
+                    console.warn('Failed preview fetch on ' + url, err);
+                }
+            }
+
+            if (res && res.ok && data) {
                 if (metodePengiriman === 'delivery') {
                     document.getElementById('summary-jarak-row').style.display = 'flex';
                     document.getElementById('summary-alamat-row').style.display = 'flex';
                     document.getElementById('summary-jarak').textContent = jarakKm ? jarakKm.toFixed(2) + ' km' : '0 km';
                     document.getElementById('summary-alamat').textContent = document.getElementById('alamatDelivery').value || '-';
                     document.getElementById('summary-ongkir-label').textContent = 'Biaya Pengiriman';
-                    document.getElementById('summary-metode').textContent = 'Diantar (Delivery)';
+                    document.getElementById('summary-metode').textContent = 'Diantar';
                     document.getElementById('summary-jam-kirim-label').textContent = 'Jam Pengiriman';
 
                     if (cfg.hasGratisOngkir) {
@@ -430,7 +652,7 @@
                     document.getElementById('summary-alamat-row').style.display = 'none';
                     document.getElementById('summary-ongkir-label').textContent = 'Metode';
                     document.getElementById('summary-ongkir').textContent = 'Diambil';
-                    document.getElementById('summary-metode').textContent = 'Diambil (Pickup)';
+                    document.getElementById('summary-metode').textContent = 'Diambil di Resto';
                     document.getElementById('summary-jam-kirim-label').textContent = 'Jam Ambil';
                     document.getElementById('summary-ongkir-coret').classList.add('hidden');
                     document.getElementById('badge-gratis-ongkir').classList.add('hidden');
@@ -444,9 +666,7 @@
 
                 document.getElementById('summary-sisa-pelunasan').textContent = formatRp(data.total - data.dp);
 
-                const opsiBayarEl = document.querySelector('input[name="opsi_pembayaran"]:checked');
-                const opsiBayar = opsiBayarEl ? opsiBayarEl.value : 'dp';
-                updatePaymentLabel(opsiBayar);
+                setOpsiPembayaran(opsiBayar);
 
                 if (opsiBayar === 'lunas') {
                     document.getElementById('sisa-pelunasan-container').style.display = 'none';
@@ -502,7 +722,6 @@
     document.getElementById('jamAcara').addEventListener('input', hitungTotalPreview);
     document.getElementById('jamPengambilan').addEventListener('input', hitungTotalPreview);
     document.getElementById('alamatDelivery').addEventListener('input', hitungTotalPreview);
-    document.querySelectorAll('input[name="opsi_pembayaran"]').forEach(el => el.addEventListener('change', hitungTotalPreview));
 
     function checkFormValidity() {
         const form = document.getElementById(cfg.formId);
@@ -523,105 +742,175 @@
         updateStepper();
     }
 
-    document.querySelectorAll('#' + cfg.formId + ' input, #' + cfg.formId + ' select, #' + cfg.formId + ' textarea').forEach(el => {
-        el.addEventListener('input', checkFormValidity);
-        el.addEventListener('change', checkFormValidity);
-    });
-
     /* ============================================================
-       STEPPER PROGRESS
+       DRAFT PERSISTENCE (AUTO-SAVE & RESTORE)
        ============================================================ */
-    function val(name) {
-        return (document.getElementsByName(name)[0] && document.getElementsByName(name)[0].value) || (document.getElementById(name) && document.getElementById(name).value) || '';
+    const DRAFT_KEY = 'bbc_order_draft_' + (cfg.type || 'catering');
+
+    function saveOrderDraft() {
+        try {
+            const form = document.getElementById(cfg.formId);
+            if (!form) return;
+
+            const komponenChoices = {};
+            document.querySelectorAll('#komponen-container input[type="radio"]:checked').forEach(r => {
+                const match = r.name.match(/komponen\[(\d+)\]/);
+                if (match) {
+                    komponenChoices[match[1]] = r.value;
+                }
+            });
+
+            const draft = {
+                nama_pemesan: document.getElementById('nama_pemesan')?.value || '',
+                kontak: document.getElementById('kontak')?.value || '',
+                tanggal_acara: document.getElementById('tanggalAcara')?.value || '',
+                jam_acara: document.getElementById('jamAcara')?.value || '',
+                qty: (document.getElementById('jumlahPorsi') || document.getElementById('jumlahBox'))?.value || '',
+                metode_pengiriman: document.querySelector('input[name="metode_pengiriman"]:checked')?.value || 'pickup',
+                jam_pengambilan: document.getElementById('jamPengambilan')?.value || '',
+                lokasi_acara: document.getElementById('alamatDelivery')?.value || '',
+                alamat_venue: document.getElementById('alamatVenue')?.value || '',
+                latitude: document.getElementById('inputLat')?.value || '',
+                longitude: document.getElementById('inputLng')?.value || '',
+                jarak_km: document.getElementById('inputJarak')?.value || '',
+                paket_id: selectedPaketId || document.querySelector('input[name="paket_id"]:checked')?.value || '',
+                komponen: komponenChoices,
+                catatan: document.getElementById('catatan')?.value || '',
+                opsi_pembayaran: document.querySelector('input[name="opsi_pembayaran"]:checked')?.value || 'dp',
+            };
+
+            sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        } catch (e) {
+            console.warn('Gagal menyimpan draft pemesanan:', e);
+        }
     }
 
-    function stepDone(i) {
-        if (i === 1) return !!val('nama_pemesan') && !!val('kontak');
-        if (i === 2) {
-            const alamatOk = metodePengiriman === 'pickup' || (metodePengiriman === 'delivery' && !!val('alamatDelivery'));
-            const qty = parseInt(qtyEl ? qtyEl.value : 0) || 0;
-            return !!val('tanggal_acara') && !!val('jam_acara') && qty >= cfg.minPorsi && alamatOk;
-        }
-        if (i === 3) return selectedPaketId !== null;
-        if (i === 4) {
-            if (selectedPaketId === null) return false;
-            const reqs = document.querySelectorAll('#komponen-container input[type="radio"][required]');
-            if (reqs.length === 0) return true;
-            const names = [...new Set(Array.from(reqs).map(r => r.name))];
-            return names.every(name => document.querySelector(`input[name="${name}"]:checked`));
-        }
-        if (i === 5) {
-            const opsi = document.querySelector('input[name="opsi_pembayaran"]:checked');
-            return !!opsi && currentTotal > 0;
-        }
-        return false;
+    function getSavedDraft() {
+        let draft = null;
+        try {
+            const raw = sessionStorage.getItem(DRAFT_KEY);
+            if (raw) draft = JSON.parse(raw);
+        } catch (e) {}
+
+        const oldCfg = cfg.old || {};
+
+        return {
+            nama_pemesan: oldCfg.nama_pemesan || draft?.nama_pemesan || '',
+            kontak: oldCfg.kontak || draft?.kontak || '',
+            tanggal_acara: oldCfg.tanggal_acara || draft?.tanggal_acara || '',
+            jam_acara: oldCfg.jam_acara || draft?.jam_acara || '',
+            qty: oldCfg.jumlah_porsi || oldCfg.jumlah_box || draft?.qty || '',
+            metode_pengiriman: oldCfg.metode_pengiriman || draft?.metode_pengiriman || 'pickup',
+            jam_pengambilan: oldCfg.jam_pengambilan || draft?.jam_pengambilan || '',
+            lokasi_acara: oldCfg.lokasi_acara || draft?.lokasi_acara || '',
+            alamat_venue: oldCfg.alamat_venue || draft?.alamat_venue || '',
+            latitude: oldCfg.latitude || draft?.latitude || '',
+            longitude: oldCfg.longitude || draft?.longitude || '',
+            jarak_km: oldCfg.jarak_km || draft?.jarak_km || '',
+            paket_id: oldCfg.paket_id || draft?.paket_id || '',
+            komponen: (oldCfg.komponen && Object.keys(oldCfg.komponen).length > 0) ? oldCfg.komponen : (draft?.komponen || {}),
+            catatan: oldCfg.catatan || draft?.catatan || '',
+            opsi_pembayaran: oldCfg.opsi_pembayaran || draft?.opsi_pembayaran || 'dp',
+        };
     }
 
-    const stepHints = {
-        1: 'Langkah 1 — Isi data pemesan agar admin dapat menghubungi Anda.',
-        2: 'Langkah 2 — Atur tanggal, jam, jumlah, dan metode pengambilan/pengiriman.',
-        3: 'Langkah 3 — Pilih paket ' + cfg.satuanLabel + ' yang sesuai kebutuhan.',
-        4: 'Langkah 4 — Tentukan pilihan menu pada setiap komponen.',
-        5: 'Langkah 5 — Pilih cara pembayaran, lalu lanjutkan ke pembayaran.'
-    };
-
-    function updateStepper() {
-        const items = document.querySelectorAll('.step-item');
-        if (!items.length) return;
-
-        let current = 1;
-        for (let i = 1; i <= 5; i++) {
-            if (!stepDone(i)) { current = i; break; }
-            current = i;
-        }
-        if (current > 5) current = 5;
-
-        items.forEach(item => {
-            const n = parseInt(item.dataset.step, 10);
-            const dot = item.querySelector('.step-dot');
-            const label = item.querySelector('.step-label');
-
-            item.classList.toggle('is-done', n < current);
-            item.classList.toggle('is-current', n === current);
-
-            if (dot) {
-                dot.classList.toggle('bg-primary', n <= current);
-                dot.classList.toggle('bg-surface', n > current); // Fix conflict
-                dot.classList.toggle('border-primary', n <= current);
-                dot.classList.toggle('text-white', n <= current);
-                dot.classList.toggle('ring-4', n === current);
-                dot.classList.toggle('ring-primary/15', n === current);
-                dot.classList.toggle('border-primary/20', n > current);
-                dot.classList.toggle('text-body/40', n > current);
-
-                const num = dot.querySelector('.step-num');
-                const check = dot.querySelector('.step-check');
-                if (num) num.classList.toggle('hidden', n < current);
-                if (check) check.classList.toggle('hidden', n >= current);
-            }
-
-            if (label) {
-                label.classList.toggle('text-primary', n < current);
-                label.classList.toggle('text-body', n === current);
-                label.classList.toggle('text-body/50', n > current);
-            }
-        });
-
-        const hint = document.getElementById('stepper-hint');
-        if (hint) hint.textContent = stepHints[current] || '';
-    }
-
-    /* ============================================================
-       AUTO-SELECT PAKET DARI URL (?paket_id=)
-       ============================================================ */
-    document.addEventListener('DOMContentLoaded', function () {
+    function restoreOrderDraft() {
+        const data = getSavedDraft();
         const urlParams = new URLSearchParams(window.location.search);
-        const paketId = urlParams.get('paket_id');
-        if (paketId) {
-            const paketCard = document.querySelector(`.paket-card[data-paket-id="${paketId}"]`);
-            if (paketCard) paketCard.click();
+
+        const namaEl = document.getElementById('nama_pemesan');
+        if (namaEl && data.nama_pemesan && !namaEl.value) namaEl.value = data.nama_pemesan;
+
+        const kontakEl = document.getElementById('kontak');
+        if (kontakEl && data.kontak && !kontakEl.value) kontakEl.value = data.kontak;
+
+        const tglEl = document.getElementById('tanggalAcara');
+        if (tglEl && data.tanggal_acara) tglEl.value = data.tanggal_acara;
+
+        const jamAcaraEl = document.getElementById('jamAcara');
+        if (jamAcaraEl && data.jam_acara) jamAcaraEl.value = data.jam_acara;
+
+        const porsiEl = document.getElementById('jumlahPorsi') || document.getElementById('jumlahBox');
+        if (porsiEl && data.qty) porsiEl.value = data.qty;
+
+        const jamKirimEl = document.getElementById('jamPengambilan');
+        if (jamKirimEl && data.jam_pengambilan) jamKirimEl.value = data.jam_pengambilan;
+
+        const venueEl = document.getElementById('alamatVenue');
+        if (venueEl && data.alamat_venue) venueEl.value = data.alamat_venue;
+
+        const alamatEl = document.getElementById('alamatDelivery');
+        if (alamatEl && data.lokasi_acara) {
+            alamatEl.value = data.lokasi_acara;
+            const cardAlamat = document.getElementById('cardAlamat');
+            if (cardAlamat) cardAlamat.textContent = data.lokasi_acara;
         }
+
+        const latEl = document.getElementById('inputLat');
+        if (latEl && data.latitude) latEl.value = data.latitude;
+
+        const lngEl = document.getElementById('inputLng');
+        if (lngEl && data.longitude) lngEl.value = data.longitude;
+
+        const jarakEl = document.getElementById('inputJarak');
+        if (jarakEl && data.jarak_km) {
+            jarakEl.value = data.jarak_km;
+            jarakKm = parseFloat(data.jarak_km) || 0;
+        }
+
+        const catatanEl = document.getElementById('catatan');
+        if (catatanEl && data.catatan) catatanEl.value = data.catatan;
+
+        if (data.metode_pengiriman) {
+            setMetodePengiriman(data.metode_pengiriman);
+        }
+
+        if (data.opsi_pembayaran) {
+            const bayarRadio = document.querySelector(`input[name="opsi_pembayaran"][value="${data.opsi_pembayaran}"]`);
+            if (bayarRadio) {
+                bayarRadio.checked = true;
+                updatePaymentLabel(data.opsi_pembayaran);
+            }
+        }
+
+        const targetPaketId = urlParams.get('paket_id') || data.paket_id;
+        if (targetPaketId && targetPaketId !== 'null' && targetPaketId !== 'undefined' && !isNaN(parseInt(targetPaketId))) {
+            const card = document.querySelector(`.paket-card[data-paket-id="${targetPaketId}"]`);
+            if (card) {
+                selectPaket(targetPaketId, data.komponen);
+            }
+        }
+
+        hitungTotalPreview();
         checkFormValidity();
         updateStepper();
+    }
+
+    /* ============================================================
+       AUTO-SAVE ON ANY INPUT
+       ============================================================ */
+    document.querySelectorAll('#' + cfg.formId + ' input, #' + cfg.formId + ' select, #' + cfg.formId + ' textarea').forEach(el => {
+        el.addEventListener('input', () => {
+            saveOrderDraft();
+            checkFormValidity();
+        });
+        el.addEventListener('change', () => {
+            saveOrderDraft();
+            checkFormValidity();
+        });
+    });
+
+    const orderForm = document.getElementById(cfg.formId);
+    if (orderForm) {
+        orderForm.addEventListener('submit', function () {
+            sessionStorage.removeItem(DRAFT_KEY);
+        });
+    }
+
+    /* ============================================================
+       AUTO-RESTORE ON LOAD
+       ============================================================ */
+    document.addEventListener('DOMContentLoaded', function () {
+        restoreOrderDraft();
     });
 </script>

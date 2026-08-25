@@ -19,10 +19,16 @@ class StokCateringController extends Controller
         $kategoris = KategoriBahanBaku::all();
 
         if ($tab === 'riwayat') {
-            $riwayatQuery = \App\Models\MutasiStok::with(['bahan_baku', 'bahan_baku.satuan'])
+            $riwayatQuery = \App\Models\MutasiStok::with([
+                'bahan_baku.satuan',
+                'detail_pesanan.pesanan.pelanggan',
+                'detail_pesanan.pesanan.jenis_pesanan',
+                'detail_penyesuaian_stok.penyesuaian_stok',
+            ])
                 ->where('jenis_persediaan', 'catering')
                 ->where('jenis_mutasi_stok_id', 2) // Keluar
-                ->orderBy('tanggal_mutasi', 'desc');
+                ->orderBy('tanggal_mutasi', 'desc')
+                ->orderBy('id', 'desc');
 
             if ($request->has('search') && $request->search != '') {
                 $search = $request->search;
@@ -36,14 +42,18 @@ class StokCateringController extends Controller
 
             if ($request->has('jenis_penggunaan') && $request->jenis_penggunaan != '') {
                 if ($request->jenis_penggunaan == 'Catering') {
-                    $riwayatQuery->where('catatan', 'like', '%Catering%');
+                    $riwayatQuery->where(function($q) {
+                        $q->where('catatan', 'like', '%Catering%')
+                          ->orWhere('catatan', 'like', '%Pesanan%')
+                          ->orWhereNotNull('detail_pesanan_id');
+                    });
                 } elseif ($request->jenis_penggunaan == 'Penyesuaian') {
                     $riwayatQuery->whereNotNull('detail_penyesuaian_stok_id')
                                  ->orWhere('catatan', 'like', '%Penyesuaian%');
                 }
             }
 
-            $riwayats = $riwayatQuery->paginate(50)->withQueryString();
+            $riwayats = $riwayatQuery->paginate(100)->withQueryString();
             
             return view('admin.persediaan.stok-catering.index', compact('tab', 'riwayats', 'kategoris'));
         }

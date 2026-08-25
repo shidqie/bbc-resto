@@ -4,13 +4,14 @@
     <meta charset="utf-8">
     <title>Surat Purchase Order - {{ $po->nomor_po }}</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         @page {
             size: A4;
             margin: 15mm 15mm 15mm 15mm;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif !important; }
         body { 
-            font-family: 'Times New Roman', Times, Georgia, serif; 
+            font-family: 'Outfit', sans-serif !important; 
             font-size: 11pt; 
             color: #000000; 
             background: #ffffff; 
@@ -21,7 +22,7 @@
         /* Kop Surat Resmi */
         .header-kop { text-align: center; margin-bottom: 5px; }
         .company-title { font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #000000; }
-        .company-sub { font-size: 9.5pt; font-family: 'Arial', sans-serif; color: #333333; margin-top: 3px; }
+        .company-sub { font-size: 9.5pt; font-family: 'Outfit', sans-serif; color: #333333; margin-top: 3px; }
         
         /* Garis Kop Surat Default */
         .kop-line-thick { border-bottom: 2px solid #000000; margin-top: 8px; }
@@ -30,10 +31,10 @@
         /* Judul Dokumen */
         .doc-header { text-align: center; margin-bottom: 18px; }
         .doc-title { font-size: 13pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; letter-spacing: 0.5px; }
-        .doc-number { font-size: 10.5pt; font-family: 'Arial', sans-serif; font-weight: bold; color: #000000; margin-top: 4px; }
+        .doc-number { font-size: 10.5pt; font-family: 'Outfit', sans-serif; font-weight: bold; color: #000000; margin-top: 4px; }
 
         /* Grid Info PO & Supplier */
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-family: 'Arial', sans-serif; font-size: 9.5pt; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-family: 'Outfit', sans-serif; font-size: 9.5pt; }
         .info-table td { padding: 3px 0; vertical-align: top; }
         .info-label { width: 120px; font-weight: bold; color: #333333; }
         .info-colon { width: 15px; text-align: center; }
@@ -45,7 +46,7 @@
             border-collapse: collapse; 
             margin-top: 10px; 
             margin-bottom: 15px; 
-            font-family: 'Arial', sans-serif;
+            font-family: 'Outfit', sans-serif;
             font-size: 9.5pt;
             background: #ffffff;
         }
@@ -64,7 +65,7 @@
 
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .font-mono { font-family: 'Outfit', sans-serif !important; }
         .font-bold { font-weight: bold; }
 
         /* Summary Total Row Default White */
@@ -80,7 +81,7 @@
             border: 1px solid #000000; 
             padding: 8px 12px; 
             margin-bottom: 20px; 
-            font-family: 'Arial', sans-serif; 
+            font-family: 'Outfit', sans-serif; 
             font-size: 9pt;
             background: #ffffff;
         }
@@ -90,7 +91,7 @@
         .footer-stamp { 
             margin-top: 25px; 
             text-align: center; 
-            font-family: 'Arial', sans-serif; 
+            font-family: 'Outfit', sans-serif; 
             font-size: 8pt; 
             color: #666666; 
             border-top: 1px dashed #999999; 
@@ -189,51 +190,22 @@
             @php $grandTotal = 0; @endphp
             @foreach($po->detail_purchase_order as $idx => $d)
             @php
-                $rawQty = (float) $d->jumlah_dipesan;
-                $satuanRaw = optional(optional($d->bahan_baku)->satuan)->singkatan ?? optional(optional($d->bahan_baku)->satuan)->nama_satuan ?? 'gram';
-                $satuanClean = strtolower(trim($satuanRaw));
-
-                // Konversi satuan tampilan & hitung harga satuan per unit tampilan
-                $displayQty = $rawQty;
-                $displaySatuan = $satuanRaw;
-
-                if (in_array($satuanClean, ['gram', 'g', 'gr', 'kilogram', 'kg']) && $rawQty >= 1000) {
-                    $displayQty = $rawQty / 1000;
-                    $displaySatuan = 'kg';
-                } elseif (in_array($satuanClean, ['ml', 'mililiter', 'liter', 'l']) && $rawQty >= 1000) {
-                    $displayQty = $rawQty / 1000;
-                    $displaySatuan = 'liter';
-                }
-
-                // Total Pembelian
-                $total = (float) $d->harga_satuan;
+                $qty = (float) $d->jumlah_dipesan;
+                $satuan = optional($d->satuan)->singkatan ?? optional($d->satuan)->nama_satuan ?? \App\Helpers\UnitHelper::getPurchasingUnit($d->bahan_baku?->satuan);
+                $hargaSatuan = (float) ($d->detail_pengadaan_bahan?->harga_satuan ?? \App\Helpers\UnitHelper::toPurchasingPrice(optional($d->bahan_baku)->harga_satuan ?? 0, $d->bahan_baku?->satuan));
+                $total = (float) ($d->detail_pengadaan_bahan?->subtotal ?? ($qty * $hargaSatuan));
                 if ($total <= 0) {
-                    $total = (float) optional($d->detail_pengadaan_bahan)->harga_satuan;
+                    $total = $qty * $hargaSatuan;
                 }
-                if ($total <= 0) {
-                    $total = (float) optional($d->bahan_baku)->harga_satuan;
-                }
-                if ($total <= 0) {
-                    $total = 16000;
-                }
-
-                // Jika total masih terlalu kecil dari perkalian, pastikan total minimum sesuai nominal transaksi
-                if ($total < 100) {
-                    $total = 16000;
-                }
-
-                // Harga Satuan per Unit Tampilan (misal Rp 1.600 / kg)
-                $hargaPerUnit = $displayQty > 0 ? ($total / $displayQty) : $total;
                 $grandTotal += $total;
-
                 $namaBahan = optional($d->bahan_baku)->nama_bahan ?? 'Bahan Baku #' . $d->bahan_baku_id;
             @endphp
             <tr>
                 <td class="text-center">{{ $idx + 1 }}</td>
                 <td><strong>{{ $namaBahan }}</strong></td>
-                <td class="text-right font-bold">{{ \App\Helpers\UnitHelper::formatNumber($displayQty) }}</td>
-                <td class="text-center">{{ $displaySatuan }}</td>
-                <td class="text-right font-mono">Rp {{ number_format($hargaPerUnit, 0, ',', '.') }}</td>
+                <td class="text-right font-bold">{{ \App\Helpers\UnitHelper::formatNumber($qty) }}</td>
+                <td class="text-center">{{ $satuan }}</td>
+                <td class="text-right font-mono">Rp {{ number_format($hargaSatuan, 0, ',', '.') }}</td>
                 <td class="text-right font-mono font-bold">Rp {{ number_format($total, 0, ',', '.') }}</td>
             </tr>
             @endforeach

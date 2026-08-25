@@ -1,244 +1,170 @@
 @extends('layouts.pos')
 
+@section('title', 'Pembayaran Selesai')
+
 @section('content')
-<div x-data="posSuccessPreview()" class="relative h-[calc(100vh-65px)] w-full bg-slate-100 flex items-center justify-center font-sans overflow-hidden">
-    {{-- Dimmer Overlay / Background untuk ilusi Modal --}}
-    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-0"></div>
+<div class="relative min-h-[calc(100vh-65px)] w-full bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
 
-    {{-- SUCCESS MODAL --}}
-    <div x-show="!showPrintPreview" class="relative z-10 w-full max-w-[480px] bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center mx-4"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-90"
-         x-transition:enter-end="opacity-100 scale-100">
+    {{-- MAIN 2-COLUMN CONTAINER --}}
+    <div class="relative w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-in fade-in zoom-in duration-200">
         
-        {{-- Close Button di ujung kanan atas (Opsional, tapi ada di screenshot) --}}
-        <a href="{{ route('pos.dinein.index') }}" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-            <i class="ph ph-x text-xl"></i>
-        </a>
-
-        {{-- Icon Centang --}}
-        <div class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500 mb-5 relative">
-            <div class="absolute inset-0 rounded-full border border-emerald-200 animate-ping opacity-50"></div>
-            <i class="ph-bold ph-check text-4xl"></i>
-        </div>
-
-        {{-- Teks Berhasil --}}
-        <h2 class="text-2xl font-bold text-slate-800 mb-1">Pesanan Berhasil!</h2>
-        <p class="text-xs text-slate-500 mb-4 font-medium uppercase tracking-wider">Nomor Pesanan</p>
-        
-        <div class="text-lg font-bold text-slate-800 tracking-wide mb-3">
-            {{ $pesanan->id_pesanan ?? 'ORD-'.date('Ymd').'-'.str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) }}
-        </div>
-        
-        <div class="text-3xl font-black text-primary mb-8">
-            Rp {{ number_format($pesanan->total_tagihan, 0, ',', '.') }}
-        </div>
-
-        {{-- Tombol Aksi --}}
-        <div class="w-full space-y-3">
-            <button @click="window.open('{{ route('pos.dinein.print-nota', $pesanan->id) }}', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-container transition flex justify-center items-center gap-2 shadow-sm">
-                <i class="ph-bold ph-printer text-lg text-emerald-400"></i> Cetak Struk
-            </button>
-            <button @click="window.open('{{ route('pos.dinein.print-dapur', $pesanan->id) }}', '_blank', 'width=400,height=700')" class="w-full py-3.5 bg-emerald-50 border border-emerald-200 text-primary rounded-xl font-bold text-sm hover:bg-emerald-100 transition flex justify-center items-center gap-2 shadow-sm">
-                <i class="ph-bold ph-printer text-lg text-primary"></i> Cetak Struk Dapur
-            </button>
-            <a href="{{ route('pos.dinein.index') }}" class="w-full py-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold text-sm transition flex justify-center items-center">
-                Pesanan Baru
-            </a>
-        </div>
-    </div>
-
-    {{-- PRINT PREVIEW MODAL --}}
-    <div x-show="showPrintPreview" class="relative z-20 w-full max-w-5xl bg-white rounded-xl shadow-2xl flex flex-col mx-4 h-[85vh] overflow-hidden"
-         style="display: none;"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-90"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
-        
-        {{-- Header Preview Modal --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-            <div class="flex items-center gap-3">
-                <i class="ph-bold ph-printer text-2xl text-slate-700"></i>
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800">Print Receipt</h2>
-                    <p class="text-xs text-slate-500">Configure printer settings and preview the receipt.</p>
-                </div>
-            </div>
-            <button @click="closePrintPreview()" class="text-slate-400 hover:text-slate-600 transition">
-                <i class="ph ph-x text-xl"></i>
-            </button>
-        </div>
-
-        {{-- Body Preview Modal --}}
-        <div class="flex flex-1 overflow-hidden bg-slate-50/50">
+        {{-- LEFT COLUMN: STATUS & PAYMENT SUMMARY --}}
+        <div class="lg:col-span-6 bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 sm:p-7 flex flex-col justify-between text-center relative">
             
-            {{-- Kiri: Settings --}}
-            <div class="w-80 bg-white border-r border-slate-100 p-6 overflow-y-auto custom-scrollbar shrink-0">
-                
-                {{-- Print Method --}}
-                <div class="mb-6">
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Print Method</p>
-                    <div class="flex p-1 bg-slate-100 rounded-lg">
-                        <button class="flex-1 py-1.5 text-slate-700 bg-white rounded-md shadow-sm text-sm font-semibold flex items-center justify-center gap-1"><i class="ph-bold ph-globe"></i></button>
-                        <button class="flex-1 py-1.5 text-slate-400 hover:text-slate-700 rounded-md text-sm font-semibold flex items-center justify-center gap-1 cursor-not-allowed"><i class="ph-bold ph-usb"></i></button>
-                        <button class="flex-1 py-1.5 text-slate-400 hover:text-slate-700 rounded-md text-sm font-semibold flex items-center justify-center gap-1 cursor-not-allowed"><i class="ph-bold ph-bluetooth"></i></button>
-                    </div>
-                    <p class="text-[10px] text-slate-400 mt-2">Uses standard browser print dialog.</p>
+            {{-- Close / Back icon button in top right --}}
+            <a href="{{ route('pos.dinein.index') }}"
+               class="absolute top-4 right-4 w-9 h-9 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-center cursor-pointer"
+               title="Kembali ke Pesanan Dine-In">
+                <x-heroicon-o-x-mark class="w-5 h-5" />
+            </a>
+
+            <div>
+                {{-- Success Badge Icon --}}
+                <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center mx-auto mb-3.5 shadow-xs">
+                    <x-heroicon-o-check-circle class="w-10 h-10 stroke-[2.2]" />
                 </div>
 
-                {{-- Paper Size --}}
-                <div class="mb-6">
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Paper Size</p>
-                    <div class="space-y-2">
-                        <label class="flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-colors"
-                               :class="settings.paper_size === '58' ? 'border-warning bg-orange-50/30' : 'border-slate-200 hover:border-slate-300'">
-                            <div class="flex items-center gap-3">
-                                <input type="radio" x-model="settings.paper_size" value="58" class="text-warning focus:ring-warning" @change="updatePreviewUrl()">
-                                <div>
-                                    <p class="text-sm font-bold text-slate-800">58mm</p>
-                                    <p class="text-xs text-slate-500">Small thermal</p>
-                                </div>
-                            </div>
-                            <div class="w-5 h-6 border-2 border-slate-300 rounded-sm"></div>
-                        </label>
-                        <label class="flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-colors"
-                               :class="settings.paper_size === '80' ? 'border-warning bg-orange-50/30' : 'border-slate-200 hover:border-slate-300'">
-                            <div class="flex items-center gap-3">
-                                <input type="radio" x-model="settings.paper_size" value="80" class="text-warning focus:ring-warning" @change="updatePreviewUrl()">
-                                <div>
-                                    <p class="text-sm font-bold text-slate-800">80mm</p>
-                                    <p class="text-xs text-slate-500">Standard thermal</p>
-                                </div>
-                            </div>
-                            <div class="w-7 h-6 border-2 border-slate-300 rounded-sm"></div>
-                        </label>
-                    </div>
-                </div>
+                {{-- Title & Subtitle --}}
+                <h2 class="text-xl font-black text-gray-900 leading-tight">Pembayaran Selesai!</h2>
+                <p class="text-xs text-gray-500 font-medium mt-1">Pembayaran telah lunas dan transaksi selesai dicatat ke sistem.</p>
 
-                {{-- Tampilan Nota (Toggles) --}}
-                <div>
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Tampilan Nota</p>
-                    <div class="space-y-3">
-                        <template x-for="(label, key) in toggles" :key="key">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-semibold text-slate-700" x-text="label"></span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" x-model="settings[key]" class="sr-only peer" @change="updatePreviewUrl()">
-                                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-warning"></div>
-                                </label>
-                            </div>
-                        </template>
-                    </div>
-                </div>
+                @php
+                    $pembayaran = $pesanan->pembayaran ? $pesanan->pembayaran->first() : null;
+                    $mejaRaw = $pesanan->meja ? ($pesanan->meja->nomor_meja ?? '-') : '-';
+                    $mejaStr = str_starts_with($mejaRaw, 'Meja') ? $mejaRaw : ($mejaRaw === '-' ? '-' : 'Meja ' . $mejaRaw);
+                    $namaKonsumen = $pesanan->nama_konsumen ?? ($pesanan->pelanggan->nama ?? 'Tamu');
+                    $namaKasir = $pesanan->kasir->nama ?? ($pesanan->pelayan->nama ?? (auth()->user()->nama ?? 'Kasir BBC'));
+                    $metodeBayarRaw = $pembayaran->metode_pembayaran ?? ($pesanan->metode_bayar ?? 'Tunai');
+                    $cleanedMetode = strtolower(str_replace(['_', '-'], ' ', $metodeBayarRaw));
+                    $metodeBayar = match($cleanedMetode) {
+                        'cash', 'tunai' => 'Tunai',
+                        'qris', 'qris manual', 'qris_manual' => 'QRIS',
+                        'transfer', 'transfer manual', 'bank transfer', 'bank_transfer' => 'Transfer Bank',
+                        'debit', 'kartu debit', 'edc debit', 'edc_debit' => 'Kartu Debit',
+                        'kredit', 'kartu kredit' => 'Kartu Kredit',
+                        default => ucwords(str_replace('_', ' ', $metodeBayarRaw)),
+                    };
+                    $totalTagihan = $pesanan->total_tagihan ?? 0;
+                    $uangDiterima = $pembayaran->jumlah_bayar ?? $totalTagihan;
+                    $kembalian = max(0, $uangDiterima - $totalTagihan);
+                @endphp
 
+                {{-- Order Summary Details --}}
+                <div class="w-full mt-5 bg-gray-50/80 rounded-2xl p-4 border border-gray-100 space-y-2.5 text-xs text-left">
+                    <div class="flex items-center justify-between pb-2 border-b border-gray-200/60">
+                        <span class="text-gray-500 font-medium">Kode Pesanan</span>
+                        <span class="font-bold text-gray-900 font-mono tracking-tight">{{ $pesanan->id_pesanan ?? ('DIN-' . $pesanan->id) }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500 font-medium">Meja</span>
+                        <span class="font-bold text-gray-900">{{ $mejaStr }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500 font-medium">Nama Konsumen</span>
+                        <span class="font-bold text-gray-900">{{ $namaKonsumen }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500 font-medium">Metode Pembayaran</span>
+                        <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">{{ $metodeBayar }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500 font-medium">Kasir</span>
+                        <span class="font-semibold text-gray-700">{{ $namaKasir }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2.5 border-t border-gray-200/60">
+                        <span class="font-bold text-gray-700">Total Pembayaran</span>
+                        <span class="font-black text-base text-primary">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</span>
+                    </div>
+
+                    @if(strtolower($metodeBayarRaw) === 'cash' || strtolower($metodeBayarRaw) === 'tunai')
+                    <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1">
+                        <span>Diterima: Rp {{ number_format($uangDiterima, 0, ',', '.') }}</span>
+                        <span>Kembalian: <strong class="text-gray-700">Rp {{ number_format($kembalian, 0, ',', '.') }}</strong></span>
+                    </div>
+                    @endif
+                </div>
             </div>
 
-            {{-- Kanan: Iframe Preview --}}
-            <div class="flex-1 bg-slate-100 flex flex-col p-6 items-center overflow-y-auto">
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Preview — <span x-text="settings.paper_size"></span>MM Portrait</div>
-                <div class="bg-white shadow-md w-full flex-1 max-w-[400px] border border-slate-200 rounded overflow-hidden">
-                    {{-- Iframe for Receipt Preview --}}
-                    <iframe x-ref="receiptFrame" :src="previewUrl" class="w-full h-full border-none"></iframe>
-                </div>
+            {{-- Action Buttons --}}
+            <div class="w-full mt-6 space-y-2.5">
+                {{-- Button 1: Cetak Struk Pembayaran --}}
+                <button type="button"
+                        onclick="printReceiptDirect()"
+                        class="w-full h-11 bg-primary hover:bg-primary-container text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer">
+                    <x-heroicon-o-printer class="w-4 h-4 text-emerald-400" />
+                    <span>Cetak Struk Pembayaran</span>
+                </button>
+
+                {{-- Button 2: Kembali ke Halaman Sebelumnya --}}
+                <a href="{{ route('pos.dinein.index') }}"
+                   class="w-full h-11 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 hover:border-gray-300 font-bold text-xs rounded-xl transition-all shadow-2xs flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer">
+                    <x-heroicon-o-arrow-left class="w-4 h-4 text-gray-500" />
+                    <span>Kembali ke Halaman Sebelumnya</span>
+                </a>
             </div>
 
         </div>
 
-        {{-- Footer Preview Modal --}}
-        <div class="flex items-center justify-end px-6 py-4 border-t border-slate-100 shrink-0 gap-3 bg-white">
-            <button @click="closePrintPreview()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
-                Cancel
-            </button>
-            <button @click="executePrint()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-warning hover:bg-orange-600 transition flex items-center gap-2 shadow-sm">
-                <i class="ph-bold ph-printer"></i> Print Receipt
-            </button>
+        {{-- RIGHT COLUMN: PRATINJAU STRUK CETAK (THERMAL RECEIPT PREVIEW) --}}
+        <div class="lg:col-span-6 bg-white rounded-3xl shadow-2xl border border-gray-100 p-5 flex flex-col justify-between">
+            
+            {{-- Preview Card Header --}}
+            <div class="w-full flex items-center justify-between pb-3.5 border-b border-gray-100 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="p-1.5 bg-emerald-50 text-emerald-700 rounded-lg">
+                        <x-heroicon-o-document-text class="w-4 h-4" />
+                    </span>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-900 text-sm leading-tight">Pratinjau Struk Cetak</h3>
+                        <p class="text-[11px] text-gray-400">Format Kertas Thermal 80mm</p>
+                    </div>
+                </div>
+                <button type="button"
+                        onclick="printReceiptDirect()"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                        title="Cetak Sekarang">
+                    <x-heroicon-o-printer class="w-3.5 h-3.5" />
+                    <span>Cetak</span>
+                </button>
+            </div>
+
+            {{-- Embedded Thermal Paper Frame --}}
+            <div class="w-full my-3.5 bg-slate-100/80 p-3 sm:p-4 rounded-2xl flex justify-center items-center overflow-hidden border border-slate-200/60 shadow-inner flex-1 min-h-[460px]">
+                <iframe id="receiptPreviewIframe"
+                        src="{{ route('pos.dinein.print-nota', $pesanan->id) }}?preview=1&auto_print=0&embed=1"
+                        class="w-full h-[460px] max-w-[340px] rounded-xl bg-white shadow-md border border-gray-200/90 overflow-y-auto"
+                        frameborder="0">
+                </iframe>
+            </div>
+
         </div>
+
     </div>
+
 </div>
 
 <script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('posSuccessPreview', () => ({
-            showPrintPreview: false,
-            baseUrl: '{{ route('pos.dinein.print-nota', $pesanan->id) }}',
-            previewUrl: '',
-            
-            settings: {
-                paper_size: '58',
-                show_alamat: true,
-                show_telepon: true,
-                show_waktu: true,
-                show_kasir: true,
-                show_pelanggan: true,
-                show_meja: true,
-                show_footer: true,
-                show_pencetak: true,
-                show_branding: true,
-            },
+    function printReceiptDirect() {
+        const frame = document.getElementById('receiptPreviewIframe');
+        if (frame && frame.contentWindow) {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+        } else {
+            printReceiptPopup('{{ route('pos.dinein.print-nota', $pesanan->id) }}', 'PrintNota_{{ $pesanan->id }}');
+        }
+    }
 
-            toggles: {
-                show_alamat: 'Alamat Toko',
-                show_telepon: 'Telepon Toko',
-                show_waktu: 'Tanggal & Waktu',
-                show_kasir: 'Nama Kasir',
-                show_pelanggan: 'Nama Pelanggan',
-                show_meja: 'Nomor Meja',
-                show_footer: 'Footer Kustom',
-                show_pencetak: 'Pencetak & Jam Cetak',
-                show_branding: 'Branding POS',
-            },
-
-            init() {
-                this.updatePreviewUrl();
-            },
-
-            openPrintPreview() {
-                this.showPrintPreview = true;
-            },
-
-            closePrintPreview() {
-                this.showPrintPreview = false;
-            },
-
-            updatePreviewUrl() {
-                let params = new URLSearchParams();
-                for (const key in this.settings) {
-                    // Convert boolean to 1 or 0 for query param, keep string as is
-                    let val = typeof this.settings[key] === 'boolean' ? (this.settings[key] ? '1' : '0') : this.settings[key];
-                    params.append(key, val);
-                }
-                this.previewUrl = `${this.baseUrl}?${params.toString()}`;
-            },
-
-            executePrint() {
-                if (this.$refs.receiptFrame && this.$refs.receiptFrame.contentWindow) {
-                    this.$refs.receiptFrame.contentWindow.focus();
-                    this.$refs.receiptFrame.contentWindow.print();
-                }
-            },
-
-            printDapur() {
-                // Cetak dapur menggunakan route /admin/pos/pesanan/{id}/print-dapur
-                let url = '{{ route("pos.dinein.print-dapur", $pesanan->id) }}';
-                let iframe = document.getElementById('kitchen-print-iframe');
-                if (!iframe) {
-                    iframe = document.createElement('iframe');
-                    iframe.id = 'kitchen-print-iframe';
-                    iframe.style.display = 'none';
-                    document.body.appendChild(iframe);
-                }
-                iframe.src = url;
-                iframe.onload = function() {
-                    setTimeout(() => {
-                        iframe.contentWindow.focus();
-                        iframe.contentWindow.print();
-                    }, 500);
-                };
-            }
-        }));
-    });
+    function printReceiptPopup(url, title) {
+        const width = 450;
+        const height = 650;
+        const left = (window.screen.width / 2) - (width / 2);
+        const top = (window.screen.height / 2) - (height / 2);
+        window.open(url, title, `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=yes, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`);
+    }
 </script>
 @endsection

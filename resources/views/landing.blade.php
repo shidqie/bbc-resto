@@ -71,7 +71,7 @@
     </x-landing.section>
 
     {{-- 5. PAKET CATERING --}}
-    <x-landing.section id="catering" title="Paket Katering" subtitle="Pemesanan min. H-3. DP 50%." bgBatik="true">
+    <x-landing.section id="catering" title="Paket Katering" subtitle="Pemesanan min. H-4. DP 50%." bgBatik="true">
         <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             @forelse($paketCatering as $paket)
                 <x-landing.package-card :paket="$paket" type="catering" />
@@ -82,7 +82,7 @@
     </x-landing.section>
 
     {{-- 6. PAKET NASI BOX --}}
-    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Minimal 20 box. Pemesanan min. H-3. DP 25%." bgBatik="true">
+    <x-landing.section id="nasi-box" title="Paket Nasi Box" subtitle="Minimal 20 box. Pemesanan min. H-4. DP 25%." bgBatik="true">
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             @forelse($paketNasiBox as $paket)
                 <x-landing.package-card :paket="$paket" type="nasi_box" />

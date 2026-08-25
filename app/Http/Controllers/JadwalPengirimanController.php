@@ -50,7 +50,14 @@ class JadwalPengirimanController extends Controller
         $statusFilter = $request->get('status', 'Semua');
         $search = $request->get('search');
 
-        $query = Pesanan::with(['jadwal_pesanan', 'detail_pesanan.menu', 'pengiriman'])
+        $query = Pesanan::with([
+            'pelanggan',
+            'jadwal_pesanan',
+            'pengiriman',
+            'detail_pesanan.menu',
+            'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket.menu',
+            'jenis_pesanan',
+        ])
             ->whereIn('jenis_pesanan_id', [2, 3])
             ->whereHas('pengiriman'); // Only show orders that are sent to delivery (Jadwal Pengiriman is a worklist)
 
@@ -77,7 +84,13 @@ class JadwalPengirimanController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('id_pesanan', 'like', "%{$search}%")
-                    ->orWhere('catatan', 'like', "%{$search}%");
+                    ->orWhere('catatan', 'like', "%{$search}%")
+                    ->orWhereHas('pelanggan', function ($sub) use ($search) {
+                        $sub->where('nama', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('jadwal_pesanan', function ($sub) use ($search) {
+                        $sub->where('nama_penerima', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -169,6 +182,11 @@ class JadwalPengirimanController extends Controller
      */
     public function updatePengirimanStatus(Request $request, $id)
     {
+        $roleName = Auth::user()->peran?->nama_peran ?? '';
+        if (!in_array($roleName, ['Pengantaran', 'Tim Pengantaran', 'Pemilik', 'Admin', 'Super Admin'])) {
+            return back()->with('error', 'Hanya Tim Pengantaran atau Pemilik yang memiliki hak akses untuk memperbarui status pengiriman.');
+        }
+
         $rules = ['status_pengiriman_id' => 'required|integer|min:1|max:5'];
         if ($request->status_pengiriman_id == 4) {
             $rules['foto_bukti'] = 'required|image|max:5120'; // max 5MB

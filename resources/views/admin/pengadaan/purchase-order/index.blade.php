@@ -3,13 +3,20 @@
 
 @section('content')
 <div class="flex-1 bg-gray-50 text-gray-800 pb-10">
+    @php
+        $userRole = auth()->user()->peran->nama_peran ?? '';
+        $isAdminOrPemilik = in_array($userRole, ['Admin', 'Super Admin', 'Pemilik', 'Manajer']);
+        $isDapur = (auth()->user()->hasRole('Dapur', 'Tim Dapur') || in_array($userRole, ['Dapur', 'Tim Dapur', 'Koki'])) && !$isAdminOrPemilik;
+    @endphp
+
     <div class="w-full p-6 space-y-5">
 
         <x-ui.page-header
             title="Purchase Order"
-            subtitle="Kelola pemesanan bahan baku ke supplier atau toko."
+            subtitle="{{ $isDapur ? 'Daftar pemesanan bahan baku untuk penerimaan barang.' : 'Kelola pemesanan bahan baku ke supplier atau toko.' }}"
             :breadcrumbs="['Pengadaan', 'Purchase Order']">
             <x-slot:actions>
+                @if(!$isDapur)
                 <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open = false">
                     <button @click="open = !open" type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-[#0D3024] hover:bg-[#0D3024]/90 text-white font-semibold text-sm rounded-lg shadow-sm transition-all duration-150">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
@@ -36,6 +43,7 @@
                         </a>
                     </div>
                 </div>
+                @endif
             </x-slot:actions>
         </x-ui.page-header>
 
@@ -74,7 +82,7 @@
                     <th class="px-4 py-3.5 text-left">Kode PO</th>
                     <th class="px-4 py-3.5 text-left">Tanggal</th>
                     <th class="px-4 py-3.5 text-left">Sumber</th>
-                    <th class="px-4 py-3.5 text-left">Supplier/Toko</th>
+                    <th class="px-4 py-3.5 text-left">Nama Supplier</th>
                     <th class="px-4 py-3.5 text-center">Jumlah Item</th>
                     <th class="px-4 py-3.5 text-center">Status</th>
                     <th class="px-4 py-3.5 text-center">Aksi</th>
@@ -86,9 +94,21 @@
                         <td class="px-4 py-4 align-middle">
                             <span class="font-mono font-bold text-gray-900 text-xs">{{ $po->nomor_po }}</span>
                         </td>
-                        <td class="px-4 py-4 align-middle font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($po->tanggal_po)->format('d M Y') }}</td>
-                        <td class="px-4 py-4 align-middle text-gray-700 capitalize">{{ $po->jenis_po == 'operasional' ? 'Harian' : 'Katering' }}</td>
-                        <td class="px-4 py-4 align-middle text-gray-700">{{ $po->supplier }}</td>
+                        <td class="px-4 py-4 align-middle text-gray-600 text-xs whitespace-nowrap">
+                            {{ \Carbon\Carbon::parse($po->tanggal_po)->translatedFormat('d M Y') }}
+                        </td>
+                        <td class="px-4 py-4 align-middle text-gray-700">
+                            <span class="font-semibold">{{ $po->jenis_po == 'operasional' ? 'Harian' : 'Katering' }}</span>
+                            @php
+                                $sumberKode = $po->kode_pesanan_catering ?: optional(optional($po->pengadaan_bahan)->pesanan)->id_pesanan;
+                            @endphp
+                            @if($sumberKode)
+                                <p class="text-[11px] font-mono text-emerald-700 font-bold mt-0.5">
+                                    {{ $sumberKode }}
+                                </p>
+                            @endif
+                        </td>
+                        <td class="px-4 py-4 align-middle text-gray-700 font-medium">{{ $po->supplier }}</td>
                         <td class="px-4 py-4 align-middle text-center font-bold text-gray-900">{{ $po->detail_purchase_order->count() }} <span class="text-xs font-normal text-gray-500">item</span></td>
                         <td class="px-4 py-4 align-middle text-center">
                             <x-ui.badge :color="$po->status_warna" size="sm">{{ $po->status_nama }}</x-ui.badge>
@@ -113,7 +133,7 @@
                     </x-ui.table.row>
                     @empty
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <x-ui.empty-state icon="document-text" title="Belum ada purchase order." message="Gunakan tombol '+ Buat Purchase Order' di atas untuk membuat PO baru." />
                         </td>
                     </tr>
@@ -125,3 +145,28 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if(session('penerimaan_berhasil'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Bahan Baku Berhasil Diterima!',
+                html: '<div class="text-left bg-emerald-50/70 p-4 rounded-xl border border-emerald-100 text-xs text-emerald-950 space-y-1.5">' +
+                      '<p class="font-bold flex items-center gap-1.5 text-emerald-800"><svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Stok Bahan Otomatis Bertambah</p>' +
+                      '<p class="text-gray-600">Penerimaan bahan baku telah berhasil dicatat dan stok persediaan telah diperbarui.</p>' +
+                      '</div>',
+                confirmButtonColor: '#059669',
+                confirmButtonText: 'Selesai',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'rounded-xl px-6 py-2.5 font-bold text-sm shadow-xs'
+                }
+            });
+        }
+    });
+</script>
+@endif
+@endpush

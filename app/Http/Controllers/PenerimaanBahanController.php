@@ -60,7 +60,10 @@ class PenerimaanBahanController extends Controller
 
     public function create(PurchaseOrder $po)
     {
-        abort_unless(app(PengadaanStatusService::class)->poMasihBisaDiterima($po), 403, 'Purchase Order ini tidak dapat diterima (sudah selesai/dibatalkan).');
+        if (!app(PengadaanStatusService::class)->poMasihBisaDiterima($po)) {
+            return redirect()->route('pengadaan.po.show', $po->id)
+                ->with('info', 'Seluruh bahan baku pada Purchase Order #' . $po->nomor_po . ' telah selesai diterima.');
+        }
 
         $po->load([
             'pengadaan_bahan',
@@ -78,7 +81,10 @@ class PenerimaanBahanController extends Controller
 
     public function store(Request $request, PurchaseOrder $po)
     {
-        abort_unless(app(PengadaanStatusService::class)->poMasihBisaDiterima($po), 403, 'Purchase Order ini tidak dapat diterima (sudah selesai/dibatalkan).');
+        if (!app(PengadaanStatusService::class)->poMasihBisaDiterima($po)) {
+            return redirect()->route('pengadaan.po.show', $po->id)
+                ->with('info', 'Purchase Order #' . $po->nomor_po . ' sudah selesai diterima.');
+        }
 
         $request->validate([
             'tanggal_penerimaan' => 'nullable|date',
@@ -100,7 +106,7 @@ class PenerimaanBahanController extends Controller
         $jenisPersediaan = $isCatering ? StokBahan::JENIS_CATERING : StokBahan::JENIS_HARIAN;
         $stokService = app(StockService::class);
 
-        DB::transaction(function () use ($request, $po, $pengadaan, $jenisPersediaan, $stokService, $sisaItems, $checkeds) {
+        $penerimaan = DB::transaction(function () use ($request, $po, $pengadaan, $jenisPersediaan, $stokService, $sisaItems, $checkeds) {
             $totalNotaRaw = $request->total_nota;
             $totalPembelian = null;
             if ($totalNotaRaw !== null && $totalNotaRaw !== '') {
@@ -110,7 +116,7 @@ class PenerimaanBahanController extends Controller
             $penerimaan = PenerimaanBahan::create([
                 'nomor_penerimaan' => $this->kodePenerimaan(),
                 'purchase_order_id' => $po->id,
-                'kode_permintaan' => $pengadaan->id_pengadaan,
+                'kode_permintaan' => optional($pengadaan)->id_pengadaan ?? $po->nomor_po,
                 'diterima_oleh' => auth()->id() ?? 1,
                 'diterima_pada' => $request->tanggal_penerimaan
                     ? \Carbon\Carbon::parse($request->tanggal_penerimaan . ' ' . now()->format('H:i:s'))
@@ -182,11 +188,15 @@ class PenerimaanBahanController extends Controller
                 $detailPo->jumlah_diterima = (float) $detailPo->jumlah_diterima + $diterimaFinal;
                 $detailPo->save();
 
+                // Konversi kuantitas dari Purchasing Unit (Kg, Liter, Pcs) ke Base Unit Stok (Gram, Ml, Pcs)
+                $jumlahStokMasuk = \App\Helpers\UnitHelper::toBaseQuantity($diterimaFinal, $detailPo->satuan);
+                $satuanBeliName = \App\Helpers\UnitHelper::getPurchasingUnit($detailPo->satuan);
+
                 // Stok masuk hanya pada jenis persediaan sesuai permintaan (harian/catering).
-                $keterangan = "Penerimaan {$penerimaan->nomor_penerimaan} / {$po->nomor_po}";
+                $keterangan = "Penerimaan {$penerimaan->nomor_penerimaan} / {$po->nomor_po} (+{$diterimaFinal} {$satuanBeliName})";
                 $stokService->addStock(
                     $detailPo->bahan_baku_id,
-                    $diterimaFinal,
+                    $jumlahStokMasuk,
                     $keterangan,
                     1,
                     auth()->id(),
@@ -214,6 +224,12 @@ class PenerimaanBahanController extends Controller
             } else {
                 $penerimaan->status = $anyKurang ? 'diproses' : 'selesai';
             }
+
+            // Jika total pembelian tidak diisi secara manual, otomatis hitung dari akumulasi detail bahan
+            if ($totalPembelian === null || $totalPembelian <= 0) {
+                $penerimaan->total_pembelian = (float) $penerimaan->detail_penerimaan_bahan()->sum(\Illuminate\Support\Facades\DB::raw('jumlah_diterima * harga_satuan'));
+            }
+
             $penerimaan->diverifikasi_oleh = auth()->id() ?? 1;
             $penerimaan->waktu_verifikasi = now();
             $penerimaan->save();
@@ -228,10 +244,14 @@ class PenerimaanBahanController extends Controller
             $kode = app(PengadaanStatusService::class)->impliedStatusKode($pengadaan);
             $pengadaan->status_pengadaan_id = \App\Models\StatusPengadaan::idByKode($kode);
             $pengadaan->save();
+
+            return $penerimaan;
         });
 
         return redirect()->route('pengadaan.po.show', $po->id)
-            ->with('success', 'Penerimaan berhasil disimpan. Stok bahan yang diterima telah diperbarui.');
+            ->with('success', 'Bahan baku berhasil diterima dan stok persediaan berhasil ditambahkan!')
+            ->with('penerimaan_berhasil', true)
+            ->with('penerimaan_nomor', optional($penerimaan)->nomor_penerimaan ?? $po->nomor_po);
     }
 
     public function show(PenerimaanBahan $penerimaan)
@@ -242,8 +262,9 @@ class PenerimaanBahanController extends Controller
             'detail_penerimaan_bahan.bahan_baku.satuan',
         ]);
 
-        // Perubahan di baris ini: $totalPembelian diubah menjadi $total_pembelian
-        $total_pembelian = $penerimaan->detail_penerimaan_bahan->sum(fn ($d) => (float) $d->jumlah_diterima * (float) $d->harga_satuan);
+        $total_pembelian = ($penerimaan->total_pembelian && (float)$penerimaan->total_pembelian > 0)
+            ? (float) $penerimaan->total_pembelian
+            : $penerimaan->detail_penerimaan_bahan->sum(fn ($d) => (float) $d->jumlah_diterima * (float) $d->harga_satuan);
         
         $sisaItems = collect();
         if ($penerimaan->purchase_order_id) {

@@ -46,7 +46,7 @@ class PengadaanStatusService
             'detail_id' => $detail->id,
             'bahan_id' => $detail->bahan_baku_id,
             'nama_bahan' => optional($detail->bahan_baku)->nama_bahan,
-            'satuan' => optional($detail->satuan)->nama_satuan ?? '',
+            'satuan' => optional($detail->satuan)->singkatan ?? optional($detail->satuan)->nama_satuan ?? \App\Helpers\UnitHelper::getPurchasingUnit($detail->bahan_baku?->satuan),
             'jumlah_diminta' => $diminta,
             'sudah_di_po' => $sudahDiPo,
             'jumlah_diterima' => $diterima,
@@ -65,7 +65,7 @@ class PengadaanStatusService
     public function sisaPermintaan(PengadaanBahan $pengadaan): Collection
     {
         return $pengadaan->detail_pengadaan_bahan()
-            ->with(['bahan_baku.satuan', 'detail_purchase_order'])
+            ->with(['bahan_baku.satuan', 'satuan', 'detail_purchase_order'])
             ->get()
             ->map(fn ($d) => $this->sisaDetailPermintaan($d))
             ->values();
@@ -148,17 +148,20 @@ class PengadaanStatusService
      */
     public function sisaDetailPo(PurchaseOrder $po): Collection
     {
-        return $po->detail_purchase_order()->with(['bahan_baku.satuan'])->get()->map(function (DetailPurchaseOrder $d) {
+        return $po->detail_purchase_order()->with(['bahan_baku.satuan', 'satuan', 'detail_pengadaan_bahan'])->get()->map(function (DetailPurchaseOrder $d) {
+            $satuanBeli = optional($d->satuan)->singkatan ?? optional($d->satuan)->nama_satuan ?? \App\Helpers\UnitHelper::getPurchasingUnit($d->bahan_baku?->satuan);
+            $hargaSatuan = (float) ($d->detail_pengadaan_bahan?->harga_satuan ?? \App\Helpers\UnitHelper::toPurchasingPrice(optional($d->bahan_baku)->harga_satuan ?? 0, $d->bahan_baku?->satuan));
+
             return [
                 'detail_id' => $d->id,
                 'bahan_id' => $d->bahan_baku_id,
                 'nama_bahan' => optional($d->bahan_baku)->nama_bahan,
-                'kode_bahan' => optional($d->bahan_baku)->kode_bahan,
-                'satuan' => optional($d->satuan)->nama_satuan ?? '',
+                'kode_bahan' => optional($d->bahan_baku)->id_bahan_baku ?? optional($d->bahan_baku)->kode_bahan,
+                'satuan' => $satuanBeli,
                 'jumlah_dipesan' => (float) $d->jumlah_dipesan,
                 'jumlah_diterima' => (float) $d->jumlah_diterima,
                 'sisa' => (float) $d->sisa,
-                'harga_satuan' => (float) optional($d->bahan_baku)->harga_satuan,
+                'harga_satuan' => $hargaSatuan,
                 'status_nama' => $d->status_nama,
                 'warna' => $d->status_warna,
             ];

@@ -1,4 +1,4 @@
-<nav id="landing-navbar" class="sticky top-0 z-50 bg-white border-b border-neutral-200">
+<nav id="landing-navbar" class="sticky top-0 z-[100] bg-white/95 dark:bg-surface/95 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="h-16 flex items-center justify-between gap-4" x-data="{ layanan: false, akun: false }">
@@ -42,7 +42,18 @@
             {{-- 3. RIGHT: Actions (Auth & Pesan Sekarang) --}}
             <div class="hidden lg:flex items-center justify-end gap-4 shrink-0">
                 @if(Auth::guard('web')->check())
-                    <a href="{{ route('dashboard') }}" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Dasbor Admin</a>
+                    @php
+                        $roleName = Auth::guard('web')->user()->peran->nama_peran ?? 'Admin';
+                        $dashboardText = match($roleName) {
+                            'Pemilik' => 'Dasbor Pemilik',
+                            'Manajer' => 'Dasbor Manajer',
+                            'Kasir' => 'Dasbor Kasir',
+                            'Dapur', 'Tim Dapur' => 'Dasbor Dapur',
+                            'Pengantaran', 'Tim Pengantaran' => 'Dasbor Pengantaran',
+                            default => 'Dasbor ' . $roleName,
+                        };
+                    @endphp
+                    <a href="{{ route('dashboard') }}" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">{{ $dashboardText }}</a>
                 @elseif(Auth::guard('pelanggan')->check())
                     <x-ui.notification-dropdown type="external" />
                     <div class="relative" @mouseenter="akun = true" @mouseleave="akun = false">
@@ -122,8 +133,19 @@
 
             {{-- Auth Section --}}
             @if(Auth::guard('web')->check())
+                @php
+                    $roleNameMobile = Auth::guard('web')->user()->peran->nama_peran ?? 'Admin';
+                    $dashboardTextMobile = match($roleNameMobile) {
+                        'Pemilik' => 'Dasbor Pemilik',
+                        'Manajer' => 'Dasbor Manajer',
+                        'Kasir' => 'Dasbor Kasir',
+                        'Dapur', 'Tim Dapur' => 'Dasbor Dapur',
+                        'Pengantaran', 'Tim Pengantaran' => 'Dasbor Pengantaran',
+                        default => 'Dasbor ' . $roleNameMobile,
+                    };
+                @endphp
                 <a href="{{ route('dashboard') }}" class="mobile-nav-link py-2.5 text-sm font-semibold text-neutral-900">
-                    Dasbor Admin
+                    {{ $dashboardTextMobile }}
                 </a>
             @elseif(Auth::guard('pelanggan')->check())
                 <a href="{{ route('konsumen.pesanan.index') }}" class="mobile-nav-link py-2.5 text-sm font-medium text-neutral-800">

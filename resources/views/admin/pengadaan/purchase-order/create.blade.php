@@ -8,7 +8,7 @@
         {{-- PAGE HEADER --}}
         <x-ui.page-header
             title="BUAT PURCHASE ORDER (PO)"
-            subtitle="Buat pesanan bahan baku kepada supplier."
+            subtitle="Buat pesanan bahan baku kepada supplier berdasarkan kebutuhan produksi dan stok."
             :breadcrumbs="['Pengadaan', 'Purchase Order', 'Buat PO']">
             <x-slot:actions>
                 <x-ui.button variant="secondary" href="{{ route('pengadaan.po.index') }}">
@@ -19,6 +19,25 @@
 
         <x-ui.alert />
 
+        @if(isset($resepBelumLengkap) && $resepBelumLengkap)
+        <div class="p-5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 space-y-2 shadow-xs">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <h4 class="font-extrabold text-sm uppercase tracking-wide text-amber-800">Status: Resep Belum Lengkap</h4>
+            </div>
+            <p class="text-xs text-amber-800 leading-relaxed">
+                Terdapat menu pada pesanan ini yang belum memiliki data resep/Bill of Materials (BOM) lengkap di master resep. Silakan lengkapi resep pada menu berikut agar perhitungan kebutuhan otomatis akurat:
+            </p>
+            <div class="flex flex-wrap gap-2 pt-1">
+                @foreach($missingMenus as $mm)
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-200/70 text-amber-900 border border-amber-300">
+                        {{ $mm }}
+                    </span>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         <form action="{{ route('pengadaan.po.store-unified') }}" method="POST" id="poForm" class="space-y-6">
             @csrf
             <input type="hidden" name="tipe" value="{{ $tipe ?? 'Operasional' }}">
@@ -26,38 +45,70 @@
                 <input type="hidden" name="pesanan_id" value="{{ $pesanan->id }}">
             @endif
 
-            {{-- CARD 1: INFORMASI PO --}}
+            {{-- CARD 1: INFORMASI PO & PESANAN --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                    <h3 class="text-xs font-extrabold text-gray-700 uppercase tracking-wider">INFORMASI PO</h3>
-                    <span class="text-xs text-gray-400 font-semibold">RM BBC Resto</span>
+                    <h3 class="text-xs font-extrabold text-gray-700 uppercase tracking-wider">INFORMASI PO & SUMBER KEBUTUHAN</h3>
+                    <span class="text-xs text-gray-400 font-semibold">RM Saung Babakan Cinta</span>
                 </div>
                 <div class="p-6 space-y-5">
-                    {{-- Row 1: No. PO (Full Width) --}}
+                    {{-- Row 1: No. PO --}}
                     <div>
                         <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider mb-2">No. PO</label>
-                        <input type="text" name="nomor_po" value="{{ $kodePo }}" readonly class="w-full bg-gray-100/80 border border-gray-200 rounded-xl text-gray-700 font-medium text-sm px-4 py-2.5 cursor-not-allowed font-semibold">
+                        <input type="text" name="nomor_po" value="{{ $kodePo }}" readonly class="w-full bg-gray-100/80 border border-gray-200 rounded-xl text-gray-700 font-semibold text-sm px-4 py-2.5 cursor-not-allowed">
                         <p class="text-[11px] text-gray-400 mt-1">Dibuat otomatis oleh sistem</p>
                     </div>
 
-                    {{-- Row 2: Supplier & Tanggal PO/Kebutuhan --}}
+                    {{-- Row 2: Pemilihan Pesanan Katering / Nasi Box --}}
                     @if($tipe === 'Catering' || $tipe === 'Katering')
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 mb-5">
+                    <div class="grid grid-cols-1 gap-y-3 p-4 bg-emerald-50/40 border border-emerald-100 rounded-2xl">
                         <div>
-                            <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider mb-2">Pesanan Katering <span class="text-red-500">*</span></label>
-                            <select name="kode_pesanan" onchange="window.location.href='?tipe=Catering&kode_pesanan=' + this.value" class="block w-full rounded-xl border border-gray-200 focus:border-primary/20 focus:ring-primary/20 bg-white text-sm px-4 py-2.5 transition-all font-medium outline-none">
-                                <option value="">— Pilih Pesanan Katering —</option>
-                                @foreach($pesananKatering as $pk)
-                                    <option value="{{ $pk->id_pesanan }}" {{ (request('kode_pesanan') == $pk->id_pesanan) ? 'selected' : '' }}>
-                                        {{ $pk->id_pesanan }} - {{ $pk->pelanggan->nama_pelanggan ?? 'Umum' }} ({{ \Carbon\Carbon::parse($pk->waktu_pesanan)->format('d/m/Y') }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            <p class="text-[11px] text-gray-400 mt-1">Pilih pesanan untuk menghitung kebutuhan bahan</p>
+                            <label class="block text-xs font-extrabold text-emerald-900 uppercase tracking-wider mb-2">Pesanan Katering / Nasi Box (Sumber Kebutuhan BOM) <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select name="kode_pesanan" onchange="window.location.href='?tipe=Catering&kode_pesanan=' + encodeURIComponent(this.value)" class="block w-full appearance-none rounded-xl border border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 bg-white text-sm pl-4 pr-10 py-2.5 transition-all font-semibold text-gray-800 outline-none shadow-xs cursor-pointer">
+                                    <option value="">— Pilih Pesanan Katering / Nasi Box —</option>
+                                    @foreach($pesananKatering as $pk)
+                                        @php
+                                            $namaCust = optional($pk->pelanggan)->nama ?? optional($pk->pelanggan)->nama_pelanggan ?? 'Umum';
+                                            $tglPesanan = \Carbon\Carbon::parse($pk->waktu_pesanan ?? $pk->dibuat_pada ?? $pk->created_at)->format('d/m/Y');
+                                            $qtyPorsi = optional($pk->detail_pesanan->first())->jumlah ?? 0;
+                                            $menuNama = optional(optional($pk->detail_pesanan->first())->menu)->nama_menu ?? 'Paket';
+                                        @endphp
+                                        <option value="{{ $pk->id_pesanan }}" {{ (request('kode_pesanan') == $pk->id_pesanan) ? 'selected' : '' }}>
+                                            {{ $pk->id_pesanan }} - {{ $namaCust }} ({{ $menuNama }} {{ $qtyPorsi }} Porsi - {{ $tglPesanan }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-700">
+                                    <x-heroicon-o-chevron-down class="w-4 h-4" />
+                                </span>
+                            </div>
                         </div>
+
+                        @if($pesanan)
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs border-t border-emerald-100">
+                            <div>
+                                <span class="text-gray-500 block">Pemesan:</span>
+                                <span class="font-bold text-gray-800">{{ optional($pesanan->pelanggan)->nama ?? optional($pesanan->pelanggan)->nama_pelanggan ?? 'Umum' }} ({{ optional($pesanan->pelanggan)->no_telp ?? optional($pesanan->pelanggan)->telepon ?? '-' }})</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Menu Dipesan:</span>
+                                <span class="font-bold text-gray-800">
+                                    @foreach($pesanan->detail_pesanan as $dp)
+                                        {{ optional($dp->menu)->nama_menu }} ({{ $dp->jumlah }} Porsi){{ !$loop->last ? ', ' : '' }}
+                                    @endforeach
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Perhitungan Stok:</span>
+                                <span class="font-bold text-emerald-700">Otomatis BOM &minus; Saldo Stok {{ (optional($pesanan)->jenis_pesanan_id == 3) ? 'Harian' : 'Katering' }}</span>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                     @endif
 
+                    {{-- Row 3: Supplier, Tanggal PO & Kebutuhan --}}
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-5 mb-5">
                         <div>
                             <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider mb-2">Supplier / Toko <span class="text-red-500">*</span></label>
@@ -78,7 +129,7 @@
                         </div>
                     </div>
 
-                    {{-- Row 4: Catatan PO (Full Width) --}}
+                    {{-- Row 4: Catatan PO --}}
                     <div>
                         <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider mb-2">Catatan PO</label>
                         <input type="text" name="catatan" value="{{ old('catatan') }}" placeholder="Tambahkan catatan jika diperlukan..." class="block w-full rounded-xl border border-gray-200 focus:border-primary/20 focus:ring-2 focus:ring-primary/20 text-sm px-4 py-2.5 transition-all outline-none font-medium">
@@ -86,15 +137,15 @@
                 </div>
             </div>
 
-            {{-- CARD 2: DAFTAR BAHAN BAKU --}}
+            {{-- CARD 2: DAFTAR BAHAN BAKU YANG WAJIB DIPESAN (KEKURANGAN > 0) --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
-                        <h3 class="text-xs font-extrabold text-gray-700 uppercase tracking-wider">DAFTAR BAHAN BAKU</h3>
-                        <span class="text-xs text-gray-500 font-bold px-2.5 py-0.5 bg-gray-200/60 rounded-md" id="itemCountBadge">{{ count($items) }} item</span>
+                        <h3 class="text-xs font-extrabold text-gray-700 uppercase tracking-wider">DAFTAR KEBUTUHAN PENGADAAN (STOK KURANG)</h3>
+                        <span class="text-xs text-gray-700 font-bold px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-md" id="itemCountBadge">{{ count($items) }} item wajib dibeli</span>
                     </div>
 
-                    {{-- Unified Toolbar: Search & Combobox --}}
+                    {{-- Search & Combobox Toolbar --}}
                     <div class="flex items-center gap-2">
                         <div class="relative" x-data="{
                             open: false,
@@ -105,9 +156,9 @@
                                         id: {{ $bb->id }},
                                         nama: '{{ addslashes($bb->nama_bahan) }}',
                                         kode: '{{ $bb->id_bahan_baku }}',
-                                        satuan: '{{ addslashes($bb->satuan->singkatan ?? '-') }}',
-                                        harga: {{ (float)($bb->harga_satuan ?? 0) }},
-                                        stok_minimal: {{ (float)($bb->stok_minimal ?? $bb->stok_minimal_harian ?? 5) }},
+                                        satuan: '{{ addslashes(\App\Helpers\UnitHelper::getPurchasingUnit($bb->satuan)) }}',
+                                        harga: {{ (float)\App\Helpers\UnitHelper::toPurchasingPrice($bb->harga_satuan ?? 0, $bb->satuan) }},
+                                        stok_minimal: {{ (float)\App\Helpers\UnitHelper::toPurchasingQuantity($bb->stok_minimal ?? 5, $bb->satuan) }},
                                         full: '{{ addslashes($bb->nama_bahan) }} ({{ $bb->id_bahan_baku }})'
                                     },
                                 @endforeach
@@ -125,7 +176,6 @@
                             }
                         }" @click.outside="open = false">
                             
-                            {{-- Magnifying Glass SVG Icon --}}
                             <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
@@ -136,8 +186,8 @@
                                    @click="open = true"
                                    @input="open = true; window.filterAndPaginateTable(1);"
                                    @keydown.enter.prevent="open = false; window.addCustomBahanRow();"
-                                   placeholder="Cari & tambah bahan baku..."
-                                   class="w-64 sm:w-80 h-10 rounded-xl border border-gray-200 bg-white text-sm pl-10 pr-9 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium shadow-sm">
+                                   placeholder="Cari & tambah bahan lain..."
+                                   class="w-64 sm:w-80 h-10 rounded-xl border border-gray-200 bg-white text-sm pl-10 pr-9 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium shadow-xs">
                             
                             <button type="button" @click="open = !open" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
                                 <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -167,7 +217,7 @@
                             </div>
                         </div>
 
-                        <button type="button" onclick="addCustomBahanRow()" class="h-10 px-5 bg-[#0D3024] hover:bg-[#0D3024]/90 text-white rounded-xl text-sm font-bold transition-all shrink-0 flex items-center justify-center gap-1.5 shadow-sm">
+                        <button type="button" onclick="addCustomBahanRow()" class="h-10 px-5 bg-[#0D3024] hover:bg-[#0D3024]/90 text-white rounded-xl text-sm font-bold transition-all shrink-0 flex items-center justify-center gap-1.5 shadow-xs">
                             + Tambah
                         </button>
                     </div>
@@ -177,53 +227,60 @@
                     <table class="w-full text-left border-collapse text-sm" id="poTable">
                         <thead>
                             <tr class="bg-gray-50/80 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th class="py-3.5 px-4 text-center w-14">NO</th>
+                                <th class="py-3.5 px-4 text-center w-12">NO</th>
                                 <th class="py-3.5 px-6">Bahan Baku</th>
-                                <th class="py-3.5 px-6 text-right w-40">Jumlah Pesan</th>
-                                <th class="py-3.5 px-6 text-center w-28">Satuan</th>
-                                <th class="py-3.5 px-6 text-right w-48">Total Pembelian</th>
+                                <th class="py-3.5 px-4 text-center w-28">Kebutuhan BOM</th>
+                                <th class="py-3.5 px-4 text-center w-28">Stok Tersedia</th>
+                                <th class="py-3.5 px-4 text-center w-28">Sudah Dipesan</th>
+                                <th class="py-3.5 px-6 text-right w-36">Kekurangan (Beli)</th>
+                                <th class="py-3.5 px-4 text-center w-24">Satuan Beli</th>
                                 <th class="py-3.5 px-4 text-center w-16">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100" id="poTableBody">
                             @forelse($items as $idx => $item)
                             @php
-                                $qty = $item->jumlah_beli ?? 0;
-                                $harga = 0;
-                                $totalPembelian = 0;
+                                $qty = (float) ($item->jumlah_beli ?? $item->kekurangan ?? $item->kebutuhan_bersih ?? 0);
+                                $kebutuhanTotal = (float) ($item->kebutuhan_total ?? $item->kebutuhan_awal ?? $qty);
+                                $stokVal = (float) ($item->stok_saat_ini ?? 0);
+                                $sudahPesanVal = (float) ($item->sudah_dipesan ?? 0);
+                                $harga = (float) ($item->harga_satuan ?? 0);
+                                $satuanBeli = $item->satuan_beli ?? \App\Helpers\UnitHelper::getPurchasingUnit($item->satuan);
+                                $satuanDasar = $item->satuan_dasar ?? \App\Helpers\UnitHelper::getBaseUnit($item->satuan);
                             @endphp
                             <tr class="item-row hover:bg-gray-50/50 transition-colors"
                                 data-bahan-id="{{ $item->id }}"
-                                data-harga="0">
+                                data-kode="{{ $item->id_bahan_baku }}"
+                                data-harga="{{ $harga }}">
                                 <input type="hidden" name="item_checked[{{ $item->id }}]" value="1">
-                                <input type="hidden" name="harga_satuan[{{ $item->id }}]" class="harga-satuan-hidden" value="0">
+                                <input type="hidden" name="harga_satuan[{{ $item->id }}]" class="harga-satuan-hidden" value="{{ $harga }}">
+                                
                                 <td class="py-3.5 px-4 text-center text-xs text-gray-500 font-semibold row-number">
                                     {{ $idx + 1 }}
                                 </td>
                                 <td class="py-3.5 px-6">
                                     <p class="font-bold text-gray-900 item-nama">{{ $item->nama_bahan }}</p>
-                                    <p class="text-xs text-gray-400 font-medium item-kode">{{ $item->id_bahan_baku }}</p>
+                                </td>
+                                <td class="py-3.5 px-4 text-center text-xs font-semibold text-gray-700">
+                                    {{ number_format($kebutuhanTotal, fmod($kebutuhanTotal, 1) === 0.0 ? 0 : 2, ',', '.') }} {{ $satuanDasar }}
+                                </td>
+                                <td class="py-3.5 px-4 text-center">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold {{ $stokVal > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-500' }}">
+                                        {{ number_format($stokVal, fmod($stokVal, 1) === 0.0 ? 0 : 2, ',', '.') }} {{ $satuanDasar }}
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-4 text-center text-xs font-semibold text-gray-500">
+                                    {{ $sudahPesanVal > 0 ? number_format($sudahPesanVal, fmod($sudahPesanVal, 1) === 0.0 ? 0 : 2, ',', '.') . ' ' . $satuanDasar : '-' }}
                                 </td>
                                 <td class="py-3.5 px-6 text-right">
                                     <input type="text" inputmode="decimal"
                                         name="jumlah_beli[{{ $item->id }}]"
-                                        value="{{ $qty }}"
+                                        value="{{ $qty > 0 ? (fmod($qty, 1) === 0.0 ? (int)$qty : $qty) : 0 }}"
                                         oninput="this.value = this.value.replace(/[^0-9.]/g, ''); updateRowTotal(this)"
                                         class="w-28 text-right rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm py-2 px-3 qty-input outline-none font-bold text-gray-900">
                                 </td>
-                                <td class="py-3.5 px-6 text-center text-gray-600 text-sm font-medium">
-                                    {{ $item->satuan->singkatan ?? '-' }}
-                                </td>
-                                <td class="py-3.5 px-6 text-right">
-                                    <div class="relative inline-block w-40">
-                                        <span class="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">Rp</span>
-                                        <input type="text" inputmode="numeric"
-                                            name="total_pembelian[{{ $item->id }}]"
-                                            value=""
-                                            placeholder="0"
-                                            oninput="formatRowHargaInput(this); updateRowTotal(this)"
-                                            class="w-full text-right pl-8 pr-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm py-2 total-pembelian-input outline-none font-bold text-gray-900">
-                                    </div>
+                                <td class="py-3.5 px-4 text-center text-gray-800 text-xs font-bold">
+                                    {{ $satuanBeli }}
                                 </td>
                                 <td class="py-3.5 px-4 text-center">
                                     <button type="button" onclick="removePoRow(this)" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Bahan">
@@ -233,8 +290,15 @@
                             </tr>
                             @empty
                             <tr id="emptyRow">
-                                <td colspan="6" class="py-12 text-center text-gray-400 font-medium">
-                                    Belum ada bahan baku di dalam daftar PO. Gunakan <span class="font-bold text-gray-700">"Cari & Tambah Bahan Baku"</span> di atas untuk menambahkan bahan.
+                                <td colspan="8" class="py-12 text-center text-gray-400 font-medium">
+                                    @if(isset($pesanan))
+                                        <div class="space-y-1">
+                                            <p class="font-bold text-emerald-700 text-sm">Semua bahan baku untuk pesanan ini sudah mencukupi di stok!</p>
+                                            <p class="text-xs text-gray-500">Tidak ada kekurangan bahan baku yang perlu dipesan. Anda tetap dapat menambahkan bahan lain menggunakan pencarian di atas.</p>
+                                        </div>
+                                    @else
+                                        Belum ada bahan baku di dalam daftar PO. Pilih pesanan katering atau gunakan <span class="font-bold text-gray-700">"Cari & Tambah Bahan Baku"</span> di atas.
+                                    @endif
                                 </td>
                             </tr>
                             @endforelse
@@ -251,16 +315,12 @@
                     </div>
                 </div>
 
-                {{-- Total PO & Action Buttons --}}
-                <div class="border-t border-gray-100 px-6 py-6 bg-gray-50/60 space-y-5">
-                    <div class="flex justify-end">
-                        <div class="w-80 text-right space-y-1">
-                            <span class="text-xs font-extrabold text-gray-500 uppercase tracking-wider block">TOTAL PO</span>
-                            <span id="grandtotal-display" class="font-extrabold text-gray-900 text-3xl block">Rp 0</span>
-                        </div>
+                {{-- Action Buttons & Summary --}}
+                <div class="border-t border-gray-100 px-6 py-4 bg-gray-50/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="text-xs text-gray-500 font-medium">
+                        Total item yang akan dipesan: <span class="font-bold text-gray-900" id="totalItemsSummary">0</span> bahan baku
                     </div>
-
-                    <div class="flex justify-end items-center gap-3 pt-4 border-t border-gray-200/60">
+                    <div class="flex items-center gap-3">
                         <x-ui.button type="button" variant="secondary" href="{{ route('pengadaan.po.index') }}">
                             Batal
                         </x-ui.button>
@@ -270,6 +330,59 @@
                     </div>
                 </div>
             </div>
+
+            {{-- CARD 3: BAHAN BAKU DENGAN STOK MENCUKUPI (INFORMASI TRANSPARANSI) --}}
+            @if(isset($itemsCukup) && $itemsCukup->isNotEmpty())
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden" x-data="{ open: false }">
+                <button type="button" @click="open = !open" class="w-full px-6 py-4 bg-gray-50/60 hover:bg-gray-100/60 border-b border-gray-100 flex items-center justify-between text-left transition-colors">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        <h3 class="text-xs font-extrabold text-gray-700 uppercase tracking-wider">Bahan Baku dengan Stok Mencukupi ({{ $itemsCukup->count() }} item - Tidak Perlu Dipesan)</h3>
+                    </div>
+                    <span class="text-xs text-gray-500 font-semibold flex items-center gap-1">
+                        <span x-text="open ? 'Sembunyikan' : 'Lihat Rincian'"></span>
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </button>
+
+                <div x-show="open" class="p-6 space-y-3" style="display: none;">
+                    <p class="text-xs text-gray-500">Bahan baku di bawah ini telah tersedia dalam jumlah yang mencukupi saldo stok {{ (optional($pesanan)->jenis_pesanan_id == 3) ? 'harian' : 'katering' }}, sehingga otomatis tidak dimasukkan ke dalam pesanan pembelian (PO).</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold uppercase">
+                                    <th class="py-2.5 px-4">Bahan Baku</th>
+                                    <th class="py-2.5 px-4">Menu Pengguna</th>
+                                    <th class="py-2.5 px-4 text-center">Kebutuhan BOM</th>
+                                    <th class="py-2.5 px-4 text-center">Stok Tersedia</th>
+                                    <th class="py-2.5 px-4 text-center">Kekurangan</th>
+                                    <th class="py-2.5 px-4 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($itemsCukup as $ic)
+                                @php
+                                    $satuanTxt = optional($ic->satuan)->singkatan ?? optional($ic->satuan)->nama_satuan ?? '-';
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-2 px-4 font-semibold text-gray-800">{{ $ic->nama_bahan }}</td>
+                                    <td class="py-2 px-4 text-gray-500">{{ $ic->menu_nama ?: '-' }}</td>
+                                    <td class="py-2 px-4 text-center font-bold text-gray-700">{{ number_format($ic->kebutuhan_total, fmod($ic->kebutuhan_total, 1) === 0.0 ? 0 : 2, ',', '.') }} {{ $satuanTxt }}</td>
+                                    <td class="py-2 px-4 text-center font-bold text-emerald-700">{{ number_format($ic->stok_saat_ini, fmod($ic->stok_saat_ini, 1) === 0.0 ? 0 : 2, ',', '.') }} {{ $satuanTxt }}</td>
+                                    <td class="py-2 px-4 text-center font-bold text-gray-400">0 {{ $satuanTxt }}</td>
+                                    <td class="py-2 px-4 text-center">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            Stok Cukup
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @endif
 
         </form>
     </div>
@@ -333,45 +446,21 @@
     }
 
     function updateRowTotal(input) {
-        const tr = input.closest('tr');
-        if (!tr) return;
-
-        const qtyInput = tr.querySelector('.qty-input');
-        const totalInput = tr.querySelector('.total-pembelian-input');
-        const hiddenHarga = tr.querySelector('.harga-satuan-hidden');
-
-        const qty = parseNumericValue(qtyInput ? qtyInput.value : 0);
-        const total = parseNumericValue(totalInput ? totalInput.value : 0);
-
-        if (hiddenHarga && qty > 0 && total > 0) {
-            hiddenHarga.value = total / qty;
-        }
-
         recalcTotal();
     }
 
     function recalcTotal() {
-        let grandTotal = 0;
-        let visibleCount = 0;
-
         const rows = document.querySelectorAll('.item-row');
-        rows.forEach(tr => {
-            if (tr.style.display !== 'none') {
-                visibleCount++;
-                const totalInput = tr.querySelector('.total-pembelian-input');
-                const total = parseNumericValue(totalInput ? totalInput.value : 0);
-                grandTotal += total;
-            }
-        });
+        const count = rows.length;
 
-        const grandDisplay = document.getElementById('grandtotal-display');
-        if (grandDisplay) {
-            grandDisplay.textContent = formatRupiah(grandTotal);
+        const totalSummaryEl = document.getElementById('totalItemsSummary');
+        if (totalSummaryEl) {
+            totalSummaryEl.textContent = count;
         }
 
         const badge = document.getElementById('itemCountBadge');
         if (badge) {
-            badge.textContent = visibleCount + ' item';
+            badge.textContent = count + ' item wajib dibeli';
         }
     }
 
@@ -388,7 +477,7 @@
             const tbody = document.getElementById('poTableBody');
             tbody.innerHTML = `
                 <tr id="emptyRow">
-                    <td colspan="6" class="py-12 text-center text-gray-400 font-medium">
+                    <td colspan="8" class="py-12 text-center text-gray-400 font-medium">
                         Belum ada bahan baku di dalam daftar PO. Gunakan <span class="font-bold text-gray-700">"Cari & Tambah Bahan Baku"</span> di atas untuk menambahkan bahan.
                     </td>
                 </tr>
@@ -401,7 +490,6 @@
     let currentPage = 1;
 
     function filterAndPaginateTable(page = 1) {
-        currentPage = page;
         const addBahanInput = document.getElementById('addBahanInput');
         const query = (addBahanInput ? addBahanInput.value : '').toLowerCase().trim();
 
@@ -409,7 +497,7 @@
         const matchedRows = allRows.filter(row => {
             if (!query) return true;
             const nama = (row.querySelector('.item-nama')?.textContent || '').toLowerCase();
-            const kode = (row.querySelector('.item-kode')?.textContent || '').toLowerCase();
+            const kode = (row.getAttribute('data-kode') || '').toLowerCase();
             return nama.includes(query) || kode.includes(query);
         });
 
@@ -451,11 +539,14 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = `px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                active ? 'bg-primary text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                active ? 'bg-primary text-white shadow-xs' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
             } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`;
             btn.textContent = text;
             if (!disabled) {
-                btn.onclick = () => filterAndPaginateTable(targetPage);
+                btn.onclick = () => {
+                    currentPage = targetPage;
+                    filterAndPaginateTable(targetPage);
+                };
             }
             return btn;
         };
@@ -484,8 +575,12 @@
                 id: {{ $bb->id }},
                 nama: "{{ addslashes($bb->nama_bahan) }}",
                 kode: "{{ $bb->id_bahan_baku }}",
-                satuan: "{{ $bb->satuan->singkatan ?? '-' }}",
-                harga: {{ (float)($bb->harga_satuan ?? 0) }}
+                satuan: "{{ \App\Helpers\UnitHelper::getPurchasingUnit($bb->satuan) }}",
+                satuan_dasar: "{{ \App\Helpers\UnitHelper::getBaseUnit($bb->satuan) }}",
+                harga: {{ (float)\App\Helpers\UnitHelper::toPurchasingPrice($bb->harga_satuan ?? 0, $bb->satuan) }},
+                stok_minimal: {{ (float)\App\Helpers\UnitHelper::toPurchasingQuantity($bb->stok_minimal ?? 5, $bb->satuan) }},
+                stok_katering: {{ (float)(optional($bb->stok_catering_balance)->jumlah_stok ?? 0) }},
+                stok_harian: {{ (float)(optional($bb->stok_harian)->jumlah_stok ?? 0) }}
             },
         @endforeach
     };
@@ -528,39 +623,43 @@
 
         const tbody = document.getElementById('poTableBody');
 
+        const isNasiBox = '{{ optional($pesanan)->jenis_pesanan_id }}' === '3';
+        const isCatering = ('{{ $tipe }}' === 'Catering' || '{{ $tipe }}' === 'Katering') && !isNasiBox;
+        const stokVal = isCatering ? (itemData.stok_katering || 0) : (itemData.stok_harian || 0);
+        const stokFormatted = Number(stokVal).toLocaleString('id-ID');
+
+        const unitPrice = itemData.harga || 0;
+        const defaultQty = itemData.stok_minimal ? (itemData.stok_minimal * 2) : 1;
+
         const tr = document.createElement('tr');
         tr.className = 'item-row hover:bg-gray-50/50 transition-colors bg-amber-50/40';
         tr.setAttribute('data-bahan-id', bahanId);
-        tr.setAttribute('data-harga', itemData.harga);
+        tr.setAttribute('data-kode', itemData.kode);
+        tr.setAttribute('data-harga', unitPrice);
 
         tr.innerHTML = `
             <input type="hidden" name="item_checked[${bahanId}]" value="1">
-            <input type="hidden" name="harga_satuan[${bahanId}]" class="harga-satuan-hidden" value="0">
+            <input type="hidden" name="harga_satuan[${bahanId}]" class="harga-satuan-hidden" value="${unitPrice}">
             <td class="py-3.5 px-4 text-center text-xs text-gray-500 font-semibold row-number">-</td>
             <td class="py-3.5 px-6">
                 <p class="font-bold text-gray-900 item-nama">${itemData.nama}</p>
-                <p class="text-xs text-gray-400 font-medium item-kode">${itemData.kode}</p>
             </td>
+            <td class="py-3.5 px-4 text-center text-xs font-semibold text-gray-700">-</td>
+            <td class="py-3.5 px-4 text-center">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${stokVal > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-500'}">
+                    ${stokFormatted} ${itemData.satuan_dasar}
+                </span>
+            </td>
+            <td class="py-3.5 px-4 text-center text-xs font-semibold text-gray-500">-</td>
             <td class="py-3.5 px-6 text-right">
                 <input type="text" inputmode="decimal"
                     name="jumlah_beli[${bahanId}]"
-                    value="${itemData.stok_minimal ? (itemData.stok_minimal * 2) : 10}"
+                    value="${defaultQty}"
                     oninput="this.value = this.value.replace(/[^0-9.]/g, ''); updateRowTotal(this)"
                     class="w-28 text-right rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm py-2 px-3 qty-input outline-none font-bold text-gray-900">
             </td>
-            <td class="py-3.5 px-6 text-center text-gray-600 text-sm font-medium">
+            <td class="py-3.5 px-4 text-center text-gray-800 text-xs font-bold">
                 ${itemData.satuan}
-            </td>
-            <td class="py-3.5 px-6 text-right">
-                <div class="relative inline-block w-40">
-                    <span class="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">Rp</span>
-                    <input type="text" inputmode="numeric"
-                        name="total_pembelian[${bahanId}]"
-                        value=""
-                        placeholder="0"
-                        oninput="formatRowHargaInput(this); updateRowTotal(this)"
-                        class="w-full text-right pl-8 pr-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm py-2 total-pembelian-input outline-none font-bold text-gray-900">
-                </div>
             </td>
             <td class="py-3.5 px-4 text-center">
                 <button type="button" onclick="removePoRow(this)" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Bahan">

@@ -250,7 +250,7 @@
                         <div class="pt-3 mt-4 border-t border-gray-200">
                             <span class="block text-[10px] text-gray-400 mb-0.5">Terakhir diperbarui</span>
                             <div class="text-xs font-medium text-gray-700">
-                                {{ $riwayats->first()->dibuat_pada->format('d F Y, H:i') }}
+                                {{ $riwayats->first()->dibuat_pada->translatedFormat('d F Y, H:i') }}
                             </div>
                             <div class="text-xs text-gray-500 mt-0.5">
                                 Oleh {{ $riwayats->first()->diubahOleh->nama ?? 'Sistem' }}
@@ -286,7 +286,7 @@
                         @forelse($riwayats as $riwayat)
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-6 py-4">
-                                <div class="font-medium text-gray-900">{{ $riwayat->dibuat_pada->format('d M Y') }}</div>
+                                <div class="font-medium text-gray-900">{{ $riwayat->dibuat_pada->translatedFormat('d M Y') }}</div>
                                 <div class="text-xs text-gray-500">{{ $riwayat->dibuat_pada->format('H:i') }}</div>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium text-gray-700">

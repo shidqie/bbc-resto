@@ -139,11 +139,16 @@
 
                 <div id="statusContainer" class="hidden">
                     <label class="block text-sm font-semibold text-gray-900 mb-1.5">Status <span class="text-red-500">*</span></label>
-                    <select name="status_meja_id" id="inputStatus" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
-                        <option value="1">Tersedia</option>
-                        <option value="2">Terisi</option>
-                        <option value="4">Tidak Aktif</option>
-                    </select>
+                    <div class="relative">
+                        <select name="status_meja_id" id="inputStatus" class="w-full appearance-none border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white shadow-xs cursor-pointer">
+                            <option value="1">Tersedia</option>
+                            <option value="2">Terisi</option>
+                            <option value="4">Tidak Aktif</option>
+                        </select>
+                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                            <x-heroicon-o-chevron-down class="w-4 h-4" />
+                        </span>
+                    </div>
                 </div>
             </form>
         </div>

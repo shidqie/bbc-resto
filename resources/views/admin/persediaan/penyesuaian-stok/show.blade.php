@@ -27,7 +27,7 @@
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">Tanggal</span>
-                    <span class="font-medium">{{ \Carbon\Carbon::parse($penyesuaian->tanggal_penyesuaian)->format('d M Y H:i') }}</span>
+                    <span class="font-medium">{{ \Carbon\Carbon::parse($penyesuaian->tanggal_penyesuaian)->translatedFormat('d M Y H:i') }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">Dibuat Oleh</span>

@@ -110,12 +110,84 @@ class DineInService
                 throw new Exception("Meja {$meja->nomor_meja} sedang tidak aktif.");
             }
 
-            // Cek apakah meja sedang terisi atau memiliki pesanan aktif
-            $activeOrder = PesananDinein::where('meja_id', $meja->id)
-                ->whereIn('status_pesanan_id', [1, 2]) // 1=Menunggu, 2=Diproses
+            // --- VALIDASI: Cek Ketersediaan Bahan Baku (BOM) ---
+            foreach ($items as $item) {
+                if (! BOMService::cekKetersediaanBahan($item['menu_id'], $item['qty'])) {
+                    $menu = Menu::find($item['menu_id']);
+                    $namaMenu = $menu ? ($menu->nama_produk ?? $menu->nama) : 'Menu';
+                    throw new Exception("Pesanan gagal: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
+                }
+            }
+
+            // 1. Cari apakah meja sudah memiliki sesi pesanan aktif (belum lunas dan belum selesai/batal)
+            $activePesanan = Pesanan::where('meja_id', $meja->id)
+                ->where('jenis_pesanan_id', 1)
+                ->whereNotIn('status_pesanan_id', [5, 6]) // 5 = Selesai, 6 = Dibatalkan
+                ->where(function ($q) {
+                    $q->whereNull('status_pembayaran_id')
+                        ->orWhereNotIn('status_pembayaran_id', [2, 5]); // 2/5 = Lunas
+                })
+                ->latest('id')
                 ->first();
 
-            // Hitung total tagihan pesanan tambahan/baru menggunakan KalkulasiPesananService (Pengaturan Transaksi)
+            if ($activePesanan) {
+                // Sesi pesanan aktif ditemukan -> Masukkan sebagai PESANAN TAMBAHAN ke sesi yang sama
+                $maxBatch = (int) (DetailPesanan::where('pesanan_id', $activePesanan->id)->max('batch_pesanan') ?? 1);
+                $newBatch = $maxBatch + 1;
+
+                foreach ($items as $item) {
+                    $menu = Menu::find($item['menu_id']);
+                    if ($menu) {
+                        $harga = $menu->harga_jual ?? $menu->harga ?? 0;
+                        DetailPesanan::create([
+                            'pesanan_id'    => $activePesanan->id,
+                            'menu_id'       => $menu->id,
+                            'jumlah'        => $item['qty'],
+                            'harga_satuan'  => $harga,
+                            'subtotal'      => $harga * $item['qty'],
+                            'catatan'       => $item['catatan'] ?? null,
+                            'is_tambahan'   => true,
+                            'batch_pesanan' => $newBatch,
+                            'waktu_dipesan' => now(),
+                        ]);
+                    }
+                }
+
+                // Hitung ulang akumulasi subtotal dari seluruh detail pesanan (awal + tambahan)
+                $totalSubtotal = (float) DetailPesanan::where('pesanan_id', $activePesanan->id)->sum('subtotal');
+                $kalkulasiService = app(\App\Services\KalkulasiPesananService::class);
+                $kalkulasi = $kalkulasiService->hitungTotal($totalSubtotal);
+
+                $updateDataPesanan = [
+                    'jumlah_sebelum_potongan'  => $kalkulasi['subtotal'],
+                    'persentase_biaya_layanan' => $kalkulasi['persentase_biaya_layanan'],
+                    'biaya_pelayanan'          => $kalkulasi['nominal_biaya_layanan'],
+                    'persentase_pajak'         => $kalkulasi['persentase_pajak'],
+                    'jumlah_pajak'             => $kalkulasi['nominal_pajak'],
+                    'total_tagihan'            => $kalkulasi['total_tagihan'],
+                ];
+
+                // Jika input lewat kasir dan status masih menunggu konfirmasi, otomatis dikonfirmasi
+                if ($sumberPesanan !== 'self_order' && $activePesanan->status_pesanan_id == 1) {
+                    $updateDataPesanan['status_pesanan_id'] = 2; // Dikonfirmasi
+                }
+
+                $activePesanan->update($updateDataPesanan);
+
+                // Pastikan status meja tetap terisi
+                $updateData = ['status_meja_id' => 2];
+                if (DB::getSchemaBuilder()->hasColumn('meja', 'status')) {
+                    $updateData['status'] = 'terisi';
+                }
+                $meja->update($updateData);
+
+                // Buat Tiket Dapur (KOT) untuk batch pesanan tambahan
+                $this->createKot($activePesanan, $activePesanan, $items, $meja, $staffId, ($sumberPesanan === 'self_order' ? 'self_order_tambahan' : 'pos_tambahan'));
+
+                return $activePesanan;
+            }
+
+            // 2. Jika belum ada pesanan aktif -> Buat pesanan baru (Pesanan Awal)
             $subtotal = 0;
             foreach ($items as $item) {
                 $menu = Menu::find($item['menu_id']);
@@ -125,36 +197,6 @@ class DineInService
 
             $kalkulasiService = app(\App\Services\KalkulasiPesananService::class);
             $kalkulasi = $kalkulasiService->hitungTotal((float) $subtotal);
-            $totalTagihan = $kalkulasi['total_tagihan'];
-
-            if ($activeOrder) {
-                // UPDATE EXISTING ORDER
-                $pesanan = $activeOrder;
-                $pesanan->update([
-                    'total_tagihan' => $pesanan->total_tagihan + $totalTagihan
-                ]);
-                $kodePesanan = $pesanan->kode_pesanan;
-            } else {
-                // BUAT PESANAN BARU (Aturan 4: PSN-YYYYMMDD-HHMMSS)
-                $kodePesanan = \App\Helpers\IdCodeGenerator::generatePesananId();
-
-                $pesanan = PesananDinein::create([
-                    'meja_id' => $meja->id,
-                    'nama_konsumen' => $namaKonsumen,
-                    'jumlah_tamu' => $jumlahTamu,
-                    'status' => 'menunggu_pembayaran',
-                    'dibuka_oleh' => $staffId,
-                    'dibuka_pada' => now(),
-                    'kode_pesanan' => $kodePesanan,
-                    'total_tagihan' => $totalTagihan,
-                ]);
-            }
-
-            $updateData = ['status_meja_id' => 2]; // 2 = TERISI
-            if (DB::getSchemaBuilder()->hasColumn('meja', 'status')) {
-                $updateData['status'] = 'terisi';
-            }
-            $meja->update($updateData);
 
             // Formatted Catatan String with Phone Number
             $catatanString = ($sumberPesanan === 'self_order' ? 'Self-Order QR (' . $namaKonsumen . ')' : 'Pemesan: ' . $namaKonsumen);
@@ -162,84 +204,52 @@ class DineInService
                 $catatanString .= ' | ' . $nomorHp;
             }
 
-            // Tambahkan item khusus untuk pesanan baru ini saja
-            foreach ($items as $item) {
-                ItemPesananDinein::create([
-                    'pesanan_dinein_id' => $pesanan->id,
-                    'menu_id' => $item['menu_id'],
-                    'qty' => $item['qty'],
-                    'catatan' => $item['catatan'] ?? null,
-                    'diinput_oleh' => $staffId,
-                    'diinput_pada' => now(),
-                ]);
+            $kodePesanan = \App\Helpers\IdCodeGenerator::generatePesananId();
+
+            $pesanan = Pesanan::create([
+                'id_pesanan'                => $kodePesanan,
+                'tanggal_pesanan'           => now(),
+                'jenis_pesanan_id'          => 1, // Dine In
+                'meja_id'                   => $meja->id,
+                'pelayan_id'                => $staffId,
+                'status_pesanan_id'         => ($sumberPesanan === 'self_order' ? 1 : 2), // Kasir = Dikonfirmasi langsung (2), Self-Order = Menunggu Konfirmasi (1)
+                'status_pembayaran_id'      => 1, // Menunggu Pembayaran
+                'jumlah_sebelum_potongan'   => $kalkulasi['subtotal'],
+                'persentase_biaya_layanan'  => $kalkulasi['persentase_biaya_layanan'],
+                'biaya_pelayanan'           => $kalkulasi['nominal_biaya_layanan'],
+                'persentase_pajak'          => $kalkulasi['persentase_pajak'],
+                'jumlah_pajak'              => $kalkulasi['nominal_pajak'],
+                'total_tagihan'             => $kalkulasi['total_tagihan'],
+                'catatan'                   => $catatanString,
+            ]);
+
+            $updateData = ['status_meja_id' => 2]; // 2 = TERISI
+            if (DB::getSchemaBuilder()->hasColumn('meja', 'status')) {
+                $updateData['status'] = 'terisi';
             }
+            $meja->update($updateData);
 
-            // --- VALIDASI TERLEBIH DAHULU: Cek Ketersediaan Bahan Baku (BOM) ---
-            foreach ($items as $item) {
-                if (! BOMService::cekKetersediaanBahan($item['menu_id'], $item['qty'])) {
-                    $menu = Menu::find($item['menu_id']);
-                    $namaMenu = $menu ? ($menu->nama_produk ?? $menu->nama) : 'Menu';
-                    throw new Exception("Pesanan gagal: Stok bahan baku untuk menu '{$namaMenu}' tidak mencukupi (Stok Kosong).");
-                }
-            }
-
-            // CATATAN: Stok TIDAK dipotong di sini (FR-10).
-            // Pengurangan stok dilakukan SATU KALI saat pembayaran berhasil
-            // via OrderService::potongStokPesanan, agar tidak terjadi double-deduction.
-
-            // --- SYNC ke tabel Pesanan (normalized) agar kasir POS bisa membaca ---
-            // Cek apakah sudah ada entry di pesanan untuk PesananDinein ini
-            $pesananNorm = Pesanan::where('id_pesanan', $kodePesanan)->first();
-            if (! $pesananNorm) {
-                $pesananNorm = Pesanan::create([
-                    'id_pesanan'                => $kodePesanan,
-                    'tanggal_pesanan'           => now(),
-                    'jenis_pesanan_id'          => 1, // Dine In
-                    'meja_id'                   => $meja->id,
-                    'pelayan_id'                => $staffId,
-                    'status_pesanan_id'         => 1, // Menunggu Konfirmasi
-                    'status_pembayaran_id'        => 1, // Menunggu Pembayaran
-                    'jumlah_sebelum_potongan'   => $kalkulasi['subtotal'],
-                    'persentase_biaya_layanan'  => $kalkulasi['persentase_biaya_layanan'],
-                    'biaya_pelayanan'           => $kalkulasi['nominal_biaya_layanan'],
-                    'persentase_pajak'          => $kalkulasi['persentase_pajak'],
-                    'jumlah_pajak'              => $kalkulasi['nominal_pajak'],
-                    'total_tagihan'             => $kalkulasi['total_tagihan'],
-                    'catatan'                   => $catatanString,
-                ]);
-            } else {
-                $newSubtotal = ($pesananNorm->jumlah_sebelum_potongan ?? 0) + $subtotal;
-                $newKalkulasi = $kalkulasiService->hitungTotal((float) $newSubtotal);
-                $pesananNorm->update([
-                    'jumlah_sebelum_potongan'   => $newKalkulasi['subtotal'],
-                    'persentase_biaya_layanan'  => $newKalkulasi['persentase_biaya_layanan'],
-                    'biaya_pelayanan'           => $newKalkulasi['nominal_biaya_layanan'],
-                    'persentase_pajak'          => $newKalkulasi['persentase_pajak'],
-                    'jumlah_pajak'              => $newKalkulasi['nominal_pajak'],
-                    'total_tagihan'             => $newKalkulasi['total_tagihan'],
-                ]);
-            }
-
+            // Tambahkan detail pesanan awal
             foreach ($items as $item) {
                 $menu = Menu::find($item['menu_id']);
                 if ($menu) {
                     $harga = $menu->harga_jual ?? $menu->harga ?? 0;
                     DetailPesanan::create([
-                        'pesanan_id' => $pesananNorm->id,
-                        'menu_id' => $menu->id,
-                        'jumlah' => $item['qty'],
-                        'harga_satuan' => $harga,
-                        'subtotal' => $harga * $item['qty'],
-                        'catatan' => $item['catatan'] ?? null,
+                        'pesanan_id'    => $pesanan->id,
+                        'menu_id'       => $menu->id,
+                        'jumlah'        => $item['qty'],
+                        'harga_satuan'  => $harga,
+                        'subtotal'      => $harga * $item['qty'],
+                        'catatan'       => $item['catatan'] ?? null,
+                        'is_tambahan'   => false,
+                        'batch_pesanan' => 1,
+                        'waktu_dipesan' => now(),
                     ]);
                 }
             }
 
-            // Simpan id pesanan normalized ke pesananDinein agar bisa di-link
-            $pesanan->pesanan_id = $pesananNorm->id;
-
             // --- AUTO CREATE KOT (Tiket Dapur) ---
-            $this->createKot($pesananNorm, $pesanan, $items, $meja, $staffId, $sumberPesanan);
+            $this->createKot($pesanan, $pesanan, $items, $meja, $staffId, $sumberPesanan);
 
             return $pesanan;
         });
@@ -275,7 +285,7 @@ class DineInService
 
             $mejaUpdate = ['status_meja_id' => 1]; // 1 = TERSEDIA
             if (DB::getSchemaBuilder()->hasColumn('meja', 'status')) {
-                $mejaUpdate['status'] = 'kosong';
+                $mejaUpdate['status'] = 'tersedia';
             }
             if ($pesanan->meja) {
                 $pesanan->meja->update($mejaUpdate);

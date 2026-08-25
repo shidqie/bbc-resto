@@ -12,13 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First convert the enum column to a string column
-        // We do this by dropping and recreating or using DB statement (easier in MySQL)
-        
-        DB::statement("ALTER TABLE item_paket MODIFY COLUMN tipe_item VARCHAR(50) NOT NULL");
-        
-        // Convert old values
-        DB::statement("UPDATE item_paket SET tipe_item = 'wajib' WHERE tipe_item = 'tetap'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE item_paket MODIFY COLUMN tipe_item VARCHAR(50) NOT NULL");
+            DB::statement("UPDATE item_paket SET tipe_item = 'wajib' WHERE tipe_item = 'tetap'");
+        } else {
+            DB::table('item_paket')->where('tipe_item', 'tetap')->update(['tipe_item' => 'wajib']);
+        }
     }
 
     /**
@@ -26,9 +25,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("UPDATE item_paket SET tipe_item = 'tetap' WHERE tipe_item = 'wajib'");
-        
-        // Revert back to enum
-        DB::statement("ALTER TABLE item_paket MODIFY COLUMN tipe_item ENUM('tetap', 'pilihan') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("UPDATE item_paket SET tipe_item = 'tetap' WHERE tipe_item = 'wajib'");
+            DB::statement("ALTER TABLE item_paket MODIFY COLUMN tipe_item ENUM('tetap', 'pilihan') NOT NULL");
+        } else {
+            DB::table('item_paket')->where('tipe_item', 'wajib')->update(['tipe_item' => 'tetap']);
+        }
     }
 };

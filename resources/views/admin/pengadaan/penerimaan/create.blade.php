@@ -17,18 +17,68 @@
             @csrf
 
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
-                <div class="lg:col-span-3">
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="lg:col-span-3"
+                     x-data="{
+                         page: 1,
+                         perPage: 10,
+                         search: '',
+                         items: [
+                             @foreach($items as $idx => $row)
+                             {
+                                 id: '{{ $row['detail_id'] }}',
+                                 name: '{{ strtolower(addslashes($row['nama_bahan'])) }}',
+                                 code: '{{ strtolower(addslashes($row['kode_bahan'])) }}'
+                             }{{ !$loop->last ? ',' : '' }}
+                             @endforeach
+                         ],
+                         get filteredItems() {
+                             if (!this.search.trim()) return this.items;
+                             const q = this.search.toLowerCase().trim();
+                             return this.items.filter(i => i.name.includes(q) || i.code.includes(q));
+                         },
+                         get totalItems() {
+                             return this.filteredItems.length;
+                         },
+                         get totalPages() {
+                             return Math.ceil(this.totalItems / this.perPage) || 1;
+                         },
+                         get startItem() {
+                             return this.totalItems > 0 ? (this.page - 1) * this.perPage + 1 : 0;
+                         },
+                         get endItem() {
+                             return Math.min(this.page * this.perPage, this.totalItems);
+                         },
+                         isItemVisible(id) {
+                             const idx = this.filteredItems.findIndex(i => i.id == id);
+                             if (idx === -1) return false;
+                             return idx >= (this.page - 1) * this.perPage && idx < this.page * this.perPage;
+                         },
+                         nextPage() {
+                             if (this.page < this.totalPages) this.page++;
+                         },
+                         prevPage() {
+                             if (this.page > 1) this.page--;
+                         },
+                         setPage(p) {
+                             this.page = p;
+                         },
+                         onSearch() {
+                             this.page = 1;
+                         }
+                     }">
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex items-center gap-3">
-                                <h3 class="font-bold text-gray-900 text-sm tracking-tight">DAFTAR BAHAN DITERIMA</h3>
-                                <span class="text-xs text-gray-500 font-medium px-2.5 py-0.5 bg-gray-200/60 rounded-md" id="itemCountBadge">{{ count($items) }} item</span>
+                                <h3 class="font-bold text-gray-900 text-sm tracking-tight uppercase">DAFTAR BAHAN DITERIMA</h3>
+                                <span class="text-xs text-gray-600 font-semibold px-2.5 py-0.5 bg-gray-200/70 rounded-md" id="itemCountBadge">
+                                    <span x-text="totalItems"></span> item
+                                </span>
                             </div>
                             <div class="relative">
                                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
-                                <input type="text" id="addBahanInput" oninput="filterAndPaginateTable(1)" placeholder="Cari bahan baku..." class="w-full sm:w-64 pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20">
+                                <input type="text" x-model="search" @input="onSearch()" placeholder="Cari bahan baku..." class="w-full sm:w-64 pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20">
                             </div>
                         </div>
                         <div class="overflow-x-auto">
@@ -51,7 +101,7 @@
                                         $hargaSatuanPO = (float) ($row['harga_satuan'] ?? 0);
                                         $subtotalInitial = $sisaVal * $hargaSatuanPO;
                                     @endphp
-                                    <tr class="item-row hover:bg-gray-50/40 transition-colors">
+                                    <tr class="item-row hover:bg-gray-50/40 transition-colors" x-show="isItemVisible('{{ $row['detail_id'] }}')">
                                         <td class="px-4 py-3 text-center align-middle">
                                             <input type="checkbox" name="item_checked[{{ $row['detail_id'] }}]" value="1" class="item-checkbox rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" checked onchange="toggleRowInputs(this, '{{ $row['detail_id'] }}')">
                                         </td>
@@ -60,11 +110,11 @@
                                             <p class="text-xs text-gray-400 font-medium mt-0.5">{{ $row['kode_bahan'] }}</p>
                                         </td>
                                         <td class="px-4 py-3 text-right align-middle font-bold text-gray-900" id="dipesan_{{ $row['detail_id'] }}" data-dipesan="{{ $dipesanVal }}">
-                                            {{ $dipesanVal }} <span class="text-xs font-normal text-gray-500">{{ $row['satuan'] }}</span>
+                                            {{ \App\Helpers\UnitHelper::formatNumber($dipesanVal) }} <span class="text-xs font-normal text-gray-500">{{ $row['satuan'] }}</span>
                                         </td>
                                         <td class="px-4 py-3 align-middle">
                                             <div class="flex items-center gap-1.5 justify-end">
-                                                <input type="text" name="jumlah_diterima[{{ $row['detail_id'] }}]" id="jml_{{ $row['detail_id'] }}" value="{{ $sisaVal }}" oninput="this.value = this.value.replace(/[^0-9.]/g, ''); updateRowCalc('{{ $row['detail_id'] }}')" class="w-24 text-right border border-gray-200 text-gray-900 text-sm rounded-xl px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold" required>
+                                                <input type="text" name="jumlah_diterima[{{ $row['detail_id'] }}]" id="jml_{{ $row['detail_id'] }}" value="{{ (float) $sisaVal }}" oninput="this.value = this.value.replace(/[^0-9.,]/g, ''); updateRowCalc('{{ $row['detail_id'] }}')" class="w-24 text-right border border-gray-200 text-gray-900 text-sm rounded-xl px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold" required>
                                                 <span class="text-xs text-gray-500 font-medium shrink-0">{{ $row['satuan'] }}</span>
                                             </div>
                                         </td>
@@ -88,12 +138,41 @@
                                 </tbody>
                             </table>
                         </div>
+
                         {{-- Pagination Bar --}}
                         <div class="px-6 py-3.5 border-t border-gray-100 bg-gray-50/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600" id="paginationControls">
                             <div>
-                                Menampilkan <span class="font-bold text-gray-900" id="pageStart">1</span> - <span class="font-bold text-gray-900" id="pageEnd">10</span> dari <span class="font-bold text-gray-900" id="totalItems">0</span> bahan baku
+                                Menampilkan <span class="font-bold text-gray-900" x-text="startItem"></span> - <span class="font-bold text-gray-900" x-text="endItem"></span> dari <span class="font-bold text-gray-900" x-text="totalItems"></span> bahan baku
                             </div>
-                            <div class="flex items-center gap-1.5" id="paginationButtons">
+                            <div class="flex items-center gap-1.5" x-show="totalPages > 1">
+                                {{-- Prev Button --}}
+                                <button type="button" 
+                                        @click="prevPage()" 
+                                        :disabled="page === 1"
+                                        :class="page === 1 ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'hover:bg-gray-50 cursor-pointer'"
+                                        class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-200 text-gray-700 transition-all shadow-2xs">
+                                    Sebelumnya
+                                </button>
+
+                                {{-- Page Numbers --}}
+                                <template x-for="p in totalPages" :key="p">
+                                    <button type="button" 
+                                            x-show="p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)"
+                                            @click="setPage(p)" 
+                                            :class="p === page ? 'bg-emerald-600 text-white shadow-xs font-bold' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold'"
+                                            class="min-w-[32px] px-2.5 py-1.5 rounded-lg text-xs transition-all cursor-pointer"
+                                            x-text="p">
+                                    </button>
+                                </template>
+
+                                {{-- Next Button --}}
+                                <button type="button" 
+                                        @click="nextPage()" 
+                                        :disabled="page === totalPages"
+                                        :class="page === totalPages ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'hover:bg-gray-50 cursor-pointer'"
+                                        class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-gray-200 text-gray-700 transition-all shadow-2xs">
+                                    Selanjutnya
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -119,13 +198,17 @@
                                 <label class="block text-xs font-semibold text-gray-500 mb-1">Tanggal Penerimaan</label>
                                 <input type="date" name="tanggal_penerimaan" value="{{ date('Y-m-d') }}" class="w-full border border-gray-200 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-medium">
                             </div>
+
                             <div>
                                 <label class="block text-xs font-semibold text-gray-500 mb-1">Total Pembelian (Rp)</label>
                                 <div class="relative">
                                     <span class="absolute left-3 top-2.5 text-sm text-gray-500 font-bold">Rp</span>
-                                    <input type="text" name="total_nota" id="grandTotalNota" value="" placeholder="0" oninput="formatRupiahInput(this); manualTotalChange = true;" class="w-full pl-9 pr-3 border border-gray-200 text-gray-900 text-base rounded-xl py-2 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-extrabold text-right">
+                                    <input type="text" name="total_nota" id="grandTotalNota" value="" placeholder="0" 
+                                           oninput="formatRupiahInput(this); isManualInput = true;" 
+                                           class="w-full pl-9 pr-3 border border-gray-200 text-gray-900 text-base rounded-xl py-2 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-extrabold text-right">
                                 </div>
                             </div>
+
                             <div>
                                 <label class="block text-xs font-semibold text-gray-500 mb-1">Catatan <span class="font-normal italic">(opsional)</span></label>
                                 <textarea name="catatan" rows="3" placeholder="Keterangan tambahan..." class="w-full border border-gray-200 text-gray-900 text-sm rounded-xl px-3 py-2 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-medium"></textarea>
@@ -142,7 +225,21 @@
 
 @push('scripts')
 <script>
-    let manualTotalChange = false;
+    let isManualInput = false;
+
+    function parseDecimal(val) {
+        if (val === '' || val === null || val === undefined) return 0;
+        let str = String(val).replace(/[^0-9.,]/g, '').replace(',', '.');
+        let parsed = parseFloat(str);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function parseInteger(val) {
+        if (val === '' || val === null || val === undefined) return 0;
+        let str = String(val).replace(/[^0-9]/g, '');
+        let parsed = parseInt(str, 10);
+        return isNaN(parsed) ? 0 : parsed;
+    }
 
     function toggleRowInputs(checkbox, id) {
         const targets = ['jml_', 'hrg_'];
@@ -174,8 +271,8 @@
 
         let subtotal = 0;
         if (checkbox.checked) {
-            const diterima = parseFloat(jmlInput.value.replace(/[^0-9.]/g, '')) || 0;
-            const harga = parseInt(hrgInput.value.replace(/[^0-9]/g, ''), 10) || 0;
+            const diterima = parseDecimal(jmlInput.value);
+            const harga = parseInteger(hrgInput.value);
             subtotal = diterima * harga;
         }
 
@@ -184,9 +281,8 @@
     }
 
     function recalcGrandTotal() {
-        if (manualTotalChange) return;
-
         let grandTotal = 0;
+
         document.querySelectorAll('.item-row').forEach(row => {
             const checkbox = row.querySelector('.item-checkbox');
             if (checkbox && checkbox.checked) {
@@ -195,15 +291,15 @@
                     const id = idMatch[1];
                     const jmlInput = document.getElementById('jml_' + id);
                     const hrgInput = document.getElementById('hrg_' + id);
-                    const diterima = parseFloat(jmlInput ? jmlInput.value.replace(/[^0-9.]/g, '') : 0) || 0;
-                    const harga = parseInt(hrgInput ? hrgInput.value.replace(/[^0-9]/g, '') : 0, 10) || 0;
+                    const diterima = parseDecimal(jmlInput ? jmlInput.value : 0);
+                    const harga = parseInteger(hrgInput ? hrgInput.value : 0);
                     grandTotal += (diterima * harga);
                 }
             }
         });
 
         const grandTotalInput = document.getElementById('grandTotalNota');
-        if (grandTotalInput) {
+        if (grandTotalInput && !isManualInput) {
             grandTotalInput.value = formatRupiahValue(grandTotal);
         }
     }
@@ -226,88 +322,13 @@
         
         setTimeout(() => {
             btn.disabled = true;
-            btn.innerHTML = '<x-heroicon-o-check class="w-4 h-4 animate-spin" /> Menyimpan...';
+            btn.innerHTML = '<svg class="w-4 h-4 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyimpan...';
         }, 50);
-        
+
         return true;
     }
 
-    const ITEMS_PER_PAGE = 15;
-    let currentPage = 1;
-
-    function filterAndPaginateTable(page = 1) {
-        currentPage = page;
-        const searchInput = document.getElementById('addBahanInput');
-        const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
-
-        const allRows = Array.from(document.querySelectorAll('.item-row'));
-        const matchedRows = allRows.filter(row => {
-            if (!query) return true;
-            const text = row.textContent.toLowerCase();
-            return text.includes(query);
-        });
-
-        const totalMatched = matchedRows.length;
-        const totalPages = Math.ceil(totalMatched / ITEMS_PER_PAGE) || 1;
-        if (currentPage > totalPages) currentPage = totalPages;
-
-        const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-        const endIdx = startIdx + ITEMS_PER_PAGE;
-
-        allRows.forEach(row => row.style.display = 'none');
-
-        matchedRows.slice(startIdx, endIdx).forEach((row, idx) => {
-            row.style.display = '';
-        });
-
-        updatePaginationUI(totalMatched, startIdx, endIdx, totalPages);
-    }
-
-    function updatePaginationUI(total, startIdx, endIdx, totalPages) {
-        const pageStartEl = document.getElementById('pageStart');
-        const pageEndEl = document.getElementById('pageEnd');
-        const totalItemsEl = document.getElementById('totalItems');
-        const container = document.getElementById('paginationButtons');
-
-        if (!pageStartEl || !container) return;
-
-        pageStartEl.textContent = total > 0 ? startIdx + 1 : 0;
-        pageEndEl.textContent = Math.min(endIdx, total);
-        totalItemsEl.textContent = total;
-
-        container.innerHTML = '';
-        if (totalPages <= 1) return;
-
-        const createBtn = (text, targetPage, active = false, disabled = false) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = `px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                active ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-            } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`;
-            btn.textContent = text;
-            if (!disabled) {
-                btn.onclick = () => filterAndPaginateTable(targetPage);
-            }
-            return btn;
-        };
-
-        container.appendChild(createBtn('Sebelumnya', currentPage - 1, false, currentPage === 1));
-
-        for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                container.appendChild(createBtn(i, i, i === currentPage));
-            } else if (i === currentPage - 2 || i === currentPage + 2) {
-                const dots = document.createElement('span');
-                dots.className = 'px-1 text-gray-400';
-                dots.textContent = '...';
-                container.appendChild(dots);
-            }
-        }
-
-        container.appendChild(createBtn('Selanjutnya', currentPage + 1, false, currentPage === totalPages));
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
+    function initPageCalculations() {
         document.querySelectorAll('.item-row').forEach(row => {
             const checkbox = row.querySelector('.item-checkbox');
             if (checkbox) {
@@ -316,20 +337,24 @@
             }
         });
         
-        filterAndPaginateTable(1);
         recalcGrandTotal();
-        
-        // Reset manual flag if grand total is empty
+
         const grandTotalInput = document.getElementById('grandTotalNota');
         if (grandTotalInput) {
             grandTotalInput.addEventListener('blur', function() {
-                if (!this.value) {
-                    manualTotalChange = false;
+                if (!this.value || this.value === '0') {
+                    isManualInput = false;
                     recalcGrandTotal();
                 }
             });
         }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPageCalculations);
+    } else {
+        initPageCalculations();
+    }
 </script>
 @endpush
 @endsection

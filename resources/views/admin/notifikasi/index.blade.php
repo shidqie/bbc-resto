@@ -10,7 +10,7 @@
                     <div class="flex-1">
                         <h4 class="font-medium text-gray-900">{{ $notif->data['title'] ?? 'Notifikasi' }}</h4>
                         <p class="text-sm text-gray-600 mt-1">{{ $notif->data['message'] ?? '' }}</p>
-                        <p class="text-xs text-gray-400 mt-2">{{ $notif->created_at->diffForHumans() }}</p>
+                        <p class="text-xs text-gray-400 mt-2">{{ $notif->created_at->locale('id')->diffForHumans() }}</p>
                     </div>
                     @if($notif->data['url'] ?? false)
                         <a href="{{ $notif->data['url'] }}" class="text-sm text-primary font-medium">Lihat Detail</a>

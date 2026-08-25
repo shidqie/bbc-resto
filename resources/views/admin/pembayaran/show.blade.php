@@ -138,7 +138,7 @@
                 </div>
                 <div class="col-span-2">
                     <p class="text-xs text-gray-500 font-medium">Waktu Pembayaran</p>
-                    <p class="text-sm font-bold text-gray-900">{{ $pembayaran->dibayar_pada ? \Carbon\Carbon::parse($pembayaran->dibayar_pada)->format('d F Y, H:i') . ' WIB' : '-' }}</p>
+                    <p class="text-sm font-bold text-gray-900">{{ $pembayaran->dibayar_pada ? \Carbon\Carbon::parse($pembayaran->dibayar_pada)->translatedFormat('d F Y, H:i') . ' WIB' : '-' }}</p>
                 </div>
             </div>
         </div>

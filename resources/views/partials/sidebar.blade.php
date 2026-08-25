@@ -119,17 +119,21 @@
                 ])
                 @endif
 
-     {{-- Pengadaan --}}
-                        @if($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur'))
-                            @include('partials.sidebar-submenu', [
-                                'icon' => 'heroicon-o-shopping-bag',
-                                'label' => 'Pengadaan',
-                                'isOpen' => request()->routeIs('pengadaan.po.*') || request()->routeIs('pengadaan.penerimaan.*'),
-                                'items' => [
-                                    ['label' => 'Purchase Order', 'url' => route('pengadaan.po.index'), 'active' => request()->routeIs('pengadaan.po.*')],
-                                ],
-                            ])
-                        @endif
+        {{-- Pengadaan --}}
+        @php
+            $pengadaanItems = [];
+            if ($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur')) {
+                $pengadaanItems[] = ['label' => 'Purchase Order', 'url' => route('pengadaan.po.index'), 'active' => request()->routeIs('pengadaan.po.*')];
+            }
+        @endphp
+        @if(count($pengadaanItems))
+            @include('partials.sidebar-submenu', [
+                'icon' => 'heroicon-o-shopping-bag',
+                'label' => 'Pengadaan',
+                'isOpen' => request()->routeIs('pengadaan.po.*') || request()->routeIs('pengadaan.penerimaan.*'),
+                'items' => $pengadaanItems,
+            ])
+        @endif
 
 
         {{-- Laporan --}}

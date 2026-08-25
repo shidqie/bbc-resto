@@ -12,7 +12,7 @@ class PesananController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pesanan::with(['jenis_pesanan', 'status_pesanan', 'meja', 'kasir', 'jadwal_pesanan'])
+        $query = Pesanan::with(['jenis_pesanan', 'status_pesanan', 'status_pembayaran', 'meja', 'kasir', 'jadwal_pesanan', 'pelanggan', 'pengiriman.status_pengiriman'])
             ->orderBy('dibuat_pada', 'desc');
 
         if ($request->has('jenis') && $request->jenis != '' && $request->jenis != 'all') {
@@ -72,6 +72,7 @@ class PesananController extends Controller
             'jenis_pesanan', 'status_pesanan', 'meja', 'kasir', 'pelayan',
             'detail_pesanan.menu',
             'tiket_dapur', 'jadwal_pesanan',
+            'pembayaran.diverifikasi_oleh_pengguna',
         ])->findOrFail($id);
 
         if ($request->ajax()) {

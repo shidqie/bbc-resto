@@ -28,9 +28,19 @@ class OrderService
      */
     public function jenisPersediaanPesanan($pesanan): string
     {
-        if (method_exists($pesanan, 'jenis_pesanan') && $pesanan->jenis_pesanan) {
-            $kode = strtoupper((string) $pesanan->jenis_pesanan->kode_jenis);
-            if (in_array($kode, ['CAT', 'CATERING'], true)) {
+        if (isset($pesanan->jenis_pesanan_id)) {
+            if ((int) $pesanan->jenis_pesanan_id === 2) {
+                return StokBahan::JENIS_CATERING;
+            }
+            if (in_array((int) $pesanan->jenis_pesanan_id, [1, 3], true)) {
+                return StokBahan::JENIS_HARIAN;
+            }
+        }
+
+        if (isset($pesanan->jenis_pesanan) && $pesanan->jenis_pesanan) {
+            $kode = strtoupper((string) ($pesanan->jenis_pesanan->kode_jenis ?? ''));
+            $nama = strtolower((string) ($pesanan->jenis_pesanan->nama_jenis ?? ''));
+            if (in_array($kode, ['KT', 'CAT', 'CATERING', 'KATERING'], true) || str_contains($nama, 'catering') || str_contains($nama, 'katering')) {
                 return StokBahan::JENIS_CATERING;
             }
         }
@@ -108,13 +118,14 @@ class OrderService
                     continue;
                 }
 
-                $userId = Auth::id() ?? $pesanan->dibuat_oleh;
+                $userId = Auth::id() ?? $pesanan->dibuat_oleh ?? \App\Models\Pengguna::value('id');
+                $kodePesanan = $pesanan->id_pesanan ?? $pesanan->nomor_pesanan ?? $pesanan->id;
 
                 foreach ($kebutuhan as $item) {
                     $this->stockService->deductStock(
                         $item['bahan_baku_id'],
                         $item['kebutuhan'],
-                        "Pesanan #{$pesanan->nomor_pesanan} (Menu: {$item['menu_nama']})",
+                        "Pesanan #{$kodePesanan} (Menu: {$item['menu_nama']})",
                         2,
                         $userId,
                         ['detail_pesanan_id' => $detail->id],
@@ -144,7 +155,8 @@ class OrderService
             ]);
 
             $jenisPersediaan = $this->jenisPersediaanPesanan($pesanan);
-            $userId = Auth::id() ?? $pesanan->dibuat_oleh;
+            $userId = Auth::id() ?? $pesanan->dibuat_oleh ?? \App\Models\Pengguna::value('id');
+            $kodePesanan = $pesanan->id_pesanan ?? $pesanan->nomor_pesanan ?? $pesanan->id;
 
             foreach ($pesanan->detail_pesanan as $detail) {
                 if (! $detail->stock_deducted_at) {
@@ -156,7 +168,7 @@ class OrderService
                     $this->stockService->addStock(
                         $item['bahan_baku_id'],
                         $item['kebutuhan'],
-                        "Pembatalan pesanan #{$pesanan->nomor_pesanan} (Menu: {$item['menu_nama']}) - mutasi pembalik",
+                        "Pembatalan pesanan #{$kodePesanan} (Menu: {$item['menu_nama']}) - mutasi pembalik",
                         1,
                         $userId,
                         ['detail_pesanan_id' => $detail->id],

@@ -39,7 +39,7 @@
             </x-ui.card>
             <x-ui.card>
                 <p class="text-xs font-semibold text-gray-500">Tanggal Permintaan</p>
-                <p class="font-bold text-gray-900 mt-1">{{ \Carbon\Carbon::parse($pengadaan->tanggal_pengadaan)->format('d M Y') }}</p>
+                <p class="font-bold text-gray-900 mt-1">{{ \Carbon\Carbon::parse($pengadaan->tanggal_pengadaan)->translatedFormat('d M Y') }}</p>
             </x-ui.card>
             <x-ui.card>
                 <p class="text-xs font-semibold text-gray-500">Jenis</p>
@@ -184,7 +184,7 @@
                         <tr class="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                             <th class="px-4 py-3 text-left">Kode PO</th>
                             <th class="px-4 py-3 text-left">Tanggal</th>
-                            <th class="px-4 py-3 text-left">Supplier/Toko</th>
+                            <th class="px-4 py-3 text-left">Nama Supplier</th>
                             <th class="px-4 py-3 text-center">Jumlah Item</th>
                             <th class="px-4 py-3 text-left">Status</th>
                             <th class="px-4 py-3 text-center">Aksi</th>
@@ -194,7 +194,7 @@
                         @foreach($pengadaan->purchase_order as $po)
                         <tr>
                             <td class="px-4 py-3 align-middle font-mono font-bold text-gray-900 text-xs">{{ $po->nomor_po }}</td>
-                            <td class="px-4 py-3 align-middle text-gray-700">{{ \Carbon\Carbon::parse($po->tanggal_po)->format('d M Y') }}</td>
+                            <td class="px-4 py-3 align-middle text-gray-700">{{ \Carbon\Carbon::parse($po->tanggal_po)->translatedFormat('d M Y') }}</td>
                             <td class="px-4 py-3 align-middle text-gray-700">{{ $po->supplier }}</td>
                             <td class="px-4 py-3 align-middle text-center font-bold text-gray-900">{{ $po->detail_purchase_order->count() }} <span class="text-xs font-normal text-gray-500">item</span></td>
                             <td class="px-4 py-3 align-middle"><x-ui.badge :color="$po->status_warna" size="sm">{{ $po->status_nama }}</x-ui.badge></td>

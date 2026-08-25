@@ -29,46 +29,72 @@ class PesananCateringController extends Controller
 
         $selectedPaketId = $request->paket_id;
 
-        return view('pelanggan.pesanan.catering.create', compact('pakets', 'selectedPaketId'));
+        $komponenMap = [];
+        foreach ($pakets as $p) {
+            $komponenMap[$p->id] = $this->getKomponen($p->id)->getData();
+        }
+
+        return view('pelanggan.pesanan.catering.create', compact('pakets', 'selectedPaketId', 'komponenMap'));
     }
 
     // GET /pesan/catering/komponen/{paketId}
     public function getKomponen($paketId)
     {
-        $paket = Menu::with('komponen_paket.opsi.menu')->findOrFail($paketId);
+        try {
+            $paket = Menu::with('komponen_paket.opsi.menu')->find($paketId);
+            if (!$paket) {
+                return response()->json([]);
+            }
 
-        return response()->json(
-            $paket->komponen_paket->map(function ($k) {
-                if (in_array($k->tipe_komponen, ['wajib', 'tetap'])) {
-                    $menu = $k->menu_id_terkait ? \App\Models\Menu::find($k->menu_id_terkait) : null;
+            return response()->json(
+                $paket->komponen_paket->map(function ($k) {
+                    if (in_array($k->tipe_komponen, ['wajib', 'tetap'])) {
+                        $menu = $k->menu_id_terkait ? \App\Models\Menu::find($k->menu_id_terkait) : null;
+                        $foto = $menu ? $menu->foto : null;
+                        if (!$foto) {
+                            $matched = \App\Models\Menu::where('nama_menu', $k->nama_komponen)->whereNotNull('foto')->first();
+                            $foto = $matched ? $matched->foto : null;
+                        }
+                        return [
+                            'id' => $k->id,
+                            'nama_komponen' => $k->nama_komponen,
+                            'tipe' => 'fixed',
+                            'opsi' => [[
+                                'menu' => [
+                                    'id' => $menu ? $menu->id : $k->id,
+                                    'nama' => $menu ? ($k->nama_komponen !== $menu->nama_menu && $k->nama_komponen ? $k->nama_komponen : $menu->nama_menu) : $k->nama_komponen,
+                                    'foto' => $foto,
+                                ]
+                            ]]
+                        ];
+                    }
+
                     return [
                         'id' => $k->id,
                         'nama_komponen' => $k->nama_komponen,
-                        'tipe' => 'fixed',
-                        'opsi' => [[
-                            'menu' => [
-                                'id' => $menu ? $menu->id : $k->id,
-                                'nama' => $menu ? ($k->nama_komponen !== $menu->nama_menu && $k->nama_komponen ? $k->nama_komponen : $menu->nama_menu) : $k->nama_komponen,
-                                'foto' => $menu ? $menu->foto : null,
-                            ]
-                        ]]
-                    ];
-                }
+                        'tipe' => $k->tipe_komponen === 'semua_didapat' ? 'fixed' : 'choice',
+                        'opsi' => $k->opsi->map(function ($o) {
+                            $foto = $o->foto ?? ($o->menu ? $o->menu->foto : null);
+                            if (!$foto) {
+                                $matched = \App\Models\Menu::where('nama_menu', $o->nama_pilihan)->whereNotNull('foto')->first();
+                                $foto = $matched ? $matched->foto : null;
+                            }
 
-                return [
-                    'id' => $k->id,
-                    'nama_komponen' => $k->nama_komponen,
-                    'tipe' => $k->tipe_komponen === 'semua_didapat' ? 'fixed' : 'choice',
-                    'opsi' => $k->opsi->map(fn ($o) => [
-                        'menu' => [
-                            'id' => $o->id,
-                            'nama' => $o->nama_pilihan,
-                            'foto' => $o->foto ?? ($o->menu ? $o->menu->foto : null),
-                        ],
-                    ])->values()->all(),
-                ];
-            })
-        );
+                            return [
+                                'menu' => [
+                                    'id' => $o->id,
+                                    'nama' => $o->nama_pilihan,
+                                    'foto' => $foto,
+                                ],
+                            ];
+                        })->values()->all(),
+                    ];
+                })
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('getKomponen error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     // POST /pesan/catering/preview
@@ -122,7 +148,7 @@ class PesananCateringController extends Controller
             'nama_pemesan.required' => 'Nama pemesan wajib diisi.',
             'kontak.required' => 'Kontak WhatsApp wajib diisi.',
             'tanggal_acara.required' => 'Tanggal acara wajib diisi.',
-            'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-3 sebelum hari pelaksanaan acara.',
+            'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-4 sebelum hari pelaksanaan acara.',
             'lokasi_acara.required' => 'Alamat acara wajib diisi.',
             'metode_pengiriman.required' => 'Metode pengiriman wajib dipilih.',
             'jumlah_porsi.required' => 'Jumlah porsi wajib diisi.',
@@ -220,17 +246,20 @@ class PesananCateringController extends Controller
                 ]);
             }
 
-            // Buat sesi pembayaran DP 15 menit
-            $nominalDp = round($totalTagihan * 0.5); // Catering DP 50%
+            // Buat sesi pembayaran awal 12 jam (Lunas 100% atau DP 50%)
+            $isLunasOpsi = $request->opsi_pembayaran === 'lunas';
+            $nominalBayarAwal = $isLunasOpsi ? $totalTagihan : round($totalTagihan * 0.5);
+            $jenisBayarAwal = $isLunasOpsi ? 'pelunasan' : 'uang_muka';
+
             Pembayaran::create([
                 'kode_pembayaran' => 'PAY-' . strtoupper(uniqid()),
                 'pesanan_id' => $pesanan->id,
-                'jenis_pembayaran' => 'uang_muka',
+                'jenis_pembayaran' => $jenisBayarAwal,
                 'metode_pembayaran' => null, // Belum dipilih
-                'jumlah_dibayar' => $nominalDp,
-                'jumlah_tagihan' => $nominalDp,
+                'jumlah_dibayar' => $nominalBayarAwal,
+                'jumlah_tagihan' => $nominalBayarAwal,
                 'status_verifikasi' => 'belum_dibayar',
-                'expires_at' => now()->addMinutes(15),
+                'expires_at' => now()->addHours(12),
             ]);
 
             // Kirim notifikasi
@@ -240,10 +269,19 @@ class PesananCateringController extends Controller
             
             if ($admins->count() > 0) {
                 $qty = $pesanan->detail_pesanan->sum('jumlah') ?: $pesanan->detail_pesanan->sum('kuantitas');
+                $namaPemesan = $pelanggan->nama ?? ($pesanan->pelanggan->nama ?? null);
+                if (!$namaPemesan && !empty($pesanan->catatan)) {
+                    if (preg_match('/^Pemesan:\s*(.+)$/m', $pesanan->catatan, $m)) {
+                        $namaPemesan = trim($m[1]);
+                    } else {
+                        $namaPemesan = trim(explode('|', $pesanan->catatan)[0]);
+                    }
+                }
+                $atasNama = $namaPemesan ? " atas nama {$namaPemesan}" : "";
                 \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\PesananBaru(
                     $pesanan,
                     "Pesanan Baru",
-                    "Pesanan Katering #{$pesanan->id_pesanan} sebanyak {$qty} porsi telah masuk dan menunggu konfirmasi.", 
+                    "Pesanan Katering #{$pesanan->id_pesanan} sebanyak {$qty} porsi{$atasNama} telah masuk dan menunggu konfirmasi.", 
                     route('admin.pesanan.catering.index')
                 ));
             }
@@ -264,7 +302,7 @@ class PesananCateringController extends Controller
     {
         $status = $request->status ?? 'all';
 
-        $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'status_pesanan', 'pembayaran', 'pelanggan'])
+        $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'status_pesanan', 'status_pembayaran', 'pembayaran', 'pelanggan', 'pengiriman.status_pengiriman'])
             ->where('jenis_pesanan_id', 2)
             ->latest('dibuat_pada');
 
@@ -368,15 +406,20 @@ class PesananCateringController extends Controller
 
         $kebutuhan = [];
         foreach ($agregat as $item) {
-            $bahan = \App\Models\BahanBaku::with('stok_relasi', 'satuan')->find($item['bahan_baku_id']);
+            $bahan = \App\Models\BahanBaku::with(['stok_catering_balance', 'satuan'])->find($item['bahan_baku_id']);
             if (! $bahan) {
                 continue;
             }
+            $stokKatering = (float) ($bahan->stok_catering_balance->jumlah_stok ?? 0);
+            $totalKebutuhan = (float) $item['kebutuhan'];
             $kebutuhan[$bahan->id] = [
+                'id' => $bahan->id,
+                'kode_bahan' => $bahan->id_bahan_baku ?? ('BB-' . str_pad($bahan->id, 3, '0', STR_PAD_LEFT)),
                 'nama_bahan' => $bahan->nama_bahan,
-                'satuan' => ($bahan->satuan->nama_satuan ?? '-'),
-                'stok_sekarang' => (float) ($bahan->stok_relasi->jumlah_stok ?? 0),
-                'total_kebutuhan' => $item['kebutuhan'],
+                'satuan' => optional($bahan->satuan)->nama_satuan ?? optional($bahan->satuan)->singkatan ?? 'Gram',
+                'stok_katering' => $stokKatering,
+                'total_kebutuhan' => $totalKebutuhan,
+                'cukup' => $stokKatering >= $totalKebutuhan,
             ];
         }
         $kebutuhanBahan = array_values($kebutuhan);
@@ -444,6 +487,7 @@ class PesananCateringController extends Controller
         } else {
             $pesanan->update([
                 'status_pembayaran_id' => 5, // Lunas
+                'status_pesanan_id' => $pesanan->status_pesanan_id == 1 ? 2 : $pesanan->status_pesanan_id,
             ]);
         }
 
@@ -466,52 +510,30 @@ class PesananCateringController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $pesanan = Pesanan::findOrFail($id);
+        $pesanan = Pesanan::with('pengiriman')->findOrFail($id);
         $request->validate(['status' => 'required']);
 
-        $statusMap = [
-            'menunggu_pembayaran' => 7,
-            'terkonfirmasi' => 8,
-            'proses_pengadaan' => 9,
-            'bahan_diterima' => 10,
-            'sedang_produksi' => 11,
-            'produksi_selesai' => 12,
-            'selesai' => 5,
-            'dibatalkan' => 6,
-        ];
-        $status = $statusMap[$request->status] ?? (int) $request->status;
+        $roleName = Auth::user()->peran?->nama_peran ?? '';
+        $isPemilik = in_array($roleName, ['Pemilik', 'Admin', 'Super Admin']);
+        $isDapur = in_array($roleName, ['Dapur', 'Tim Dapur', 'Koki']) || (method_exists(Auth::user(), 'hasRole') && Auth::user()->hasRole('Dapur', 'Tim Dapur', 'Koki'));
+        $isManajer = in_array($roleName, ['Manajer', 'Manager']);
 
-        // Peta transisi status yang diizinkan
-        $allowedTransitions = [
-            1 => [2, 6], // Menunggu Konfirmasi -> Dikonfirmasi / Dibatalkan
-            2 => [3, 6], // Dikonfirmasi -> Sedang Diproses / Dibatalkan
-            3 => [4],    // Sedang Diproses -> Siap Dikirim
-            4 => [5],    // Siap Dikirim -> Selesai
-            5 => [],     // Selesai -> final
-            6 => [],     // Dibatalkan -> final
-        ];
+        if ($isManajer) {
+            return back()->with('error', 'Aktor Manajer tidak memiliki hak untuk mengubah status pesanan konsumen.');
+        }
 
-        $currentStatus = $pesanan->status_pesanan_id;
+        $status = (int) $request->status;
+        $currentStatus = (int) $pesanan->status_pesanan_id;
 
-        // Validasi transisi status
-        if (!in_array($status, $allowedTransitions[$currentStatus] ?? [])) {
-            // Jika membatalkan (6) selalu diperbolehkan kecuali sudah selesai
-            if ($status != 6 || $currentStatus == 5) {
-                return back()->with('error', 'Perubahan status tidak diizinkan dari status saat ini.');
+        // 1. Aksi Pembatalan (Status 6 - Dibatalkan)
+        if ($status === 6) {
+            if (!$isPemilik) {
+                return back()->with('error', 'Hanya Pemilik yang dapat membatalkan pesanan.');
             }
-        }
+            if ($currentStatus === 5) {
+                return back()->with('error', 'Pesanan yang sudah selesai tidak dapat dibatalkan.');
+            }
 
-        // Validasi syarat DP (Untuk masuk ke status Dikonfirmasi)
-        if ($status === 2 && !in_array($pesanan->status_pembayaran_id, [3, 4, 5])) {
-            return back()->with('error', 'Status tidak bisa diubah karena pembayaran DP belum diverifikasi.');
-        }
-
-        // Validasi syarat LUNAS (Untuk masuk ke dapur / Sedang Diproses)
-        if ($status === 3 && $pesanan->status_pembayaran_id !== 5) {
-            return back()->with('error', 'Pesanan hanya bisa masuk ke dapur setelah LUNAS. Verifikasi pelunasan terlebih dahulu.');
-        }
-
-        if ($status == 6) {
             $alasan = $request->alasan_batal;
             $pesanan->update([
                 'status_pesanan_id' => 6,
@@ -521,101 +543,87 @@ class PesananCateringController extends Controller
             app(OrderService::class)->restoreStockPesanan($pesanan);
 
             if ($pesanan->pengiriman) {
-                $pesanan->pengiriman->update(['status_pengiriman_id' => 5]); // Gagal / Batal
+                $pesanan->pengiriman->update(['status_pengiriman_id' => 5]); // Dibatalkan
             }
 
-            return back()->with('success', 'Pesanan dibatalkan.');
+            return back()->with('success', 'Pesanan katering berhasil dibatalkan.');
         }
 
-        // Jika status berpindah ke Sedang Diproses (ID 3) dan belum pernah dipotong stok
-        if ($status == 3 && $pesanan->status_pesanan_id < 3) {
-            try {
-                app(OrderService::class)->potongStokPesanan($pesanan);
-            } catch (\RuntimeException $e) {
-                return back()->with('error', 'Gagal memproses pesanan: ' . $e->getMessage() . ' Silakan tambah stok bahan terlebih dahulu.');
+        // 2. Transisi: MENUNGGU (1) -> DIKONFIRMASI (2)
+        if ($status === 2) {
+            if (!$isPemilik) {
+                return back()->with('error', 'Hanya Pemilik yang dapat mengonfirmasi pesanan.');
             }
-        }
-        
-        $pesanan->update(['status_pesanan_id' => $status]);
-
-        // Sinkronisasi dengan Pengiriman (Jika ada jadwal pengiriman)
-        if ($pesanan->pengiriman) {
-            if ($status == 4) { // Siap Dikirim
-                $pesanan->pengiriman->update(['status_pengiriman_id' => 2]); // Siap Dikirim di Pengiriman
-            } elseif ($status == 5) { // Selesai
-                $pesanan->pengiriman->update(['status_pengiriman_id' => 4]); // Selesai/Diterima di Pengiriman
+            if (!in_array($pesanan->status_pembayaran_id, [3, 4, 5])) {
+                return back()->with('error', 'Pesanan tidak bisa dikonfirmasi karena pembayaran DP belum diverifikasi.');
             }
+            $pesanan->update(['status_pesanan_id' => 2]);
+            return back()->with('success', 'Pesanan katering berhasil dikonfirmasi.');
         }
 
-        // Kirim Notifikasi Status
-        $statusTexts = [
-            1 => 'menunggu konfirmasi',
-            2 => 'telah dikonfirmasi',
-            3 => 'sedang diproses',
-            4 => 'dalam pengantaran',
-            5 => 'telah selesai',
-            6 => 'dibatalkan',
-        ];
-        $statusText = $statusTexts[$status] ?? 'diperbarui';
-
-        // 1. Notifikasi ke Konsumen
-        if ($pesanan->pelanggan) {
-            $pesanan->pelanggan->notify(new \App\Notifications\StatusPesanan(
-                'Status Pesanan', 
-                "Pesanan Katering #{$pesanan->id_pesanan} Anda {$statusText}.", 
-                route('konsumen.pesanan.index')
-            ));
-        }
-
-        // 2. Notifikasi ke Dapur & Pemilik (Dikonfirmasi / Diproses)
-        if (in_array($status, [2, 3])) {
-            $roles = $status == 2 ? ['Dapur'] : ['Dapur', 'Pemilik'];
-            $internalMsg = $status == 2 
-                ? "Pesanan Katering #{$pesanan->id_pesanan} telah dikonfirmasi. Silakan cek detail." 
-                : "Pesanan Katering #{$pesanan->id_pesanan} siap diproses (produksi bisa dimulai).";
-            
-            $internals = \App\Models\Pengguna::whereHas('peran', function ($q) use ($roles) {
-                $q->whereIn('nama_peran', $roles);
-            })->get();
-            
-            if ($internals->count() > 0) {
-                \Illuminate\Support\Facades\Notification::send($internals, new \App\Notifications\StatusPesanan(
-                    'Update Pesanan',
-                    $internalMsg,
-                    route('admin.pesanan.catering.index')
-                ));
+        // 3. Transisi: DIKONFIRMASI (2) -> TERJADWAL (7)
+        if ($status === 7) {
+            if (!$isPemilik) {
+                return back()->with('error', 'Hanya Pemilik yang dapat menjadwalkan pesanan.');
             }
-        }
-
-        // 3. Notifikasi ke Tim Pengantaran (Siap Dikirim)
-        if ($status == 4) {
-            $kurirs = \App\Models\Pengguna::whereHas('peran', function ($q) {
-                $q->where('nama_peran', 'Tim Pengantaran');
-            })->get();
-            if ($kurirs->count() > 0) {
-                \Illuminate\Support\Facades\Notification::send($kurirs, new \App\Notifications\StatusPesanan(
-                    'Pesanan Siap Dikirim',
-                    "Pesanan Katering #{$pesanan->id_pesanan} siap dikirim.",
-                    route('admin.pengantaran.index')
-                ));
+            $pesanan->update(['status_pesanan_id' => 7]);
+            if ($pesanan->pengiriman) {
+                $pesanan->pengiriman->update(['status_pengiriman_id' => 1]); // Dijadwalkan
             }
+            return back()->with('success', 'Pesanan katering berhasil ditandai Terjadwal.');
         }
 
-        // 4. Notifikasi ke Pemilik (Selesai)
-        if ($status == 5) {
-            $pemilik = \App\Models\Pengguna::whereHas('peran', function ($q) {
-                $q->where('nama_peran', 'Pemilik');
-            })->get();
-            if ($pemilik->count() > 0) {
-                \Illuminate\Support\Facades\Notification::send($pemilik, new \App\Notifications\StatusPesanan(
-                    'Pesanan Selesai',
-                    "Pesanan Katering #{$pesanan->id_pesanan} telah selesai / pengiriman selesai.",
-                    route('admin.pesanan.catering.index')
-                ));
+        // 4. Transisi: DIKONFIRMASI (2) / TERJADWAL (7) -> DIPROSES (3)
+        if ($status === 3) {
+            if (!$isDapur && !$isPemilik) {
+                return back()->with('error', 'Hanya Tim Dapur yang dapat memulai proses memasak pesanan.');
             }
+            if (!in_array($pesanan->status_pembayaran_id, [3, 4, 5])) {
+                return back()->with('error', 'Pesanan hanya bisa masuk ke dapur setelah pembayaran DP atau Lunas diverifikasi.');
+            }
+
+            if ($pesanan->status_pesanan_id < 3) {
+                try {
+                    app(OrderService::class)->potongStokPesanan($pesanan);
+                } catch (\RuntimeException $e) {
+                    return back()->with('error', 'Gagal memproses pesanan: ' . $e->getMessage() . ' Silakan tambah stok bahan terlebih dahulu.');
+                }
+            }
+
+            $pesanan->update(['status_pesanan_id' => 3]);
+            return back()->with('success', 'Pesanan katering sedang diproses oleh dapur.');
         }
 
-        return back()->with('success', 'Status pesanan berhasil diperbarui.');
+        // 5. Transisi: DIPROSES (3) -> SIAP (4) (Pesanan Siap)
+        if ($status === 4) {
+            if (!$isDapur && !$isPemilik) {
+                return back()->with('error', 'Hanya Tim Dapur yang dapat menandai pesanan selesai disiapkan.');
+            }
+
+            $pesanan->update(['status_pesanan_id' => 4]);
+
+            // Jika ada pengiriman, otomatis jadikan SIAP_DIKIRIM (2)
+            if ($pesanan->pengiriman) {
+                $pesanan->pengiriman->update(['status_pengiriman_id' => 2]); // Siap Dikirim
+            }
+
+            return back()->with('success', 'Pesanan katering telah siap.');
+        }
+
+        // 6. Transisi: SIAP (4) -> SELESAI (5) (Khusus Ambil Sendiri)
+        if ($status === 5) {
+            if (!$isPemilik) {
+                return back()->with('error', 'Hanya Pemilik yang dapat menyelesaikan pesanan.');
+            }
+            if ($pesanan->pengiriman && $pesanan->pengiriman->status_pengiriman_id !== 4) {
+                return back()->with('error', 'Pesanan dengan metode pengantaran akan otomatis selesai ketika status pengiriman Terkirim.');
+            }
+
+            $pesanan->update(['status_pesanan_id' => 5]);
+            return back()->with('success', 'Pesanan katering telah selesai.');
+        }
+
+        return back()->with('error', 'Perubahan status tidak diizinkan.');
     }
 
     /** Tolak bukti pembayaran yang diunggah pelanggan */

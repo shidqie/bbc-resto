@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -75,7 +75,12 @@
     --color-body-rgb: 203 213 225;
   }
 
-  html {
+  *, ::before, ::after {
+    font-family: 'Outfit', sans-serif !important;
+  }
+
+  html, body {
+    font-family: 'Outfit', sans-serif !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -244,7 +249,59 @@ html.dark .admin-shell .bg-\[\#F8FAFC\] {
   background-color: var(--dark-bg) !important;
 }
 
-/* Tables */
+/* ── Universal Table Typography (Outfit Font & Consistent Scale) ── */
+table,
+.data-table,
+.admin-table {
+  font-family: 'Outfit', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+table th,
+thead th,
+.table-header th {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.8125rem !important; /* 13px */
+  font-weight: 700 !important;
+  line-height: 1.25rem !important;
+  letter-spacing: 0.015em;
+}
+
+table td,
+tbody td,
+.table-cell td {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.875rem !important; /* 14px */
+  line-height: 1.35rem !important;
+}
+
+table code,
+table .font-mono,
+table [class*="font-mono"] {
+  font-family: 'Outfit', monospace, sans-serif !important;
+  font-size: 0.8125rem !important; /* 13px */
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+}
+
+table .badge,
+table [class*="rounded-full"],
+table [class*="rounded-lg"],
+table [class*="rounded-md"] {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.75rem !important; /* 12px */
+  font-weight: 600 !important;
+}
+
+table button,
+table a.button,
+table .btn {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.75rem !important; /* 12px */
+  font-weight: 700 !important;
+}
+
+/* Tables in Dark Mode */
 html.dark .admin-shell table {
   border-color: var(--dark-border) !important;
 }

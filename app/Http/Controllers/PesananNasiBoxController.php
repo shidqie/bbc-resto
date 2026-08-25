@@ -32,7 +32,19 @@ class PesananNasiBoxController extends Controller
 
         $selectedPaketId = $request->paket_id;
 
-        return view('pelanggan.pesanan.nasi-box.create', compact('pakets', 'selectedPaketId'));
+        $komponenMap = [];
+        $cateringCtrl = new \App\Http\Controllers\PesananCateringController();
+        foreach ($pakets as $p) {
+            $komponenMap[$p->id] = $cateringCtrl->getKomponen($p->id)->getData();
+        }
+
+        return view('pelanggan.pesanan.nasi-box.create', compact('pakets', 'selectedPaketId', 'komponenMap'));
+    }
+
+    // GET /pesan/nasi-box/komponen/{paketId}
+    public function getKomponen($paketId)
+    {
+        return (new \App\Http\Controllers\PesananCateringController())->getKomponen($paketId);
     }
 
     // POST /pesan/nasibox/preview
@@ -97,7 +109,7 @@ class PesananNasiBoxController extends Controller
             'nama_pemesan.required' => 'Nama pemesan wajib diisi.',
             'kontak.required' => 'Kontak WhatsApp wajib diisi.',
             'tanggal_acara.required' => 'Tanggal acara wajib diisi.',
-            'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-3 sebelum hari pelaksanaan acara.',
+            'tanggal_acara.after_or_equal' => 'Harap melakukan pemesanan minimal H-4 sebelum hari pelaksanaan acara.',
             'lokasi_acara.required' => 'Alamat acara wajib diisi.',
             'metode_pengiriman.required' => 'Metode pengiriman wajib dipilih.',
             'jumlah_box.required' => 'Jumlah pesanan wajib diisi.',
@@ -195,17 +207,20 @@ class PesananNasiBoxController extends Controller
                         ]);
                     }
 
-                    // Buat sesi pembayaran DP 15 menit
-                    $nominalDp = round($totalTagihan * 0.25); // Nasi Box DP 25%
+                    // Buat sesi pembayaran awal 12 jam (Lunas 100% atau DP 25%)
+                    $isLunasOpsi = $request->opsi_pembayaran === 'lunas';
+                    $nominalBayarAwal = $isLunasOpsi ? $totalTagihan : round($totalTagihan * 0.25);
+                    $jenisBayarAwal = $isLunasOpsi ? 'pelunasan' : 'uang_muka';
+
                     Pembayaran::create([
                         'kode_pembayaran' => 'PAY-' . strtoupper(uniqid()),
                         'pesanan_id' => $pesananBaru->id,
-                        'jenis_pembayaran' => 'uang_muka',
+                        'jenis_pembayaran' => $jenisBayarAwal,
                         'metode_pembayaran' => null, // Belum dipilih
-                        'jumlah_dibayar' => $nominalDp,
-                        'jumlah_tagihan' => $nominalDp,
+                        'jumlah_dibayar' => $nominalBayarAwal,
+                        'jumlah_tagihan' => $nominalBayarAwal,
                         'status_verifikasi' => 'belum_dibayar',
-                        'expires_at' => now()->addMinutes(15),
+                        'expires_at' => now()->addHours(12),
                     ]);
 
                     // Kirim notifikasi
@@ -215,10 +230,19 @@ class PesananNasiBoxController extends Controller
                     
                     if ($admins->count() > 0) {
                         $qty = $pesananBaru->detail_pesanan->sum('jumlah') ?: $pesananBaru->detail_pesanan->sum('kuantitas');
+                        $namaPemesan = $pelanggan->nama ?? ($pesananBaru->pelanggan->nama ?? null);
+                        if (!$namaPemesan && !empty($pesananBaru->catatan)) {
+                            if (preg_match('/^Pemesan:\s*(.+)$/m', $pesananBaru->catatan, $m)) {
+                                $namaPemesan = trim($m[1]);
+                            } else {
+                                $namaPemesan = trim(explode('|', $pesananBaru->catatan)[0]);
+                            }
+                        }
+                        $atasNama = $namaPemesan ? " atas nama {$namaPemesan}" : "";
                         \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\PesananBaru(
                             $pesananBaru,
                             "Pesanan Baru",
-                            "Pesanan Nasi Box #{$pesananBaru->id_pesanan} sebanyak {$qty} box telah masuk dan menunggu konfirmasi.", 
+                            "Pesanan Nasi Box #{$pesananBaru->id_pesanan} sebanyak {$qty} box{$atasNama} telah masuk dan menunggu konfirmasi.", 
                             route('admin.pesanan.nasibox.index')
                         ));
                     }
@@ -240,7 +264,7 @@ class PesananNasiBoxController extends Controller
     // ADMIN GET /admin/pesanan/nasibox
     public function index(Request $request)
     {
-        $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'status_pesanan'])
+        $query = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'status_pesanan', 'status_pembayaran', 'pembayaran', 'pelanggan', 'pengiriman.status_pengiriman'])
             ->where('jenis_pesanan_id', 3)
             ->latest('dibuat_pada');
 
@@ -363,12 +387,19 @@ class PesananNasiBoxController extends Controller
 
         $result = [];
         foreach ($agregat as $item) {
-            $bahan = BahanBaku::with('satuan')->find($item['bahan_baku_id']);
+            $bahan = BahanBaku::with(['satuan', 'stok_harian'])->find($item['bahan_baku_id']);
             if ($bahan) {
+                $stokHarian = (float) ($bahan->stok_harian->jumlah_stok ?? 0);
+                $totalKebutuhan = (float) $item['kebutuhan'];
                 $result[] = [
+                    'id' => $bahan->id,
+                    'kode_bahan' => $bahan->id_bahan_baku ?? ('BB-' . str_pad($bahan->id, 3, '0', STR_PAD_LEFT)),
                     'nama_bahan' => $bahan->nama_bahan,
-                    'total_kebutuhan' => rtrim(rtrim(number_format($item['kebutuhan'], 2, ',', '.'), '0'), ','),
-                    'satuan' => $bahan->satuan->singkatan ?? '',
+                    'total_kebutuhan' => $totalKebutuhan,
+                    'stok_harian' => $stokHarian,
+                    'stok_katering' => $stokHarian, // fallback compatibility
+                    'satuan' => optional($bahan->satuan)->nama_satuan ?? optional($bahan->satuan)->singkatan ?? 'Gram',
+                    'cukup' => $stokHarian >= $totalKebutuhan,
                 ];
             }
         }
@@ -389,52 +420,30 @@ class PesananNasiBoxController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        $pesanan = Pesanan::with('pengiriman')->findOrFail($id);
         $request->validate(['status' => 'required']);
 
-        $statusMap = [
-            'menunggu_pembayaran' => 7,
-            'terkonfirmasi' => 8,
-            'proses_pengadaan' => 9,
-            'bahan_diterima' => 10,
-            'sedang_produksi' => 11,
-            'produksi_selesai' => 12,
-            'selesai' => 5,
-            'dibatalkan' => 6,
-        ];
-        $status = $statusMap[$request->status] ?? (int) $request->status;
+        $roleName = Auth::user()->peran?->nama_peran ?? '';
+        $isPemilik = in_array($roleName, ['Pemilik', 'Admin', 'Super Admin']);
+        $isDapur = in_array($roleName, ['Dapur', 'Tim Dapur', 'Koki']) || (method_exists(Auth::user(), 'hasRole') && Auth::user()->hasRole('Dapur', 'Tim Dapur', 'Koki'));
+        $isManajer = in_array($roleName, ['Manajer', 'Manager']);
 
-        $pesanan = Pesanan::findOrFail($id);
+        if ($isManajer) {
+            return back()->with('error', 'Aktor Manajer tidak memiliki hak untuk mengubah status pesanan konsumen.');
+        }
 
-        // Peta transisi status yang diizinkan
-        $allowedTransitions = [
-            1 => [2, 6], // Menunggu Konfirmasi -> Dikonfirmasi / Dibatalkan
-            2 => [3, 6], // Dikonfirmasi -> Sedang Diproses / Dibatalkan
-            3 => [4],    // Sedang Diproses -> Siap Dikirim
-            4 => [5],    // Siap Dikirim -> Selesai
-            5 => [],     // Selesai -> final
-            6 => [],     // Dibatalkan -> final
-        ];
+        $status = (int) $request->status;
+        $currentStatus = (int) $pesanan->status_pesanan_id;
 
-        $currentStatus = $pesanan->status_pesanan_id;
-
-        // Validasi transisi status
-        if (!in_array($status, $allowedTransitions[$currentStatus] ?? [])) {
-            if ($status != 6 || $currentStatus == 5) {
-                return back()->with('error', 'Perubahan status tidak diizinkan dari status saat ini.');
+        // 1. Aksi Pembatalan (Status 6 - Dibatalkan)
+        if ($status === 6) {
+            if (!$isPemilik) {
+                return back()->with('error', 'Hanya Pemilik yang dapat membatalkan pesanan.');
             }
-        }
+            if ($currentStatus === 5) {
+                return back()->with('error', 'Pesanan yang sudah selesai tidak dapat dibatalkan.');
+            }
 
-        // Validasi syarat DP (Untuk masuk ke status Dikonfirmasi)
-        if ($status === 2 && !in_array($pesanan->status_pembayaran_id, [3, 4, 5])) {
-            return back()->with('error', 'Status tidak bisa diubah karena pembayaran DP belum diverifikasi.');
-        }
-
-        // Validasi syarat LUNAS (Untuk masuk ke dapur / Sedang Diproses)
-        if ($status === 3 && $pesanan->status_pembayaran_id !== 5) {
-            return back()->with('error', 'Pesanan hanya bisa masuk ke dapur setelah LUNAS. Verifikasi pelunasan terlebih dahulu.');
-        }
-
-        if ($status == 6) {
             $alasan = $request->alasan_batal;
             $pesanan->update([
                 'status_pesanan_id' => 6,
@@ -444,101 +453,87 @@ class PesananNasiBoxController extends Controller
             app(OrderService::class)->restoreStockPesanan($pesanan);
 
             if ($pesanan->pengiriman) {
-                $pesanan->pengiriman->update(['status_pengiriman_id' => 5]); // Gagal / Batal
+                $pesanan->pengiriman->update(['status_pengiriman_id' => 5]); // Dibatalkan
             }
 
-            return back()->with('success', 'Pesanan berhasil dibatalkan.');
+            return back()->with('success', 'Pesanan Nasi Box berhasil dibatalkan.');
         }
 
-        // Jika status berpindah ke Sedang Diproses (ID 3) dan belum pernah dipotong stok
-        if ($status == 3 && $pesanan->status_pesanan_id < 3) {
-            try {
-                app(OrderService::class)->potongStokPesanan($pesanan);
-            } catch (\RuntimeException $e) {
-                return back()->with('error', 'Gagal memproses pesanan: ' . $e->getMessage() . ' Silakan tambah stok bahan terlebih dahulu.');
+        // 2. Transisi: MENUNGGU (1) -> DIKONFIRMASI (2)
+        if ($status === 2) {
+            if (!$isPemilik) {
+                return back()->with('error', 'Hanya Pemilik yang dapat mengonfirmasi pesanan.');
             }
-        }
-        
-        $pesanan->update(['status_pesanan_id' => $status]);
-
-        // Sinkronisasi dengan Pengiriman (Jika ada jadwal pengiriman)
-        if ($pesanan->pengiriman) {
-            if ($status == 4) { // Siap Dikirim
-                $pesanan->pengiriman->update(['status_pengiriman_id' => 2]); // Siap Dikirim di Pengiriman
-            } elseif ($status == 5) { // Selesai
-                $pesanan->pengiriman->update(['status_pengiriman_id' => 4]); // Selesai/Diterima di Pengiriman
+            if (!in_array($pesanan->status_pembayaran_id, [3, 4, 5])) {
+                return back()->with('error', 'Pesanan tidak bisa dikonfirmasi karena pembayaran DP belum diverifikasi.');
             }
+            $pesanan->update(['status_pesanan_id' => 2]);
+            return back()->with('success', 'Pesanan Nasi Box berhasil dikonfirmasi.');
         }
 
-        // Kirim Notifikasi Status
-        $statusTexts = [
-            1 => 'menunggu konfirmasi',
-            2 => 'telah dikonfirmasi',
-            3 => 'sedang diproses',
-            4 => 'dalam pengantaran',
-            5 => 'telah selesai',
-            6 => 'dibatalkan',
-        ];
-        $statusText = $statusTexts[$status] ?? 'diperbarui';
-
-        // 1. Notifikasi ke Konsumen
-        if ($pesanan->pelanggan) {
-            $pesanan->pelanggan->notify(new \App\Notifications\StatusPesanan(
-                'Status Pesanan', 
-                "Pesanan Nasi Box #{$pesanan->id_pesanan} Anda {$statusText}.", 
-                route('konsumen.pesanan.index')
-            ));
-        }
-
-        // 2. Notifikasi ke Dapur & Pemilik (Dikonfirmasi / Diproses)
-        if (in_array($status, [2, 3])) {
-            $roles = $status == 2 ? ['Dapur'] : ['Dapur', 'Pemilik'];
-            $internalMsg = $status == 2 
-                ? "Pesanan Nasi Box #{$pesanan->id_pesanan} telah dikonfirmasi. Silakan cek detail." 
-                : "Pesanan Nasi Box #{$pesanan->id_pesanan} siap diproses (produksi bisa dimulai).";
-            
-            $internals = \App\Models\Pengguna::whereHas('peran', function ($q) use ($roles) {
-                $q->whereIn('nama_peran', $roles);
-            })->get();
-            
-            if ($internals->count() > 0) {
-                \Illuminate\Support\Facades\Notification::send($internals, new \App\Notifications\StatusPesanan(
-                    'Update Pesanan',
-                    $internalMsg,
-                    route('admin.pesanan.nasibox.index')
-                ));
+        // 3. Transisi: DIKONFIRMASI (2) -> TERJADWAL (7)
+        if ($status === 7) {
+            if (!$isPemilik) {
+                return back()->with('error', 'Hanya Pemilik yang dapat menjadwalkan pesanan.');
             }
-        }
-
-        // 3. Notifikasi ke Tim Pengantaran (Siap Dikirim)
-        if ($status == 4) {
-            $kurirs = \App\Models\Pengguna::whereHas('peran', function ($q) {
-                $q->where('nama_peran', 'Tim Pengantaran');
-            })->get();
-            if ($kurirs->count() > 0) {
-                \Illuminate\Support\Facades\Notification::send($kurirs, new \App\Notifications\StatusPesanan(
-                    'Pesanan Siap Dikirim',
-                    "Pesanan Nasi Box #{$pesanan->id_pesanan} siap dikirim.",
-                    route('admin.pengantaran.index')
-                ));
+            $pesanan->update(['status_pesanan_id' => 7]);
+            if ($pesanan->pengiriman) {
+                $pesanan->pengiriman->update(['status_pengiriman_id' => 1]); // Dijadwalkan
             }
+            return back()->with('success', 'Pesanan Nasi Box berhasil ditandai Terjadwal.');
         }
 
-        // 4. Notifikasi ke Pemilik (Selesai)
-        if ($status == 5) {
-            $pemilik = \App\Models\Pengguna::whereHas('peran', function ($q) {
-                $q->where('nama_peran', 'Pemilik');
-            })->get();
-            if ($pemilik->count() > 0) {
-                \Illuminate\Support\Facades\Notification::send($pemilik, new \App\Notifications\StatusPesanan(
-                    'Pesanan Selesai',
-                    "Pesanan Nasi Box #{$pesanan->id_pesanan} telah selesai / pengiriman selesai.",
-                    route('admin.pesanan.nasibox.index')
-                ));
+        // 4. Transisi: DIKONFIRMASI (2) / TERJADWAL (7) -> DIPROSES (3)
+        if ($status === 3) {
+            if (!$isDapur && !$isPemilik) {
+                return back()->with('error', 'Hanya Tim Dapur yang dapat memulai proses memasak pesanan.');
             }
+            if (!in_array($pesanan->status_pembayaran_id, [3, 4, 5])) {
+                return back()->with('error', 'Pesanan hanya bisa masuk ke dapur setelah pembayaran DP atau Lunas diverifikasi.');
+            }
+
+            if ($pesanan->status_pesanan_id < 3) {
+                try {
+                    app(OrderService::class)->potongStokPesanan($pesanan);
+                } catch (\RuntimeException $e) {
+                    return back()->with('error', 'Gagal memproses pesanan: ' . $e->getMessage() . ' Silakan tambah stok bahan terlebih dahulu.');
+                }
+            }
+
+            $pesanan->update(['status_pesanan_id' => 3]);
+            return back()->with('success', 'Pesanan Nasi Box sedang diproses oleh dapur.');
         }
 
-        return back()->with('success', 'Status pesanan berhasil diperbarui.');
+        // 5. Transisi: DIPROSES (3) -> SIAP (4) (Pesanan Siap)
+        if ($status === 4) {
+            if (!$isDapur && !$isPemilik) {
+                return back()->with('error', 'Hanya Tim Dapur yang dapat menandai pesanan selesai disiapkan.');
+            }
+
+            $pesanan->update(['status_pesanan_id' => 4]);
+
+            // Jika ada pengiriman, otomatis jadikan SIAP_DIKIRIM (2)
+            if ($pesanan->pengiriman) {
+                $pesanan->pengiriman->update(['status_pengiriman_id' => 2]); // Siap Dikirim
+            }
+
+            return back()->with('success', 'Pesanan Nasi Box telah siap.');
+        }
+
+        // 6. Transisi: SIAP (4) -> SELESAI (5) (Khusus Ambil Sendiri)
+        if ($status === 5) {
+            if (!$isPemilik) {
+                return back()->with('error', 'Hanya Pemilik yang dapat menyelesaikan pesanan.');
+            }
+            if ($pesanan->pengiriman && $pesanan->pengiriman->status_pengiriman_id !== 4) {
+                return back()->with('error', 'Pesanan dengan metode pengantaran akan otomatis selesai ketika status pengiriman Terkirim.');
+            }
+
+            $pesanan->update(['status_pesanan_id' => 5]);
+            return back()->with('success', 'Pesanan Nasi Box telah selesai.');
+        }
+
+        return back()->with('error', 'Perubahan status tidak diizinkan.');
     }
 
     /** Verifikasi bukti pembayaran Nasi Box */
@@ -569,7 +564,10 @@ class PesananNasiBoxController extends Controller
                 'batas_pelunasan'      => $batasPelunasan
             ]);
         } else {
-            $pesanan->update(['status_pembayaran_id' => 5]); // Lunas
+            $pesanan->update([
+                'status_pembayaran_id' => 5, // Lunas
+                'status_pesanan_id'    => $pesanan->status_pesanan_id == 1 ? 2 : $pesanan->status_pesanan_id,
+            ]);
         }
 
         return back()->with('success', 'Bukti pembayaran #'.$pembayaran->kode_pembayaran.' berhasil diverifikasi.');

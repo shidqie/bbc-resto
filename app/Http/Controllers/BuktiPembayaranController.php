@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PaymentTransaction;
 use App\Models\Pembayaran;
 use App\Models\Pesanan;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class BuktiPembayaranController extends Controller
@@ -90,16 +91,17 @@ class BuktiPembayaranController extends Controller
             return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
         }
 
+        $isLunasSkema = $pesanan->isSkemaLunas();
         $lunas = (float) $pesanan->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
         $dpAmount = $pesanan->nominalDP();
-        $isPelunasan = $lunas >= $dpAmount && $lunas < $pesanan->total_tagihan;
+        $isPelunasan = $isLunasSkema || ($lunas >= $dpAmount && $lunas < $pesanan->total_tagihan);
         $amountToPay = $isPelunasan ? max(0, $pesanan->total_tagihan - $lunas) : max(0, $dpAmount);
 
         // Record QRIS payment as automatically accepted/verified
         Pembayaran::create([
             'kode_pembayaran' => 'BYR-' . now()->format('Ymd-His') . '-' . rand(10, 99),
             'pesanan_id' => $pesanan->id,
-            'jenis_pembayaran' => $isPelunasan ? 'pelunasan' : 'uang_muka',
+            'jenis_pembayaran' => ($isLunasSkema || $isPelunasan) ? 'pelunasan' : 'uang_muka',
             'jumlah_dibayar' => $amountToPay,
             'metode_pembayaran' => 'qris',
             'status_verifikasi' => 'diterima',
@@ -137,9 +139,12 @@ class BuktiPembayaranController extends Controller
             ->where('status_verifikasi', 'diterima') // Sebagian / Lunas
             ->sum('jumlah_dibayar');
 
+        $isLunasSkema = $pesanan->isSkemaLunas();
+        $isPelunasan = $isLunasSkema || $request->jenis_pembayaran === 'pelunasan';
+
         $dpPersentase = $pesanan->jenis_pesanan_id == 3 ? 0.25 : 0.5; // Nasi Box = 25%, Catering = 50%
 
-        $jumlahBayar = $request->jenis_pembayaran === 'pelunasan'
+        $jumlahBayar = $isPelunasan
             ? max(0, $total - $dpSudahBayar)
             : max(0, $total * $dpPersentase - $dpSudahBayar);
 
@@ -147,16 +152,16 @@ class BuktiPembayaranController extends Controller
             return back()->with('error', 'Tagihan untuk pembayaran ini sudah lunas.');
         }
 
-        $jenisBayar = $request->jenis_pembayaran === 'pelunasan' ? 'pelunasan' : 'uang_muka';
+        $jenisBayar = $isPelunasan ? 'pelunasan' : 'uang_muka';
 
         $pembayaran = Pembayaran::where('pesanan_id', $pesanan->id)
-            ->where('jenis_pembayaran', $jenisBayar)
+            ->whereIn('jenis_pembayaran', $isPelunasan ? ['pelunasan', 'pembayaran_penuh'] : ['uang_muka'])
             ->where('status_verifikasi', 'belum_dibayar')
             ->latest()
             ->first();
 
         if (!$pembayaran) {
-            if ($jenisBayar === 'pelunasan') {
+            if ($isPelunasan) {
                 $pembayaran = Pembayaran::create([
                     'kode_pembayaran' => 'PAY-' . strtoupper(uniqid()),
                     'pesanan_id' => $pesanan->id,
@@ -165,6 +170,7 @@ class BuktiPembayaranController extends Controller
                     'jumlah_dibayar' => $jumlahBayar,
                     'jumlah_tagihan' => $jumlahBayar,
                     'status_verifikasi' => 'belum_dibayar',
+                    'expires_at' => now()->addHours(12),
                 ]);
             } else {
                 return back()->with('error', 'Sesi pembayaran tidak ditemukan atau sudah kedaluwarsa.');
@@ -196,12 +202,26 @@ class BuktiPembayaranController extends Controller
             $q->whereIn('nama_peran', ['Pemilik', 'Admin', 'Manajer']);
         })->get();
         if ($admins->count() > 0) {
+            $pesanan->loadMissing('pelanggan');
+            $namaPemesan = $pesanan->pelanggan->nama ?? null;
+            if (!$namaPemesan && !empty($pesanan->catatan)) {
+                if (preg_match('/^Pemesan:\s*(.+)$/m', $pesanan->catatan, $m)) {
+                    $namaPemesan = trim($m[1]);
+                } elseif (preg_match('/Self-Order QR \(([^)]+)\)/', $pesanan->catatan, $m)) {
+                    $namaPemesan = trim($m[1]);
+                } elseif (preg_match('/^(.+?)\s*\(\d+\s*tamu\)/', $pesanan->catatan, $m)) {
+                    $namaPemesan = trim($m[1]);
+                } else {
+                    $namaPemesan = trim(explode('|', $pesanan->catatan)[0]);
+                }
+            }
+            $atasNama = $namaPemesan ? " atas nama {$namaPemesan}" : "";
             $jenisLabel = $jenisBayar === 'uang_muka' ? 'DP' : 'Pelunasan';
             \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\StatusPembayaran(
                 $pembayaran,
                 "Pembayaran $jenisLabel Masuk",
-                "Pembayaran $jenisLabel untuk pesanan #{$pesanan->id_pesanan} telah diterima dan menunggu verifikasi.",
-                route('admin.pembayaran.verifikasi')
+                "Pembayaran $jenisLabel untuk pesanan #{$pesanan->id_pesanan}{$atasNama} telah diterima dan menunggu verifikasi.",
+                route('admin.verifikasi_pembayaran.index')
             ));
         }
 
@@ -247,16 +267,16 @@ class BuktiPembayaranController extends Controller
             'jumlah_dibayar' => $sisaBayar,
             'jumlah_tagihan' => $sisaBayar,
             'status_verifikasi' => 'belum_dibayar',
-            'expires_at' => now()->addMinutes(15),
+            'expires_at' => now()->addHours(12),
         ]);
 
-        return redirect()->route('pesanan.bayar', $pesanan->id_pesanan)->with('success', 'Sesi pelunasan dimulai, selesaikan dalam 15 menit.');
+        return redirect()->route('pesanan.bayar', $pesanan->id_pesanan)->with('success', 'Sesi pelunasan dimulai, selesaikan dalam 12 jam.');
     }
 
     /** GET /pesan/invoice/{kodePesanan} */
-    public function invoicePdf($kodePesanan)
+    public function invoicePdf(Request $request, $kodePesanan)
     {
-        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengiriman'])
+        $pesanan = Pesanan::with(['detail_pesanan.menu', 'jadwal_pesanan', 'pengiriman', 'pembayaran', 'pelanggan'])
             ->where('id_pesanan', $kodePesanan)
             ->first();
 
@@ -276,7 +296,16 @@ class BuktiPembayaranController extends Controller
             ?? optional($pesanan->jadwal_pesanan)->nomor_telepon_penerima
             ?? '-';
 
-        return view('pelanggan.pembayaran.invoice-pdf', compact('pesanan', 'type', 'kodePesanan', 'namaPemesan', 'kontak'));
+        if ($request->query('preview') === '1') {
+            $isPdf = false;
+            return view('pelanggan.pembayaran.invoice-pdf', compact('pesanan', 'type', 'kodePesanan', 'namaPemesan', 'kontak', 'isPdf'));
+        }
+
+        $isPdf = true;
+        $pdf = Pdf::loadView('pelanggan.pembayaran.invoice-pdf', compact('pesanan', 'type', 'kodePesanan', 'namaPemesan', 'kontak', 'isPdf'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('Bukti-Pembayaran-' . $pesanan->id_pesanan . '.pdf');
     }
 
     /** Status bayar: belum_bayar / dp_terbayar / lunas */

@@ -2,13 +2,16 @@
 @section('title', 'Pesanan Katering')
 
 @section('content')
+@php
+    $isDapur = auth()->user()->hasRole('Dapur', 'Tim Dapur') || in_array(auth()->user()->peran?->nama_peran, ['Dapur', 'Tim Dapur', 'Koki']);
+@endphp
 <div class="flex-1 bg-gray-50 text-gray-800">
     <div class="w-full p-6 space-y-5">
 
         {{-- PAGE HEADER --}}
         <x-ui.page-header
             title="Pesanan Katering"
-            subtitle="Kelola seluruh transaksi pesanan catering, tanggal acara, rincian porsi & pembayaran DP."
+            subtitle="{{ $isDapur ? 'Kelola dan proses persiapan hidangan pesanan Katering.' : 'Kelola seluruh transaksi pesanan catering, tanggal acara, rincian porsi & pembayaran DP.' }}"
             :breadcrumbs="['Penjualan', 'Katering']">
         </x-ui.page-header>
 
@@ -22,7 +25,9 @@
                     
                     <x-ui.multi-select name="status" :options="['all' => 'Semua Status', 'ditinjau' => 'Baru', 'terkonfirmasi' => 'Terkonfirmasi', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan']" :selected="request('status', 'all')" label="Status Pesanan" type="radio" />
                     
-                    <x-ui.multi-select name="status_pembayaran" :options="['all' => 'Semua Pembayaran', 'menunggu_dp' => 'Menunggu Pembayaran DP', 'verifikasi_dp' => 'Menunggu Verifikasi DP', 'menunggu_pelunasan' => 'Menunggu Pelunasan', 'verifikasi_lunas' => 'Menunggu Verifikasi Pelunasan', 'lunas' => 'Lunas']" :selected="request('status_pembayaran', 'all')" label="Status Pembayaran" type="radio" />
+                    @if(!$isDapur)
+                        <x-ui.multi-select name="status_pembayaran" :options="['all' => 'Semua Pembayaran', 'menunggu_dp' => 'Menunggu Pembayaran DP', 'verifikasi_dp' => 'Menunggu Verifikasi DP', 'menunggu_pelunasan' => 'Menunggu Pelunasan', 'verifikasi_lunas' => 'Menunggu Verifikasi Pelunasan', 'lunas' => 'Lunas']" :selected="request('status_pembayaran', 'all')" label="Status Pembayaran" type="radio" />
+                    @endif
                     
                     <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'kustom' => 'Kustom']" :selected="request('periode')" label="Periode Pesanan" type="radio" />
                     
@@ -41,19 +46,146 @@
                 </form>
             </x-slot:toolbar>
 
-            <x-ui.table class="min-w-[1100px]">
-                <x-ui.table.header>
-                    <th class="px-4 py-3.5 text-left w-12">No</th>
-                    <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
-                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
-                    <th class="px-4 py-3.5 text-left">Konsumen</th>
-                    <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
-                    <th class="px-4 py-3.5 text-right">Total Tagihan</th>
-                    <th class="px-4 py-3.5 text-center">Status Pesanan</th>
-                    <th class="px-4 py-3.5 text-center">Status Pembayaran</th>
-                    <th class="px-4 py-3.5 text-center">Aksi</th>
-                </x-ui.table.header>
-                <tbody class="divide-y divide-gray-100">
+            @if($isDapur)
+                <x-ui.table class="min-w-[850px]">
+                    <x-ui.table.header>
+                        <th class="px-4 py-3.5 text-left w-12">No</th>
+                        <th class="px-4 py-3.5 text-left">Waktu Pesanan</th>
+                        <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                        <th class="px-4 py-3.5 text-left">Menu / Paket</th>
+                        <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
+                        <th class="px-4 py-3.5 text-center">Status Pesanan</th>
+                        <th class="px-4 py-3.5 text-center">Aksi</th>
+                    </x-ui.table.header>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($pesanans as $p)
+                        <x-ui.table.row>
+                            <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">
+                                {{ $loop->iteration + ($pesanans->currentPage() - 1) * $pesanans->perPage() }}
+                            </td>
+                            <td class="px-4 py-4 align-middle whitespace-nowrap text-sm text-gray-700 font-medium">
+                                {{ $p->dibuat_pada ? \Carbon\Carbon::parse($p->dibuat_pada)->translatedFormat('d M Y, H.i') . ' WIB' : '-' }}
+                            </td>
+                            <td class="px-4 py-4 align-middle whitespace-nowrap">
+                                <span class="font-mono text-xs font-bold text-gray-900">{{ $p->id_pesanan }}</span>
+                            </td>
+                            <td class="px-4 py-4 align-middle">
+                                <p class="font-bold text-gray-900 text-sm">{{ $p->detail_pesanan->first()->menu->nama_menu ?? 'Paket Katering' }}</p>
+                                <p class="text-xs text-gray-500">{{ $p->detail_pesanan->first()->jumlah ?? 0 }} Porsi &bull; {{ optional($p->pelanggan)->nama ?? $p->jadwal_pesanan->nama_penerima ?? '-' }}</p>
+                            </td>
+                            <td class="px-4 py-4 align-middle whitespace-nowrap">
+                                @if($p->jadwal_pesanan?->tanggal_acara)
+                                    <p class="font-bold text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->tanggal_acara)->translatedFormat('d M Y') }}</p>
+                                    @if($p->jadwal_pesanan?->waktu_acara)
+                                        <p class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->waktu_acara)->format('H:i') }} WIB</p>
+                                    @endif
+                                @else
+                                    <span class="text-xs text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-4 text-center align-middle whitespace-nowrap">
+                                @php
+                                    $stId = (int) $p->status_pesanan_id;
+                                    $stConfig = match($stId) {
+                                        1 => ['label' => 'Menunggu Konfirmasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500'],
+                                        2 => ['label' => 'Dikonfirmasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
+                                        3 => ['label' => 'Sedang Diproses', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500 animate-pulse'],
+                                        4 => ['label' => 'Pesanan Siap', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90', 'dot' => 'bg-purple-500'],
+                                        5 => ['label' => 'Selesai', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
+                                        6 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                        7 => ['label' => 'Terjadwal', 'color' => 'bg-sky-50 text-sky-800 border-sky-200/90', 'dot' => 'bg-sky-500'],
+                                        default => ['label' => optional($p->status_pesanan)->nama_status ?? 'Status #'.$stId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
+                                    };
+                                @endphp
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs whitespace-nowrap {{ $stConfig['color'] }}">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $stConfig['dot'] }}"></span>
+                                    <span>{{ $stConfig['label'] }}</span>
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-center align-middle whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-2">
+                                    @if(in_array($p->status_pesanan_id, [2, 7]))
+                                        @if(in_array($p->status_pembayaran_id, [3, 4, 5]))
+                                            <form id="form-proses-cat-{{ $p->id }}" action="{{ route('admin.pesanan.catering.update-status', $p->id) }}" method="POST" class="inline-block">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="3">
+                                                <button type="button" 
+                                                        onclick="window.confirmDialog({ 
+                                                            title: 'Mulai Proses Masak', 
+                                                            name: 'Pesanan #{{ $p->id_pesanan }}', 
+                                                            message: 'Mulai proses masak pesanan ini? Stok bahan akan dipotong otomatis.', 
+                                                            formId: 'form-proses-cat-{{ $p->id }}', 
+                                                            confirmText: 'Mulai Masak', 
+                                                            cancelText: 'Batal', 
+                                                            type: 'warning' 
+                                                        })" 
+                                                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                                    <x-heroicon-o-fire class="w-4 h-4 stroke-2" />
+                                                    <span>Mulai Proses</span>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-yellow-50 text-yellow-800 text-[11px] font-semibold border border-yellow-200">
+                                                <x-heroicon-o-lock-closed class="w-3.5 h-3.5 text-yellow-600" />
+                                                <span>Menunggu DP</span>
+                                            </span>
+                                        @endif
+                                    @elseif($p->status_pesanan_id == 3)
+                                        <form id="form-siap-cat-{{ $p->id }}" action="{{ route('admin.pesanan.catering.update-status', $p->id) }}" method="POST" class="inline-block">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="4">
+                                            <button type="button" 
+                                                    onclick="window.confirmDialog({ 
+                                                        title: 'Tandai Pesanan Siap', 
+                                                        name: 'Pesanan #{{ $p->id_pesanan }}', 
+                                                        message: 'Tandai seluruh masakan pesanan telah selesai disiapkan oleh Dapur?', 
+                                                        formId: 'form-siap-cat-{{ $p->id }}', 
+                                                        confirmText: 'Pesanan Siap', 
+                                                        cancelText: 'Batal', 
+                                                        type: 'warning' 
+                                                    })" 
+                                                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                                                <x-heroicon-o-check class="w-4 h-4 stroke-2" />
+                                                <span>Pesanan Siap</span>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    <button type="button" 
+                                            onclick="openCateringDrawer('{{ route('admin.pesanan.catering.show', $p->id) }}')"
+                                            class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                                            title="Lihat Detail Pesanan">
+                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </td>
+                        </x-ui.table.row>
+                        @empty
+                        <tr>
+                            <td colspan="7">
+                                <x-ui.empty-state icon="clipboard-document-list" title="Tidak ada pesanan aktif" message="Belum ada pesanan katering yang perlu diproses dapur." />
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </x-ui.table>
+            @else
+                <x-ui.table class="min-w-[1100px]">
+                    <x-ui.table.header>
+                        <th class="px-4 py-3.5 text-left w-12">No</th>
+                        <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
+                        <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                        <th class="px-4 py-3.5 text-left">Konsumen</th>
+                        <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
+                        <th class="px-4 py-3.5 text-right">Total Tagihan</th>
+                        <th class="px-4 py-3.5 text-center">Status Pesanan</th>
+                        <th class="px-4 py-3.5 text-center">Status Pembayaran</th>
+                        <th class="px-4 py-3.5 text-center">Status Pengiriman</th>
+                        <th class="px-4 py-3.5 text-center">Aksi</th>
+                    </x-ui.table.header>
+                    <tbody class="divide-y divide-gray-100">
                     @forelse($pesanans as $p)
                     <x-ui.table.row>
                         <td class="px-4 py-4 text-sm text-gray-500 font-medium align-middle">
@@ -70,84 +202,84 @@
                         </td>
                         <td class="px-4 py-4 align-middle whitespace-nowrap">
                             @if($p->jadwal_pesanan?->tanggal_acara)
-                                <p class="font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->tanggal_acara)->format('d M Y') }}</p>
+                                <p class="font-medium text-gray-900 text-sm">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->tanggal_acara)->translatedFormat('d M Y') }}</p>
                             @else
                                 <span class="text-xs text-gray-400">-</span>
                             @endif
                         </td>
                         <td class="px-4 py-4 text-right font-bold text-gray-900 tabular-nums whitespace-nowrap">
                             Rp {{ number_format($p->total_tagihan, 0, ',', '.') }}
-                            @php $totalP = (float) $p->total_tagihan; @endphp
                         </td>
-                        <td class="px-4 py-4 text-center align-middle">
-                            @if(in_array($p->status_pesanan_id, [5, 6]))
-                                @php
-                                    $sColorMap = [5 => 'success', 6 => 'danger'];
-                                    $sColor = $sColorMap[$p->status_pesanan_id] ?? 'gray';
-                                @endphp
-                                <x-ui.badge :color="$sColor" size="sm">{{ $p->status_pesanan->nama_status ?? '-' }}</x-ui.badge>
-                            @else
-                                <form action="{{ route('admin.pesanan.catering.update-status', $p->id) }}" method="POST" class="inline-block">
-                                    @csrf @method('PATCH')
-                                    @php
-                                        $allowed = [
-                                            1 => [1, 2],
-                                            2 => [2, 3],
-                                            3 => [3, 4],
-                                            4 => [4, 5],
-                                        ];
-                                        $validNext = $allowed[$p->status_pesanan_id] ?? [$p->status_pesanan_id];
-                                    @endphp
-                                    <select name="status" onchange="this.form.submit()" class="text-xs font-semibold rounded-lg border-gray-300 py-1.5 pl-3 pr-8 focus:ring-primary focus:border-primary bg-gray-50 hover:bg-white transition-colors cursor-pointer">
-                                        @if(in_array(1, $validNext)) <option value="1" {{ $p->status_pesanan_id == 1 ? 'selected' : '' }}>Menunggu Konfirmasi</option> @endif
-                                        @if(in_array(2, $validNext)) <option value="2" {{ $p->status_pesanan_id == 2 ? 'selected' : '' }}>Dikonfirmasi</option> @endif
-                                        @if(in_array(3, $validNext)) <option value="3" {{ $p->status_pesanan_id == 3 ? 'selected' : '' }}>Sedang Diproses</option> @endif
-                                        @if(in_array(4, $validNext)) <option value="4" {{ $p->status_pesanan_id == 4 ? 'selected' : '' }}>Siap Dikirim</option> @endif
-                                        @if(in_array(5, $validNext)) <option value="5" {{ $p->status_pesanan_id == 5 ? 'selected' : '' }}>Selesai</option> @endif
-                                    </select>
-                                </form>
-                            @endif
-                        </td>
-                        <td class="px-4 py-4 align-middle text-center">
+                        {{-- 1. STATUS PESANAN --}}
+                        <td class="px-4 py-4 text-center align-middle whitespace-nowrap">
                             @php
-                                $totalDiterimaPP = (float) $p->pembayaran->where('status_verifikasi', 'diterima')->sum('jumlah_dibayar');
-                                $totalMenungguPP = (float) $p->pembayaran->where('status_verifikasi', 'menunggu_verifikasi')->sum('jumlah_dibayar');
-                                
-                                $bayarLabel = 'Belum Bayar';
-                                $bayarColor = 'danger';
-
-                                if ($totalDiterimaPP >= $totalP) {
-                                    $bayarLabel = 'Lunas';
-                                    $bayarColor = 'success';
-                                } else {
-                                    $hasPelunasanMenunggu = $p->pembayaran->where('jenis_pembayaran', 'pelunasan')->where('status_verifikasi', 'menunggu_verifikasi')->isNotEmpty();
-                                    $hasDpMenunggu = $p->pembayaran->where('jenis_pembayaran', 'uang_muka')->where('status_verifikasi', 'menunggu_verifikasi')->isNotEmpty();
-                                    
-                                    if ($hasPelunasanMenunggu || ($totalMenungguPP >= $totalP)) {
-                                        $bayarLabel = 'Menunggu Verifikasi Pelunasan';
-                                        $bayarColor = 'warning';
-                                    } elseif ($totalDiterimaPP > 0) {
-                                        $bayarLabel = 'Menunggu Pelunasan';
-                                        $bayarColor = 'primary';
-                                    } elseif ($hasDpMenunggu || $totalMenungguPP > 0) {
-                                        $bayarLabel = 'Menunggu Verifikasi DP';
-                                        $bayarColor = 'warning';
-                                    }
-                                }
+                                $stId = (int) $p->status_pesanan_id;
+                                $stConfig = match($stId) {
+                                    1 => ['label' => 'Menunggu Konfirmasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500'],
+                                    2 => ['label' => 'Dikonfirmasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
+                                    3 => ['label' => 'Sedang Diproses', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500 animate-pulse'],
+                                    4 => ['label' => 'Pesanan Siap', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90', 'dot' => 'bg-purple-500'],
+                                    5 => ['label' => 'Selesai', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
+                                    6 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                    7 => ['label' => 'Terjadwal', 'color' => 'bg-sky-50 text-sky-800 border-sky-200/90', 'dot' => 'bg-sky-500'],
+                                    default => ['label' => optional($p->status_pesanan)->nama_status ?? 'Status #'.$stId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
+                                };
                             @endphp
-                            <x-ui.badge :color="$bayarColor" size="sm" class="whitespace-nowrap">{{ $bayarLabel }}</x-ui.badge>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $stConfig['color'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $stConfig['dot'] }}"></span>
+                                <span>{{ $stConfig['label'] }}</span>
+                            </span>
+                        </td>
+                        {{-- 2. STATUS PEMBAYARAN --}}
+                        <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
+                            @php
+                                $payId = (int) $p->status_pembayaran_id;
+                                $payConfig = match($payId) {
+                                    1 => ['label' => 'Belum Bayar', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                    2 => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
+                                    3 => ['label' => 'DP Terverifikasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
+                                    4 => ['label' => 'Menunggu Pelunasan', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500'],
+                                    5 => ['label' => 'Lunas', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
+                                    6 => ['label' => 'Pembayaran Ditolak', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                    default => ['label' => optional($p->status_pembayaran)->nama_status ?? 'Status #'.$payId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
+                                };
+                            @endphp
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $payConfig['color'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $payConfig['dot'] }}"></span>
+                                <span>{{ $payConfig['label'] }}</span>
+                            </span>
+                        </td>
+                        {{-- 3. STATUS PENGIRIMAN (HANYA JIKA METODE PENERIMAAN DIANTAR) --}}
+                        <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
+                            @if($p->pengiriman)
+                                @php
+                                    $shipId = (int) ($p->pengiriman->status_pengiriman_id ?? 1);
+                                    $shipConfig = match($shipId) {
+                                        1 => ['label' => 'Dijadwalkan', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
+                                        2 => ['label' => 'Siap Dikirim', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90', 'dot' => 'bg-purple-500'],
+                                        3 => ['label' => 'Dalam Pengantaran', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
+                                        4 => ['label' => 'Terkirim', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
+                                        5 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                        default => ['label' => optional($p->pengiriman->status_pengiriman)->nama_status ?? 'Status #'.$shipId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
+                                    };
+                                @endphp
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $shipConfig['color'] }}">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $shipConfig['dot'] }}"></span>
+                                    <span>{{ $shipConfig['label'] }}</span>
+                                </span>
+                            @else
+                                <span class="text-xs text-gray-400 font-medium">Diambil di Resto</span>
+                            @endif
                         </td>
                         <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <x-ui.action-button @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.catering.show', $p->id) }}'})" title="Detail">
+                                <x-ui.action-button onclick="openCateringDrawer('{{ route('admin.pesanan.catering.show', $p->id) }}')" @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.catering.show', $p->id) }}'})" title="Detail">
                                     <x-heroicon-o-eye class="w-4 h-4" />
                                 </x-ui.action-button>
                                 
                                 @php
                                     $buktiPending = $p->pembayaran->firstWhere('status_verifikasi', 'menunggu_verifikasi');
-                                    $buktiTerakhir = $p->pembayaran->whereNotNull('bukti_pembayaran')->last();
                                 @endphp
-                                
 
                                 @if($buktiPending)
                                     <form id="form-verif-{{ $buktiPending->id }}" action="{{ route('admin.bukti.verifikasi-pembayaran', $buktiPending->id) }}" method="POST" class="hidden">
@@ -173,34 +305,22 @@
                     </x-ui.table.row>
                     @empty
                     <tr>
-                        <td colspan="9">
+                        <td colspan="10">
                             <x-ui.empty-state icon="clipboard-document-list" title="Tidak ada pesanan katering" message="Tidak ada data pesanan catering." />
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </x-ui.table>
+            @endif
         </x-ui.data-table>
 
     </div>
-</div>
-
-{{-- Detail Katering Drawer --}}
-<div x-data="{
-    open: false,
-    content: '',
-    loading: false,
-    openDrawer(url) {
-        this.open = true;
-        this.loading = true;
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(res => res.text())
-            .then(html => {
-                this.content = html;
-                this.loading = false;
-            });
-    }
-}" @open-catering-drawer.window="openDrawer($event.detail.url)">
+</div>{{-- Detail Katering Drawer --}}
+<div x-data="cateringDrawerApp()"
+     @open-catering-drawer.window="openDrawer($event.detail.url)"
+     @close-catering-drawer.window="open = false"
+     @keydown.escape.window="open = false">
     
     {{-- Overlay --}}
     <div x-show="open" 
@@ -210,34 +330,94 @@
          x-transition:leave="transition-opacity ease-linear duration-300"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-gray-900/50 z-40 backdrop-blur-sm" 
+         class="fixed inset-0 bg-gray-900/50 z-[9990] backdrop-blur-xs" 
          @click="open = false" 
          style="display: none;"></div>
     
-    {{-- Drawer Panel --}}
-    <div class="fixed top-0 right-0 h-full w-full sm:w-[600px] md:w-[700px] lg:w-[800px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-200"
-         :class="open ? 'translate-x-0' : 'translate-x-full'" 
-         style="display:flex; flex-direction:column;">
+    {{-- Drawer Panel (Slide-Over Panel) --}}
+    <div x-show="open"
+         x-cloak
+         x-transition:enter="transform transition ease-in-out duration-300"
+         x-transition:enter-start="translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transform transition ease-in-out duration-300"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="translate-x-full"
+         class="fixed inset-y-0 right-0 max-w-4xl w-full bg-white shadow-2xl z-[9999] border-l border-gray-200 flex flex-col"
+         style="display: none;">
         
-        {{-- Header --}}
-        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white shadow-sm z-10">
-            <h3 class="text-lg font-bold text-gray-900">Rincian Detail</h3>
-            <button @click="open = false" class="text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors">
-                <x-heroicon-o-x-mark class="w-5 h-5" />
+        {{-- Header Drawer --}}
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white shrink-0 shadow-2xs">
+            <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                <x-heroicon-o-clipboard-document-list class="w-5 h-5 text-emerald-600" />
+                <span>Detail Pesanan Katering</span>
+            </h3>
+            <button type="button" @click="open = false" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-gray-700 bg-gray-100 hover:bg-red-50 hover:text-red-700 border border-gray-200 hover:border-red-200 transition-colors cursor-pointer shadow-2xs">
+                <x-heroicon-o-x-mark class="w-4 h-4" />
+                <span>Tutup</span>
             </button>
         </div>
-        
+
         {{-- Body --}}
-        <div class="flex-1 overflow-y-auto p-6 bg-white relative">
-            <div x-show="loading" class="absolute inset-0 flex flex-col justify-center items-center bg-white/80 backdrop-blur-sm z-20">
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 bg-gray-50/50 relative">
+            <div x-show="loading" class="absolute inset-0 flex flex-col justify-center items-center bg-white/90 backdrop-blur-xs z-20">
                 <svg class="animate-spin mb-3 h-8 w-8 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span class="text-sm font-medium text-gray-500">Memuat data pesanan...</span>
+                <span class="text-sm font-medium text-gray-600">Memuat data pesanan...</span>
             </div>
             <div x-show="!loading" x-html="content" class="h-full"></div>
         </div>
     </div>
 </div>
+
+<script>
+    function cateringDrawerApp() {
+        return {
+            open: false,
+            content: '',
+            loading: false,
+            openDrawer(url) {
+                this.open = true;
+                this.loading = true;
+                this.content = '';
+                fetch(url, { 
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    } 
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.text();
+                })
+                .then(html => {
+                    this.content = html;
+                    this.loading = false;
+                    this.$nextTick(() => {
+                        const container = this.$el.querySelector('[x-html]');
+                        if (container) {
+                            container.querySelectorAll('[x-cloak]').forEach(el => el.removeAttribute('x-cloak'));
+                            if (window.Alpine) {
+                                window.Alpine.initTree(container);
+                            }
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.error('Drawer error:', err);
+                    this.loading = false;
+                    this.content = '<div class="p-8 text-center text-red-500 font-medium">Gagal memuat detail pesanan katering.</div>';
+                });
+            }
+        };
+    }
+
+    function openCateringDrawer(url) {
+        window.dispatchEvent(new CustomEvent('open-catering-drawer', {
+            detail: { url: url }
+        }));
+    }
+</script>
 @endsection

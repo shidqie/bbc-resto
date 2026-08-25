@@ -23,6 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set locale Bahasa Indonesia untuk Aplikasi & Carbon
+        app()->setLocale('id');
+        \Carbon\Carbon::setLocale('id');
+        setlocale(LC_TIME, 'id_ID.utf8', 'id_ID', 'id', 'ind');
+
         // Kelola pengguna (CRUD, toggle status, reset password)
         Gate::define('kelola-pengguna', function ($user) {
             return $user->peran && in_array($user->peran->nama_peran, ['Pemilik', 'Manajer']);

@@ -66,7 +66,7 @@
                             </td>
                             <td class="px-4 py-4 align-middle whitespace-nowrap">
                                 @if($p->jadwal_pesanan?->tanggal_acara)
-                                    <p class="text-xs text-gray-700 font-medium">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->tanggal_acara)->format('d M Y') }}</p>
+                                    <p class="text-xs text-gray-700 font-medium">{{ \Carbon\Carbon::parse($p->jadwal_pesanan->tanggal_acara)->translatedFormat('d M Y') }}</p>
                                 @else
                                     <span class="text-xs text-gray-400">-</span>
                                 @endif
@@ -94,13 +94,11 @@
                                             ];
                                             $validNext = $allowed[$p->status_pesanan_id] ?? [$p->status_pesanan_id];
                                         @endphp
-                                        <select name="status" onchange="this.form.submit()" class="text-xs font-semibold rounded-lg border-gray-300 py-1.5 pl-3 pr-8 focus:ring-primary focus:border-primary bg-gray-50 hover:bg-white transition-colors cursor-pointer">
-                                            @if(in_array(1, $validNext)) <option value="1" {{ $p->status_pesanan_id == 1 ? 'selected' : '' }}>Menunggu Konfirmasi</option> @endif
-                                            @if(in_array(2, $validNext)) <option value="2" {{ $p->status_pesanan_id == 2 ? 'selected' : '' }}>Dikonfirmasi</option> @endif
-                                            @if(in_array(3, $validNext)) <option value="3" {{ $p->status_pesanan_id == 3 ? 'selected' : '' }}>Sedang Diproses</option> @endif
-                                            @if(in_array(4, $validNext)) <option value="4" {{ $p->status_pesanan_id == 4 ? 'selected' : '' }}>Siap Dikirim</option> @endif
-                                            @if(in_array(5, $validNext)) <option value="5" {{ $p->status_pesanan_id == 5 ? 'selected' : '' }}>Selesai</option> @endif
-                                        </select>
+                                        <x-ui.table-status-select 
+                                            :id="'dapur-nb-' . $p->id" 
+                                            name="status" 
+                                            :current="$p->status_pesanan_id" 
+                                            :allowed="$validNext" />
                                     </form>
                                 @endif
                             </td>
@@ -171,24 +169,11 @@
         </x-ui.data-table>
 
     </div>
-</div>
-
-{{-- Detail Nasi Box Drawer --}}
-<div x-data="{
-    open: false,
-    content: '',
-    loading: false,
-    openDrawer(url) {
-        this.open = true;
-        this.loading = true;
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(res => res.text())
-            .then(html => {
-                this.content = html;
-                this.loading = false;
-            });
-    }
-}" @open-nasibox-drawer.window="openDrawer($event.detail.url)">
+</div>{{-- Detail Nasi Box Drawer --}}
+<div x-data="dapurNasiboxDrawerApp()"
+     @open-nasibox-drawer.window="openDrawer($event.detail.url)"
+     @close-nasibox-drawer.window="open = false"
+     @keydown.escape.window="open = false">
     
     {{-- Overlay --}}
     <div x-show="open" 
@@ -198,34 +183,85 @@
          x-transition:leave="transition-opacity ease-linear duration-300"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-gray-900/50 z-40 backdrop-blur-sm" 
+         class="fixed inset-0 bg-gray-900/50 z-[9990] backdrop-blur-xs" 
          @click="open = false" 
          style="display: none;"></div>
     
-    {{-- Drawer Panel --}}
-    <div class="fixed top-0 right-0 h-full w-full sm:w-[600px] md:w-[700px] lg:w-[800px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-200"
-         :class="open ? 'translate-x-0' : 'translate-x-full'" 
-         style="display:flex; flex-direction:column;">
+    {{-- Drawer Panel (Slide-Over Panel) --}}
+    <div x-show="open"
+         x-cloak
+         x-transition:enter="transform transition ease-in-out duration-300"
+         x-transition:enter-start="translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transform transition ease-in-out duration-300"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="translate-x-full"
+         class="fixed inset-y-0 right-0 max-w-4xl w-full bg-white shadow-2xl z-[9999] border-l border-gray-200 flex flex-col"
+         style="display: none;">
         
-        {{-- Header --}}
-        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white shadow-sm z-10">
-            <h3 class="text-lg font-bold text-gray-900">Rincian Detail</h3>
-            <button @click="open = false" class="text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors">
-                <x-heroicon-o-x-mark class="w-5 h-5" />
+        {{-- Header Drawer --}}
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white shrink-0 shadow-2xs">
+            <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                <x-heroicon-o-clipboard-document-list class="w-5 h-5 text-emerald-600" />
+                <span>Detail Produksi Nasi Box</span>
+            </h3>
+            <button type="button" @click="open = false" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-gray-700 bg-gray-100 hover:bg-red-50 hover:text-red-700 border border-gray-200 hover:border-red-200 transition-colors cursor-pointer shadow-2xs">
+                <x-heroicon-o-x-mark class="w-4 h-4" />
+                <span>Tutup</span>
             </button>
         </div>
-        
+
         {{-- Body --}}
-        <div class="flex-1 overflow-y-auto p-6 bg-white relative">
-            <div x-show="loading" class="absolute inset-0 flex flex-col justify-center items-center bg-white/80 backdrop-blur-sm z-20">
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 bg-gray-50/50 relative">
+            <div x-show="loading" class="absolute inset-0 flex flex-col justify-center items-center bg-white/90 backdrop-blur-xs z-20">
                 <svg class="animate-spin mb-3 h-8 w-8 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span class="text-sm font-medium text-gray-500">Memuat data pesanan...</span>
+                <span class="text-sm font-medium text-gray-600">Memuat data pesanan...</span>
             </div>
             <div x-show="!loading" x-html="content" class="h-full"></div>
         </div>
     </div>
 </div>
+
+<script>
+    function dapurNasiboxDrawerApp() {
+        return {
+            open: false,
+            content: '',
+            loading: false,
+            openDrawer(url) {
+                this.open = true;
+                this.loading = true;
+                this.content = '';
+                fetch(url, { 
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    } 
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.text();
+                })
+                .then(html => {
+                    this.content = html;
+                    this.loading = false;
+                    this.$nextTick(() => {
+                        const container = this.$el.querySelector('[x-html]');
+                        if (container && window.Alpine) {
+                            window.Alpine.initTree(container);
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.error('Drawer error:', err);
+                    this.loading = false;
+                    this.content = '<div class="p-8 text-center text-red-500 font-medium">Gagal memuat detail pesanan nasi box.</div>';
+                });
+            }
+        };
+    }
+</script>
 @endsection

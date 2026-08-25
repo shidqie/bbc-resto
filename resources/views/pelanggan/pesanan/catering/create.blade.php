@@ -1,6 +1,6 @@
 <x-layouts.landing>
     <x-slot:title>Pesan Katering — Saung Babakan Cinta</x-slot:title>
-    <x-slot:description>Form pemesanan katering Saung Babakan Cinta — minimal 50 porsi, pemesanan H-3 sebelum acara.</x-slot:description>
+    <x-slot:description>Form pemesanan katering Saung Babakan Cinta — minimal 50 porsi, pemesanan H-4 sebelum acara.</x-slot:description>
 
     @include('pelanggan.pesanan.partials._map-styles')
 
@@ -13,10 +13,29 @@
             'batasHari' => 3,
             'satuanLabel' => 'Porsi',
             'qtyField' => 'jumlah_porsi',
-            'previewUrl' => route('pesan.catering.preview'),
-            'komponenUrl' => route('pesan.catering.komponen', ':id'),
+            'previewUrl' => route('pesan.catering.preview', [], false),
+            'komponenUrl' => route('pesan.catering.komponen', ':id', false),
+            'komponenMap' => $komponenMap ?? [],
             'hasGratisOngkir' => true,
             'minWarning' => 'Minimal order 50 porsi.',
+            'old' => [
+                'nama_pemesan' => old('nama_pemesan', optional(auth('pelanggan')->user())->nama ?? ''),
+                'kontak' => old('kontak', optional(auth('pelanggan')->user())->nomor_telepon ?? ''),
+                'tanggal_acara' => old('tanggal_acara', ''),
+                'jam_acara' => old('jam_acara', ''),
+                'jumlah_porsi' => old('jumlah_porsi', 50),
+                'metode_pengiriman' => old('metode_pengiriman', 'pickup'),
+                'jam_pengambilan' => old('jam_pengambilan', ''),
+                'lokasi_acara' => old('lokasi_acara', ''),
+                'alamat_venue' => old('alamat_venue', ''),
+                'latitude' => old('latitude', ''),
+                'longitude' => old('longitude', ''),
+                'jarak_km' => old('jarak_km', ''),
+                'paket_id' => old('paket_id', $selectedPaketId ?? ''),
+                'komponen' => old('komponen', []),
+                'catatan' => old('catatan', ''),
+                'opsi_pembayaran' => old('opsi_pembayaran', 'dp'),
+            ]
         ];
 
         $summaryConfig = [
@@ -25,6 +44,7 @@
             'dpPersen'    => 50,
             'batasTeks'   => 'Pelunasan wajib dilakukan paling lambat H-3 sebelum tanggal pengambilan atau pengiriman pesanan.',
             'syarat'      => [
+                'Pemesanan dilakukan minimal H-4 sebelum hari pelaksanaan acara.',
                 'Konsumen wajib membayar uang muka (DP) sebesar 50% dari total nilai pesanan katering.',
                 'Pembayaran dapat dilakukan melalui transfer ke rekening yang telah ditentukan oleh pihak Rumah Makan Saung Babakan Cinta.',
                 'Apabila hingga batas waktu H-3 konsumen belum melakukan pelunasan, maka pesanan dianggap batal.',
@@ -47,12 +67,12 @@
                             <span class="text-primary">Katering</span>
                         </nav>
                         <h1 class="text-2xl sm:text-3xl font-bold text-primary">Form Pemesanan Katering</h1>
-                        <p class="text-sm text-body/70 mt-1.5">Minimal 50 porsi &middot; Pemesanan minimal H-3 sebelum acara &middot; DP 50%</p>
+                        <p class="text-sm text-body/70 mt-1.5">Minimal 50 porsi &middot; Pemesanan minimal H-4 sebelum acara &middot; DP 50%</p>
                     </div>
-<a href="{{ url('/') }}"
-                   onclick="event.preventDefault(); var href=this.href; Swal.fire({ title: 'Batalkan Pemesanan', text: 'Data yang sudah diisi akan hilang.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Batalkan', cancelButtonText: 'Batal', confirmButtonColor: '#DC2626', reverseButtons: true }).then(function (result) { if (result.isConfirmed) { window.location.href = href; } });"
-                   class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl border border-primary/10 text-body text-base font-bold hover:bg-primary/5 hover:text-primary transition-colors self-start shrink-0">
-                        <i class="ph ph-x-circle text-lg"></i>
+                    <a href="{{ url('/') }}"
+                       onclick="event.preventDefault(); var href=this.href; Swal.fire({ title: 'Batalkan Pemesanan', text: 'Data yang sudah diisi akan hilang.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Batalkan', cancelButtonText: 'Batal', confirmButtonColor: '#DC2626', reverseButtons: true }).then(function (result) { if (result.isConfirmed) { window.location.href = href; } });"
+                       class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl border border-primary/10 text-body text-base font-bold hover:bg-primary/5 hover:text-primary transition-colors self-start shrink-0">
+                        <x-heroicon-o-x-circle class="w-5 h-5 text-current" />
                         Batal Pesan
                     </a>
                 </div>
@@ -67,7 +87,7 @@
                             <div class="step-item flex flex-col items-center gap-1.5" data-step="{{ $n }}">
                                 <div class="step-dot w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-primary/20 bg-surface flex items-center justify-center text-xs sm:text-sm font-bold text-body/40 transition-all duration-300">
                                     <span class="step-num">{{ $n }}</span>
-                                    <i class="ph-bold ph-check step-check hidden"></i>
+                                    <x-heroicon-s-check class="w-4 h-4 step-check hidden text-white" />
                                 </div>
                                 <span class="step-label hidden sm:block text-xs font-semibold text-body/50 leading-tight text-center">{{ $stepLabel }}</span>
                             </div>
@@ -79,7 +99,7 @@
 
             @if($errors->any())
                 <div class="bg-danger/5 border border-danger/20 text-danger rounded-2xl p-4 mb-6">
-                    <div class="flex items-center gap-1.5 font-bold text-xs mb-1"><i class="ph-bold ph-warning-circle"></i> Periksa kembali isian Anda</div>
+                    <div class="flex items-center gap-1.5 font-bold text-xs mb-1"><x-heroicon-o-exclamation-triangle class="w-4 h-4" /> Periksa kembali isian Anda</div>
                     <ul class="list-disc list-inside text-xs space-y-1">
                         @foreach($errors->all() as $err) <li>{{ $err }}</li> @endforeach
                     </ul>
@@ -128,10 +148,10 @@
                                 <div>
                                     <label for="tanggalAcara" class="block text-xs font-bold text-body mb-1">Tanggal Acara <span class="text-danger">*</span></label>
                                     <input type="date" id="tanggalAcara" name="tanggal_acara"
-                                           min="{{ \Carbon\Carbon::today()->addDays(3)->format('Y-m-d') }}"
+                                           min="{{ \Carbon\Carbon::today()->addDays(4)->format('Y-m-d') }}"
                                            value="{{ old('tanggal_acara') }}"
                                            class="w-full border border-primary/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface" required>
-                                    <p id="tanggal-warning" class="text-danger text-xs mt-1 hidden">Pemesanan katering minimal H-3 sebelum acara.</p>
+                                    <p id="tanggal-warning" class="text-danger text-xs mt-1 hidden">Pemesanan katering minimal H-4 sebelum acara.</p>
                                 </div>
                                 <div>
                                     <label for="jamAcara" class="block text-xs font-bold text-body mb-1">Jam Acara <span class="text-danger">*</span></label>
@@ -142,27 +162,27 @@
 
                                 <div class="md:col-span-2">
                                     <x-ui.input-qty id="jumlahPorsi" name="jumlah_porsi" label="Jumlah Porsi" :value="old('jumlah_porsi', 50)" :required="true" min="50" stepper />
-                                    <p class="text-xs text-body/50 font-medium mt-1.5 flex items-center gap-1"><i class="ph ph-info"></i> Minimal pemesanan 50 porsi.</p>
+                                    <p class="text-xs text-body/50 font-medium mt-1.5 flex items-center gap-1"><x-heroicon-o-information-circle class="w-4 h-4 inline-block text-primary/70 shrink-0" /> Minimal pemesanan 50 porsi.</p>
                                     <p id="jumlah-warning" class="text-danger text-xs mt-1 hidden">Minimal order 50 porsi.</p>
                                 </div>
 
                                 <div class="md:col-span-2">
                                     <label class="block text-xs font-bold text-body mb-2">Metode Pengiriman <span class="text-danger">*</span></label>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <label class="metode-card flex items-center gap-2.5 border border-primary bg-primary/5 rounded-xl px-4 py-3 cursor-pointer transition-all duration-200">
-                                            <input type="radio" name="metode_pengiriman" value="pickup" class="sr-only metode-radio" checked>
-                                            <span class="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0"><i class="ph-bold ph-storefront"></i></span>
+                                        <label class="metode-card flex items-center gap-2.5 border {{ old('metode_pengiriman', 'pickup') === 'pickup' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-primary/10 bg-surface' }} rounded-xl px-4 py-3 cursor-pointer transition-all duration-200">
+                                            <input type="radio" name="metode_pengiriman" value="pickup" class="sr-only metode-radio" {{ old('metode_pengiriman', 'pickup') === 'pickup' ? 'checked' : '' }}>
+                                            <span class="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0"><x-heroicon-o-building-storefront class="w-5 h-5" /></span>
                                             <span>
-                                                <span class="block text-sm font-bold text-body">Diambil (Pickup)</span>
-                                                <span class="block text-xs text-body/60 font-medium">Ambil sendiri di rumah makan</span>
+                                                <span class="block text-sm font-bold text-body">Diambil di Resto</span>
+                                                <span class="block text-xs text-body/60 font-medium">Ambil langsung di rumah makan</span>
                                             </span>
                                         </label>
-                                        <label class="metode-card flex items-center gap-2.5 border border-primary/10 bg-surface rounded-xl px-4 py-3 cursor-pointer transition-all duration-200">
-                                            <input type="radio" name="metode_pengiriman" value="delivery" class="sr-only metode-radio">
-                                            <span class="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0"><i class="ph-bold ph-truck"></i></span>
+                                        <label class="metode-card flex items-center gap-2.5 border {{ old('metode_pengiriman') === 'delivery' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-primary/10 bg-surface' }} rounded-xl px-4 py-3 cursor-pointer transition-all duration-200">
+                                            <input type="radio" name="metode_pengiriman" value="delivery" class="sr-only metode-radio" {{ old('metode_pengiriman') === 'delivery' ? 'checked' : '' }}>
+                                            <span class="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0"><x-heroicon-o-truck class="w-5 h-5" /></span>
                                             <span>
-                                                <span class="block text-sm font-bold text-body">Diantar (Delivery)</span>
-                                                <span class="block text-xs text-body/60 font-medium">Kirim ke lokasi acara</span>
+                                                <span class="block text-sm font-bold text-body">Diantar ke Lokasi</span>
+                                                <span class="block text-xs text-body/60 font-medium">Kirim langsung ke lokasi tujuan</span>
                                             </span>
                                         </label>
                                     </div>
@@ -195,18 +215,18 @@
                                 @foreach($pakets as $paket)
                                     <label class="paket-card cursor-pointer border rounded-2xl p-4 transition-all duration-200 hover:border-primary hover:shadow-sm border-primary/10 bg-surface relative flex flex-col"
                                            data-paket-id="{{ $paket->id }}" data-harga="{{ $paket->harga_jual }}">
-                                        <input type="radio" name="paket_id" value="{{ $paket->id }}" class="sr-only paket-radio" {{ old('paket_id') == $paket->id ? 'checked' : '' }} required>
+                                        <input type="radio" name="paket_id" value="{{ $paket->id }}" class="sr-only paket-radio" {{ old('paket_id', $selectedPaketId) == $paket->id ? 'checked' : '' }} required>
 
                                         <div class="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-primary/20 bg-surface flex items-center justify-center opacity-0 selected-indicator transition-opacity">
-                                            <i class="ph-bold ph-check text-primary text-xs"></i>
+                                            <x-heroicon-s-check class="w-4 h-4 text-primary" />
                                         </div>
 
                                         <div>
                                             @if($paket->foto)
-                                                <img src="{{ Storage::url($paket->foto) }}" alt="{{ $paket->nama_menu }}" class="w-full h-44 object-cover rounded-xl mb-3">
+                                                <img src="{{ $paket->foto_url ?? Storage::url($paket->foto) }}" alt="{{ $paket->nama_menu }}" class="w-full h-44 object-cover rounded-xl mb-3">
                                             @else
                                                 <div class="w-full h-44 rounded-xl bg-primary/[0.03] flex items-center justify-center mb-3 text-primary/30">
-                                                    <i class="ph ph-package text-3xl"></i>
+                                                    <x-heroicon-o-cube class="w-10 h-10" />
                                                 </div>
                                             @endif
                                             <div class="mb-2">
@@ -252,20 +272,26 @@
                             <div class="flex items-start gap-3 mb-5">
                                 <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0">5</span>
                                 <div>
-                                    <h2 class="text-sm font-bold text-body">Pembayaran</h2>
-                                    <p class="text-xs text-body/60 mt-0.5">Pilih skema pembayaran. Mendukung Transfer Bank BCA & QRIS (GoPay, OVO, Dana, m-Banking).</p>
+                                    <h2 class="text-sm font-bold text-body">Metode Pembayaran</h2>
+                                    <p class="text-xs text-body/60 mt-0.5">Pilih skema pembayaran katering (DP 50% atau Pelunasan Langsung).</p>
                                 </div>
                             </div>
-                            <div class="flex flex-col sm:flex-row gap-3">
-                                <label class="flex-1 flex items-center gap-3 border border-primary bg-primary/5 rounded-xl px-4 py-3 cursor-pointer transition-all duration-200">
-                                    <input type="radio" name="opsi_pembayaran" value="dp" checked class="w-4 h-4 text-primary focus:ring-primary/20" onchange="updatePaymentLabel(this.value)">
+                            <div class="grid sm:grid-cols-2 gap-3">
+                                <label class="metode-bayar-card flex items-center gap-3 border-2 {{ old('opsi_pembayaran', 'dp') === 'dp' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-primary/10 bg-surface' }} rounded-xl p-3.5 cursor-pointer transition-all duration-200">
+                                    <input type="radio" name="opsi_pembayaran" value="dp" class="sr-only bayar-radio" {{ old('opsi_pembayaran', 'dp') === 'dp' ? 'checked' : '' }}>
+                                    <span class="radio-dot w-4 h-4 rounded-full border-2 {{ old('opsi_pembayaran', 'dp') === 'dp' ? 'border-primary' : 'border-body/20' }} flex items-center justify-center shrink-0">
+                                        <span class="w-2 h-2 rounded-full {{ old('opsi_pembayaran', 'dp') === 'dp' ? 'bg-primary' : 'bg-transparent' }}"></span>
+                                    </span>
                                     <div>
-                                        <p class="text-sm font-bold text-body">Bayar DP (50%)</p>
-                                        <p class="text-xs text-body/60 font-medium">Sisa dibayar H-3 sebelum acara</p>
+                                        <p class="text-sm font-bold text-body">Uang Muka / DP (50%)</p>
+                                        <p class="text-xs text-body/60 font-medium">Pelunasan H-3 sebelum acara</p>
                                     </div>
                                 </label>
-                                <label class="flex-1 flex items-center gap-3 border border-primary/10 bg-surface rounded-xl px-4 py-3 cursor-pointer hover:border-primary/40 transition-all duration-200">
-                                    <input type="radio" name="opsi_pembayaran" value="lunas" class="w-4 h-4 text-primary focus:ring-primary/20" onchange="updatePaymentLabel(this.value)">
+                                <label class="metode-bayar-card flex items-center gap-3 border-2 {{ old('opsi_pembayaran') === 'lunas' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-primary/10 bg-surface' }} rounded-xl p-3.5 cursor-pointer transition-all duration-200">
+                                    <input type="radio" name="opsi_pembayaran" value="lunas" class="sr-only bayar-radio" {{ old('opsi_pembayaran') === 'lunas' ? 'checked' : '' }}>
+                                    <span class="radio-dot w-4 h-4 rounded-full border-2 {{ old('opsi_pembayaran') === 'lunas' ? 'border-primary' : 'border-body/20' }} flex items-center justify-center shrink-0">
+                                        <span class="w-2 h-2 rounded-full {{ old('opsi_pembayaran') === 'lunas' ? 'bg-primary' : 'bg-transparent' }}"></span>
+                                    </span>
                                     <div>
                                         <p class="text-sm font-bold text-body">Bayar Lunas (100%)</p>
                                         <p class="text-xs text-body/60 font-medium">Selesaikan pembayaran sekaligus</p>
@@ -277,7 +303,7 @@
                         {{-- SUBMIT (mobile: tombol submit ikut di bawah form, bukan hanya di summary) --}}
                         <button type="submit" class="lg:hidden w-full inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base py-3.5 rounded-xl hover:bg-primary/90 transition-colors">
                             Bayar
-                            <i class="ph-bold ph-arrow-right"></i>
+                            <x-heroicon-o-arrow-right class="w-5 h-5" />
                         </button>
                     </div>
 

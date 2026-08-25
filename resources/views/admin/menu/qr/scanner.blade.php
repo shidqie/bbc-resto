@@ -6,9 +6,14 @@
     <title>Scan QR Code Meja - Saung Babakan Cinta</title>
     <meta name="description" content="Pindai QR Code di meja Anda untuk melihat menu digital & langsung memesan dari smartphone.">
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-saung.png') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo-saung.png') }}">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Anonymous+Pro:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -21,7 +26,7 @@
                 extend: {
                     fontFamily: {
                         sans: ['Outfit', 'sans-serif'],
-                        mono: ['"Anonymous Pro"', 'monospace'],
+                        mono: ['Outfit', 'sans-serif'],
                     },
                     fontSize: {
                         xs: ['11px', '1.45'],
@@ -50,7 +55,7 @@
         .no-scrollbar::-webkit-scrollbar{display:none}
         .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
         [x-cloak]{display:none!important}
-        .mono{font-family:'Anonymous Pro',monospace;letter-spacing:.04em}
+        .mono{font-family:'Outfit',sans-serif;letter-spacing:.04em}
 
         .scan-laser {
             position: absolute;

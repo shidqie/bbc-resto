@@ -27,7 +27,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <span class="block text-xs font-semibold text-gray-500 mb-1">Tanggal Pesanan</span>
-                    <span class="block text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->format('d M Y, H:i') }}</span>
+                    <span class="block text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->translatedFormat('d M Y, H:i') }}</span>
                 </div>
                 <div>
                     <span class="block text-xs font-semibold text-gray-500 mb-1">Kasir</span>
@@ -94,7 +94,7 @@
                         @foreach($pesanan->pembayaran as $pay)
                             <div class="flex justify-between text-xs items-center">
                                 <div>
-                                    <span class="font-medium text-gray-700 block">{{ \Carbon\Carbon::parse($pay->dibuat_pada)->format('d M Y, H:i') }}</span>
+                                    <span class="font-medium text-gray-700 block">{{ \Carbon\Carbon::parse($pay->dibuat_pada)->translatedFormat('d M Y, H:i') }}</span>
                                     <span class="text-gray-400 block">{{ optional($pay->metode_pembayaran)->nama_metode ?? '-' }}</span>
                                 </div>
                                 <div class="text-right">
