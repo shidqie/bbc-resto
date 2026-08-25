@@ -118,42 +118,69 @@
                     <div class="grid grid-cols-1 gap-y-3 p-4 bg-emerald-50/40 border border-emerald-100 rounded-2xl">
                         <div>
                             <div class="flex items-center justify-between mb-2">
-                                <label class="block text-xs font-extrabold text-emerald-900 uppercase tracking-wider">Pesanan Nasi Box (Sumber Kebutuhan BOM)</label>
+                                <label class="block text-xs font-extrabold text-emerald-900 uppercase tracking-wider">Sumber Kebutuhan Pesanan (Dine-In / Nasi Box / Harian)</label>
                                 <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded">Opsional</span>
                             </div>
                             <div class="relative">
                                 <select name="kode_pesanan" onchange="window.location.href='?tipe=Harian' + (this.value ? '&kode_pesanan=' + encodeURIComponent(this.value) : '')" class="block w-full appearance-none rounded-xl border border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 bg-white text-sm pl-4 pr-10 py-2.5 transition-all font-semibold text-gray-800 outline-none shadow-xs cursor-pointer">
                                     <option value="">— Tanpa Pesanan (Restock Operasional Harian Rutin) —</option>
-                                    @foreach($pesananList as $pk)
-                                        @php
-                                            $namaCust = optional($pk->pelanggan)->nama ?? optional($pk->pelanggan)->nama_pelanggan ?? 'Umum';
-                                            $tglPesanan = \Carbon\Carbon::parse($pk->waktu_pesanan ?? $pk->dibuat_pada ?? $pk->created_at)->format('d/m/Y');
-                                            $qtyPorsi = optional($pk->detail_pesanan->first())->jumlah ?? 0;
-                                            $menuNama = optional(optional($pk->detail_pesanan->first())->menu)->nama_menu ?? 'Paket';
-                                        @endphp
-                                        <option value="{{ $pk->id_pesanan }}" {{ (request('kode_pesanan') == $pk->id_pesanan || (optional($pesanan)->id_pesanan == $pk->id_pesanan)) ? 'selected' : '' }}>
-                                            {{ $pk->id_pesanan }} - {{ $namaCust }} ({{ $menuNama }} {{ $qtyPorsi }} Box - {{ $tglPesanan }})
-                                        </option>
-                                    @endforeach
+                                    @php
+                                        $dineInOrders = $pesananList->where('jenis_pesanan_id', 1);
+                                        $nasiBoxOrders = $pesananList->where('jenis_pesanan_id', 3);
+                                    @endphp
+                                    @if($dineInOrders->isNotEmpty())
+                                        <optgroup label="─── PESANAN DINE-IN (MAKAN DI TEMPAT) ───">
+                                            @foreach($dineInOrders as $pk)
+                                                @php
+                                                    $namaCust = optional($pk->pelanggan)->nama ?? optional($pk->pelanggan)->nama_pelanggan ?? ($pk->nomor_meja ? 'Meja ' . $pk->nomor_meja : 'Umum');
+                                                    $tglPesanan = \Carbon\Carbon::parse($pk->waktu_pesanan ?? $pk->dibuat_pada ?? $pk->created_at)->format('d/m/Y H:i');
+                                                    $countMenu = $pk->detail_pesanan->count();
+                                                @endphp
+                                                <option value="{{ $pk->id_pesanan }}" {{ (request('kode_pesanan') == $pk->id_pesanan || (optional($pesanan)->id_pesanan == $pk->id_pesanan)) ? 'selected' : '' }}>
+                                                    {{ $pk->id_pesanan }} - {{ $namaCust }} (Dine-In - {{ $countMenu }} Menu - {{ $tglPesanan }})
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                    @if($nasiBoxOrders->isNotEmpty())
+                                        <optgroup label="─── PESANAN NASI BOX ───">
+                                            @foreach($nasiBoxOrders as $pk)
+                                                @php
+                                                    $namaCust = optional($pk->pelanggan)->nama ?? optional($pk->pelanggan)->nama_pelanggan ?? 'Umum';
+                                                    $tglPesanan = \Carbon\Carbon::parse($pk->waktu_pesanan ?? $pk->dibuat_pada ?? $pk->created_at)->format('d/m/Y');
+                                                    $qtyPorsi = optional($pk->detail_pesanan->first())->jumlah ?? 0;
+                                                    $menuNama = optional(optional($pk->detail_pesanan->first())->menu)->nama_menu ?? 'Paket';
+                                                @endphp
+                                                <option value="{{ $pk->id_pesanan }}" {{ (request('kode_pesanan') == $pk->id_pesanan || (optional($pesanan)->id_pesanan == $pk->id_pesanan)) ? 'selected' : '' }}>
+                                                    {{ $pk->id_pesanan }} - {{ $namaCust }} ({{ $menuNama }} {{ $qtyPorsi }} Box - {{ $tglPesanan }})
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
                                 </select>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-700">
                                     <x-heroicon-o-chevron-down class="w-4 h-4" />
                                 </span>
                             </div>
-                            <p class="text-[11px] text-gray-500 mt-1.5">Pilih pesanan nasi box untuk otomatis menghitung kekurangan bahan BOM, atau pilih tanpa pesanan untuk restock harian umum.</p>
+                            <p class="text-[11px] text-gray-500 mt-1.5">Pilih pesanan Dine-In atau Nasi Box untuk otomatis menghitung kebutuhan BOM, atau pilih tanpa pesanan untuk restock operasional harian biasa.</p>
                         </div>
 
                         @if($pesanan)
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs border-t border-emerald-100">
                             <div>
-                                <span class="text-gray-500 block">Pemesan:</span>
-                                <span class="font-bold text-gray-800">{{ optional($pesanan->pelanggan)->nama ?? optional($pesanan->pelanggan)->nama_pelanggan ?? 'Umum' }} ({{ optional($pesanan->pelanggan)->no_telp ?? optional($pesanan->pelanggan)->telepon ?? '-' }})</span>
+                                <span class="text-gray-500 block">Pemesan / Meja:</span>
+                                <span class="font-bold text-gray-800">
+                                    {{ optional($pesanan->pelanggan)->nama ?? optional($pesanan->pelanggan)->nama_pelanggan ?? ($pesanan->nomor_meja ? 'Meja ' . $pesanan->nomor_meja : 'Umum') }}
+                                    @if(optional($pesanan->pelanggan)->no_telp)
+                                        ({{ optional($pesanan->pelanggan)->no_telp }})
+                                    @endif
+                                </span>
                             </div>
                             <div>
                                 <span class="text-gray-500 block">Menu Dipesan:</span>
                                 <span class="font-bold text-gray-800">
                                     @foreach($pesanan->detail_pesanan as $dp)
-                                        {{ optional($dp->menu)->nama_menu }} ({{ $dp->jumlah }} Box){{ !$loop->last ? ', ' : '' }}
+                                        {{ optional($dp->menu)->nama_menu }} ({{ $dp->jumlah }} {{ $pesanan->jenis_pesanan_id == 3 ? 'Box' : 'Porsi' }}){{ !$loop->last ? ', ' : '' }}
                                     @endforeach
                                 </span>
                             </div>

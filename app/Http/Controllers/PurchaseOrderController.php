@@ -96,9 +96,9 @@ class PurchaseOrderController extends Controller
                 }
             }
         } else {
-            // KHUSUS NASI BOX & HARIAN (jenis_pesanan_id = 3 & Stok Harian)
-            $pesananList = Pesanan::with(['pelanggan', 'detail_pesanan.menu'])
-                ->where('jenis_pesanan_id', 3)
+            // KHUSUS DINE-IN, NASI BOX & HARIAN (jenis_pesanan_id in [1, 3] & Stok Harian)
+            $pesananList = Pesanan::with(['pelanggan', 'detail_pesanan.menu', 'jenis_pesanan'])
+                ->whereIn('jenis_pesanan_id', [1, 3])
                 ->where('status_pesanan_id', '>=', 2)
                 ->where('status_pesanan_id', '!=', 6)
                 ->orderBy('dibuat_pada', 'desc')
@@ -107,10 +107,10 @@ class PurchaseOrderController extends Controller
             $kodePesanan = $request->filled('kode_pesanan') ? trim($request->kode_pesanan) : null;
 
             if ($kodePesanan) {
-                // Ada pesanan Nasi Box yang dipilih
-                $pesanan = Pesanan::with(['pelanggan', 'detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket.menu'])
+                // Ada pesanan Dine-In atau Nasi Box yang dipilih
+                $pesanan = Pesanan::with(['pelanggan', 'detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket.menu', 'jenis_pesanan'])
                     ->where('id_pesanan', $kodePesanan)
-                    ->where('jenis_pesanan_id', 3)
+                    ->whereIn('jenis_pesanan_id', [1, 3])
                     ->first();
 
                 if ($pesanan && $pesanan->status_pesanan_id != 6) {
