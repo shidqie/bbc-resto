@@ -90,7 +90,7 @@
                     <x-ui.table.header>
                         <th class="px-4 py-3.5 text-left w-12">No</th>
                         <th class="px-4 py-3.5 text-left">Nama Bahan</th>
-                        <th class="px-4 py-3.5 text-right">Stok Sisa Katering</th>
+                        <th class="px-4 py-3.5 text-right">Stok Saat Ini</th>
                         <th class="px-4 py-3.5 text-left">Status</th>
                         <th class="px-4 py-3.5 text-center">Aksi</th>
                     </x-ui.table.header>
