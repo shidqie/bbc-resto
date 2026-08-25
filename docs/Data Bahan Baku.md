@@ -70,7 +70,7 @@
 | 56 | Ati Sapi | gram | 2.000 |
 | 57 | Ati Ayam | gram | 2.000 |
 | 58 | Kikil Sapi | gram | 2.000 |
-| 59 | Telur | pcs | 60 |
+|  |  | pcs | 120 |
 
 ## 3. Bumbu & Saus
 
@@ -157,37 +157,37 @@
 
 | No | Bahan Baku | Satuan | Stok Minimum Harian |
 |---:|---|---|---:|
-| 132 | Tahu | pcs | 100 |
+|  |  | pcs | 120 |
 | 133 | Tempe | gram | 5.000 |
 | 134 | Oncom | gram | 2.000 |
 | 135 | Tauco | gram | 1.000 |
-| 136 | Bakso sapi | pcs | 100 |
-| 137 | Sosis ayam | pcs | 60 |
+|  |  | pcs | 120 |
+|  |  | pcs | 120 |
 | 138 | Kerupuk udang | gram | 2.000 |
 | 139 | Santan | ml | 4.000 |
-| 140 | Es krim | pcs | 40 |
+|  |  | pcs | 120 |
 
 ## 6. Bahan Minuman
 
 | No | Bahan Baku | Satuan | Stok Minimum Harian |
 |---:|---|---|---:|
-| 141 | ABC Susu | pcs | 20 |
-| 142 | Bajigur | pcs | 20 |
-| 143 | Bandrek | pcs | 20 |
-| 144 | Cappuccino | pcs | 20 |
-| 145 | Creamy Latte | pcs | 20 |
-| 146 | Good Day | pcs | 20 |
-| 147 | Kapal Api | pcs | 20 |
-| 148 | Luwak | pcs | 20 |
+|  |  | pcs | 120 |
+|  |  | pcs | 120 |
+|  |  | pcs | 120 |
+|  |  | pcs | 120 |
+|  |  | pcs | 120 |
+|  |  | pcs | 120 |
+|  |  | pcs | 120 |
+|  |  | pcs | 120 |
 | 149 | Milo | gram | 1.000 |
-| 150 | Beng-Beng Drink | pcs | 20 |
+|  |  | pcs | 120 |
 | 151 | Susu putih | ml | 2.000 |
 | 152 | Susu coklat | ml | 2.000 |
-| 153 | Teh celup | pcs | 40 |
+|  |  | pcs | 120 |
 | 154 | Teh tabur | gram | 1.000 |
-| 155 | Indocafe | pcs | 20 |
+|  |  | pcs | 120 |
 | 156 | Air galon | ml | 20.000 |
-| 157 | Air mineral kemasan | pcs | 48 |
+|  |  | pcs | 120 |
 | 158 | Es batu | gram | 10.000 |
 | 159 | Susu kental manis | ml | 2.000 |
 
