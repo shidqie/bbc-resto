@@ -102,7 +102,22 @@ class PenerimaanBahanController extends Controller
         $checkeds = collect($request->item_checked)->filter(fn ($v) => $v)->keys()->all();
 
         $pengadaan = $po->pengadaan_bahan;
+        $pesanan = null;
+        if ($po->kode_pesanan_catering) {
+            $pesanan = \App\Models\Pesanan::where('id_pesanan', $po->kode_pesanan_catering)->first() ?: \App\Models\Pesanan::find($po->kode_pesanan_catering);
+        }
+        if (!$pesanan && $pengadaan && $pengadaan->pesanan_id) {
+            $pesanan = $pengadaan->pesanan;
+        }
+
+        $isNasiBox = $pesanan && (int) $pesanan->jenis_pesanan_id === 3;
+        $isDineIn = $pesanan && (int) $pesanan->jenis_pesanan_id === 1;
+
         $isCatering = (strtolower($po->jenis_po ?? '') === 'catering') || ($pengadaan && strtolower($pengadaan->jenis_pengadaan ?? '') === 'catering');
+        if ($isNasiBox || $isDineIn) {
+            $isCatering = false;
+        }
+
         $jenisPersediaan = $isCatering ? StokBahan::JENIS_CATERING : StokBahan::JENIS_HARIAN;
         $stokService = app(StockService::class);
 

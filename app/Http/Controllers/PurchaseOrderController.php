@@ -190,10 +190,15 @@ class PurchaseOrderController extends Controller
             $tipePO = $request->input('tipe', 'Operasional');
             $pesananId = $request->pesanan_id ?? null;
             $kodePesananCatering = null;
+            $pesananObj = null;
             if ($pesananId) {
                 $pesananObj = Pesanan::find($pesananId);
                 $kodePesananCatering = $pesananObj ? $pesananObj->id_pesanan : null;
             }
+
+            $isNasiBox = $pesananObj && (int) $pesananObj->jenis_pesanan_id === 3;
+            $isDineIn = $pesananObj && (int) $pesananObj->jenis_pesanan_id === 1;
+            $isCatering = (($tipePO === 'Catering' || $tipePO === 'Katering') && !$isNasiBox && !$isDineIn);
 
             // Create Pengadaan (Background)
             $pengadaan = PengadaanBahan::create([
@@ -202,7 +207,7 @@ class PurchaseOrderController extends Controller
                 'pesanan_id' => $pesananId,
                 'diajukan_oleh' => auth()->id() ?? 1,
                 'status_pengadaan_id' => 3, // Disetujui/Diproses
-                'jenis_pengadaan' => ($tipePO === 'Catering' || $tipePO === 'Katering') ? 'Catering' : 'Harian',
+                'jenis_pengadaan' => $isCatering ? 'Catering' : 'Harian',
                 'tanggal_pengadaan' => $request->tanggal_po ?? now()->toDateString(),
                 'total_pengadaan' => 0,
             ]);
@@ -220,7 +225,7 @@ class PurchaseOrderController extends Controller
                 'supplier' => $request->supplier_nama,
                 'no_telp_supplier' => $request->supplier_telepon,
                 'alamat_supplier' => $request->supplier_alamat,
-                'jenis_po' => ($tipePO === 'Catering' || $tipePO === 'Katering') ? 'catering' : 'operasional',
+                'jenis_po' => $isCatering ? 'catering' : 'operasional',
                 'kode_pesanan_catering' => $kodePesananCatering,
                 'tanggal_po' => $request->tanggal_po ?? now()->toDateString(),
                 'status' => PurchaseOrder::MENUNGGU_BARANG,
@@ -328,7 +333,19 @@ class PurchaseOrderController extends Controller
                 'diterima_oleh' => auth()->id() ?? 1,
             ]);
 
-            $isCatering = strtolower($po->jenis_po ?? '') === 'catering';
+            $pengadaan = $po->pengadaan_bahan;
+            $pesanan = null;
+            if ($po->kode_pesanan_catering) {
+                $pesanan = Pesanan::where('id_pesanan', $po->kode_pesanan_catering)->first() ?: Pesanan::find($po->kode_pesanan_catering);
+            }
+            if (!$pesanan && $pengadaan && $pengadaan->pesanan_id) {
+                $pesanan = $pengadaan->pesanan;
+            }
+
+            $isNasiBox = $pesanan && (int) $pesanan->jenis_pesanan_id === 3;
+            $isDineIn = $pesanan && (int) $pesanan->jenis_pesanan_id === 1;
+
+            $isCatering = (strtolower($po->jenis_po ?? '') === 'catering') && !$isNasiBox && !$isDineIn;
             $jenisPersediaan = $isCatering ? StokBahan::JENIS_CATERING : StokBahan::JENIS_HARIAN;
 
             $adaDiterima = false;

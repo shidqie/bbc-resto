@@ -90,7 +90,8 @@ class PengadaanController extends Controller
             if (! $pesanan) {
                 $error = 'Pesanan tidak ditemukan atau status pesanan tidak valid untuk pengadaan.';
             } else {
-                $hasil = app(KebutuhanBahanService::class)->hitungPengadaanPesanan($pesanan, 'catering');
+                $jenisPersediaan = ((int) $pesanan->jenis_pesanan_id === (int) $jenisNasiBoxId) ? 'harian' : 'catering';
+                $hasil = app(KebutuhanBahanService::class)->hitungPengadaanPesanan($pesanan, $jenisPersediaan);
                 $items = $hasil['items_kurang'];
                 $itemsCukup = $hasil['items_cukup'];
                 $resepBelumLengkap = ! $hasil['resep_lengkap'];
@@ -156,9 +157,11 @@ class PengadaanController extends Controller
         $pesanan = $request->filled('pesanan_id')
             ? Pesanan::whereIn('jenis_pesanan_id', [$jenisCateringId, $jenisNasiBoxId])->find($request->pesanan_id)
             : null;
-        abort_unless($pesanan, 422, 'Pesanan katering tidak valid.');
+        abort_unless($pesanan, 422, 'Pesanan tidak valid.');
 
-        return $this->storePermintaan($request, 'catering', $pesanan->id);
+        $jenis = ((int) $pesanan->jenis_pesanan_id === (int) $jenisNasiBoxId) ? 'harian' : 'catering';
+
+        return $this->storePermintaan($request, $jenis, $pesanan->id);
     }
 
     protected function storePermintaan(Request $request, string $jenis, ?int $pesananId = null)
