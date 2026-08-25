@@ -96,9 +96,6 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
-                        <x-ui.button variant="secondary" icon="arrow-down-tray" href="{{ route('laporan.persediaan.cetak-excel', array_merge(request()->all(), ['tab' => $tab])) }}" size="sm">
-                            Export Excel
-                        </x-ui.button>
                         <x-ui.button variant="secondary" icon="document-text" href="{{ route('laporan.persediaan.cetak-pdf', array_merge(request()->all(), ['tab' => $tab])) }}" target="_blank" size="sm">
                             Export PDF
                         </x-ui.button>
