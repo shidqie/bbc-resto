@@ -86,9 +86,11 @@
                 {{-- Data Master --}}
                 @php
                     $dataMasterItems = [];
-                    if ($hasRole('Admin', 'Manajer', 'Pemilik')) {
-                        $dataMasterItems[] = ['label' => 'Data Menu & Resep', 'url' => route('menu.index'), 'active' => request()->routeIs('menu.*')];
+                    if ($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur')) {
+                        $dataMasterItems[] = ['label' => 'Data Menu & Resep', 'url' => route('menu.index'), 'active' => request()->routeIs('menu.*') || request()->routeIs('resep.*')];
                         $dataMasterItems[] = ['label' => 'Kategori Menu', 'url' => route('kategori-menu.index'), 'active' => request()->routeIs('kategori-menu.*')];
+                    }
+                    if ($hasRole('Admin', 'Manajer', 'Pemilik')) {
                         $dataMasterItems[] = ['label' => 'Data Meja', 'url' => route('meja.index'), 'active' => request()->routeIs('meja.*')];
                     }
                     if ($hasRole('Admin', 'Manajer', 'Pemilik', 'Dapur', 'Tim Dapur')) {
@@ -99,7 +101,7 @@
                 @include('partials.sidebar-submenu', [
                     'icon' => 'heroicon-o-folder',
                     'label' => 'Data Master',
-                    'isOpen' => request()->routeIs('menu.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('meja.*') || request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*'),
+                    'isOpen' => request()->routeIs('menu.*') || request()->routeIs('resep.*') || request()->routeIs('kategori-menu.*') || request()->routeIs('meja.*') || request()->routeIs('bahan-baku.*') || request()->routeIs('kategori-bahan.*') || request()->routeIs('satuan.*'),
                     'items' => $dataMasterItems,
                 ])
                 @endif

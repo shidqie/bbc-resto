@@ -142,10 +142,8 @@ Route::middleware('auth')->group(function () {
         Route::get('pengadaan/penerimaan/{penerimaan}', [\App\Http\Controllers\PenerimaanBahanController::class, 'show'])->name('pengadaan.penerimaan.show');
     });
 
-    // ─── MASTER DATA (Menu, Bahan Baku, Paket, Meja) ───
-    Route::middleware(['role:Admin,Manajer,Pemilik,Dapur'])->group(function () {
-
-
+    // ─── MASTER DATA: MENU, RESEP, KATEGORI, BAHAN BAKU (Pemilik, Manajer, Dapur) ───
+    Route::middleware(['role:Admin,Manajer,Pemilik,Dapur,Tim Dapur'])->group(function () {
         Route::get('bahan-baku/{id}/drawer', [BahanBakuController::class, 'drawer'])->name('bahan-baku.drawer');
         Route::resource('bahan-baku', BahanBakuController::class);
         
@@ -171,7 +169,10 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('paket-catering', PaketCateringController::class);
         Route::patch('/paket-catering/{paketCatering}/toggle', [PaketCateringController::class, 'toggleActive'])->name('paket-catering.toggle');
+    });
 
+    // ─── MASTER DATA: DATA MEJA (Khusus Pemilik & Manajer) ───
+    Route::middleware(['role:Admin,Manajer,Pemilik'])->group(function () {
         Route::post('meja/{meja}/generate-qr', [MejaController::class, 'generateQr'])->name('meja.generate-qr');
         Route::resource('meja', MejaController::class)->except(['create', 'show', 'edit']);
     });
