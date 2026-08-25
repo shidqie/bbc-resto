@@ -206,7 +206,7 @@ Total: **14 item**
 |:---:|:---:|:---:|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | 159 | 136 | `BHB136` | **Bakso sapi** | Pcs | 120 | 50 | 3.000 | 3.050 | Semua | Aktif |
 | 160 | 140 | `BHB140` | **Es krim** | Pcs | 120 | 50 | 5.000 | 5.050 | Semua | Aktif |
-| 161 | 194 | `BHB194` | **Keju parut** | G | 1.000 | 49.985 | 0 | 49.985 | Semua | Aktif |
+| 161 | 194 | `BHB194` | **Keju parut** | Pcs | 24 | 50 | 0 | 50 | Semua | Aktif |
 | 162 | 184 | `BHB184` | **Kerupuk mentah** | G | 2.000 | 49.250 | 0 | 49.250 | Semua | Aktif |
 | 163 | 138 | `BHB138` | **Kerupuk udang** | G | 2.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
 | 164 | 199 | `BHB199` | **Kerupuk udang mentah** | G | 2.000 | 49.205 | 750 | 49.955 | Semua | Aktif |

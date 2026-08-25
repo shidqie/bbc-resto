@@ -188,7 +188,7 @@
 |---:|---|---:|---:|---:|
 | 159 | Bakso sapi | 0 pcs | 120 pcs | Rp 1.500 |
 | 160 | Es krim | 0 pcs | 120 pcs | Rp 4.000 |
-| 161 | Keju parut | 0 g | 1 kg | Rp 120.000 |
+| 161 | Keju parut | 50 pcs | 24 pcs | Rp 15.000 |
 | 162 | Kerupuk mentah | 0 g | 2 kg | Rp 30.000 |
 | 163 | Kerupuk udang | 0 g | 2 kg | Rp 50.000 |
 | 164 | Kerupuk udang mentah | 0 g | 2 kg | Rp 40.000 |
