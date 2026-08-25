@@ -57,7 +57,9 @@ class PenyesuaianStokController extends Controller
             $request->merge([
                 'bahan_baku_id' => [$request->bahan_baku_id],
                 'jenis_persediaan' => [$request->jenis_persediaan ?? 'harian'],
-                'jumlah_fisik' => [$request->jumlah_fisik],
+                'tipe_aksi' => [$request->tipe_aksi ?? 'kurang'],
+                'jumlah_input' => [$request->jumlah_input ?? $request->jumlah_fisik],
+                'jumlah_fisik' => [$request->jumlah_fisik ?? null],
                 'catatan_item' => [$request->catatan ?? null],
             ]);
         }
@@ -68,8 +70,6 @@ class PenyesuaianStokController extends Controller
             'bahan_baku_id.*' => 'required|exists:bahan_baku,id',
             'jenis_persediaan' => 'required|array',
             'jenis_persediaan.*' => 'required|in:harian,catering',
-            'jumlah_fisik' => 'required|array',
-            'jumlah_fisik.*' => 'required|numeric|min:0',
         ]);
 
         try {
@@ -89,11 +89,6 @@ class PenyesuaianStokController extends Controller
             $stockService = app(StockService::class);
 
             foreach ($request->bahan_baku_id as $idx => $bahanId) {
-                $jumlahFisikRaw = $request->jumlah_fisik[$idx] ?? '';
-                if ($jumlahFisikRaw === '' || $jumlahFisikRaw === null) {
-                    continue;
-                }
-
                 $bahan = BahanBaku::find($bahanId);
                 if (!$bahan) continue;
 
@@ -102,8 +97,28 @@ class PenyesuaianStokController extends Controller
                     ->where('jenis_persediaan', $jenisPersediaan)->first();
 
                 $jumlahSistem = $stokRow ? (float) $stokRow->jumlah_stok : 0;
-                $jumlahFisik  = (float) $jumlahFisikRaw;
-                $selisih      = $jumlahFisik - $jumlahSistem;
+                $tipeAksi = $request->tipe_aksi[$idx] ?? 'kurang';
+                $inputVal = isset($request->jumlah_input[$idx]) ? (float) $request->jumlah_input[$idx] : null;
+
+                if ($inputVal === null && isset($request->jumlah_fisik[$idx])) {
+                    $inputVal = (float) $request->jumlah_fisik[$idx];
+                }
+
+                if ($inputVal === null) {
+                    continue;
+                }
+
+                // Hitung jumlah fisik akhir & selisih berdasarkan tipe aksi
+                if ($tipeAksi === 'tambah') {
+                    $jumlahFisik = $jumlahSistem + $inputVal;
+                    $selisih = $inputVal;
+                } elseif ($tipeAksi === 'kurang') {
+                    $jumlahFisik = max(0, $jumlahSistem - $inputVal);
+                    $selisih = $jumlahFisik - $jumlahSistem; // bernilai negatif atau -inputVal
+                } else { // 'opname' atau 'set'
+                    $jumlahFisik = (float) $inputVal;
+                    $selisih = $jumlahFisik - $jumlahSistem;
+                }
 
                 $detail = DetailPenyesuaianStok::create([
                     'penyesuaian_stok_id' => $penyesuaian->id,
@@ -120,7 +135,7 @@ class PenyesuaianStokController extends Controller
                 $stockService->adjustStock(
                     $bahanId,
                     (float) $jumlahFisik,
-                    "Penyesuaian Stok: {$request->alasan}",
+                    "Penyesuaian Stok ({$tipeAksi}): {$request->alasan}",
                     null,
                     Auth::id(),
                     ['detail_penyesuaian_stok_id' => $detail->id],
@@ -130,7 +145,7 @@ class PenyesuaianStokController extends Controller
 
             DB::commit();
 
-            return redirect()->route('penyesuaian-stok.index')->with('success', "Penyesuaian Stok {$nomorPenyesuaian} berhasil disimpan dan stok telah diperbarui.");
+            return redirect()->route('penyesuaian-stok.index')->with('success', "Penyesuaian Stok {$nomorPenyesuaian} berhasil disimpan dan stok telah disesuaikan.");
 
         } catch (\Exception $e) {
             DB::rollBack();

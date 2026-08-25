@@ -70,11 +70,15 @@
                                     <div class="font-semibold text-sm text-gray-800">{{ $detail->bahan_baku->nama_bahan }}</div>
                                     <div class="text-xs text-gray-500">{{ $detail->satuan->nama_satuan ?? '-' }}</div>
                                 </td>
-                                <td class="px-5 py-3 text-right text-sm text-gray-700">{{ number_format($detail->jumlah_sistem, 2, ',', '.') }}</td>
-                                <td class="px-5 py-3 text-right text-sm font-semibold text-gray-800">{{ number_format($detail->jumlah_fisik, 2, ',', '.') }}</td>
+                                <td class="px-5 py-3 text-right text-sm text-gray-700 font-medium">
+                                    {{ \App\Helpers\UnitHelper::formatQuantity($detail->jumlah_sistem, $detail->satuan->singkatan ?? $detail->satuan->nama_satuan ?? '') }}
+                                </td>
+                                <td class="px-5 py-3 text-right text-sm font-bold text-gray-900">
+                                    {{ \App\Helpers\UnitHelper::formatQuantity($detail->jumlah_fisik, $detail->satuan->singkatan ?? $detail->satuan->nama_satuan ?? '') }}
+                                </td>
                                 <td class="px-5 py-3 text-right">
-                                    <span class="text-sm font-bold {{ $detail->jumlah_selisih > 0 ? 'text-green-600' : 'text-red-600' }}">
-                                        {{ $detail->jumlah_selisih > 0 ? '+' : '' }}{{ number_format($detail->jumlah_selisih, 2, ',', '.') }}
+                                    <span class="text-sm font-bold {{ $detail->jumlah_selisih > 0 ? 'text-emerald-600' : ($detail->jumlah_selisih < 0 ? 'text-red-600' : 'text-gray-500') }}">
+                                        {{ $detail->jumlah_selisih > 0 ? '+' : '' }}{{ \App\Helpers\UnitHelper::formatQuantity($detail->jumlah_selisih, $detail->satuan->singkatan ?? $detail->satuan->nama_satuan ?? '') }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-3 text-sm text-gray-600">{{ $detail->catatan ?? '-' }}</td>
