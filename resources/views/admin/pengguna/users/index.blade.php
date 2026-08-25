@@ -160,12 +160,7 @@
                             {{ $pelanggan->firstItem() + $loop->index }}
                         </td>
                         <td class="px-4 py-4 align-middle">
-                            <div class="min-w-0">
-                                <div class="font-medium text-gray-900 text-sm truncate">{{ $user->nama }}</div>
-                                @if($user->alamat && $user->alamat !== '-')
-                                    <div class="text-xs text-gray-400 truncate max-w-xs">{{ $user->alamat }}</div>
-                                @endif
-                            </div>
+                            <div class="font-medium text-gray-900 text-sm truncate">{{ $user->nama }}</div>
                         </td>
                         <td class="px-4 py-4 align-middle">
                             <div class="text-sm text-gray-600">
