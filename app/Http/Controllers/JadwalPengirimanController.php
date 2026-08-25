@@ -73,11 +73,7 @@ class JadwalPengirimanController extends Controller
 
         if ($statusFilter !== 'Semua' && $statusFilter !== '' && $statusFilter !== null) {
             $query->whereHas('pengiriman', function ($q) use ($statusFilter) {
-                if ($statusFilter == 2) {
-                    $q->whereIn('status_pengiriman_id', [1, 2]);
-                } else {
-                    $q->where('status_pengiriman_id', $statusFilter);
-                }
+                $q->where('status_pengiriman_id', (int) $statusFilter);
             });
         }
 
@@ -119,9 +115,10 @@ class JadwalPengirimanController extends Controller
 
         $summary = [
             'Semua' => $allSummaryOrders->count(),
-            'baru' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 1)->count(), // Menunggu Dikirim
-            'diproses' => $allSummaryOrders->whereIn('pengiriman.status_pengiriman_id', [2, 3])->count(), // Dalam Pengiriman
-            'selesai' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 4)->count(), // Sudah Diterima
+            'dijadwalkan' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 1)->count(),
+            'siap' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 2)->count(),
+            'dalam_pengantaran' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 3)->count(),
+            'terkirim' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 4)->count(),
             'dibatalkan' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 5)->count(),
         ];
 
@@ -210,11 +207,6 @@ class JadwalPengirimanController extends Controller
 
         try {
             DB::transaction(function () use ($pengiriman, $update, $request) {
-                // Buatin ketika gagal di kirim mengulang jadwal pengiriman (reset ke 1)
-                if ($request->status_pengiriman_id == 5) {
-                    $update['status_pengiriman_id'] = 1;
-                }
-
                 $pengiriman->update($update);
 
                 // Sync back to Pesanan

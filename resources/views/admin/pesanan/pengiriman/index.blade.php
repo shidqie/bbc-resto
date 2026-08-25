@@ -18,15 +18,12 @@
 
     /*
      * Ringkasan dihitung dari data $orders yang sudah dikirim controller.
-     * Status backend yang dipakai:
+     * Status backend resmi (Multiaktor RM BBC):
      * 1 = Dijadwalkan
      * 2 = Siap Dikirim
-     * 3 = Dalam Perjalanan
-     * 4 = Diterima
-     * 5 = Gagal Dikirim
-     *
-     * Pada UI, status 1 dan 2 digabung menjadi "Siap Dikirim"
-     * agar alur pengguna lebih sederhana.
+     * 3 = Dalam Pengantaran
+     * 4 = Terkirim
+     * 5 = Dibatalkan
      */
     $orderCollection = method_exists($orders, 'getCollection')
         ? $orders->getCollection()
@@ -36,16 +33,19 @@
         ? $orders->total()
         : $orderCollection->count();
 
-    $siapDikirim = $orderCollection->filter(function ($order) {
-        $status = optional($order->pengiriman)->status_pengiriman_id;
-        return in_array((int) $status, [1, 2], true);
+    $dijadwalkan = $orderCollection->filter(function ($order) {
+        return (int) optional($order->pengiriman)->status_pengiriman_id === 1;
     })->count();
 
-    $dalamPengiriman = $orderCollection->filter(function ($order) {
+    $siapDikirim = $orderCollection->filter(function ($order) {
+        return (int) optional($order->pengiriman)->status_pengiriman_id === 2;
+    })->count();
+
+    $dalamPengantaran = $orderCollection->filter(function ($order) {
         return (int) optional($order->pengiriman)->status_pengiriman_id === 3;
     })->count();
 
-    $selesai = $orderCollection->filter(function ($order) {
+    $terkirim = $orderCollection->filter(function ($order) {
         return (int) optional($order->pengiriman)->status_pengiriman_id === 4;
     })->count();
 @endphp
@@ -131,41 +131,41 @@
                 </div>
             </div>
 
-            {{-- Siap Dikirim --}}
+            {{-- Dijadwalkan / Siap Dikirim --}}
             <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-2xs flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-amber-700 uppercase tracking-wider">
-                        Siap Dikirim
+                    <p class="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                        Dijadwalkan & Siap
                     </p>
-                    <p class="text-2xl font-black text-amber-600 mt-1">{{ $siapDikirim }}</p>
-                    <p class="text-[11px] text-gray-400 mt-0.5">Menunggu kurir</p>
+                    <p class="text-2xl font-black text-blue-600 mt-1">{{ $dijadwalkan + $siapDikirim }}</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ $dijadwalkan }} terjadwal &bull; {{ $siapDikirim }} siap</p>
                 </div>
-                <div class="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center">
+                <div class="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center">
                     <x-heroicon-o-cube class="w-5 h-5" />
                 </div>
             </div>
 
-            {{-- Dalam Pengiriman --}}
+            {{-- Dalam Pengantaran --}}
             <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-2xs flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                        Dalam Pengiriman
+                    <p class="text-xs font-semibold text-amber-700 uppercase tracking-wider">
+                        Dalam Pengantaran
                     </p>
-                    <p class="text-2xl font-black text-primary mt-1">{{ $dalamPengiriman }}</p>
+                    <p class="text-2xl font-black text-amber-600 mt-1">{{ $dalamPengantaran }}</p>
                     <p class="text-[11px] text-gray-400 mt-0.5">Sedang menuju lokasi</p>
                 </div>
-                <div class="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 text-primary flex items-center justify-center">
+                <div class="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center">
                     <x-heroicon-o-truck class="w-5 h-5" />
                 </div>
             </div>
 
-            {{-- Selesai --}}
+            {{-- Terkirim --}}
             <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-2xs flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
-                        Selesai
+                        Terkirim
                     </p>
-                    <p class="text-2xl font-black text-emerald-600 mt-1">{{ $selesai }}</p>
+                    <p class="text-2xl font-black text-emerald-600 mt-1">{{ $terkirim }}</p>
                     <p class="text-[11px] text-gray-400 mt-0.5">Berhasil diantar</p>
                 </div>
                 <div class="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center">
@@ -201,10 +201,11 @@
                     <x-ui.multi-select
                         name="status"
                         :options="[
+                            '1' => 'Dijadwalkan',
                             '2' => 'Siap Dikirim',
-                            '3' => 'Dalam Pengiriman',
-                            '4' => 'Selesai',
-                            '5' => 'Gagal Dikirim'
+                            '3' => 'Dalam Pengantaran',
+                            '4' => 'Terkirim',
+                            '5' => 'Dibatalkan'
                         ]"
                         :selected="request('status')"
                         label="Status Pengiriman"
@@ -239,25 +240,29 @@
 
                             $waktuPengiriman = optional($jadwal)->waktu_pengiriman ?? optional($jadwal)->waktu_acara;
 
-                            if (in_array($statusId, [1, 2], true)) {
-                                $statusLabel = 'Siap Dikirim';
-                                $statusClass = 'bg-amber-50 text-amber-800 border-amber-200/90';
-                                $statusDot = 'bg-amber-500';
-                            } elseif ($statusId === 3) {
-                                $statusLabel = 'Dalam Pengiriman';
+                            if ($statusId === 1) {
+                                $statusLabel = 'Dijadwalkan';
                                 $statusClass = 'bg-blue-50 text-blue-800 border-blue-200/90';
-                                $statusDot = 'bg-blue-500 animate-pulse';
+                                $statusDot = 'bg-blue-500';
+                            } elseif ($statusId === 2) {
+                                $statusLabel = 'Siap Dikirim';
+                                $statusClass = 'bg-purple-50 text-purple-800 border-purple-200/90';
+                                $statusDot = 'bg-purple-500';
+                            } elseif ($statusId === 3) {
+                                $statusLabel = 'Dalam Pengantaran';
+                                $statusClass = 'bg-amber-50 text-amber-800 border-amber-200/90';
+                                $statusDot = 'bg-amber-500 animate-pulse';
                             } elseif ($statusId === 4) {
-                                $statusLabel = 'Selesai';
+                                $statusLabel = 'Terkirim';
                                 $statusClass = 'bg-emerald-50 text-emerald-800 border-emerald-200/90';
                                 $statusDot = 'bg-emerald-500';
                             } elseif ($statusId === 5) {
-                                $statusLabel = 'Gagal Dikirim';
+                                $statusLabel = 'Dibatalkan';
                                 $statusClass = 'bg-rose-50 text-rose-800 border-rose-200/90';
                                 $statusDot = 'bg-rose-500';
                             } else {
-                                $statusLabel = 'Belum Dijadwalkan';
-                                $statusClass = 'bg-gray-50 text-gray-600 border-gray-200';
+                                $statusLabel = optional($pengiriman?->status_pengiriman)->nama_status ?? 'Dijadwalkan';
+                                $statusClass = 'bg-gray-50 text-gray-700 border-gray-200';
                                 $statusDot = 'bg-gray-400';
                             }
 
