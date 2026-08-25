@@ -89,8 +89,8 @@
 | 74 | Mangga | 0 g | 500 gram | Rp 20.000 |
 | 75 | Peda | 0 g | 1,5 kg | Rp 70.000 |
 | 76 | Sepat | 0 g | 1,5 kg | Rp 65.000 |
-| 77 | Telur | 0 pcs | 120 pcs | Rp 1.600 |
-| 78 | Telur puyuh | 0 pcs | 120 pcs | Rp 450 |
+| 77 | Telur | 120 pcs | 50 pcs | Rp 1.600 |
+| 78 | Telur puyuh | 120 pcs | 50 pcs | Rp 450 |
 
 ## Bumbu & Saus
 
@@ -186,18 +186,18 @@
 
 | No. | Nama Bahan | Stok Saat Ini | Stok Minimum | Harga Satuan |
 |---:|---|---:|---:|---:|
-| 159 | Bakso sapi | 0 pcs | 120 pcs | Rp 1.500 |
-| 160 | Es krim | 0 pcs | 120 pcs | Rp 4.000 |
+| 159 | Bakso sapi | 120 pcs | 50 pcs | Rp 1.500 |
+| 160 | Es krim | 120 pcs | 50 pcs | Rp 4.000 |
 | 161 | Keju parut | 50 pcs | 24 pcs | Rp 15.000 |
 | 162 | Kerupuk mentah | 0 g | 2 kg | Rp 30.000 |
 | 163 | Kerupuk udang | 0 g | 2 kg | Rp 50.000 |
 | 164 | Kerupuk udang mentah | 0 g | 2 kg | Rp 40.000 |
 | 165 | Oncom | 0 g | 2 kg | Rp 25.000 |
-| 166 | Puding | 0 pcs | 120 pcs | Rp 3.000 |
+| 166 | Puding | 120 pcs | 50 pcs | Rp 3.000 |
 | 167 | Santan | 0 ml | 4 liter | Rp 30.000 |
-| 168 | Sosis ayam | 0 pcs | 120 pcs | Rp 2.000 |
-| 169 | Tahu | 0 pcs | 120 pcs | Rp 1.000 |
-| 170 | Tahu sumedang | 0 pcs | 120 pcs | Rp 700 |
+| 168 | Sosis ayam | 120 pcs | 50 pcs | Rp 2.000 |
+| 169 | Tahu | 120 pcs | 50 pcs | Rp 1.000 |
+| 170 | Tahu sumedang | 120 pcs | 50 pcs | Rp 700 |
 | 171 | Tauco | 0 g | 1 kg | Rp 35.000 |
 | 172 | Tempe | 0 g | 5 kg | Rp 20.000 |
 
@@ -205,28 +205,28 @@
 
 | No. | Nama Bahan | Stok Saat Ini | Stok Minimum | Harga Satuan |
 |---:|---|---:|---:|---:|
-| 173 | ABC Susu | 120 pcs | 20 pcs | Rp 2.000 |
+| 173 | ABC Susu | 120 pcs | 50 pcs | Rp 2.000 |
 | 174 | Air galon | 0 ml | 20 liter | Rp 20.000 |
-| 175 | Air mineral kemasan | 120 pcs | 48 pcs | Rp 3.000 |
-| 176 | Bajigur | 120 pcs | 20 pcs | Rp 3.000 |
-| 177 | Bandrek | 120 pcs | 20 pcs | Rp 3.000 |
-| 178 | Beng-Beng Drink | 120 pcs | 20 pcs | Rp 3.000 |
+| 175 | Air mineral kemasan | 120 pcs | 50 pcs | Rp 3.000 |
+| 176 | Bajigur | 120 pcs | 50 pcs | Rp 3.000 |
+| 177 | Bandrek | 120 pcs | 50 pcs | Rp 3.000 |
+| 178 | Beng-Beng Drink | 120 pcs | 50 pcs | Rp 3.000 |
 | 179 | Bubuk matcha | 0 g | 1 kg | Rp 180.000 |
-| 180 | Cappuccino | 120 pcs | 20 pcs | Rp 3.000 |
-| 181 | Creamy Latte | 120 pcs | 20 pcs | Rp 3.000 |
+| 180 | Cappuccino | 120 pcs | 50 pcs | Rp 3.000 |
+| 181 | Creamy Latte | 120 pcs | 50 pcs | Rp 3.000 |
 | 182 | Es batu | 0 g | 10 kg | Rp 3.000 |
-| 183 | Good Day | 120 pcs | 20 pcs | Rp 2.500 |
-| 184 | Indocafe | 120 pcs | 20 pcs | Rp 2.500 |
-| 185 | Kapal Api | 120 pcs | 20 pcs | Rp 2.000 |
+| 183 | Good Day | 120 pcs | 50 pcs | Rp 2.500 |
+| 184 | Indocafe | 120 pcs | 50 pcs | Rp 2.500 |
+| 185 | Kapal Api | 120 pcs | 50 pcs | Rp 2.000 |
 | 186 | Kopi bubuk arabika | 0 g | 1 kg | Rp 180.000 |
 | 187 | Kopi bubuk espresso | 0 g | 1 kg | Rp 200.000 |
 | 188 | Kopi bubuk robusta | 0 g | 1 kg | Rp 120.000 |
-| 189 | Kopi sachet | 120 pcs | 20 pcs | Rp 2.500 |
-| 190 | Luwak | 120 pcs | 20 pcs | Rp 2.500 |
+| 189 | Kopi sachet | 120 pcs | 50 pcs | Rp 2.500 |
+| 190 | Luwak | 120 pcs | 50 pcs | Rp 2.500 |
 | 191 | Milo | 0 g | 1 kg | Rp 3.000 |
 | 192 | Susu bubuk | 0 g | 1 kg | Rp 100.000 |
-| 193 | Susu coklat | 120 pcs | 20 pcs | Rp 3.000 |
+| 193 | Susu coklat | 120 pcs | 50 pcs | Rp 3.000 |
 | 194 | Susu kental manis | 0 ml | 2 liter | Rp 35.000 |
-| 195 | Susu putih | 120 pcs | 20 pcs | Rp 3.000 |
-| 196 | Teh celup | 120 pcs | 40 pcs | Rp 500 |
+| 195 | Susu putih | 120 pcs | 50 pcs | Rp 3.000 |
+| 196 | Teh celup | 120 pcs | 50 pcs | Rp 500 |
 | 197 | Teh tabur | 0 g | 1 kg | Rp 60.000 |

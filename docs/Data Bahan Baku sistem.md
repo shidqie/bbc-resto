@@ -80,7 +80,7 @@ Total: **21 item**
 | 59 | 56 | `BHB056` | **Ati sapi** | G | 2.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
 | 60 | 46 | `BHB046` | **Ayam broiler** | G | 10.000 | 17.967 | 49.484 | 67.451 | Semua | Aktif |
 | 61 | 47 | `BHB047` | **Ayam kampung** | G | 6.000 | 46.800 | 0 | 46.800 | Semua | Aktif |
-| 62 | 188 | `BHB188` | **Bakso ikan** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 62 | 188 | `BHB188` | **Bakso ikan** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 63 | 48 | `BHB048` | **Bebek** | G | 6.000 | 48.700 | 0 | 48.700 | Semua | Aktif |
 | 64 | 166 | `BHB166` | **Daging campur / jeroan** | G | 3.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
 | 65 | 165 | `BHB165` | **Daging kambing** | G | 3.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
@@ -95,8 +95,8 @@ Total: **21 item**
 | 74 | 162 | `BHB162` | **Mangga** | G | 500 | 49.940 | 0 | 49.940 | Semua | Aktif |
 | 75 | 54 | `BHB054` | **Peda** | G | 1.500 | 45.500 | 0 | 45.500 | Semua | Aktif |
 | 76 | 55 | `BHB055` | **Sepat** | G | 1.500 | 50.000 | 0 | 50.000 | Semua | Aktif |
-| 77 | 59 | `BHB059` | **Telur** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 78 | 189 | `BHB189` | **Telur puyuh** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 77 | 59 | `BHB059` | **Telur** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 78 | 189 | `BHB189` | **Telur puyuh** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 
 ---
 
@@ -204,18 +204,18 @@ Total: **14 item**
 
 | No. | ID | Kode | Nama Bahan | Satuan | Stok Min Harian | Stok Harian | Stok Catering | Total Stok | Cakupan | Status |
 |:---:|:---:|:---:|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 159 | 136 | `BHB136` | **Bakso sapi** | Pcs | 120 | 50 | 3.000 | 3.050 | Semua | Aktif |
-| 160 | 140 | `BHB140` | **Es krim** | Pcs | 120 | 50 | 5.000 | 5.050 | Semua | Aktif |
+| 159 | 136 | `BHB136` | **Bakso sapi** | Pcs | 50 | 120 | 3.000 | 3.120 | Semua | Aktif |
+| 160 | 140 | `BHB140` | **Es krim** | Pcs | 50 | 120 | 5.000 | 5.120 | Semua | Aktif |
 | 161 | 194 | `BHB194` | **Keju parut** | Pcs | 24 | 50 | 0 | 50 | Semua | Aktif |
 | 162 | 184 | `BHB184` | **Kerupuk mentah** | G | 2.000 | 49.250 | 0 | 49.250 | Semua | Aktif |
 | 163 | 138 | `BHB138` | **Kerupuk udang** | G | 2.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
 | 164 | 199 | `BHB199` | **Kerupuk udang mentah** | G | 2.000 | 49.205 | 750 | 49.955 | Semua | Aktif |
 | 165 | 134 | `BHB134` | **Oncom** | G | 2.000 | 49.965 | 0 | 49.965 | Semua | Aktif |
-| 166 | 186 | `BHB186` | **Puding** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 166 | 186 | `BHB186` | **Puding** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 167 | 139 | `BHB139` | **Santan** | Ml | 4.000 | 43.560 | 7.996 | 51.556 | Semua | Aktif |
-| 168 | 137 | `BHB137` | **Sosis ayam** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 169 | 132 | `BHB132` | **Tahu** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 170 | 172 | `BHB172` | **Tahu sumedang** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 168 | 137 | `BHB137` | **Sosis ayam** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 169 | 132 | `BHB132` | **Tahu** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 170 | 172 | `BHB172` | **Tahu sumedang** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 171 | 135 | `BHB135` | **Tauco** | G | 1.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
 | 172 | 133 | `BHB133` | **Tempe** | G | 5.000 | 46.250 | 0 | 46.250 | Semua | Aktif |
 
@@ -227,30 +227,30 @@ Total: **25 item**
 
 | No. | ID | Kode | Nama Bahan | Satuan | Stok Min Harian | Stok Harian | Stok Catering | Total Stok | Cakupan | Status |
 |:---:|:---:|:---:|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 173 | 141 | `BHB141` | **ABC Susu** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 173 | 141 | `BHB141` | **ABC Susu** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 174 | 160 | `BHB160` | **Air galon** | Ml | 20.000 | 23.840 | 0 | 23.840 | Semua | Aktif |
-| 175 | 156 | `BHB156` | **Air mineral kemasan** | Pcs | 120 | 50 | 50 | 100 | Semua | Aktif |
-| 176 | 142 | `BHB142` | **Bajigur** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 177 | 143 | `BHB143` | **Bandrek** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 178 | 150 | `BHB150` | **Beng-Beng Drink** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 175 | 156 | `BHB156` | **Air mineral kemasan** | Pcs | 50 | 120 | 50 | 170 | Semua | Aktif |
+| 176 | 142 | `BHB142` | **Bajigur** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 177 | 143 | `BHB143` | **Bandrek** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 178 | 150 | `BHB150` | **Beng-Beng Drink** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 179 | 183 | `BHB183` | **Bubuk matcha** | G | 1.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
-| 180 | 144 | `BHB144` | **Cappuccino** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 181 | 145 | `BHB145` | **Creamy Latte** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 180 | 144 | `BHB144` | **Cappuccino** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 181 | 145 | `BHB145` | **Creamy Latte** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 182 | 157 | `BHB157` | **Es batu** | G | 10.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
-| 183 | 146 | `BHB146` | **Good Day** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 184 | 155 | `BHB155` | **Indocafe** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 185 | 147 | `BHB147` | **Kapal Api** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 183 | 146 | `BHB146` | **Good Day** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 184 | 155 | `BHB155` | **Indocafe** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 185 | 147 | `BHB147` | **Kapal Api** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 186 | 180 | `BHB180` | **Kopi bubuk arabika** | G | 1.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
 | 187 | 177 | `BHB177` | **Kopi bubuk espresso** | G | 1.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
 | 188 | 181 | `BHB181` | **Kopi bubuk robusta** | G | 1.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
-| 189 | 176 | `BHB176` | **Kopi sachet** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 190 | 148 | `BHB148` | **Luwak** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 189 | 176 | `BHB176` | **Kopi sachet** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 190 | 148 | `BHB148` | **Luwak** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 191 | 149 | `BHB149` | **Milo** | G | 1.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
 | 192 | 175 | `BHB175` | **Susu bubuk** | G | 1.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
-| 193 | 152 | `BHB152` | **Susu coklat** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 193 | 152 | `BHB152` | **Susu coklat** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 194 | 158 | `BHB158` | **Susu kental manis** | Ml | 2.000 | 49.970 | 0 | 49.970 | Semua | Aktif |
-| 195 | 151 | `BHB151` | **Susu putih** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
-| 196 | 153 | `BHB153` | **Teh celup** | Pcs | 120 | 50 | 0 | 50 | Semua | Aktif |
+| 195 | 151 | `BHB151` | **Susu putih** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
+| 196 | 153 | `BHB153` | **Teh celup** | Pcs | 50 | 120 | 0 | 120 | Semua | Aktif |
 | 197 | 154 | `BHB154` | **Teh tabur** | G | 1.000 | 50.000 | 0 | 50.000 | Semua | Aktif |
 
 ---
