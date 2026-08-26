@@ -190,6 +190,82 @@
             cursor: not-allowed !important;
             opacity: 0.55 !important;
         }
+        /* Flatpickr Timepicker Popup */
+        .flatpickr-calendar.hasTime.noCalendar {
+            width: auto !important;
+            padding: 12px 18px !important;
+            border-radius: 16px !important;
+            background: #ffffff !important;
+            border: 1px solid #f3f4f6 !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+        }
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 50px !important;
+            max-height: 50px !important;
+            line-height: 50px !important;
+            border-top: none !important;
+            padding: 0 !important;
+            gap: 6px !important;
+        }
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time .numInputWrapper {
+            flex: none !important;
+            width: 64px !important;
+            height: 46px !important;
+            background: #f9fafb !important;
+            border: 1.5px solid #e5e7eb !important;
+            border-radius: 12px !important;
+            transition: all 0.2s ease !important;
+        }
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time .numInputWrapper:hover {
+            background: #f3f4f6 !important;
+            border-color: #d1d5db !important;
+        }
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time .numInputWrapper:focus-within {
+            border-color: #0D3024 !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(13, 48, 36, 0.12) !important;
+        }
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time input.flatpickr-hour,
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time input.flatpickr-minute {
+            font-family: 'Outfit', sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 18px !important;
+            color: #111827 !important;
+            text-align: center !important;
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            height: 100% !important;
+            line-height: 46px !important;
+            padding: 0 !important;
+        }
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time .flatpickr-time-separator {
+            font-weight: 800 !important;
+            font-size: 18px !important;
+            color: #4b5563 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 14px !important;
+            line-height: 46px !important;
+            height: 46px !important;
+            padding: 0 !important;
+        }
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time .numInputWrapper span.arrowUp,
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time .numInputWrapper span.arrowDown {
+            width: 16px !important;
+            padding: 0 2px !important;
+            opacity: 0.6 !important;
+        }
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time .numInputWrapper span.arrowUp:hover,
+        .flatpickr-calendar.hasTime.noCalendar .flatpickr-time .numInputWrapper span.arrowDown:hover {
+            opacity: 1 !important;
+            background: rgba(13, 48, 36, 0.1) !important;
+        }
     </style>
 
     <!-- Tailwind CSS CDN Fallback for Wi-Fi LAN Access -->
@@ -356,6 +432,22 @@
                             defaultDate: currentVal || null,
                             minDate: minDateVal,
                             maxDate: maxDateVal,
+                            allowInput: true,
+                            disableMobile: true
+                        });
+                    }
+                });
+
+                document.querySelectorAll('input[type="time"], input.timepicker').forEach(function(el) {
+                    if (!el._flatpickr) {
+                        const currentVal = el.value || el.getAttribute('value') || '';
+                        flatpickr(el, {
+                            enableTime: true,
+                            noCalendar: true,
+                            dateFormat: "H:i",
+                            time_24hr: true,
+                            minuteIncrement: 15,
+                            defaultDate: currentVal || null,
                             allowInput: true,
                             disableMobile: true
                         });

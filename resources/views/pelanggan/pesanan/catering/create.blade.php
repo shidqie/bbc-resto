@@ -147,17 +147,29 @@
                             <div class="grid md:grid-cols-2 gap-4 items-start">
                                 <div>
                                     <label for="tanggalAcara" class="block text-xs font-bold text-body mb-1">Tanggal Acara <span class="text-danger">*</span></label>
-                                    <input type="date" id="tanggalAcara" name="tanggal_acara"
-                                           min="{{ \Carbon\Carbon::today()->addDays(4)->format('Y-m-d') }}"
-                                           value="{{ old('tanggal_acara') }}"
-                                           class="w-full border border-primary/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface" required>
+                                    <div class="relative">
+                                        <input type="text" id="tanggalAcara" name="tanggal_acara"
+                                               min="{{ \Carbon\Carbon::today()->addDays(4)->format('Y-m-d') }}"
+                                               value="{{ old('tanggal_acara') }}"
+                                               placeholder="Pilih tanggal acara"
+                                               class="datepicker w-full border border-primary/10 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface cursor-pointer" required>
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-body/40">
+                                            <x-heroicon-o-calendar class="w-4 h-4" />
+                                        </div>
+                                    </div>
                                     <p id="tanggal-warning" class="text-danger text-xs mt-1 hidden">Pemesanan katering minimal H-4 sebelum acara.</p>
                                 </div>
                                 <div>
                                     <label for="jamAcara" class="block text-xs font-bold text-body mb-1">Jam Acara <span class="text-danger">*</span></label>
-                                    <input type="time" id="jamAcara" name="jam_acara"
-                                           value="{{ old('jam_acara') }}"
-                                           class="w-full border border-primary/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface" required>
+                                    <div class="relative">
+                                        <input type="text" id="jamAcara" name="jam_acara"
+                                               value="{{ old('jam_acara', '12:00') }}"
+                                               placeholder="Pilih jam acara"
+                                               class="timepicker w-full border border-primary/10 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface cursor-pointer" required>
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-body/40">
+                                            <x-heroicon-o-clock class="w-4 h-4" />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="md:col-span-2">
@@ -190,9 +202,15 @@
 
                                 <div class="md:col-span-2">
                                     <label for="jamPengambilan" class="block text-xs font-bold text-body mb-1">Jam Pengambilan / Pengiriman <span class="text-danger">*</span></label>
-                                    <input type="time" id="jamPengambilan" name="jam_pengambilan"
-                                           value="{{ old('jam_pengambilan') }}"
-                                           class="w-full border border-primary/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface" required>
+                                    <div class="relative">
+                                        <input type="text" id="jamPengambilan" name="jam_pengambilan"
+                                               value="{{ old('jam_pengambilan', '11:30') }}"
+                                               placeholder="Pilih jam pengambilan / pengiriman"
+                                               class="timepicker w-full border border-primary/10 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-medium text-body transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none bg-surface cursor-pointer" required>
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-body/40">
+                                            <x-heroicon-o-clock class="w-4 h-4" />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 @include('pelanggan.pesanan.partials._delivery-map')
@@ -301,8 +319,8 @@
                         </section>
 
                         {{-- SUBMIT (mobile: tombol submit ikut di bawah form, bukan hanya di summary) --}}
-                        <button type="submit" class="lg:hidden w-full inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base py-3.5 rounded-xl hover:bg-primary/90 transition-colors">
-                            Bayar
+                        <button type="submit" class="lg:hidden w-full inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-base py-3.5 rounded-xl hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
+                            Buat Pesanan
                             <x-heroicon-o-arrow-right class="w-5 h-5" />
                         </button>
                     </div>

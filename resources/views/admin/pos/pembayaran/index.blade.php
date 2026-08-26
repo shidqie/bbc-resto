@@ -86,8 +86,8 @@
 
         $showUploadForm = !($lunas >= $pesanan->total_tagihan) && $statusVerifikasi !== 'menunggu_verifikasi';
 
-        $staticQris = "00020101021126590013ID.NOBUPAN.WWW01189360050300000881530215ID10264761295010303UMI51440014ID.LINKAJA.WWW0118936009140000881530215ID10264761295010303UMI5204581253033605802ID5915RUMAH MAKAN BBC6013KAB SUMEDANG 61054536362070703A016304";
-        $dynamicQris = \App\Helpers\QrisHelper::generateDynamicQris($staticQris, $amountToPay);
+        $staticQris = "00020101021126690021ID.CO.BANKMANDIRI.WWW01189360000801988998370211719889983700303UMI51440014ID.CO.QRIS.WWW0215ID10264761295010303UMI5204581253033605802ID5915Rumah Makan BBC6015Bandung Barat (61054055162070703A016304AC4D";
+        $qrisString = $staticQris;
     @endphp
 
     <x-slot:title>{{ $payTitle }} — {{ $pesanan->id_pesanan }}</x-slot:title>
@@ -438,7 +438,7 @@
                         </div>
                     @else
                         {{-- KARTU PEMBAYARAN: NOMINAL, METODE TRANSFER / QRIS, & UPLOAD BUKTI --}}
-                        <div class="bg-white rounded-3xl border border-gray-200/80 p-5 sm:p-8 space-y-6 shadow-sm" x-data="{ copied: false }">
+                        <div class="bg-white rounded-3xl border border-gray-200/80 p-5 sm:p-8 space-y-6 shadow-sm" x-data="{ copied: false, copiedNominal: false, copiedQris: false }">
 
                             {{-- Nominal Transfer Card --}}
                             <div class="bg-primary text-white rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
@@ -531,23 +531,51 @@
                                             <x-heroicon-o-qr-code class="w-5 h-5 text-primary" />
                                             <span>QRIS</span>
                                         </div>
-                                        <p class="text-xs text-gray-500 max-w-[280px] leading-relaxed mx-auto">
+                                        <p class="text-xs text-gray-500 max-w-[300px] leading-relaxed mx-auto">
                                             Silakan pindai kode QRIS di bawah ini melalui aplikasi e-Wallet atau M-Banking Anda
                                         </p>
                                     </div>
 
-                                    {{-- QR Code Image --}}
+                                    {{-- QR Code Image (Click to expand) --}}
                                     <div @click="showFullscreenQR = true" class="p-3 bg-white border border-gray-200 rounded-2xl shadow-xs inline-block cursor-pointer hover:scale-105 transition-transform duration-200" title="Klik untuk memperbesar QR Code">
-                                        <div class="w-40 h-40 sm:w-48 sm:h-48 mx-auto flex items-center justify-center [&>svg]:w-full [&>svg]:h-full">
-                                            {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(180)->margin(1)->generate($dynamicQris) !!}
+                                        <div class="w-44 h-44 sm:w-52 sm:h-52 mx-auto flex items-center justify-center [&>svg]:w-full [&>svg]:h-full">
+                                            {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)->margin(1)->generate($qrisString) !!}
                                         </div>
                                     </div>
 
-                                    <div class="text-center space-y-0.5">
-                                        <p class="text-xs font-semibold text-gray-700">Rumah Makan BBC</p>
-                                        <p class="text-xl font-extrabold text-primary font-mono">
+                                    <div class="text-center space-y-1">
+                                        <p class="text-xs font-bold text-gray-800">Rumah Makan BBC</p>
+                                        <p class="text-2xl font-black text-primary font-mono tracking-tight">
                                             Rp {{ number_format($amountToPay, 0, ',', '.') }}
                                         </p>
+                                        <p class="text-[10px] font-semibold text-gray-400 tracking-wider">
+                                            NMID: ID1026476129501
+                                        </p>
+                                    </div>
+
+                                    {{-- Action Buttons (Salin Nominal) --}}
+                                    <div class="pt-1 flex flex-col sm:flex-row items-center justify-center gap-2">
+                                        <button type="button" @click="navigator.clipboard.writeText('{{ (int)$amountToPay }}'); copiedNominal = true; setTimeout(() => copiedNominal = false, 2000)"
+                                                class="w-full sm:w-auto px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-300 text-emerald-900 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+                                            <template x-if="!copiedNominal">
+                                                <span class="flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                                    <span>Salin Nominal (Rp {{ number_format($amountToPay, 0, ',', '.') }})</span>
+                                                </span>
+                                            </template>
+                                            <template x-if="copiedNominal">
+                                                <span class="text-emerald-700 font-extrabold flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                    <span>Nominal Berhasil Disalin!</span>
+                                                </span>
+                                            </template>
+                                        </button>
+                                        
+                                        <button type="button" @click="showFullscreenQR = true"
+                                                class="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+                                            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                            <span>Perbesar QR</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -825,16 +853,38 @@
                 {{-- QR Code Image --}}
                 <div class="p-3 bg-white border border-gray-200 rounded-2xl shadow-xs inline-block">
                     <div class="w-48 h-48 sm:w-56 sm:h-56 mx-auto flex items-center justify-center [&>svg]:w-full [&>svg]:h-full">
-                        {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(220)->margin(1)->generate($dynamicQris) !!}
+                        {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(220)->margin(1)->generate($qrisString) !!}
                     </div>
                 </div>
 
                 {{-- Details Box --}}
-                <div class="bg-gray-50 rounded-2xl p-3.5 space-y-0.5 border border-gray-100">
-                    <p class="text-xs font-semibold text-gray-700">Rumah Makan BBC</p>
-                    <p class="text-xl sm:text-2xl font-black text-primary tracking-tight font-mono break-all">
+                <div class="bg-gray-50 rounded-2xl p-3.5 space-y-1 border border-gray-100">
+                    <p class="text-xs font-bold text-gray-800">Rumah Makan BBC</p>
+                    <p class="text-2xl sm:text-3xl font-black text-primary tracking-tight font-mono break-all">
                         Rp {{ number_format($amountToPay, 0, ',', '.') }}
                     </p>
+                    <p class="text-[10px] font-semibold text-gray-400 tracking-wider">
+                        NMID: ID1026476129501
+                    </p>
+                </div>
+
+                {{-- Modal Action Copy Nominal --}}
+                <div class="pt-1">
+                    <button type="button" @click="navigator.clipboard.writeText('{{ (int)$amountToPay }}'); copiedNominal = true; setTimeout(() => copiedNominal = false, 2000)"
+                            class="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-300 text-emerald-900 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+                        <template x-if="!copiedNominal">
+                            <span class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                <span>Salin Nominal (Rp {{ number_format($amountToPay, 0, ',', '.') }})</span>
+                            </span>
+                        </template>
+                        <template x-if="copiedNominal">
+                            <span class="text-emerald-700 font-extrabold flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                <span>Nominal Berhasil Disalin!</span>
+                            </span>
+                        </template>
+                    </button>
                 </div>
             </div>
         </div>
