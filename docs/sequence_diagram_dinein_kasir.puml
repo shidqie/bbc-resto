@@ -1,0 +1,130 @@
+@startuml sequence_diagram_dinein_kasir
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam sequenceArrowThickness 1.2
+skinparam sequenceArrowColor #2563EB
+skinparam sequenceLifeLineBorderColor #3B82F6
+skinparam sequenceLifeLineBackgroundColor #EFF6FF
+skinparam sequenceParticipantBorderColor #3B82F6
+skinparam sequenceParticipantBackgroundColor #F8FAFC
+skinparam sequenceParticipantFontStyle bold
+skinparam sequenceBoxBorderColor #94A3B8
+skinparam sequenceBoxBackgroundColor #F1F5F9
+skinparam sequenceBoxFontColor #1E293B
+skinparam sequenceBoxFontStyle bold
+
+' ==============================================================================
+' DIAGRAM 2: CHECKOUT & PEMBAYARAN DINE-IN DI KASIR
+' ==============================================================================
+
+box "Aktor" #EFF6FF
+actor "kasir\n: Kasir" as Kasir
+end box
+
+box "Boundary (Antarmuka)" #F8FAFC
+participant "uiPos\n: FormCheckoutDineIn" as UI
+end box
+
+box "Control (Logika Sistem)" #F8FAFC
+participant "ctrlPay\n: DineInPaymentController" as Controller
+participant "svcBOM\n: KebutuhanBahanService" as SvcBOM
+end box
+
+box "Entity (Basis Data & Model)" #F8FAFC
+participant "pesanan\n: Pesanan" as Pesanan
+participant "pembayaran\n: Pembayaran" as Pembayaran
+participant "stokBahan\n: StokBahan" as StokBahan
+participant "mutasi\n: MutasiStok" as Mutasi
+participant "meja\n: Meja" as Meja
+participant "db\n: KoneksiBasisdata" as DB
+end box
+
+autonumber 1 "<b>0:</b>"
+
+title **SEQUENCE DIAGRAM: CHECKOUT & PEMBAYARAN DINE-IN (KASIR)**
+
+Kasir -> UI : 1: pilihMejaUntukBayar(meja_id)
+activate UI
+
+UI -> Controller : 2: checkout(meja_id)
+activate Controller
+
+Controller -> Pesanan : 3: getPesananAktifMeja(meja_id)
+activate Pesanan
+Pesanan -> DB : 4: executeQuerySelectPesanan()
+activate DB
+DB --> Pesanan : 5: dataPesananDanRincian
+deactivate DB
+Pesanan --> Controller : 6: dataPesanan
+deactivate Pesanan
+
+Controller --> UI : 7: tampilkanTagihan(dataPesanan, totalTagihan)
+deactivate Controller
+
+UI --> Kasir : 8: tampilkanFormPembayaran()
+
+Kasir -> UI : 9: masukkanPembayaran(metode, jumlahBayar, diskon)
+
+UI -> Controller : 10: processPayment(meja_id, dataPembayaran)
+activate Controller
+
+Controller -> SvcBOM : 11: potongStokBahan(pesanan, 'harian')
+activate SvcBOM
+
+SvcBOM -> StokBahan : 12: kurangiStok(bahan_baku_id, qty)
+activate StokBahan
+StokBahan -> DB : 13: executeQueryUpdateStok()
+activate DB
+DB --> StokBahan : 14: stokUpdated
+deactivate DB
+StokBahan --> SvcBOM : 15: success
+deactivate StokBahan
+
+SvcBOM -> Mutasi : 16: <<create>>
+activate Mutasi
+Mutasi -> DB : 17: executeQueryInsertMutasi()
+activate DB
+DB --> Mutasi : 18: mutasiCreated
+deactivate DB
+Mutasi --> SvcBOM : 19: objekMutasi
+deactivate Mutasi
+
+SvcBOM --> Controller : 20: stokBerhasilDipotong()
+deactivate SvcBOM
+
+Controller -> Pembayaran : 21: <<create>>
+activate Pembayaran
+Pembayaran -> DB : 22: executeQueryInsertPembayaran()
+activate DB
+DB --> Pembayaran : 23: pembayaranCreated
+deactivate DB
+Pembayaran --> Controller : 24: objekPembayaran
+deactivate Pembayaran
+
+Controller -> Pesanan : 25: update(status_pesanan_id = 5 / Selesai, status_pembayaran_id = 5 / Lunas)
+activate Pesanan
+Pesanan -> DB : 26: executeQueryUpdateStatusPesanan()
+activate DB
+DB --> Pesanan : 27: pesananUpdated
+deactivate DB
+Pesanan --> Controller : 28: success
+deactivate Pesanan
+
+Controller -> Meja : 29: update(status_meja_id = 1 / KOSONG)
+activate Meja
+Meja -> DB : 30: executeQueryUpdateStatusMeja()
+activate DB
+DB --> Meja : 31: mejaUpdated
+deactivate DB
+Meja --> Controller : 32: success
+deactivate Meja
+
+Controller --> UI : 33: view(strukPembayaran, kembalian)
+deactivate Controller
+
+UI --> Kasir : 34: cetakStrukNotaPembayaran()
+deactivate UI
+
+@enduml

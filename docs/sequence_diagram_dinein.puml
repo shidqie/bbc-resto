@@ -1,0 +1,131 @@
+@startuml sequence_diagram_pemesanan_dinein
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam sequenceArrowThickness 1.2
+skinparam sequenceArrowColor #2563EB
+skinparam sequenceLifeLineBorderColor #3B82F6
+skinparam sequenceLifeLineBackgroundColor #EFF6FF
+skinparam sequenceParticipantBorderColor #3B82F6
+skinparam sequenceParticipantBackgroundColor #F8FAFC
+skinparam sequenceParticipantFontStyle bold
+skinparam sequenceBoxBorderColor #94A3B8
+skinparam sequenceBoxBackgroundColor #F1F5F9
+skinparam sequenceBoxFontColor #1E293B
+skinparam sequenceBoxFontStyle bold
+
+' ==============================================================================
+' DIAGRAM 1: PEMESANAN DINE-IN MANDIRI VIA QR CODE MEJA (SELF-ORDER)
+' ==============================================================================
+
+box "Aktor" #EFF6FF
+actor "konsumen\n: Konsumen" as Konsumen
+end box
+
+box "Boundary (Antarmuka)" #F8FAFC
+participant "uiQr\n: QrMenuView" as UI
+end box
+
+box "Control (Logika Sistem)" #F8FAFC
+participant "ctrl\n: QrMenuController" as Controller
+participant "svcKebutuhan\n: KebutuhanBahanService" as SvcKebutuhan
+participant "svcDineIn\n: DineInService" as SvcDineIn
+end box
+
+box "Entity (Basis Data & Model)" #F8FAFC
+participant "meja\n: Meja" as Meja
+participant "menu\n: Menu" as Menu
+participant "pesanan\n: Pesanan" as Pesanan
+participant "tiket\n: TiketDapur" as TiketDapur
+participant "db\n: KoneksiBasisdata" as DB
+end box
+
+autonumber 1 "<b>0:</b>"
+
+title **SEQUENCE DIAGRAM: PEMESANAN DINE-IN (SELF-ORDER VIA QR MEJA)**
+
+Konsumen -> UI : 1: scanQrMeja(qr_token)
+activate UI
+
+UI -> Controller : 2: index(token)
+activate Controller
+
+Controller -> Meja : 3: findByToken(token)
+activate Meja
+Meja -> DB : 4: executeQuerySelect()
+activate DB
+DB --> Meja : 5: dataMeja
+deactivate DB
+Meja --> Controller : 6: dataMeja
+deactivate Meja
+
+Controller -> Menu : 7: getMenuDineInAktif()
+activate Menu
+Menu -> DB : 8: executeQuerySelect()
+activate DB
+DB --> Menu : 9: dataMenu
+deactivate DB
+Menu --> Controller : 10: dataMenu
+deactivate Menu
+
+Controller -> SvcKebutuhan : 11: porsiTersedia(menu, 'harian')
+activate SvcKebutuhan
+SvcKebutuhan --> Controller : 12: statusKetersediaanMenu
+deactivate SvcKebutuhan
+
+Controller --> UI : 13: view(menu, selectedMeja)
+deactivate Controller
+
+UI --> Konsumen : 14: tampilkanDaftarMenuDanMeja()
+
+Konsumen -> UI : 15: masukkanPesanan(itemMenu, qty, nama_pemesan)
+
+UI -> Controller : 16: storeOrder(meja_id, nama_konsumen, items)
+activate Controller
+
+Controller -> SvcKebutuhan : 17: bahanCukup(menu, qty, 'harian')
+activate SvcKebutuhan
+SvcKebutuhan --> Controller : 18: true (stok bahan cukup)
+deactivate SvcKebutuhan
+
+Controller -> SvcDineIn : 19: createOrder(meja_id, nama_konsumen, items)
+activate SvcDineIn
+
+SvcDineIn -> Pesanan : 20: <<create>>
+activate Pesanan
+Pesanan -> DB : 21: executeQueryInsertPesanan()
+activate DB
+DB --> Pesanan : 22: pesananCreated
+deactivate DB
+Pesanan --> SvcDineIn : 23: objekPesanan
+deactivate Pesanan
+
+SvcDineIn -> Meja : 24: update(status_meja_id = 2 / TERISI)
+activate Meja
+Meja -> DB : 25: executeQueryUpdateMeja()
+activate DB
+DB --> Meja : 26: mejaUpdated
+deactivate DB
+Meja --> SvcDineIn : 27: success
+deactivate Meja
+
+SvcDineIn -> TiketDapur : 28: <<create>>
+activate TiketDapur
+TiketDapur -> DB : 29: executeQueryInsertTiket()
+activate DB
+DB --> TiketDapur : 30: tiketCreated
+deactivate DB
+TiketDapur --> SvcDineIn : 31: objekTiketDapur
+deactivate TiketDapur
+
+SvcDineIn --> Controller : 32: pesananBerhasilDibuat(pesanan)
+deactivate SvcDineIn
+
+Controller --> UI : 33: jsonResponse(success, kode_pesanan, id)
+deactivate Controller
+
+UI --> Konsumen : 34: tampilkanStrukKonfirmasiPemesanan()
+deactivate UI
+
+@enduml
