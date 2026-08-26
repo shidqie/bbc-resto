@@ -186,3 +186,52 @@
 | 1. Konsumen membuka tautan Lacak Pesanan pada halaman web. | |
 | | 2. Sistem menampilkan status terkini pesanan (*Siap Dikirim*, *Dalam Perjalanan*, atau *Telah Diterima* beserta foto bukti serah terima jika sudah selesai). |
 | **Kondisi Akhir** | Pesanan paket katering / nasi box telah berhasil diantar ke lokasi penerima, foto bukti serah terima tersimpan di sistem, status pengiriman menjadi *Terkirim / Diterima*, dan status pesanan menjadi *Selesai*. |
+
+---
+
+## USE CASE 4: PENGADAAN BAHAN BAKU KATERING
+
+| Keterangan / Aksi Aktor | Deskripsi / Aksi Sistem |
+| :--- | :--- |
+| **Nama Use Case** | **Pengadaan Bahan Baku Katering** |
+| **Nomor** | 4 |
+| **Aktor** | Manajer / Admin / Pemilik, Pemasok (Supplier), Tim Dapur |
+| **Deskripsi** | Proses pengadaan bahan baku khusus untuk pesanan katering (dan nasi box) berdasarkan kalkulasi kebutuhan resep menu pesanan dikurangi ketersediaan stok katering di gudang, penerbitan Purchase Order (PO) ke pemasok, hingga pencatatan penerimaan fisik bahan baku oleh Tim Dapur ke kartu stok katering. |
+| **Kondisi Awal** | Pesanan katering berstatus aktif/terkonfirmasi, data resep menu paket katering telah terisi, dan data pemasok telah terdaftar. Manajer/Admin/Pemilik dan Tim Dapur telah login ke sistem. |
+| **Skenario Utama** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Manajer/Admin membuka menu Buat Purchase Order (`/admin/pengadaan/purchase-order/create?tipe=Catering`). | |
+| | 2. Sistem menampilkan formulir pembuatan Purchase Order pengadaan katering dan memuat daftar pesanan katering aktif. |
+| 3. Manajer/Admin memilih nomor/kode pesanan katering yang akan diproses kebutuhan bahannya. | |
+| | 4. Sistem secara otomatis menghitung total kebutuhan bahan baku berdasarkan resep menu paket katering, membandingkan dengan stok katering yang ada di gudang, dan menampilkan tabel daftar bahan baku yang kurang beserta rekomendasi jumlah yang harus dibeli. |
+| 5. Manajer/Admin memilih nama Pemasok (Supplier), menentukan tanggal PO, memeriksa kuantitas dan perkiraan harga satuan, serta menambahkan catatan khusus. | |
+| | 6. Sistem memvalidasi data dan menghitung estimasi total nilai tagihan Purchase Order (PO). |
+| 7. Manajer/Admin menekan tombol Simpan & Terbitkan Purchase Order. | |
+| | 8. Sistem menyimpan data PO dengan status *Dipesan (Menunggu Barang)*, menerbitkan Surat Pesanan (PO) resmi berformat PDF, dan memasukkan PO ke daftar tunggu penerimaan barang. |
+| 9. Manajer/Admin mengunduh PDF Surat Pesanan dan mengirimkannya kepada pihak Pemasok. | |
+| | 10. Sistem mencatat riwayat pemesanan ke pemasok pada log aktivitas pengadaan. |
+| 11. Pemasok memproses pesanan dan mengirimkan bahan baku ke rumah makan disertai nota/surat jalan fisik. | |
+| 12. Tim Dapur membuka menu Penerimaan Bahan Baku (`/admin/pengadaan/penerimaan/create/{po_id}`) pada nomor PO terkait. | |
+| | 13. Sistem menampilkan formulir penerimaan barang dan daftar item bahan baku yang harus dicocokkan sesuai PO. |
+| 14. Tim Dapur memeriksa kuantitas dan kualitas fisik barang yang datang, menginput jumlah yang diterima, mengisi nomor nota pemasok, lalu menekan tombol Simpan Penerimaan. | |
+| | 15. Sistem memvalidasi input barang, menyimpan data penerimaan, menambah stok bahan baku secara otomatis ke kartu stok katering (`stok_bahan` dan `mutasi_stok`), serta memperbarui status Purchase Order menjadi *Diterima / Selesai*. |
+| **Skenario Alternatif A1 – Bahan Baku Diterima Sebagian (Pengiriman Bertahap oleh Pemasok)** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Tim Dapur memeriksa kiriman pemasok dan mendapati sebagian bahan baku belum lengkap dikirim. | |
+| | 2. Tim Dapur menginput jumlah fisik yang diterima saat ini (kurang dari jumlah pada PO) lalu menekan tombol Simpan Penerimaan. |
+| | 3. Sistem memperbarui stok untuk barang yang telah diterima dan mengubah status PO menjadi *Diterima Sebagian*. |
+| 4. Ketika sisa bahan baku dikirim oleh pemasok pada tahap berikutnya, Tim Dapur membuka kembali PO tersebut dan menginput penerimaan sisa barang. | |
+| | 5. Sistem menambah stok sisa bahan baku dan memperbarui status PO menjadi *Diterima / Selesai*. |
+| **Skenario Alternatif A2 – Menu Katering Belum Memiliki Resep Lengkap** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Manajer/Admin memilih pesanan katering yang mengandung variasi menu baru. | |
+| | 2. Sistem mendeteksi bahwa terdapat menu yang belum memiliki formula resep dan menampilkan pesan peringatan *"Resep Belum Lengkap"*. |
+| 3. Manajer/Admin membuka tautan data master resep dan melengkapi takaran bahan baku untuk menu tersebut. | |
+| | 4. Sistem memperbarui kalkulasi otomatis kebutuhan bahan baku katering secara lengkap dan akurat. |
+| **Skenario Alternatif A3 – Stok Bahan Baku di Gudang Katering Sudah Mencukupi** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Manajer/Admin memilih kode pesanan katering pada formulir pengadaan. | |
+| | 2. Sistem mendeteksi bahwa seluruh kebutuhan bahan baku pesanan tersebut sudah tersedia cukup di stok gudang dan menampilkan tabel *"Semua Bahan Baku Cukup"*. |
+| 3. Manajer/Admin tidak perlu menerbitkan PO baru dan langsung mengarahkan pesanan ke jadwal produksi dapur. | |
+| | 4. Sistem menyimpan status kesiapan bahan baku untuk pesanan katering tersebut. |
+| **Kondisi Akhir** | Seluruh bahan baku khusus pesanan katering telah berhasil diadakan, diverifikasi fisik, dicatat ke dalam stok katering rumah makan, dan siap digunakan oleh Tim Dapur untuk proses memasak. |
