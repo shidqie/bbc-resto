@@ -95,16 +95,33 @@
     <div class="min-h-screen bg-gray-50/60 text-body pb-16 font-sans"
         x-data="paymentPage({{ $expireTimestamp ? $expireTimestamp : 'null' }})">
 
-        {{-- Header Bar --}}
-        <div class="bg-white border-b border-gray-200/80 py-5 sm:py-6 shadow-2xs">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        {{-- Header Bar (Centered & Enlarged Invoice) --}}
+        <div class="bg-white border-b border-gray-200/80 py-6 sm:py-8 shadow-2xs">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center gap-3.5">
                 <div>
-                    <h1 class="text-lg sm:text-2xl font-extrabold text-gray-900 tracking-tight">{{ $payTitle }}</h1>
-                    <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $payDesc }}</p>
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900 tracking-tight">{{ $payTitle }}</h1>
+                    <p class="text-xs sm:text-sm text-gray-500 font-medium mt-1">{{ $payDesc }}</p>
                 </div>
-                <div class="flex items-center gap-2 self-start sm:self-auto">
-                    <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Invoice:</span>
-                    <span class="font-mono text-xs font-bold bg-gray-100 text-gray-800 px-3 py-1.5 rounded-xl border border-gray-200/80">{{ $pesanan->id_pesanan }}</span>
+                
+                {{-- Centered & Enlarged Invoice Badge --}}
+                <div class="inline-flex items-center gap-2.5 bg-gray-50 hover:bg-gray-100/80 border border-gray-200/90 px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl shadow-2xs transition-all"
+                     x-data="{ copiedInvoice: false }">
+                    <span class="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">INVOICE:</span>
+                    <span class="font-mono text-base sm:text-xl font-extrabold text-gray-900 tracking-wide">{{ $pesanan->id_pesanan }}</span>
+                    <button type="button" 
+                            @click="navigator.clipboard.writeText('{{ $pesanan->id_pesanan }}'); copiedInvoice = true; setTimeout(() => copiedInvoice = false, 2000)"
+                            class="ml-1 p-1 sm:p-1.5 rounded-xl hover:bg-gray-200/80 text-gray-400 hover:text-gray-700 transition-all cursor-pointer flex items-center gap-1"
+                            title="Salin Nomor Invoice">
+                        <template x-if="!copiedInvoice">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        </template>
+                        <template x-if="copiedInvoice">
+                            <span class="text-[11px] sm:text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                Tersalin!
+                            </span>
+                        </template>
+                    </button>
                 </div>
             </div>
         </div>
