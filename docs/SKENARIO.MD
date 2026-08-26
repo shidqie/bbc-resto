@@ -235,3 +235,49 @@
 | 3. Manajer/Admin tidak perlu menerbitkan PO baru dan langsung mengarahkan pesanan ke jadwal produksi dapur. | |
 | | 4. Sistem menyimpan status kesiapan bahan baku untuk pesanan katering tersebut. |
 | **Kondisi Akhir** | Seluruh bahan baku khusus pesanan katering telah berhasil diadakan, diverifikasi fisik, dicatat ke dalam stok katering rumah makan, dan siap digunakan oleh Tim Dapur untuk proses memasak. |
+
+---
+
+## USE CASE 5: PENGADAAN BAHAN BAKU HARIAN
+
+| Keterangan / Aksi Aktor | Deskripsi / Aksi Sistem |
+| :--- | :--- |
+| **Nama Use Case** | **Pengadaan Bahan Baku Harian** |
+| **Nomor** | 5 |
+| **Aktor** | Tim Dapur / Manajer / Admin, Pemasok (Supplier), Pemilik |
+| **Deskripsi** | Proses pengelolaan dan pengadaan kebutuhan bahan baku untuk kegiatan operasional harian restoran berdasarkan kondisi persediaan pada sistem. Ketika stok bahan baku operasional habis atau berada di bawah batas minimum, sistem secara otomatis menambahkan bahan baku tersebut ke dalam daftar kebutuhan pengadaan harian untuk diterbitkan Purchase Order (PO) ke pemasok hingga diterima oleh Tim Dapur. |
+| **Kondisi Awal** | Data bahan baku operasional harian dan batas stok minimum telah tercatat di sistem. Stok beberapa bahan baku operasional harian telah berkurang akibat penjualan harian atau berada di bawah batas minimum (`stok_saat_ini <= stok_minimal`). Tim Dapur, Manajer/Admin, dan Pemilik telah login ke sistem. |
+| **Skenario Utama** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Tim Dapur / Manajer membuka halaman Pengadaan Bahan Baku Harian (`/admin/pengadaan/purchase-order/create?tipe=Harian` atau `/admin/pengadaan/permintaan/harian`). | |
+| | 2. Sistem memuat seluruh data bahan baku operasional, mendeteksi bahan baku yang berstatus kritis/menipis/habis (`stok_saat_ini <= stok_minimal`), menempatkan bahan baku tersebut di urutan teratas secara otomatis, mencentang barisnya secara default, dan mengisikan saran jumlah pengadaan yang harus dibeli. |
+| 3. Tim Dapur / Manajer memeriksa item yang disarankan, menyesuaikan jumlah pengadaan bila diperlukan, serta menambahkan catatan pengadaan. | |
+| | 4. Sistem memvalidasi kuantitas pengadaan dan menghitung total estimasi biaya pengadaan bahan baku harian. |
+| 5. Manajer/Admin memilih nama Pemasok (Supplier) yang dituju, memilih tanggal PO, lalu menekan tombol Simpan & Terbitkan Purchase Order Harian. | |
+| | 6. Sistem menyimpan data PO dengan status *Dipesan (Menunggu Barang)*, menerbitkan berkas resmi Surat Pesanan (PO) PDF, dan memasukkan PO ke daftar tunggu penerimaan barang. |
+| 7. Manajer/Admin mengunduh PDF Surat Pesanan dan mengirimkannya ke pihak Pemasok. | |
+| | 8. Sistem mencatat waktu dan status pengiriman pesanan ke pemasok pada log aktivitas. |
+| 9. Pemasok memproses pesanan dan mengantarkan bahan baku ke restoran beserta nota/surat jalan fisik. | |
+| 10. Tim Dapur membuka menu Penerimaan Bahan Baku (`/admin/pengadaan/penerimaan/create/{po_id}`) pada nomor PO terkait. | |
+| | 11. Sistem menampilkan formulir penerimaan barang dan daftar bahan baku harian yang harus dicocokkan sesuai PO. |
+| 12. Tim Dapur memeriksa fisik bahan baku (kuantitas & kesegaran/kondisi), menginput jumlah barang yang diterima, mengisi nomor nota/faktur pemasok, lalu menekan tombol Simpan Penerimaan. | |
+| | 13. Sistem memvalidasi barang yang diterima, mencatat penerimaan, menambah kuantitas stok bahan baku secara otomatis ke kartu stok operasional harian (`stok_bahan` dan `mutasi_stok`), serta memperbarui status Purchase Order menjadi *Diterima / Selesai*. |
+| **Skenario Alternatif A1 – Alur Pengajuan Permintaan Pengadaan oleh Tim Dapur** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Tim Dapur mengisi formulir Permintaan Pengadaan Harian (`/admin/pengadaan/permintaan/harian`) dan menekan tombol Ajukan Permintaan. | |
+| | 2. Sistem menyimpan formulir permintaan dengan status *Menunggu Pembelian* dan mengirimkan notifikasi persetujuan ke Manajer/Admin. |
+| 3. Manajer/Admin membuka daftar permintaan pengadaan, memilih pemasok yang sesuai, lalu menekan tombol Setujui & Buat PO. | |
+| | 4. Sistem menerbitkan Surat Pesanan (PO) resmi ke pemasok berdasarkan permintaan yang disetujui. |
+| **Skenario Alternatif A2 – Bahan Baku Harian Diterima Sebagian oleh Tim Dapur** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Tim Dapur mendapati beberapa bahan baku harian belum lengkap dikirim karena stok pemasok sedang kosong sebagian. | |
+| | 2. Tim Dapur menginput jumlah fisik yang diterima saat ini lalu menekan tombol Simpan Penerimaan. |
+| | 3. Sistem memperbarui stok untuk barang yang telah tiba dan mengubah status PO menjadi *Diterima Sebagian*. |
+| 4. Saat sisa barang dikirim pada hari berikutnya, Tim Dapur membuka kembali PO tersebut dan menginput penerimaan sisa barang. | |
+| | 5. Sistem memperbarui kartu stok untuk sisa barang dan memperbarui status PO menjadi *Diterima / Selesai*. |
+| **Skenario Alternatif A3 – Penambahan Item Bahan Baku di Luar Rekomendasi Otomatis Sistem** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Tim Dapur ingin menambah stok bahan baku tertentu yang belum menyentuh batas minimum guna mengantisipasi lonjakan pengunjung akhir pekan. | |
+| | 2. Tim Dapur mencentang baris bahan baku tersebut secara manual pada tabel dan memasukkan jumlah yang ingin ditambah. |
+| | 3. Sistem menambahkan item tersebut ke daftar pengadaan dan memperbarui kalkulasi total biaya pengadaan. |
+| **Kondisi Akhir** | Bahan baku operasional harian telah tiba di restoran, diverifikasi fisik oleh Tim Dapur, stok operasional harian di sistem bertambah secara otomatis, dan status pengadaan menjadi *Selesai*. |
