@@ -47,6 +47,30 @@
     <!-- Alert Messages -->
     <x-ui.alert />
 
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-2 border-b border-gray-200 pb-1">
+        <a href="{{ route('users.index', ['type' => 'karyawan']) }}"
+           @click.prevent="activeTab = 'karyawan'; window.history.pushState({}, '', '{{ route('users.index', ['type' => 'karyawan']) }}')"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+           :class="activeTab === 'karyawan' ? 'bg-primary text-white shadow-xs' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'">
+            <x-heroicon-o-user-group class="w-4 h-4" />
+            <span>Data Karyawan</span>
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'karyawan' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'">
+                {{ $pengguna->total() }}
+            </span>
+        </a>
+        <a href="{{ route('users.index', ['type' => 'pelanggan']) }}"
+           @click.prevent="activeTab = 'pelanggan'; window.history.pushState({}, '', '{{ route('users.index', ['type' => 'pelanggan']) }}')"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+           :class="activeTab === 'pelanggan' ? 'bg-primary text-white shadow-xs' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'">
+            <x-heroicon-o-users class="w-4 h-4" />
+            <span>Data Konsumen</span>
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'pelanggan' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'">
+                {{ $pelanggan->total() }}
+            </span>
+        </a>
+    </div>
+
     <!-- ================= TAB: DATA KARYAWAN ================= -->
     <div x-show="activeTab === 'karyawan'" x-cloak class="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col min-h-0">
 
@@ -104,13 +128,13 @@
                                 <x-ui.action-button href="{{ route('users.show', $user) }}" title="Detail">
                                     <x-heroicon-o-eye class="w-4 h-4" />
                                 </x-ui.action-button>
-                                <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline" data-confirm="Yakin ingin menghapus karyawan ini?">
+                                <form id="form-delete-user-{{ $user->id }}" action="{{ route('users.destroy', $user) }}" method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
-                                    <x-ui.action-button type="submit" title="Hapus">
-                                        <x-heroicon-o-trash class="w-4 h-4" />
-                                    </x-ui.action-button>
                                 </form>
+                                <x-ui.action-button variant="danger" onclick="window.confirmDialog({ title: 'Hapus Karyawan', name: 'Hapus karyawan {{ addslashes($user->nama) }}?', message: 'Akun karyawan ini akan dihapus dari sistem.', formId: 'form-delete-user-{{ $user->id }}', confirmText: 'Hapus', cancelText: 'Batal', type: 'danger' })" title="Hapus">
+                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                </x-ui.action-button>
                             </div>
                         </td>
                     </x-ui.table.row>
@@ -191,13 +215,13 @@
                                 <x-ui.action-button href="{{ route('pelanggan.show', $user) }}" title="Detail">
                                     <x-heroicon-o-eye class="w-4 h-4" />
                                 </x-ui.action-button>
-                                <form action="{{ route('pelanggan.destroy', $user) }}" method="POST" class="inline" data-confirm="Yakin ingin menghapus data konsumen ini? Semua riwayat pesanan juga akan terhapus.">
+                                <form id="form-delete-pelanggan-{{ $user->id }}" action="{{ route('pelanggan.destroy', $user) }}" method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
-                                    <x-ui.action-button type="submit" title="Hapus">
-                                        <x-heroicon-o-trash class="w-4 h-4" />
-                                    </x-ui.action-button>
                                 </form>
+                                <x-ui.action-button variant="danger" onclick="window.confirmDialog({ title: 'Hapus Data Konsumen', name: 'Hapus data konsumen {{ addslashes($user->nama) }}?', message: 'Semua riwayat pesanan konsumen ini juga akan terhapus. Aksi ini tidak dapat dibatalkan.', formId: 'form-delete-pelanggan-{{ $user->id }}', confirmText: 'Hapus', cancelText: 'Batal', type: 'danger' })" title="Hapus">
+                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                </x-ui.action-button>
                             </div>
                         </td>
                     </x-ui.table.row>

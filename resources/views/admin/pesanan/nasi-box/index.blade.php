@@ -149,12 +149,12 @@
                                             </button>
                                         </form>
                                     @endif
-
                                     <button type="button" 
                                             onclick="openNasiboxDrawer('{{ route('admin.pesanan.nasibox.show', $p->id) }}')" 
-                                            class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200/90 shadow-2xs transition-all cursor-pointer"
                                             title="Lihat Detail Pesanan">
-                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5 text-gray-500" />
+                                        <span>Detail</span>
                                     </button>
                                 </div>
                             </td>
@@ -204,21 +204,20 @@
                                     <span class="text-xs text-gray-400">-</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-4 text-right font-semibold text-gray-900 tabular-nums whitespace-nowrap">
-                                Rp {{ number_format($p->total_tagihan, 0, ',', '.') }}
+                            <td class="px-4 py-4 align-middle text-right whitespace-nowrap font-bold text-xs text-gray-900">
+                                Rp {{ number_format($p->total_harga, 0, ',', '.') }}
                             </td>
-                            {{-- 1. STATUS PESANAN --}}
+                            {{-- 1. STATUS PESANAN UTAMA --}}
                             <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
                                 @php
                                     $stId = (int) $p->status_pesanan_id;
                                     $stConfig = match($stId) {
-                                        1 => ['label' => 'Menunggu Konfirmasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500'],
+                                        1 => ['label' => 'Menunggu Pembayaran', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
                                         2 => ['label' => 'Dikonfirmasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
-                                        3 => ['label' => 'Sedang Diproses', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500 animate-pulse'],
-                                        4 => ['label' => 'Pesanan Siap', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90', 'dot' => 'bg-purple-500'],
+                                        3 => ['label' => 'Diproses Dapur', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90', 'dot' => 'bg-purple-500 animate-pulse'],
+                                        4 => ['label' => 'Siap', 'color' => 'bg-teal-50 text-teal-800 border-teal-200/90', 'dot' => 'bg-teal-500'],
                                         5 => ['label' => 'Selesai', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
                                         6 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
-                                        7 => ['label' => 'Terjadwal', 'color' => 'bg-sky-50 text-sky-800 border-sky-200/90', 'dot' => 'bg-sky-500'],
                                         default => ['label' => optional($p->status_pesanan)->nama_status ?? 'Status #'.$stId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
                                     };
                                 @endphp
@@ -233,10 +232,10 @@
                                     $payId = (int) $p->status_pembayaran_id;
                                     $payConfig = match($payId) {
                                         1 => ['label' => 'Belum Bayar', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
-                                        2 => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
-                                        3 => ['label' => 'DP Terverifikasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
-                                        4 => ['label' => 'Menunggu Pelunasan', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500'],
-                                        5 => ['label' => 'Lunas', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
+                                        2 => ['label' => 'DP Dibayar', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500'],
+                                        3 => ['label' => 'Lunas', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
+                                        4 => ['label' => 'Menunggu Konfirmasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
+                                        5 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
                                         6 => ['label' => 'Pembayaran Ditolak', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
                                         default => ['label' => optional($p->status_pembayaran)->nama_status ?? 'Status #'.$payId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
                                     };
@@ -246,7 +245,7 @@
                                     <span>{{ $payConfig['label'] }}</span>
                                 </span>
                             </td>
-                            {{-- 3. STATUS PENGIRIMAN (HANYA JIKA METODE PENERIMAAN DIANTAR) --}}
+                            {{-- 3. STATUS PENGIRIMAN --}}
                             <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
                                 @if($p->pengiriman)
                                     @php
@@ -269,9 +268,9 @@
                                 @endif
                             </td>
                             <td class="px-4 py-4 text-center">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <x-ui.action-button onclick="openNasiBoxDrawer('{{ route('admin.pesanan.nasibox.show', $p->id) }}')" @click="$dispatch('open-nasibox-drawer', {url: '{{ route('admin.pesanan.nasibox.show', $p->id) }}'})" title="Detail">
-                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                    <x-ui.action-button onclick="openNasiBoxDrawer('{{ route('admin.pesanan.nasibox.show', $p->id) }}')" @click="$dispatch('open-nasibox-drawer', {url: '{{ route('admin.pesanan.nasibox.show', $p->id) }}'})" title="Lihat Detail Pesanan" label="Detail">
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                     
                                     @php
@@ -282,8 +281,8 @@
                                         <form id="form-verif-{{ $buktiPending->id }}" action="{{ route('admin.bukti.nasibox.verifikasi-pembayaran', $buktiPending->id) }}" method="POST" class="hidden">
                                             @csrf @method('PATCH')
                                         </form>
-                                        <x-ui.action-button type="button" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi" class="text-green-600 hover:text-green-800">
-                                            <x-heroicon-o-check-badge class="w-4 h-4" />
+                                        <x-ui.action-button type="button" variant="success" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi Pembayaran" label="Verifikasi">
+                                            <x-heroicon-o-check-badge class="w-3.5 h-3.5" />
                                         </x-ui.action-button>
                                     @endif
 
@@ -293,8 +292,8 @@
                                             <input type="hidden" name="status" value="6">
                                             <input type="hidden" name="alasan_batal" value="">
                                         </form>
-                                        <x-ui.action-button onclick="window.confirmPrompt({ title: 'Batalkan Pesanan', name: 'Batalkan pesanan ini?', message: 'Masukkan alasan pembatalan. Aksi ini tidak dapat dibatalkan.', formId: 'form-batal-nb-{{ $p->id }}', confirmText: 'Batalkan', cancelText: 'Batal', promptPlaceholder: 'Tulis alasan pembatalan' })" title="Batalkan">
-                                            <x-heroicon-o-no-symbol class="w-4 h-4" />
+                                        <x-ui.action-button variant="danger" onclick="window.confirmPrompt({ title: 'Batalkan Pesanan', name: 'Batalkan pesanan ini?', message: 'Masukkan alasan pembatalan. Aksi ini tidak dapat dibatalkan.', formId: 'form-batal-nb-{{ $p->id }}', confirmText: 'Batalkan', cancelText: 'Batal', promptPlaceholder: 'Tulis alasan pembatalan' })" title="Batalkan Pesanan" label="Batal">
+                                            <x-heroicon-o-no-symbol class="w-3.5 h-3.5" />
                                         </x-ui.action-button>
                                     @endif
                                 </div>

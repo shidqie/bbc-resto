@@ -29,12 +29,16 @@
 
 @php
     $variants = [
-        'neutral' => 'text-gray-500 hover:text-gray-900 hover:bg-gray-100',
-        'danger'  => 'text-gray-400 hover:text-red-600 hover:bg-red-50',
+        'neutral' => 'text-gray-700 bg-gray-100 hover:bg-gray-200 hover:text-gray-900 border border-gray-200/90 shadow-2xs',
+        'primary' => 'text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-2xs',
+        'success' => 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-2xs',
+        'warning' => 'text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 shadow-2xs',
+        'danger'  => 'text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 shadow-2xs',
+        'ghost'   => 'text-gray-500 hover:text-gray-900 hover:bg-gray-100',
     ];
 
     $variantClass = $variants[$variant] ?? $variants['neutral'];
-    $base = "inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-colors $variantClass";
+    $base = "inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer $variantClass";
 @endphp
 
 @if($href)

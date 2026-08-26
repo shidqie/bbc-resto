@@ -152,14 +152,14 @@
         ])
         @endif
         {{-- Manajemen Pengguna --}}
-        @if($hasRole('Pemilik'))
+        @if($hasRole('Pemilik', 'Manajer'))
         @include('partials.sidebar-submenu', [
             'icon' => 'heroicon-o-users',
             'label' => 'Manajemen Pengguna',
-            'isOpen' => request()->routeIs('users.*') || request()->routeIs('roles.*'),
+            'isOpen' => request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('pelanggan.*'),
             'items' => [
-                ['label' => 'Data Karyawan', 'url' => route('users.index'), 'active' => request()->routeIs('users.*') && request('type') !== 'pelanggan'],
-                ['label' => 'Data Konsumen', 'url' => route('users.index', ['type' => 'pelanggan']), 'active' => request()->routeIs('users.*') && request('type') === 'pelanggan'],
+                ['label' => 'Data Karyawan', 'url' => route('users.index'), 'active' => request()->routeIs('users.*') && request('type') !== 'pelanggan' && !request()->routeIs('pelanggan.*')],
+                ['label' => 'Data Konsumen', 'url' => route('users.index', ['type' => 'pelanggan']), 'active' => (request()->routeIs('users.*') && request('type') === 'pelanggan') || request()->routeIs('pelanggan.*')],
             ],
         ])
         @endif
