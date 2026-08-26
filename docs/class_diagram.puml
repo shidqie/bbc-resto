@@ -1,0 +1,597 @@
+@startuml class_diagram_rm_bbc
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam classFontSize 12
+skinparam classFontName "Helvetica", "Arial", sans-serif
+skinparam classAttributeFontSize 11
+skinparam classBorderColor #3B82F6
+skinparam classHeaderBackgroundColor #EFF6FF
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #94A3B8
+skinparam packageFontName "Helvetica", "Arial", sans-serif
+skinparam packageFontSize 13
+skinparam packageFontStyle bold
+skinparam arrowColor #2563EB
+skinparam arrowThickness 1.2
+skinparam linetype ortho
+
+title **CLASS DIAGRAM - SISTEM INFORMASI RM BABAKAN CINTA (BBC RESTO)**
+
+' ==============================================================================
+' 1. USER & AUTH MODULE
+' ==============================================================================
+package "1. Manajemen Pengguna & Hak Akses" {
+    class Pengguna {
+        + id : int <<PK>>
+        + nama_pengguna : string
+        + email : string
+        + kata_sandi : string
+        + nomor_telepon : string
+        + peran_id : int <<FK>>
+        + status_aktif : boolean
+        + dibuat_pada : datetime
+        + diperbarui_pada : datetime
+        --
+        + isPemilik() : bool
+        + isManajer() : bool
+        + isKasir() : bool
+        + isPelayan() : bool
+        + isDapur() : bool
+        + isKurir() : bool
+    }
+
+    class Peran {
+        + id : int <<PK>>
+        + nama_peran : string
+        + deskripsi : string
+    }
+
+    class Pelanggan {
+        + id : int <<PK>>
+        + user_id : int <<FK, Nullable>>
+        + nama : string
+        + nomor_telepon : string
+        + email : string
+        + alamat : text
+        + kata_sandi : string
+        + dibuat_pada : datetime
+        + diperbarui_pada : datetime
+        --
+        + getStatusAkunAttribute() : string
+        + isRegistered() : bool
+    }
+}
+
+' ==============================================================================
+' 2. MASTER MENU, RESEP & MEJA MODULE
+' ==============================================================================
+package "2. Master Menu, Resep & Meja" {
+    class KategoriMenu {
+        + id : int <<PK>>
+        + kode_kategori : string
+        + nama_kategori : string
+        + deskripsi : text
+        + urutan : int
+    }
+
+    class Menu {
+        + id : int <<PK>>
+        + id_menu : string
+        + nama_menu : string
+        + kategori_menu_id : int <<FK>>
+        + jenis_menu : string
+        + harga : decimal
+        + harga_katering : decimal
+        + status_aktif : boolean
+        + gambar : string
+        + deskripsi : text
+        --
+        + isPaket() : bool
+        + isAlaCarte() : bool
+    }
+
+    class ResepMenu {
+        + id : int <<PK>>
+        + menu_id : int <<FK>>
+        + bahan_baku_id : int <<FK>>
+        + jumlah : float
+        + satuan_id : int <<FK>>
+        --
+        + getJumlahKebutuhanAttribute() : float
+    }
+
+    class ItemPaket {
+        + id : int <<PK>>
+        + menu_id : int <<FK>>
+        + menu_id_terkait : int <<FK, Nullable>>
+        + nama_item : string
+        + tipe_item : string
+        + urutan : int
+    }
+
+    class PilihanItemPaket {
+        + id : int <<PK>>
+        + item_paket_id : int <<FK>>
+        + menu_id : int <<FK>>
+        + nama_pilihan : string
+        + urutan : int
+    }
+
+    class Meja {
+        + id : int <<PK>>
+        + nomor_meja : string
+        + kapasitas : int
+        + status_meja_id : int <<FK>>
+        + qr_code : string
+    }
+
+    class StatusMeja {
+        + id : int <<PK>>
+        + kode_status : string
+        + nama_status : string
+    }
+}
+
+' ==============================================================================
+' 3. PERSEDIAAN & BAHAN BAKU MODULE
+' ==============================================================================
+package "3. Persediaan Bahan Baku" {
+    class KategoriBahanBaku {
+        + id : int <<PK>>
+        + kode_kategori : string
+        + nama_kategori : string
+    }
+
+    class Satuan {
+        + id : int <<PK>>
+        + kode_satuan : string
+        + nama_satuan : string
+    }
+
+    class BahanBaku {
+        + id : int <<PK>>
+        + id_bahan_baku : string
+        + nama_bahan : string
+        + kategori_bahan_baku_id : int <<FK>>
+        + satuan_id : int <<FK>>
+        + stok_minimal : float
+        + harga_per_satuan : decimal
+        + is_harian : boolean
+        + is_catering : boolean
+        --
+        + getTotalStokAttribute() : float
+        + getStokHarianValAttribute() : float
+        + getStokCateringValAttribute() : float
+    }
+
+    class StokBahan {
+        + id : int <<PK>>
+        + bahan_baku_id : int <<FK>>
+        + jenis_persediaan : string
+        + jumlah_stok : float
+    }
+
+    class MutasiStok {
+        + id : int <<PK>>
+        + bahan_baku_id : int <<FK>>
+        + jenis_mutasi_stok_id : int <<FK>>
+        + satuan_id : int <<FK>>
+        + jumlah : float
+        + jenis_persediaan : string
+        + referensi_tipe : string
+        + referensi_id : int
+        + keterangan : text
+        + dibuat_oleh : int <<FK>>
+        + tanggal_mutasi : datetime
+    }
+
+    class JenisMutasiStok {
+        + id : int <<PK>>
+        + kode_jenis : string
+        + nama_jenis : string
+    }
+
+    class PenyesuaianStok {
+        + id : int <<PK>>
+        + nomor_penyesuaian : string
+        + tanggal_penyesuaian : date
+        + jenis_persediaan : string
+        + alasan : text
+        + disetujui_oleh : int <<FK>>
+        + dibuat_oleh : int <<FK>>
+    }
+
+    class DetailPenyesuaianStok {
+        + id : int <<PK>>
+        + penyesuaian_stok_id : int <<FK>>
+        + bahan_baku_id : int <<FK>>
+        + stok_sistem : float
+        + stok_fisik : float
+        + selisih : float
+    }
+
+    class NotifikasiStok {
+        + id : int <<PK>>
+        + bahan_baku_id : int <<FK>>
+        + tipe_notifikasi : string
+        + pesan : text
+        + dibaca : boolean
+        + dibuat_pada : datetime
+    }
+}
+
+' ==============================================================================
+' 4. PENGADAAN & PEMBELIAN MODULE
+' ==============================================================================
+package "4. Pengadaan & Pembelian Bahan Baku" {
+    class Pemasok {
+        + id : int <<PK>>
+        + kode_pemasok : string
+        + nama_pemasok : string
+        + nomor_telepon : string
+        + email : string
+        + alamat : text
+        + status_aktif : boolean
+    }
+
+    class PengadaanBahan {
+        + id : int <<PK>>
+        + id_pengadaan : string
+        + tipe_pengadaan : string
+        + pesanan_id : int <<FK, Nullable>>
+        + pemasok_id : int <<FK, Nullable>>
+        + status_pengadaan_id : int <<FK>>
+        + tanggal_pengadaan : date
+        + tanggal_kebutuhan : date
+        + diajukan_oleh : int <<FK>>
+        + disetujui_oleh : int <<FK, Nullable>>
+        + catatan : text
+        --
+        + getStatusNamaAttribute() : string
+    }
+
+    class DetailPengadaanBahan {
+        + id : int <<PK>>
+        + pengadaan_bahan_id : int <<FK>>
+        + bahan_baku_id : int <<FK>>
+        + jumlah : float
+        + satuan_id : int <<FK>>
+        + harga_satuan : decimal
+        + subtotal : decimal
+    }
+
+    class StatusPengadaan {
+        + id : int <<PK>>
+        + kode_status : string
+        + nama_status : string
+    }
+
+    class PurchaseOrder {
+        + id : int <<PK>>
+        + nomor_po : string
+        + pengadaan_bahan_id : int <<FK>>
+        + status : string
+        + tanggal_po : date
+        + batas_waktu : date
+        + catatan : text
+        + dibuat_oleh : int <<FK>>
+        --
+        + getStatusNamaAttribute() : string
+    }
+
+    class DetailPurchaseOrder {
+        + id : int <<PK>>
+        + purchase_order_id : int <<FK>>
+        + bahan_baku_id : int <<FK>>
+        + jumlah_dipesan : float
+        + jumlah_diterima : float
+        + harga_satuan : decimal
+        + subtotal : decimal
+        + status : string
+    }
+
+    class PenerimaanBahan {
+        + id : int <<PK>>
+        + nomor_penerimaan : string
+        + purchase_order_id : int <<FK>>
+        + nomor_surat_jalan : string
+        + tanggal_penerimaan : datetime
+        + status : string
+        + diterima_oleh : int <<FK>>
+        + catatan : text
+    }
+
+    class DetailPenerimaanBahan {
+        + id : int <<PK>>
+        + penerimaan_bahan_id : int <<FK>>
+        + bahan_baku_id : int <<FK>>
+        + jumlah_diterima : float
+        + kondisi : string
+        + catatan : text
+    }
+}
+
+' ==============================================================================
+' 5. TRANSAKSI PENJUALAN & PEMESANAN MODULE
+' ==============================================================================
+package "5. Transaksi Pemesanan & Operasional" {
+    class Pesanan {
+        + id : int <<PK>>
+        + id_pesanan : string
+        + jenis_pesanan_id : int <<FK>>
+        + pelanggan_id : int <<FK, Nullable>>
+        + meja_id : int <<FK, Nullable>>
+        + pelayan_id : int <<FK, Nullable>>
+        + kasir_id : int <<FK, Nullable>>
+        + status_pesanan_id : int <<FK>>
+        + status_pembayaran_id : int <<FK>>
+        + total_tagihan : decimal
+        + total_dp : decimal
+        + sisa_tagihan : decimal
+        + catatan : text
+        + dibuat_pada : datetime
+        + diperbarui_pada : datetime
+        --
+        + isSkemaLunas() : bool
+        + isCatering() : bool
+        + isDineIn() : bool
+        + isNasiBox() : bool
+    }
+
+    class JenisPesanan {
+        + id : int <<PK>>
+        + kode_jenis : string
+        + nama_jenis : string
+    }
+
+    class StatusPesanan {
+        + id : int <<PK>>
+        + kode_status : string
+        + nama_status : string
+    }
+
+    class DetailPesanan {
+        + id : int <<PK>>
+        + pesanan_id : int <<FK>>
+        + menu_id : int <<FK>>
+        + jumlah : int
+        + harga_satuan : decimal
+        + subtotal : decimal
+        + catatan : text
+        + is_tambahan : boolean
+        + batch_pesanan : int
+    }
+
+    class PilihanPesananCatering {
+        + id : int <<PK>>
+        + detail_pesanan_id : int <<FK>>
+        + item_paket_id : int <<FK>>
+        + pilihan_item_paket_id : int <<FK>>
+    }
+
+    class JadwalPesanan {
+        + id : int <<PK>>
+        + pesanan_id : int <<FK>>
+        + tanggal_acara : date
+        + waktu_acara : time
+        + tanggal_pengiriman : date
+        + waktu_pengiriman : time
+        + lokasi_acara : string
+        + nama_penerima : string
+        + nomor_telepon_penerima : string
+        + alamat_pengiriman : text
+        + catatan : text
+    }
+
+    class TiketDapur {
+        + id : int <<PK>>
+        + nomor_tiket : string
+        + pesanan_id : int <<FK>>
+        + meja_id : int <<FK, Nullable>>
+        + status_tiket_dapur_id : int <<FK>>
+        + diproses_oleh : int <<FK, Nullable>>
+        + diselesaikan_oleh : int <<FK, Nullable>>
+        + dicetak_pada : datetime
+        + siap_pada : datetime
+        + selesai_pada : datetime
+    }
+
+    class DetailTiketDapur {
+        + id : int <<PK>>
+        + tiket_dapur_id : int <<FK>>
+        + detail_pesanan_id : int <<FK>>
+        + menu_id : int <<FK>>
+        + jumlah : int
+        + status : string
+        + catatan : text
+    }
+
+    class StatusTiketDapur {
+        + id : int <<PK>>
+        + kode_status : string
+        + nama_status : string
+    }
+
+    class Pengiriman {
+        + id : int <<PK>>
+        + nomor_pengiriman : string
+        + pesanan_id : int <<FK>>
+        + status_pengiriman_id : int <<FK>>
+        + ditugaskan_kepada : int <<FK, Nullable>>
+        + jarak_pengiriman : float
+        + biaya_pengiriman : decimal
+        + jadwal_pengiriman : datetime
+        + foto_bukti_pengiriman : string
+        --
+        + {static} hitungOngkir(jarakKm, pax) : decimal
+    }
+
+    class StatusPengiriman {
+        + id : int <<PK>>
+        + kode_status : string
+        + nama_status : string
+    }
+}
+
+' ==============================================================================
+' 6. PEMBAYARAN & GATEWAY MODULE
+' ==============================================================================
+package "6. Pembayaran & Gateway" {
+    class Pembayaran {
+        + id : int <<PK>>
+        + kode_pembayaran : string
+        + pesanan_id : int <<FK>>
+        + metode_pembayaran : string
+        + jenis_pembayaran : string
+        + status_verifikasi : string
+        + jumlah_tagihan : decimal
+        + jumlah_dibayar : decimal
+        + bukti_pembayaran : string
+        + diverifikasi_oleh : int <<FK, Nullable>>
+        + tanggal_pembayaran : datetime
+        + tanggal_verifikasi : datetime
+        + catatan : text
+        --
+        + isUploadComplete() : bool
+    }
+
+    class StatusPembayaran {
+        + id : int <<PK>>
+        + kode_status : string
+        + nama_status : string
+    }
+
+    class PaymentSession {
+        + id : int <<PK>>
+        + pesanan_id : int <<FK>>
+        + snap_token : string
+        + order_id_midtrans : string
+        + gross_amount : decimal
+        + payment_type : string
+        + transaction_status : string
+        + is_active : boolean
+        + expired_at : datetime
+    }
+
+    class PaymentTransaction {
+        + id : int <<PK>>
+        + payment_session_id : int <<FK>>
+        + transaction_id_midtrans : string
+        + status_code : string
+        + transaction_status : string
+        + fraud_status : string
+        + payment_type : string
+    }
+}
+
+' ==============================================================================
+' 7. PENGATURAN SISTEM MODULE
+' ==============================================================================
+package "7. Pengaturan Sistem" {
+    class PengaturanPengiriman {
+        + id : int <<PK>>
+        + biaya_per_km : decimal
+        + biaya_dasar_flat : decimal
+        + minimal_nominal_gratis_ongkir : decimal
+        + maksimal_jarak_layanan_km : float
+        + alamat_resto_lat : decimal
+        + alamat_resto_lng : decimal
+    }
+
+    class AturanPengiriman {
+        + id : int <<PK>>
+        + minimal_porsi : int
+        + maksimal_porsi : int
+        + gratis_km_pertama : float
+        + biaya_per_km_tambahan : decimal
+        + status_aktif : boolean
+    }
+
+    class PengaturanTransaksi {
+        + id : int <<PK>>
+        + minimal_porsi_catering : int
+        + minimal_box_nasi_box : int
+        + persentase_dp_minimal : decimal
+        + batas_hari_pelunasan_h_minus : int
+        + batas_hari_pembatalan_h_minus : int
+    }
+}
+
+' ==============================================================================
+' HUBUNGAN ANTAR KELAS (RELATIONSHIPS)
+' ==============================================================================
+
+' User & Role
+Peran "1" <-- "0..*" Pengguna : memiliki peran
+Pengguna "0..1" <-- "0..*" Pelanggan : terhubung akun pengguna
+
+' Master Menu & Meja
+KategoriMenu "1" <-- "0..*" Menu : mengelompokkan
+StatusMeja "1" <-- "0..*" Meja : status kondisi
+Menu "1" *-- "0..*" ResepMenu : komposisi resep
+Menu "1" *-- "0..*" ItemPaket : paket menu
+ItemPaket "1" *-- "0..*" PilihanItemPaket : opsi pilihan
+
+' Persediaan Bahan Baku
+KategoriBahanBaku "1" <-- "0..*" BahanBaku : kategori
+Satuan "1" <-- "0..*" BahanBaku : satuan dasar
+Satuan "1" <-- "0..*" ResepMenu : satuan pemakaian
+Satuan "1" <-- "0..*" DetailPengadaanBahan : satuan beli
+BahanBaku "1" <-- "0..*" ResepMenu : digunakan pada
+BahanBaku "1" *-- "1..*" StokBahan : saldo persediaan
+BahanBaku "1" <-- "0..*" MutasiStok : riwayat mutasi
+JenisMutasiStok "1" <-- "0..*" MutasiStok : tipe mutasi
+BahanBaku "1" <-- "0..*" NotifikasiStok : alert stok
+
+' Penyesuaian Stok
+Pengguna "1" <-- "0..*" PenyesuaianStok : dibuat oleh
+PenyesuaianStok "1" *-- "1..*" DetailPenyesuaianStok : detail penyesuaian
+BahanBaku "1" <-- "0..*" DetailPenyesuaianStok : bahan yang disesuaikan
+
+' Pengadaan Bahan Baku
+Pemasok "1" <-- "0..*" PengadaanBahan : ditujukan ke
+StatusPengadaan "1" <-- "0..*" PengadaanBahan : status
+Pengguna "1" <-- "0..*" PengadaanBahan : diajukan oleh
+PengadaanBahan "1" *-- "1..*" DetailPengadaanBahan : rincian pengadaan
+BahanBaku "1" <-- "0..*" DetailPengadaanBahan : bahan diminta
+
+' Purchase Order & Penerimaan
+PengadaanBahan "1" <-- "0..*" PurchaseOrder : dasar pembuatan PO
+Pengguna "1" <-- "0..*" PurchaseOrder : dibuat oleh
+PurchaseOrder "1" *-- "1..*" DetailPurchaseOrder : rincian item PO
+BahanBaku "1" <-- "0..*" DetailPurchaseOrder : bahan di PO
+PurchaseOrder "1" <-- "0..*" PenerimaanBahan : dasar penerimaan
+Pengguna "1" <-- "0..*" PenerimaanBahan : diterima oleh
+PenerimaanBahan "1" *-- "1..*" DetailPenerimaanBahan : item diterima
+BahanBaku "1" <-- "0..*" DetailPenerimaanBahan : bahan diterima
+
+' Transaksi Pemesanan (Pesanan)
+JenisPesanan "1" <-- "0..*" Pesanan : jenis layanan
+StatusPesanan "1" <-- "0..*" Pesanan : status pesanan
+StatusPembayaran "1" <-- "0..*" Pesanan : status bayar
+Pelanggan "0..1" <-- "0..*" Pesanan : memesan
+Meja "0..1" <-- "0..*" Pesanan : meja dine-in
+Pengguna "0..1" <-- "0..*" Pesanan : dilayani oleh pelayan/kasir
+Pesanan "1" *-- "1..*" DetailPesanan : item pesanan
+Menu "1" <-- "0..*" DetailPesanan : menu dipesan
+DetailPesanan "1" *-- "0..*" PilihanPesananCatering : pilihan katering
+
+' Alur Operasional Pesanan
+Pesanan "1" *-- "0..1" JadwalPesanan : jadwal acara/kirim
+Pesanan "1" *-- "0..1" Pengiriman : pengantaran kurir
+StatusPengiriman "1" <-- "0..*" Pengiriman : status antar
+Pengguna "0..1" <-- "0..*" Pengiriman : kurir pengantar
+Pesanan "1" *-- "0..*" TiketDapur : tiket pesanan dapur
+StatusTiketDapur "1" <-- "0..*" TiketDapur : status tiket
+TiketDapur "1" *-- "1..*" DetailTiketDapur : item tiket dapur
+Pesanan "1" <-- "0..*" PengadaanBahan : pengadaan khusus acara
+
+' Pembayaran & Midtrans Gateway
+Pesanan "1" *-- "0..*" Pembayaran : riwayat transaksi bayar
+Pengguna "0..1" <-- "0..*" Pembayaran : verifikator pembayaran
+Pesanan "1" *-- "0..*" PaymentSession : sesi gateway
+PaymentSession "1" *-- "0..*" PaymentTransaction : transaksi log Midtrans
+
+@enduml
