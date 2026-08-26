@@ -142,3 +142,47 @@
 | | 2. Kasir/Admin memeriksa permohonan pembatalan pada halaman kelola pesanan lalu menekan tombol Batalkan Pesanan. |
 | | 3. Sistem membatalkan pesanan, mengubah status pesanan menjadi *Dibatalkan*, dan membatalkan jadwal pengiriman serta persiapan dapur. |
 | **Kondisi Akhir** | Pesanan paket katering / nasi box berhasil diproses, dimasak, dan diantar ke alamat konsumen. Status pembayaran menjadi *Lunas*, status pengiriman menjadi *Selesai*, dan status pesanan menjadi *Selesai*. |
+
+---
+
+## USE CASE 3: PENGIRIMAN PESANAN KATERING DAN NASI BOX
+
+| Keterangan / Aksi Aktor | Deskripsi / Aksi Sistem |
+| :--- | :--- |
+| **Nama Use Case** | **Pengiriman Pesanan Katering dan Nasi Box** |
+| **Nomor** | 3 |
+| **Aktor** | Kasir / Admin, Tim Dapur, Tim Pengantaran (Kurir), Konsumen |
+| **Deskripsi** | Proses pengelolaan jadwal pengantaran pesanan katering dan nasi box, mulai dari penyiapan makanan oleh Tim Dapur, penugasan kurir oleh Kasir/Admin, keberangkatan pengantaran oleh Tim Pengantaran (Kurir), hingga konfirmasi penerimaan pesanan di lokasi konsumen disertai pengunggahan foto bukti serah terima. |
+| **Kondisi Awal** | Pesanan katering atau nasi box telah terverifikasi/lunas, metode pengiriman tercatat *Delivery*, dan data pengiriman telah terdaftar pada Jadwal Pengiriman. Tim Dapur, Kasir/Admin, dan Tim Pengantaran telah login ke sistem. |
+| **Skenario Utama** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Tim Dapur membuka jadwal pesanan hari ini, menyelesaikan proses memasak dan pengemasan, lalu menekan tombol Pesanan Siap Dikirim. | |
+| | 2. Sistem mengubah status pesanan menjadi *Siap Dikirim*, mengubah status pengiriman menjadi *Siap Dikirim*, dan menampilkan data pada daftar siap antar. |
+| 3. Kasir/Admin membuka halaman Jadwal Pengiriman (`/admin/jadwal-pengiriman`). | |
+| | 4. Sistem menampilkan kalender dan daftar pengiriman pesanan beserta ringkasan status (Dijadwalkan, Siap Dikirim, Dalam Perjalanan, Terkirim). |
+| 5. Kasir/Admin memilih pesanan yang siap dikirim, memilih nama Tim Pengantaran (Kurir) pada dropdown, lalu menekan tombol Tugaskan Kurir. | |
+| | 6. Sistem menyimpan ID kurir yang ditugaskan, memperbarui status penugasan, dan mengirimkan notifikasi tugas pengantaran baru ke akun Kurir yang bersangkutan. |
+| 7. Tim Pengantaran (Kurir) membuka menu Jadwal Pengiriman pada akunnya dan memilih pesanan yang ditugaskan kepadanya. | |
+| | 8. Sistem menampilkan rincian lengkap pengantaran (alamat tujuan, nama penerima, kontak WhatsApp, jam kirim, dan rincian paket pesanan). |
+| 9. Tim Pengantaran (Kurir) mengambil paket pesanan makanan dari dapur dan menekan tombol Mulai Antar / Dalam Perjalanan. | |
+| | 10. Sistem mencatat waktu keberangkatan (`berangkat_pada`), memperbarui status pengiriman menjadi *Dalam Perjalanan*, dan mengirimkan notifikasi status pengantaran kepada konsumen. |
+| 11. Tim Pengantaran (Kurir) melakukan perjalanan menuju alamat tujuan dan menyerahkan paket pesanan kepada konsumen/penerima. | |
+| 12. Tim Pengantaran (Kurir) mengambil foto serah terima pesanan bersama penerima di lokasi acara, mengunggah file foto ke sistem, lalu menekan tombol Selesai Pengantaran. | |
+| | 13. Sistem memvalidasi berkas foto bukti, mencatat waktu penerimaan (`diterima_pada`), mengubah status pengiriman menjadi *Terkirim / Diterima*, mengubah status pesanan menjadi *Selesai*, serta mengirimkan notifikasi sukses pengiriman kepada Pemilik dan Konsumen. |
+| **Skenario Alternatif A1 – Pengiriman Gagal / Dijadwalkan Ulang (Konsumen Tidak Ditemukan / Kendala Lapangan)** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Tim Pengantaran (Kurir) tiba di lokasi namun konsumen tidak dapat dihubungi atau alamat tidak ditemukan. | |
+| | 2. Tim Pengantaran (Kurir) memilih status *Gagal Dikirim* dan mengisi catatan kendala lapangan. |
+| | 3. Sistem mengubah status pengiriman menjadi *Gagal Dikirim* dan mencatat riwayat kegagalan. |
+| 4. Kasir/Admin menerima laporan kendala, menghubungi konsumen untuk koordinasi, lalu memperbarui jam/jadwal pengiriman baru pada sistem. | |
+| | 5. Sistem memperbarui jadwal pengiriman dan mengembalikan status pengiriman menjadi *Dijadwalkan* kembali. |
+| **Skenario Alternatif A2 – Pengalihan Penugasan Kurir oleh Admin** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Kasir/Admin mengetahui bahwa kurir yang ditugaskan sebelumnya berhalangan hadir. | |
+| | 2. Kasir/Admin memilih nama kurir pengganti pada baris pesanan lalu menekan tombol Tugaskan Kurir. |
+| | 3. Sistem memperbarui data kurir yang ditugaskan dan mengirimkan notifikasi tugas baru kepada kurir pengganti. |
+| **Skenario Alternatif A3 – Konsumen Memantau Status Pengiriman Secara Mandiri (Tracking)** | |
+| **Aksi Aktor** | **Aksi Sistem** |
+| 1. Konsumen membuka tautan Lacak Pesanan pada halaman web. | |
+| | 2. Sistem menampilkan status terkini pesanan (*Siap Dikirim*, *Dalam Perjalanan*, atau *Telah Diterima* beserta foto bukti serah terima jika sudah selesai). |
+| **Kondisi Akhir** | Pesanan paket katering / nasi box telah berhasil diantar ke lokasi penerima, foto bukti serah terima tersimpan di sistem, status pengiriman menjadi *Terkirim / Diterima*, dan status pesanan menjadi *Selesai*. |
