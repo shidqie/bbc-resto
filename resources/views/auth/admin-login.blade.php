@@ -16,7 +16,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -38,43 +37,7 @@
 
     <div class="flex min-h-screen w-full">
 
-        {{-- ── LEFT PANEL ── --}}
-        <div class="hidden lg:flex lg:w-2/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden">
-
-            {{-- Full photo background --}}
-            <div class="absolute inset-0" style="background-image: url('{{ asset('images/homepage.webp') }}'); background-size: cover; background-position: center;"></div>
-            {{-- Dark gradient overlay --}}
-            <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
-            {{-- Color tint --}}
-            <div class="absolute inset-0 bg-primary/40"></div>
-
-            {{-- Top: Logo --}}
-            <div class="relative z-10 flex items-center gap-2.5">
-                <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-full object-contain bg-white/10 p-0.5">
-                <span class="text-white/80 text-sm font-semibold tracking-wide">BBC Resto</span>
-            </div>
-
-            {{-- Middle --}}
-            <div class="relative z-10">
-                <div class="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-3.5 py-1.5 mb-6">
-                    <x-heroicon-o-shield-check class="w-3 h-3 text-white/60" />
-                    <span class="text-white/60 text-xs font-semibold uppercase tracking-[0.1em]">Staff Access</span>
-                </div>
-                <h1 class="text-2xl font-bold text-white leading-snug mb-3">
-                    Portal<br>Internal.
-                </h1>
-                <p class="text-white/70 text-xs leading-relaxed max-w-xs">
-                    Akses khusus untuk tim kasir, manajer, dapur & admin. Gunakan kredensial yang telah diberikan.
-                </p>
-            </div>
-
-            {{-- Bottom --}}
-            <div class="relative z-10">
-                <p class="text-white/30 text-xs">© 2026 Saung Babakan Cinta</p>
-            </div>
-        </div>
-
-        {{-- ── RIGHT: FORM ── --}}
+        {{-- ── LEFT: FORM ── --}}
         <div class="flex-1 relative flex items-center justify-center px-6 py-16 sm:px-12 bg-secondary-soft">
 
             <a href="{{ route('home') }}"
@@ -133,7 +96,7 @@
                             <button type="button" @click="show = !show"
                                     class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
                                 <x-heroicon-o-eye class="w-4 h-4" x-show="!show" />
-                                <x-heroicon-o-sparkles class="w-4 h-4" x-show="show" style="display:none" />
+                                <x-heroicon-o-eye-slash class="w-4 h-4" x-show="show" style="display:none" />
                             </button>
                         </div>
                     </div>
@@ -154,10 +117,50 @@
                     </div>
                 </form>
 
-
+                <p class="text-center text-xs text-gray-400 font-medium mt-6 fu d4">
+                    Bukan staf internal?
+                    <a href="{{ route('konsumen.login') }}" class="text-gray-500 font-bold hover:text-primary hover:underline transition-all">Masuk sebagai Konsumen</a>
+                </p>
 
             </div>
         </div>
+
+        {{-- ── RIGHT PANEL (PHOTO BACKGROUND ON RIGHT FOR ADMIN) ── --}}
+        <div class="hidden lg:flex lg:w-2/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden">
+
+            {{-- Full photo background --}}
+            <div class="absolute inset-0" style="background-image: url('{{ asset('images/homepage.webp') }}'); background-size: cover; background-position: center;"></div>
+            {{-- Dark gradient overlay --}}
+            <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
+            {{-- Color tint --}}
+            <div class="absolute inset-0 bg-primary/40"></div>
+
+            {{-- Top: Logo --}}
+            <div class="relative z-10 flex items-center gap-2.5">
+                <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-full object-contain bg-white/10 p-0.5">
+                <span class="text-white/80 text-sm font-semibold tracking-wide">BBC Resto</span>
+            </div>
+
+            {{-- Middle --}}
+            <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-3.5 py-1.5 mb-6">
+                    <x-heroicon-o-shield-check class="w-3 h-3 text-white/60" />
+                    <span class="text-white/60 text-xs font-semibold uppercase tracking-[0.1em]">Staff Access</span>
+                </div>
+                <h1 class="text-2xl font-bold text-white leading-snug mb-3">
+                    Portal<br>Internal.
+                </h1>
+                <p class="text-white/70 text-xs leading-relaxed max-w-xs">
+                    Akses khusus untuk tim kasir, manajer, dapur, kurir & admin. Gunakan kredensial yang telah diberikan.
+                </p>
+            </div>
+
+            {{-- Bottom --}}
+            <div class="relative z-10">
+                <p class="text-white/30 text-xs">© 2026 Saung Babakan Cinta</p>
+            </div>
+        </div>
+
     </div>
 </body>
 </html>

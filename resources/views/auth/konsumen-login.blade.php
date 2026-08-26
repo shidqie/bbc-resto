@@ -16,7 +16,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -38,12 +37,12 @@
 
     <div class="flex min-h-screen w-full">
 
-        {{-- ── LEFT PANEL ── --}}
+        {{-- ── LEFT PANEL (PHOTO BACKGROUND ON LEFT FOR KONSUMEN) ── --}}
         <div class="hidden lg:flex lg:w-2/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden">
 
             <div class="absolute inset-0" style="background-image: url('{{ asset('images/homepage.webp') }}'); background-size: cover; background-position: center;"></div>
             <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80"></div>
-            <div class="absolute inset-0 bg-secondary-container/40"></div>
+            <div class="absolute inset-0 bg-primary/40"></div>
 
             <div class="relative z-10 flex items-center gap-2.5">
                 <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-full object-contain bg-white/10 p-0.5">
@@ -72,7 +71,7 @@
         <div class="flex-1 relative flex items-center justify-center px-6 py-16 sm:px-12 bg-secondary-soft">
 
             <a href="{{ route('home') }}"
-               class="absolute top-6 left-6 sm:top-8 sm:left-8 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-secondary-container transition-colors fu d1">
+               class="absolute top-6 left-6 sm:top-8 sm:left-8 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-colors fu d1">
                 <x-heroicon-o-arrow-left class="w-4 h-4" />
                 Kembali
             </a>
@@ -105,7 +104,7 @@
                         <input id="login" type="text" name="login" value="{{ old('login') }}"
                                required autofocus autocomplete="username"
                                placeholder="nama@email.com / 08xxxxxxxxxx"
-                               class="w-full px-3.5 py-2 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-secondary-container focus:ring-1 focus:ring-secondary-container/20 outline-none {{ $errors->has('login') ? 'border-red-300' : 'border-gray-200' }}">
+                               class="w-full px-3.5 py-2 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none {{ $errors->has('login') ? 'border-red-300' : 'border-gray-200' }}">
                     </div>
 
                     <div class="fu d3" x-data="{ show: false }">
@@ -114,7 +113,7 @@
                             <input id="kata_sandi" :type="show ? 'text' : 'password'" name="kata_sandi"
                                    required autocomplete="current-password"
                                    placeholder="••••••••"
-                                   class="w-full px-3.5 py-2 pr-10 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-secondary-container focus:ring-1 focus:ring-secondary-container/20 outline-none {{ $errors->has('kata_sandi') ? 'border-red-300' : 'border-gray-200' }}">
+                                   class="w-full px-3.5 py-2 pr-10 bg-white border rounded-xl text-xs font-medium text-gray-900 placeholder-gray-300 transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none {{ $errors->has('kata_sandi') ? 'border-red-300' : 'border-gray-200' }}">
                             <button type="button" @click="show = !show"
                                     class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
                                 <x-heroicon-o-eye class="w-4 h-4" x-show="!show" />
@@ -125,13 +124,13 @@
 
                     <div class="flex items-center gap-2 fu d3">
                         <input id="remember_me" type="checkbox" name="remember"
-                               class="w-3.5 h-3.5 rounded border-gray-300 text-secondary-container focus:ring-secondary-container/20 transition-all cursor-pointer">
+                               class="w-3.5 h-3.5 rounded border-gray-300 text-primary focus:ring-primary/20 transition-all cursor-pointer">
                         <label for="remember_me" class="text-xs text-gray-500 font-medium cursor-pointer select-none">Ingat saya</label>
                     </div>
 
                     <div class="pt-1 fu d4">
                         <button type="submit"
-                                class="w-full py-2.5 bg-secondary-container hover:bg-secondary/90 text-white font-semibold text-xs rounded-xl transition-all duration-200 active:scale-[0.99]">
+                                class="w-full py-2.5 bg-primary hover:bg-primary-container text-white font-semibold text-xs rounded-xl transition-all duration-200 active:scale-[0.99]">
                             Masuk
                         </button>
                     </div>
@@ -139,12 +138,12 @@
 
                 <p class="text-center text-xs text-gray-500 font-medium mt-5 fu d4">
                     Belum punya akun?
-                    <a href="{{ route('konsumen.register') }}" class="text-secondary-container font-bold hover:opacity-70 transition-opacity">Daftar Sekarang</a>
+                    <a href="{{ route('konsumen.register') }}" class="text-primary font-bold hover:opacity-70 transition-opacity">Daftar Sekarang</a>
                 </p>
 
                 <p class="text-center text-xs text-gray-400 font-medium mt-3 fu d4">
                     Atau masuk sebagai
-                    <a href="{{ route('admin.login') }}" class="text-gray-500 font-bold hover:text-secondary-container hover:underline transition-all">Admin / Staf Internal</a>
+                    <a href="{{ route('admin.login') }}" class="text-gray-500 font-bold hover:text-primary hover:underline transition-all">Admin / Staf Internal</a>
                 </p>
 
             </div>
