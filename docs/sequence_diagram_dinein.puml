@@ -19,6 +19,7 @@ participant "ctrl: QrMenuController" as ctrl
 participant "p: Pesanan" as p
 participant "t: TiketDapur" as t
 participant "db: KoneksiBasisdata" as db
+actor "Tim Dapur" as d
 
 autonumber 1 "<b>0:</b>"
 
@@ -78,7 +79,9 @@ deactivate db
 ctrl --> main : 21: konfirmasiPesananBerhasil(kodePesanan)
 deactivate ctrl
 
-main --> k : 22: strukKonfirmasiPemesanan
+main -> d : 22: cetakStrukDapur(nomorMeja, itemPesanan, catatan)
+
+main --> k : 23: strukKonfirmasiPemesanan
 deactivate main
 
 @enduml
