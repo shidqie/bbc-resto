@@ -10,76 +10,57 @@
 | **Nama Use Case** | **Pemesanan Dine-In** |
 | **Nomor** | 1 |
 | **Aktor** | Konsumen, Kasir, Tim Dapur, Pelayan |
-| **Deskripsi** | Proses pemesanan dine-in mulai dari konsumen memilih menu melalui self-order, konfirmasi pesanan oleh Kasir, pemrosesan pesanan oleh Tim Dapur, penyajian pesanan oleh Pelayan, hingga proses pembayaran selesai. |
-| **Kondisi Awal** | Konsumen berada pada meja yang tersedia. Data menu dan meja telah tersedia pada sistem. Kasir dan Tim Dapur telah masuk ke dalam sistem. |
+| **Deskripsi** | Proses pemesanan dine-in mulai dari konsumen memilih menu melalui self-order, konfirmasi pesanan oleh Kasir, pemrosesan pesanan oleh Tim Dapur, penyajian pesanan oleh Pelayan, hingga proses pembayaran selesai di Kasir. |
+| **Kondisi Awal** | Konsumen berada pada meja makan yang tersedia. Data menu dan meja telah aktif di sistem. Kasir dan Tim Dapur telah login ke sistem. |
 | **Skenario Utama** | |
 | **Aksi Aktor** | **Aksi Sistem** |
-| 1. Konsumen melakukan scan QR Code pada meja. | |
-| | 2. Sistem menampilkan daftar menu yang tersedia. |
-| 3. Konsumen memilih menu dengan menekan tombol +. | |
-| | 4. Sistem menambahkan menu yang dipilih ke dalam keranjang pesanan. |
+| 1. Konsumen melakukan scan QR Code pada meja makan. | |
+| | 2. Sistem memvalidasi token QR meja dan menampilkan halaman daftar menu Dine-In. |
+| 3. Konsumen memilih menu makanan/minuman dan menentukan jumlah porsi. | |
+| | 4. Sistem memasukkan menu ke keranjang belanja dan menampilkan total harga sementara. |
 | 5. Konsumen menekan tombol Pesan. | |
-| | 6. Sistem menampilkan halaman Konfirmasi Pesanan yang berisi data pemesan, rincian pesanan, dan total pesanan. |
-| 7. Konsumen mengisi data pemesan kemudian menekan tombol Pesan Menu. | |
-| | 8. Sistem menyimpan pesanan dan memberikan status *Menunggu Konfirmasi*. |
-| | 9. Sistem menampilkan informasi bahwa pesanan berhasil dibuat serta menyediakan Bukti Pesanan yang dapat diunduh. |
-| | 10. Sistem mengirimkan informasi pesanan ke halaman Daftar Pesanan Dine-In Aktif milik Kasir. |
-| 11. Kasir menerima notifikasi pesanan baru. | |
-| 12. Kasir membuka dan memeriksa rincian pesanan. | |
-| 13. Kasir menekan tombol Konfirmasi. | |
-| | 14. Sistem mengubah status pesanan menjadi *Sedang Diproses* serta mencetak Struk Dapur Checker dan Meja Checker. |
-| 15. Kasir memberikan Struk Dapur Checker kepada Tim Dapur sebagai acuan dalam menyiapkan pesanan. | |
-| | 16. Sistem menampilkan pesanan pada halaman Tim Dapur dengan status *Sedang Diproses*. |
-| 17. Tim Dapur menyiapkan makanan dan minuman berdasarkan pesanan. | |
-| 18. Setelah pesanan selesai disiapkan, Tim Dapur menekan tombol Pesanan Siap. | |
-| | 19. Sistem mengubah status pesanan menjadi *Siap Disajikan*. |
-| 20. Pelayan mengambil pesanan yang telah siap dan mengantarkannya ke meja konsumen. | |
-| 21. Pelayan meletakkan Meja Checker pada meja konsumen sebagai penanda dan media pencocokan pesanan. | |
-| 22. Setelah pesanan dihidangkan, Pelayan memberikan informasi kepada Kasir. | |
-| 23. Kasir mengubah status pesanan menjadi *Sudah Dihidangkan*. | |
-| 24. Setelah selesai makan, konsumen melakukan pembayaran di Kasir. | |
-| 25. Kasir membuka halaman Daftar Pesanan Dine-In Aktif dan memilih pesanan berdasarkan kode pesanan, nomor meja, atau nama konsumen. | |
-| 26. Kasir menekan tombol Bayar. | |
-| | 27. Sistem menampilkan rincian pesanan, total pembayaran, dan pilihan metode pembayaran. |
-| 28. Konsumen menentukan metode pembayaran Tunai atau QRIS. | |
-| 29. Jika pembayaran dilakukan secara tunai, Kasir memasukkan jumlah uang yang diterima. | |
-| | 30. Sistem menghitung dan menampilkan jumlah kembalian. |
-| 31. Jika pembayaran menggunakan QRIS, Kasir memilih metode pembayaran QRIS. | |
-| | 32. Sistem menampilkan QRIS rumah makan. |
-| 33. Konsumen melakukan pembayaran melalui QRIS. | |
-| 34. Kasir memeriksa kesesuaian nominal pembayaran QRIS secara manual. | |
-| 35. Kasir menekan tombol Konfirmasi Pembayaran. | |
-| | 36. Sistem mengubah status pembayaran menjadi *Lunas* dan status pesanan menjadi *Selesai*. |
-| | 37. Sistem mengubah status meja menjadi *Tersedia*. |
-| | 38. Sistem mencetak Struk Pembayaran Dine-In. |
-| 39. Kasir menyerahkan struk pembayaran kepada konsumen. | |
+| | 6. Sistem menampilkan formulir data pemesan (Nama, Nomor WhatsApp, dan Catatan). |
+| 7. Konsumen mengisi data pemesan lalu menekan tombol Pesan Menu. | |
+| | 8. Sistem menyimpan data pesanan dengan status *Menunggu Konfirmasi*, mencatat data meja terisi, dan mengirimkan notifikasi pesanan baru ke layar Kasir. |
+| 9. Kasir membuka pesanan baru tersebut pada daftar pesanan aktif. | |
+| | 10. Sistem menampilkan rincian menu pesanan, nomor meja, dan data pemesan. |
+| 11. Kasir memeriksa kesesuaian pesanan lalu menekan tombol Konfirmasi Pesanan. | |
+| | 12. Sistem mengubah status pesanan menjadi *Sedang Diproses*, mencetak Struk Dapur Checker & Meja Checker, serta meneruskan pesanan ke layar Tim Dapur. |
+| 13. Tim Dapur menerima struk pesanan dan menekan tombol Mulai Memasak. | |
+| | 14. Sistem mengubah status proses dapur menjadi *Sedang Dimasak*. |
+| 15. Tim Dapur menyiapkan makanan hingga selesai, lalu menekan tombol Pesanan Siap. | |
+| | 16. Sistem mengubah status pesanan menjadi *Siap Disajikan* dan memberikan penanda visual di sistem. |
+| 17. Pelayan membawa pesanan beserta Meja Checker ke meja konsumen, lalu melapor ke Kasir. | |
+| | 18. Kasir menekan tombol Pesanan Disajikan pada sistem. |
+| | 19. Sistem memperbarui status pesanan menjadi *Sudah Dihidangkan*. |
+| 20. Setelah selesai makan, konsumen menuju meja kasir untuk membayar. Kasir memilih pesanan meja tersebut dan menekan tombol Bayar. | |
+| | 21. Sistem menampilkan rincian total tagihan dan opsi metode pembayaran (Tunai / QRIS). |
+| 22. Kasir memilih metode pembayaran (Tunai/QRIS), memasukkan nominal uang yang diterima dari konsumen, lalu menekan tombol Konfirmasi Pembayaran. | |
+| | 23. Sistem memvalidasi pembayaran, menghitung kembalian, mengubah status pembayaran menjadi *Lunas*, status pesanan menjadi *Selesai*, status meja kembali menjadi *Tersedia*, dan mencetak Struk Pembayaran. |
+| 24. Kasir menyerahkan struk pembayaran dan uang kembalian kepada konsumen. | |
+| | 25. Sistem mengembalikan tampilan kasir ke status siap menerima pesanan berikutnya. |
 | **Skenario Alternatif A1 – Konsumen Menambah Pesanan** | |
 | **Aksi Aktor** | **Aksi Sistem** |
-| 1. Konsumen melakukan scan QR Code kembali pada meja yang masih memiliki pesanan aktif. | |
-| | 2. Sistem mendeteksi bahwa meja masih memiliki pesanan aktif. |
-| | 3. Sistem menampilkan informasi pesanan aktif dan pilihan untuk menambah pesanan. |
-| 4. Konsumen memilih menu tambahan. | |
-| | 5. Sistem menambahkan menu tambahan ke dalam pesanan aktif pada meja yang sama. |
-| | 6. Sistem mengirimkan informasi pesanan tambahan kepada Kasir. |
-| 7. Kasir mengonfirmasi pesanan tambahan. | |
-| | 8. Sistem meneruskan pesanan tambahan kepada Tim Dapur untuk diproses. |
-| | 9. Sistem memperbarui total pesanan sehingga seluruh pesanan tetap dibayarkan dalam satu transaksi. |
-| **Skenario Alternatif A2 – Pembayaran Tunai** | |
+| 1. Konsumen melakukan scan QR Code kembali pada meja yang sama. | |
+| | 2. Sistem mendeteksi adanya pesanan aktif pada meja tersebut dan menampilkan opsi tambah menu. |
+| 3. Konsumen memilih menu tambahan dan menekan tombol Tambah Pesanan. | |
+| | 4. Sistem menggabungkan menu tambahan ke pesanan aktif yang sedang berjalan dan mengirimkan notifikasi ke Kasir. |
+| 5. Kasir menekan tombol Konfirmasi Pesanan Tambahan. | |
+| | 6. Sistem meneruskan item tambahan ke Tim Dapur serta memperbarui total tagihan transaksi. |
+| **Skenario Alternatif A2 – Pembayaran Menggunakan Tunai** | |
 | **Aksi Aktor** | **Aksi Sistem** |
-| 1. Kasir memilih metode pembayaran Tunai. | |
-| 2. Kasir memasukkan jumlah uang yang diterima dari konsumen. | |
-| | 3. Sistem menghitung dan menampilkan jumlah kembalian. |
-| 4. Kasir menekan tombol Konfirmasi Pembayaran. | |
-| | 5. Sistem menyimpan pembayaran dan mengubah status pembayaran menjadi *Lunas*. |
-| **Skenario Alternatif A3 – Pembayaran QRIS** | |
+| 1. Kasir memilih metode pembayaran Tunai dan menginput nominal uang yang diserahkan konsumen. | |
+| | 2. Sistem secara otomatis menghitung dan menampilkan jumlah uang kembalian. |
+| 3. Kasir menekan tombol Konfirmasi Pembayaran. | |
+| | 4. Sistem menyimpan transaksi pembayaran dan mengubah status menjadi *Lunas*. |
+| **Skenario Alternatif A3 – Pembayaran Menggunakan QRIS** | |
 | **Aksi Aktor** | **Aksi Sistem** |
 | 1. Kasir memilih metode pembayaran QRIS. | |
-| | 2. Sistem menampilkan QRIS rumah makan. |
-| 3. Konsumen melakukan pembayaran sesuai dengan total pesanan. | |
-| 4. Kasir memeriksa kesesuaian nominal pembayaran secara manual karena sistem tidak menggunakan payment gateway. | |
-| 5. Kasir menekan tombol Konfirmasi Pembayaran. | |
-| | 6. Sistem menyimpan pembayaran dan mengubah status pembayaran menjadi *Lunas*. |
-| **Kondisi Akhir** | Pesanan telah selesai diproses dan dibayar. Status pembayaran menjadi *Lunas*, status pesanan menjadi *Selesai*, dan status meja kembali menjadi *Tersedia*. |
+| | 2. Sistem menampilkan barcode QRIS statis rumah makan dan total nominal pembayaran. |
+| 3. Konsumen melakukan pemindaian QRIS via e-wallet/m-banking dan menunjukkan bukti sukses bayar ke Kasir. | |
+| | 4. Kasir mencocokkan nominal pada bukti bayar konsumen lalu menekan tombol Konfirmasi Pembayaran. |
+| | 5. Sistem menyimpan transaksi pembayaran QRIS dan mengubah status menjadi *Lunas*. |
+| **Kondisi Akhir** | Seluruh pesanan telah dihidangkan dan dibayar lunas. Status pembayaran menjadi *Lunas*, status pesanan menjadi *Selesai*, dan status meja kembali menjadi *Tersedia*. |
 
 ---
 
@@ -95,80 +76,69 @@
 | **Skenario Utama** | |
 | **Aksi Aktor** | **Aksi Sistem** |
 | 1. Konsumen membuka halaman pemesanan Nasi Box (`/pesan/nasi-box`) atau Katering (`/pesan/catering`). | |
-| | 2. Sistem menampilkan daftar paket menu yang tersedia beserta batas minimal porsi/box dan ketentuan batas pemesanan minimal (H-4 untuk Katering, H-2/H-3 untuk Nasi Box). |
-| 3. Konsumen memilih salah satu paket menu yang diinginkan dan menentukan jumlah porsi/box yang dipesan. | |
-| | 4. Sistem menampilkan pilihan variasi komponen menu yang termasuk dalam paket (lauk utama, sayur, olahan pelengkap, sambal, kerupuk, dessert, dan minuman). |
-| 5. Konsumen memilih variasi komponen menu yang diinginkan sesuai ketentuan paket. | |
-| 6. Konsumen mengisi data pemesan (Nama Pemesan dan Nomor WhatsApp). | |
-| 7. Konsumen menentukan tanggal acara, jam pelaksanaan acara, dan jam estimasi pengiriman/pengambilan. | |
-| | 8. Sistem memvalidasi tanggal acara memenuhi ketentuan batas waktu minimal pemesanan. |
-| 9. Konsumen memilih metode pengiriman *Delivery* (Diantar ke Alamat) dan mengisikan alamat lengkap lokasi acara serta perkiraan jarak (Km). | |
-| | 10. Sistem secara otomatis menghitung biaya ongkos kirim berdasarkan aturan tingkatan gratis ongkir (tier porsi) dan tarif tambahan per kilometer. |
-| | 11. Sistem menampilkan rincian tagihan yang memuat subtotal paket menu, biaya ongkos kirim, dan total tagihan keseluruhan. |
-| 12. Konsumen memilih opsi pembayaran (Uang Muka / DP 50% atau Pembayaran Penuh / Lunas 100%). | |
-| 13. Konsumen menekan tombol Pesan Sekarang / Kirim Pesanan. | |
-| | 14. Sistem menyimpan data pemesan ke data pelanggan (mencegah duplikasi data berdasarkan nomor WhatsApp), menyimpan data pesanan (`pesanan`), jadwal pengiriman (`jadwal_pesanan`), rincian menu (`detail_pesanan`), pilihan lauk (`pilihan_pesanan_catering`), dan data pengiriman (`pengiriman`). |
-| | 15. Sistem memberikan status pesanan *Menunggu Pembayaran* dan menerbitkan Kode Pesanan resmi. |
-| | 16. Sistem mengalihkan konsumen ke halaman Instruksi Pembayaran yang menampilkan nomor rekening bank, QRIS rumah makan, nominal yang harus dibayar, batas waktu pembayaran, dan formulir unggah bukti transfer. |
-| 17. Konsumen melakukan transfer pembayaran dan mengunggah foto bukti pembayaran/struk transfer. | |
-| | 18. Sistem menyimpan berkas bukti transfer dan mengubah status pembayaran menjadi *Menunggu Verifikasi Pembayaran*. |
-| | 19. Sistem mengirimkan notifikasi pesanan dan pembayaran baru ke halaman Kasir/Admin. |
-| 20. Kasir/Admin membuka halaman Kelola Pesanan (Katering / Nasi Box) dan memeriksa rincian pesanan serta foto bukti transfer yang diunggah. | |
-| 21. Kasir/Admin menekan tombol Verifikasi Pembayaran. | |
-| | 22. Sistem mengubah status pembayaran menjadi *DP Terverifikasi* (jika memilih DP) atau *Lunas* (jika pembayaran penuh), serta mengubah status pesanan menjadi *Dikonfirmasi / Terjadwal*. |
-| | 23. Sistem menerbitkan Invoice / Bukti Pemesanan resmi berformat PDF yang dapat diunduh langsung oleh konsumen. |
-| | 24. Sistem menampilkan jadwal pesanan ke dashboard Tim Dapur dan halaman Jadwal Pengiriman. |
-| 25. Menjelang hari acara, Tim Dapur menyiapkan bahan baku dan memasak pesanan sesuai rincian menu dan jumlah porsi. | |
-| 26. Setelah makanan selesai dimasak dan dikemas rapi, Tim Dapur menekan tombol Pesanan Siap. | |
-| | 27. Sistem mengubah status pesanan menjadi *Siap Dikirim*. |
-| 28. Kasir/Admin membuka halaman Jadwal Pengiriman dan memilih Tim Pengantaran (Kurir) untuk mengantar pesanan. | |
-| 29. Kasir/Admin menekan tombol Tugaskan Kurir. | |
-| | 30. Sistem memperbarui penugasan kurir dan mengubah status pengiriman menjadi *Siap Dikirim*. |
-| 31. Tim Pengantaran (Kurir) membawa paket pesanan dan memulai perjalanan menuju alamat lokasi acara. | |
-| 32. Tim Pengantaran (Kurir) menekan tombol Dalam Pengantaran. | |
-| | 33. Sistem mengubah status pengiriman menjadi *Dalam Pengantaran*. |
-| 34. Tim Pengantaran (Kurir) menyerahkan pesanan kepada konsumen di lokasi tujuan. | |
-| 35. Tim Pengantaran (Kurir) mengambil foto bukti serah terima pesanan dan mengunggahnya ke sistem. | |
-| | 36. Sistem menyimpan foto bukti pengiriman dan mengubah status pengiriman menjadi *Selesai*. |
-| | 37. Sistem mengubah status pesanan menjadi *Selesai*. |
+| | 2. Sistem menampilkan katalog pilihan paket menu, ketentuan minimal jumlah porsi/box, dan batas waktu minimal pemesanan (H-4 Katering, H-2/H-3 Nasi Box). |
+| 3. Konsumen memilih paket menu dan memasukkan jumlah porsi/box yang diinginkan. | |
+| | 4. Sistem menampilkan opsi variasi komponen lauk/menu yang termasuk dalam paket (lauk utama, sayur, olahan pelengkap, sambal, kerupuk, dessert, dan minuman). |
+| 5. Konsumen memilih variasi komponen lauk yang diinginkan. | |
+| | 6. Sistem memvalidasi kelengkapan pilihan menu paket dan menampilkan formulir data pengiriman & jadwal acara. |
+| 7. Konsumen mengisi data pemesan (Nama, No. WhatsApp), memilih tanggal & jam acara, serta memilih metode pengiriman *Delivery* dan mengisi alamat lokasi serta jarak tempuh (Km). | |
+| | 8. Sistem menghitung biaya ongkir otomatis berdasarkan tingkatan gratis ongkir & tarif per km, lalu menampilkan rincian total tagihan beserta pilihan skema pembayaran (DP 50% atau Lunas 100%). |
+| 9. Konsumen memilih skema pembayaran (DP / Lunas) lalu menekan tombol Pesan Sekarang. | |
+| | 10. Sistem menyimpan data pemesan ke data pelanggan (mencegah duplikasi data), menyimpan data pesanan (status: *Menunggu Pembayaran*), jadwal acara, rincian komponen, data pengiriman, dan mengalihkan konsumen ke halaman instruksi pembayaran. |
+| 11. Konsumen melakukan transfer bank/QRIS dan mengunggah foto bukti pembayaran ke sistem. | |
+| | 12. Sistem menyimpan berkas bukti transfer, memperbarui status pembayaran menjadi *Menunggu Verifikasi Pembayaran*, dan mengirimkan notifikasi ke halaman Kasir/Admin. |
+| 13. Kasir/Admin membuka menu Kelola Pesanan (Katering/Nasi Box) dan memeriksa rincian pesanan beserta foto bukti transfer. | |
+| | 14. Sistem menampilkan rincian lengkap pesanan dan pratinjau bukti transfer pembayaran. |
+| 15. Kasir/Admin menekan tombol Verifikasi Pembayaran. | |
+| | 16. Sistem memvalidasi pembayaran, mengubah status pembayaran menjadi *DP Terverifikasi* / *Lunas*, mengubah status pesanan menjadi *Dikonfirmasi / Terjadwal*, menerbitkan Invoice resmi PDF, dan memasukkan jadwal ke antrean Tim Dapur. |
+| 17. Pada hari pelaksanaan, Tim Dapur membuka jadwal pesanan, memasak hidangan, mengemas pesanan, lalu menekan tombol Pesanan Siap. | |
+| | 18. Sistem mengubah status pesanan menjadi *Siap Dikirim* dan memunculkan pesanan pada menu Jadwal Pengiriman. |
+| 19. Kasir/Admin membuka halaman Jadwal Pengiriman, memilih Tim Pengantaran (Kurir), lalu menekan tombol Tugaskan Kurir. | |
+| | 20. Sistem mencatat penugasan kurir dan memperbarui status pengiriman menjadi *Siap Dikirim*. |
+| 21. Tim Pengantaran (Kurir) mengambil pesanan makanan dan menekan tombol Dalam Pengantaran saat berangkat menuju lokasi acara. | |
+| | 22. Sistem mengubah status pengiriman menjadi *Dalam Pengantaran*. |
+| 23. Tim Pengantaran (Kurir) menyerahkan pesanan kepada konsumen di lokasi tujuan, mengambil foto serah terima pesanan, mengunggahnya ke sistem, lalu menekan tombol Selesai Pengantaran. | |
+| | 24. Sistem menyimpan foto bukti penerimaan, mengubah status pengiriman menjadi *Selesai*, dan mengubah status pesanan menjadi *Selesai*. |
 | **Skenario Alternatif A1 – Pembayaran Menggunakan Uang Muka (DP 50%) dan Pelunasan** | |
 | **Aksi Aktor** | **Aksi Sistem** |
 | 1. Konsumen memilih opsi pembayaran Uang Muka (DP 50%) pada saat pemesanan. | |
-| | 2. Sistem menghitung nominal DP (50% dari total tagihan) dan sisa tagihan yang wajib dilunasi sebelum tanggal pengiriman. |
-| 3. Konsumen melakukan transfer sebesar nominal DP dan mengunggah bukti transfer DP. | |
-| 4. Kasir/Admin memverifikasi bukti transfer DP. | |
-| | 5. Sistem mengubah status pembayaran menjadi *DP Terverifikasi / Menunggu Pelunasan* dan pesanan tetap dijadwalkan. |
-| 6. Menjelang hari pelaksanaan acara (H-2 atau sebelum pengiriman), konsumen membuka halaman Lacak Pesanan dan mengunggah bukti transfer pelunasan sisa tagihan. | |
-| 7. Kasir/Admin memeriksa bukti pelunasan dan menekan tombol Verifikasi Pelunasan. | |
-| | 8. Sistem mengubah status pembayaran menjadi *Lunas*. |
+| | 2. Sistem menghitung nominal DP (50% dari total tagihan) dan sisa tagihan yang harus dilunasi sebelum pengiriman. |
+| 3. Konsumen mengunggah bukti transfer pembayaran DP. | |
+| | 4. Sistem menyimpan bukti bayar DP dan mengirimkan notifikasi verifikasi ke Kasir/Admin. |
+| 5. Kasir/Admin menekan tombol Verifikasi Pembayaran DP. | |
+| | 6. Sistem mengubah status pembayaran menjadi *DP Terverifikasi / Menunggu Pelunasan* dan pesanan tetap diproses. |
+| 7. Menjelang hari acara (H-2 atau sebelum pengiriman), konsumen mengunggah bukti transfer pelunasan pada halaman Lacak Pesanan. | |
+| | 8. Sistem menyimpan bukti pelunasan dan mengirimkan notifikasi ke Kasir/Admin. |
+| 9. Kasir/Admin memeriksa bukti pelunasan lalu menekan tombol Verifikasi Pelunasan. | |
+| | 10. Sistem mengubah status pembayaran menjadi *Lunas*. |
 | **Skenario Alternatif A2 – Pembayaran Penuh (Langsung Lunas 100%)** | |
 | **Aksi Aktor** | **Aksi Sistem** |
-| 1. Konsumen memilih opsi pembayaran Penuh (Lunas 100%) pada saat formulir pemesanan. | |
-| | 2. Sistem menampilkan tagihan penuh (subtotal paket + ongkos kirim). |
-| 3. Konsumen melakukan transfer 100% dan mengunggah bukti bayar. | |
-| 4. Kasir/Admin memeriksa bukti transfer dan menekan tombol Verifikasi Pembayaran. | |
-| | 5. Sistem langsung mengubah status pembayaran menjadi *Lunas* dan status pesanan menjadi *Dikonfirmasi / Terjadwal*. |
-| **Skenario Alternatif A3 – Konsumen Memilih Metode Pengambilan di Tempat (Pickup / Ambil Sendiri)** | |
+| 1. Konsumen memilih opsi Pembayaran Penuh (Lunas 100%) pada formulir pemesanan. | |
+| | 2. Sistem menampilkan nominal penuh (subtotal paket + ongkos kirim). |
+| 3. Konsumen melakukan transfer 100% dan mengunggah foto bukti pembayaran. | |
+| | 4. Sistem menyimpan bukti bayar dan meneruskan notifikasi ke Kasir/Admin. |
+| 5. Kasir/Admin memeriksa bukti transfer lalu menekan tombol Verifikasi Pembayaran. | |
+| | 6. Sistem langsung mengubah status pembayaran menjadi *Lunas* dan status pesanan menjadi *Dikonfirmasi / Terjadwal*. |
+| **Skenario Alternatif A3 – Konsumen Memilih Metode Pengambilan Sendiri di Toko (Pickup)** | |
 | **Aksi Aktor** | **Aksi Sistem** |
-| 1. Pada formulir pemesanan, konsumen memilih metode pengiriman *Pickup* (Diambil Sendiri ke Restoran). | |
-| | 2. Sistem menonaktifkan input alamat pengiriman dan menetapkan biaya ongkos kirim menjadi Rp 0. |
-| 3. Konsumen menentukan jam pengambilan pesanan di restoran. | |
-| 4. Setelah pesanan selesai dimasak, Tim Dapur menandai pesanan *Siap Diambil*. | |
-| 5. Konsumen datang ke restoran untuk mengambil pesanan. | |
-| 6. Kasir menyerahkan pesanan dan menandai status pesanan menjadi *Selesai*. | |
+| 1. Pada formulir pemesanan, konsumen memilih metode pengiriman *Pickup* (Ambil Sendiri). | |
+| | 2. Sistem menonaktifkan isian alamat pengiriman dan menetapkan biaya ongkos kirim sebesar Rp 0. |
+| 3. Konsumen memasukkan estimasi jam pengambilan pesanan di restoran. | |
+| | 4. Sistem menyimpan jadwal waktu pengambilan pesanan oleh konsumen. |
+| 5. Setelah makanan selesai disiapkan, Tim Dapur menandai status pesanan *Siap Diambil*. | |
+| | 6. Sistem mengirimkan notifikasi kepada konsumen bahwa pesanan telah siap diambil di restoran. |
+| 7. Konsumen datang ke restoran dan Kasir menyerahkan pesanan kepada konsumen lalu menekan tombol Pesanan Selesai. | |
+| | 8. Sistem memperbarui status pesanan menjadi *Selesai*. |
 | **Skenario Alternatif A4 – Bukti Pembayaran Ditolak oleh Kasir/Admin** | |
 | **Aksi Aktor** | **Aksi Sistem** |
-| 1. Kasir/Admin memeriksa bukti pembayaran dan menemukan bahwa nominal transfer tidak sesuai atau gambar bukti buram/palsu. | |
-| 2. Kasir/Admin menekan tombol Tolak Pembayaran dan memasukkan alasan penolakan. | |
-| | 3. Sistem mengubah status pembayaran menjadi *Pembayaran Ditolak*. |
-| | 4. Sistem menampilkan status penolakan beserta alasan catatan kasir pada halaman Lacak Pesanan konsumen. |
-| 5. Konsumen melakukan perbaikan transfer dan mengunggah kembali foto bukti pembayaran yang valid. | |
-| | 6. Sistem memperbarui status pembayaran menjadi *Menunggu Verifikasi Pembayaran* kembali. |
+| 1. Kasir/Admin memeriksa bukti transfer dan menemukan bahwa nominal transfer tidak sesuai atau gambar bukti tidak valid/buram. | |
+| | 2. Kasir/Admin menekan tombol Tolak Pembayaran dan memasukkan catatan alasan penolakan. |
+| | 3. Sistem mengubah status pembayaran menjadi *Pembayaran Ditolak* dan menampilkan pesan penolakan pada halaman Lacak Pesanan konsumen. |
+| 4. Konsumen membaca alasan penolakan dan mengunggah kembali foto bukti pembayaran yang valid. | |
+| | 5. Sistem menyimpan bukti pembayaran baru dan memperbarui status menjadi *Menunggu Verifikasi Pembayaran* kembali. |
 | **Skenario Alternatif A5 – Pembatalan Pesanan oleh Konsumen** | |
 | **Aksi Aktor** | **Aksi Sistem** |
-| 1. Konsumen mengajukan pembatalan pesanan sebelum batas waktu pembatalan yang ditentukan. | |
-| 2. Kasir/Admin memeriksa alasan pembatalan pesanan. | |
-| 3. Kasir/Admin menekan tombol Batalkan Pesanan. | |
-| | 4. Sistem mengubah status pesanan menjadi *Dibatalkan*. |
-| | 5. Sistem menghapus jadwal pengiriman dan membatalkan alur persiapan dapur. |
+| 1. Konsumen menghubungi admin/mengajukan pembatalan pesanan sebelum batas waktu pembatalan yang ditentukan. | |
+| | 2. Kasir/Admin memeriksa permohonan pembatalan pada halaman kelola pesanan lalu menekan tombol Batalkan Pesanan. |
+| | 3. Sistem membatalkan pesanan, mengubah status pesanan menjadi *Dibatalkan*, dan membatalkan jadwal pengiriman serta persiapan dapur. |
 | **Kondisi Akhir** | Pesanan paket katering / nasi box berhasil diproses, dimasak, dan diantar ke alamat konsumen. Status pembayaran menjadi *Lunas*, status pengiriman menjadi *Selesai*, dan status pesanan menjadi *Selesai*. |
