@@ -14,8 +14,9 @@ class JadwalPengirimanController extends Controller
 {
     public function index(Request $request)
     {
+        $tab = $request->get('tab', 'jadwal');
         $selectedDate = $request->get('date');
-        $selectedMonth = $request->get('month', Carbon::parse($selectedDate)->format('Y-m'));
+        $selectedMonth = $request->get('month', $selectedDate ? Carbon::parse($selectedDate)->format('Y-m') : now()->format('Y-m'));
 
         $startOfMonth = Carbon::parse($selectedMonth.'-01')->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
@@ -47,55 +48,30 @@ class JadwalPengirimanController extends Controller
             }
         }
 
-        $statusFilter = $request->get('status', 'Semua');
+        $statusFilter = $request->get('status', 'all');
+        if ($statusFilter === 'Semua' || $statusFilter === '') {
+            $statusFilter = 'all';
+        }
         $search = $request->get('search');
 
-        $query = Pesanan::with([
+        // Query dasar untuk pengiriman pesanan (catering & nasi box)
+        $baseQuery = Pesanan::with([
             'pelanggan',
             'jadwal_pesanan',
-            'pengiriman',
+            'pengiriman.status_pengiriman',
+            'pengiriman.ditugaskan_kepada_pengguna',
             'detail_pesanan.menu',
             'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket.menu',
             'jenis_pesanan',
         ])
             ->whereIn('jenis_pesanan_id', [2, 3])
-            ->whereHas('pengiriman'); // Only show orders that are sent to delivery (Jadwal Pengiriman is a worklist)
+            ->whereHas('pengiriman');
 
         if ($isTimPengantaran) {
-            $query->whereIn('status_pesanan_id', [4, 5]);
+            $baseQuery->whereIn('status_pesanan_id', [4, 5]);
         }
 
-        if ($selectedDate) {
-            $query->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {
-                $q->whereDate('tanggal_acara', $selectedDate);
-            });
-        }
-
-        if ($statusFilter !== 'Semua' && $statusFilter !== '' && $statusFilter !== null) {
-            $query->whereHas('pengiriman', function ($q) use ($statusFilter) {
-                $q->where('status_pengiriman_id', (int) $statusFilter);
-            });
-        }
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('id_pesanan', 'like', "%{$search}%")
-                    ->orWhere('catatan', 'like', "%{$search}%")
-                    ->orWhereHas('pelanggan', function ($sub) use ($search) {
-                        $sub->where('nama', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('jadwal_pesanan', function ($sub) use ($search) {
-                        $sub->where('nama_penerima', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-
-
-        $orders = $query->get()->sortBy(function ($order) {
-            return $order->jadwal_pesanan->tanggal_acara ? Carbon::parse($order->jadwal_pesanan->tanggal_acara)->format('H:i:s') : '23:59:59';
-        })->values();
-
+        // Summary Query untuk statistik kartu & badge tab
         $summaryQuery = Pesanan::whereIn('jenis_pesanan_id', [2, 3])
             ->whereHas('pengiriman');
 
@@ -108,19 +84,88 @@ class JadwalPengirimanController extends Controller
                 $q->whereDate('tanggal_acara', $selectedDate);
             });
         }
-            
 
-        
-        $allSummaryOrders = $summaryQuery->get();
+        $allSummaryOrders = $summaryQuery->with('pengiriman')->get();
+
+        $dijadwalkanCount = $allSummaryOrders->where('pengiriman.status_pengiriman_id', 1)->count();
+        $siapCount = $allSummaryOrders->where('pengiriman.status_pengiriman_id', 2)->count();
+        $dalamPengantaranCount = $allSummaryOrders->where('pengiriman.status_pengiriman_id', 3)->count();
+        $terkirimCount = $allSummaryOrders->where('pengiriman.status_pengiriman_id', 4)->count();
+        $dibatalkanCount = $allSummaryOrders->where('pengiriman.status_pengiriman_id', 5)->count();
+
+        $activeCount = $dijadwalkanCount + $siapCount + $dalamPengantaranCount;
+        $historyCount = $terkirimCount + $dibatalkanCount;
 
         $summary = [
             'Semua' => $allSummaryOrders->count(),
-            'dijadwalkan' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 1)->count(),
-            'siap' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 2)->count(),
-            'dalam_pengantaran' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 3)->count(),
-            'terkirim' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 4)->count(),
-            'dibatalkan' => $allSummaryOrders->where('pengiriman.status_pengiriman_id', 5)->count(),
+            'dijadwalkan' => $dijadwalkanCount,
+            'siap' => $siapCount,
+            'dalam_pengantaran' => $dalamPengantaranCount,
+            'terkirim' => $terkirimCount,
+            'dibatalkan' => $dibatalkanCount,
+            'active_count' => $activeCount,
+            'history_count' => $historyCount,
         ];
+
+        // Query untuk data tabel sesuai Tab Aktif
+        $query = clone $baseQuery;
+
+        if ($selectedDate) {
+            $query->whereHas('jadwal_pesanan', function ($q) use ($selectedDate) {
+                $q->whereDate('tanggal_acara', $selectedDate);
+            });
+        }
+
+        if ($tab === 'riwayat') {
+            if ($statusFilter !== 'all') {
+                $query->whereHas('pengiriman', function ($q) use ($statusFilter) {
+                    $q->where('status_pengiriman_id', (int) $statusFilter);
+                });
+            } else {
+                $query->whereHas('pengiriman', function ($q) {
+                    $q->whereIn('status_pengiriman_id', [4, 5]); // Selesai (4) / Dibatalkan (5)
+                });
+            }
+        } else {
+            // Default tab: 'jadwal' (Pengiriman Aktif)
+            if ($statusFilter !== 'all') {
+                $query->whereHas('pengiriman', function ($q) use ($statusFilter) {
+                    $q->where('status_pengiriman_id', (int) $statusFilter);
+                });
+            } else {
+                $query->whereHas('pengiriman', function ($q) {
+                    $q->whereIn('status_pengiriman_id', [1, 2, 3]); // Dijadwalkan (1), Siap (2), Dalam Pengantaran (3)
+                });
+            }
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id_pesanan', 'like', "%{$search}%")
+                    ->orWhere('catatan', 'like', "%{$search}%")
+                    ->orWhereHas('pelanggan', function ($sub) use ($search) {
+                        $sub->where('nama', 'like', "%{$search}%")
+                            ->orWhere('nomor_telepon', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('jadwal_pesanan', function ($sub) use ($search) {
+                        $sub->where('nama_penerima', 'like', "%{$search}%")
+                            ->orWhere('alamat_pengiriman', 'like', "%{$search}%")
+                            ->orWhere('nomor_telepon_penerima', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($tab === 'riwayat') {
+            $orders = $query->get()->sortByDesc(function ($order) {
+                return $order->pengiriman->diterima_pada ?? $order->updated_at;
+            })->values();
+        } else {
+            $orders = $query->get()->sortBy(function ($order) {
+                return $order->jadwal_pesanan && $order->jadwal_pesanan->tanggal_acara
+                    ? Carbon::parse($order->jadwal_pesanan->tanggal_acara)->format('Y-m-d H:i:s')
+                    : '9999-12-31 23:59:59';
+            })->values();
+        }
 
         $kurirs = [];
         if (Auth::user()->peran_id != 6) {
@@ -128,6 +173,7 @@ class JadwalPengirimanController extends Controller
         }
 
         return view('admin.pesanan.pengiriman.index', compact(
+            'tab',
             'selectedDate',
             'selectedMonth',
             'startOfMonth',

@@ -113,19 +113,19 @@
                                         </td>
                                         <td class="px-4 py-3 align-middle">
                                             <div class="flex items-center gap-1.5 justify-end">
-                                                <input type="text" name="jumlah_diterima[{{ $row['detail_id'] }}]" id="jml_{{ $row['detail_id'] }}" value="{{ (float) $sisaVal }}" oninput="this.value = this.value.replace(/[^0-9.,]/g, ''); updateRowCalc('{{ $row['detail_id'] }}')" class="w-24 text-right border border-gray-200 text-gray-900 text-sm rounded-xl px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold" required>
+                                                <input type="text" name="jumlah_diterima[{{ $row['detail_id'] }}]" id="jml_{{ $row['detail_id'] }}" value="{{ (float) $sisaVal }}" oninput="updateRowCalc('{{ $row['detail_id'] }}')" onchange="updateRowCalc('{{ $row['detail_id'] }}')" class="w-24 text-right border border-gray-200 text-gray-900 text-sm rounded-xl px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold" required>
                                                 <span class="text-xs text-gray-500 font-medium shrink-0">{{ $row['satuan'] }}</span>
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 align-middle">
                                             <div class="relative inline-block w-full">
                                                 <span class="absolute left-3 top-2 text-xs text-gray-400 font-bold">Rp</span>
-                                                <input type="text" name="harga_beli[{{ $row['detail_id'] }}]" id="hrg_{{ $row['detail_id'] }}" value="{{ $hargaSatuanPO > 0 ? number_format($hargaSatuanPO, 0, ',', '.') : '' }}" placeholder="0" oninput="formatRupiahInput(this); updateRowCalc('{{ $row['detail_id'] }}')" class="w-full text-right pl-8 pr-3 border border-gray-200 text-gray-900 text-sm rounded-xl py-1.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold hrg-input">
+                                                <input type="text" name="harga_beli[{{ $row['detail_id'] }}]" id="hrg_{{ $row['detail_id'] }}" value="{{ $hargaSatuanPO > 0 ? number_format($hargaSatuanPO, 0, ',', '.') : '' }}" placeholder="0" oninput="formatRupiahInput(this); updateRowCalc('{{ $row['detail_id'] }}')" onchange="updateRowCalc('{{ $row['detail_id'] }}')" class="w-full text-right pl-8 pr-3 border border-gray-200 text-gray-900 text-sm rounded-xl py-1.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold hrg-input">
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 text-right align-middle">
                                             <div class="font-bold text-gray-900" id="subtotal_{{ $row['detail_id'] }}">
-                                                Rp {{ number_format($subtotalInitial, 0, ',', '.') }}
+                                                Rp {{ number_format(round($subtotalInitial), 0, ',', '.') }}
                                             </div>
                                         </td>
                                     </tr>
@@ -226,18 +226,50 @@
 <script>
     let isManualInput = false;
 
-    function parseDecimal(val) {
+    /**
+     * Konversi kuantitas input string ke numerik murni (float).
+     * Menerima format "0,5", "0.5", "4,004", "4.004", "10", dll.
+     */
+    function parseNumericQty(val) {
         if (val === '' || val === null || val === undefined) return 0;
-        let str = String(val).replace(/[^0-9.,]/g, '').replace(',', '.');
+        let str = String(val).trim();
+        if (str.includes(',')) {
+            str = str.replace(/\./g, '').replace(',', '.');
+        }
         let parsed = parseFloat(str);
-        return isNaN(parsed) ? 0 : parsed;
+        return isNaN(parsed) || parsed < 0 ? 0 : parsed;
     }
 
-    function parseInteger(val) {
+    /**
+     * Konversi input harga satuan ke numerik murni (float).
+     * Menerima format "Rp 30.000", "30.000", "140.000", dll.
+     */
+    function parseNumericPrice(val) {
         if (val === '' || val === null || val === undefined) return 0;
-        let str = String(val).replace(/[^0-9]/g, '');
-        let parsed = parseInt(str, 10);
-        return isNaN(parsed) ? 0 : parsed;
+        let str = String(val).trim();
+        if (str.includes(',')) {
+            str = str.replace(/\./g, '').replace(',', '.');
+            let parsed = parseFloat(str.replace(/[^0-9.]/g, ''));
+            return isNaN(parsed) || parsed < 0 ? 0 : parsed;
+        }
+        let clean = str.replace(/[^0-9]/g, '');
+        let parsed = parseFloat(clean);
+        return isNaN(parsed) || parsed < 0 ? 0 : parsed;
+    }
+
+    /**
+     * Format numerik ke format Rupiah standar (pemisah ribuan titik).
+     * Contoh: 27500 -> "27.500", 120120 -> "120.120", 1400000 -> "1.400.000"
+     */
+    function formatRupiahDisplay(num) {
+        if (num === '' || num === null || num === undefined || isNaN(num)) return '0';
+        let rounded = Math.round(Number(num));
+        return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function formatRupiahInput(input) {
+        let numeric = parseNumericPrice(input.value);
+        input.value = numeric > 0 ? formatRupiahDisplay(numeric) : '';
     }
 
     function toggleRowInputs(checkbox, id) {
@@ -249,17 +281,10 @@
         updateRowCalc(id);
     }
 
-    function formatRupiahValue(val) {
-        if (val === '' || val === null || val === undefined) return '0';
-        let raw = String(val).replace(/[^0-9]/g, '');
-        if (!raw) return '0';
-        return parseInt(raw, 10).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    }
-
-    function formatRupiahInput(input) {
-        input.value = formatRupiahValue(input.value);
-    }
-
+    /**
+     * Perhitungan subtotal per baris:
+     * Subtotal = jumlah diterima x harga satuan
+     */
     function updateRowCalc(id) {
         const jmlInput = document.getElementById('jml_' + id);
         const hrgInput = document.getElementById('hrg_' + id);
@@ -270,15 +295,18 @@
 
         let subtotal = 0;
         if (checkbox.checked) {
-            const diterima = parseDecimal(jmlInput.value);
-            const harga = parseInteger(hrgInput.value);
+            const diterima = parseNumericQty(jmlInput.value);
+            const harga = parseNumericPrice(hrgInput.value);
             subtotal = diterima * harga;
         }
 
-        subtotalCell.innerHTML = 'Rp ' + formatRupiahValue(subtotal);
+        subtotalCell.innerHTML = 'Rp ' + formatRupiahDisplay(subtotal);
         recalcGrandTotal();
     }
 
+    /**
+     * Hitung total keseluruhan penerimaan dari seluruh baris yang dicentang.
+     */
     function recalcGrandTotal() {
         let grandTotal = 0;
 
@@ -290,8 +318,8 @@
                     const id = idMatch[1];
                     const jmlInput = document.getElementById('jml_' + id);
                     const hrgInput = document.getElementById('hrg_' + id);
-                    const diterima = parseDecimal(jmlInput ? jmlInput.value : 0);
-                    const harga = parseInteger(hrgInput ? hrgInput.value : 0);
+                    const diterima = parseNumericQty(jmlInput ? jmlInput.value : 0);
+                    const harga = parseNumericPrice(hrgInput ? hrgInput.value : 0);
                     grandTotal += (diterima * harga);
                 }
             }
@@ -299,7 +327,7 @@
 
         const grandTotalInput = document.getElementById('grandTotalNota');
         if (grandTotalInput && !isManualInput) {
-            grandTotalInput.value = formatRupiahValue(grandTotal);
+            grandTotalInput.value = formatRupiahDisplay(grandTotal);
         }
     }
 

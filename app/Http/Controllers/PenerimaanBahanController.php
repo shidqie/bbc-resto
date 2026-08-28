@@ -122,10 +122,16 @@ class PenerimaanBahanController extends Controller
         $stokService = app(StockService::class);
 
         $penerimaan = DB::transaction(function () use ($request, $po, $pengadaan, $jenisPersediaan, $stokService, $sisaItems, $checkeds) {
-            $totalNotaRaw = $request->total_nota;
+            $totalNotaRaw = (string) ($request->total_nota ?? '');
             $totalPembelian = null;
-            if ($totalNotaRaw !== null && $totalNotaRaw !== '') {
-                $totalPembelian = (float) str_replace(['Rp', '.', ' ', ','], ['', '', '', '.'], $totalNotaRaw);
+            if ($totalNotaRaw !== '') {
+                if (str_contains($totalNotaRaw, ',')) {
+                    $clean = str_replace('.', '', $totalNotaRaw);
+                    $clean = str_replace(',', '.', $clean);
+                    $totalPembelian = (float) preg_replace('/[^0-9.]/', '', $clean);
+                } else {
+                    $totalPembelian = (float) preg_replace('/[^0-9]/', '', $totalNotaRaw);
+                }
             }
 
             $penerimaan = PenerimaanBahan::create([
@@ -157,8 +163,12 @@ class PenerimaanBahanController extends Controller
                     continue;
                 }
 
-                $raw = $request->jumlah_diterima[$detailId] ?? 0;
-                $diterima = (float) str_replace(',', '.', $raw);
+                $raw = (string) ($request->jumlah_diterima[$detailId] ?? '0');
+                if (str_contains($raw, ',')) {
+                    $raw = str_replace('.', '', $raw);
+                    $raw = str_replace(',', '.', $raw);
+                }
+                $diterima = (float) $raw;
                 if ($diterima < 0) {
                     $diterima = 0;
                 }
@@ -177,11 +187,17 @@ class PenerimaanBahanController extends Controller
                 }
 
                 // Pengguna dapat menginput harga satuan aktual pada masing-masing bahan
-                $hargaBeliRaw = $request->harga_beli[$detailId] ?? null;
-                if ($hargaBeliRaw !== null && $hargaBeliRaw !== '') {
-                    $hargaBeli = (float) str_replace(['Rp', '.', ' ', ','], ['', '', '', '.'], $hargaBeliRaw);
+                $hargaBeliRaw = (string) ($request->harga_beli[$detailId] ?? '');
+                if ($hargaBeliRaw !== '') {
+                    if (str_contains($hargaBeliRaw, ',')) {
+                        $cleanHrg = str_replace('.', '', $hargaBeliRaw);
+                        $cleanHrg = str_replace(',', '.', $cleanHrg);
+                        $hargaBeli = (float) preg_replace('/[^0-9.]/', '', $cleanHrg);
+                    } else {
+                        $hargaBeli = (float) preg_replace('/[^0-9]/', '', $hargaBeliRaw);
+                    }
                 } else {
-                    $hargaBeli = (float) ($detailPo->detail_pengadaan_bahan?->harga_satuan ?? 0);
+                    $hargaBeli = (float) ($detailPo->detail_pengadaan_bahan?->harga_satuan ?? $detailPo->harga_satuan ?? 0);
                 }
 
                 $diminta = (float) $detailPo->jumlah_dipesan;

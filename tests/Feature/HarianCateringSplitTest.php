@@ -84,20 +84,14 @@ class HarianCateringSplitTest extends TestCase
         ]);
 
         // Saldo Harian dan Catering terpisah.
-        StokBahan::create([
-            'bahan_baku_id' => $bahan->id,
-            'jenis_persediaan' => StokBahan::JENIS_HARIAN,
-            'jumlah_stok' => 100,
-            'stok_minimal' => 10,
-            'terakhir_diperbarui' => now(),
-        ]);
-        StokBahan::create([
-            'bahan_baku_id' => $bahan->id,
-            'jenis_persediaan' => StokBahan::JENIS_CATERING,
-            'jumlah_stok' => 0,
-            'stok_minimal' => 10,
-            'terakhir_diperbarui' => now(),
-        ]);
+        StokBahan::updateOrCreate(
+            ['bahan_baku_id' => $bahan->id, 'jenis_persediaan' => StokBahan::JENIS_HARIAN],
+            ['jumlah_stok' => 100, 'stok_minimal' => 10, 'terakhir_diperbarui' => now()]
+        );
+        StokBahan::updateOrCreate(
+            ['bahan_baku_id' => $bahan->id, 'jenis_persediaan' => StokBahan::JENIS_CATERING],
+            ['jumlah_stok' => 0, 'stok_minimal' => 10, 'terakhir_diperbarui' => now()]
+        );
     }
 
     private function buatPengadaan(string $jenis, int $jumlah): PengadaanBahan
@@ -271,7 +265,7 @@ class HarianCateringSplitTest extends TestCase
         $this->seedReferences();
 
         JenisMenu::create(['id' => 1, 'kode_jenis' => 'MAKANAN', 'nama_jenis' => 'Makanan']);
-        \DB::table('menu')->insert([
+        $menu = Menu::create([
             'id' => 1,
             'jenis_menu_id' => 1,
             'nama_menu' => 'Nasi Liwet',

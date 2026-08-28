@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Portal Staff · BBC Resto</title>
+    <title>Portal Internal · BBC Resto</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/logo-saung.png') }}">
@@ -51,13 +51,13 @@
                 {{-- Mobile logo --}}
                 <div class="lg:hidden flex items-center gap-2.5 mb-10">
                     <img src="{{ asset('images/logo-saung.png') }}" alt="BBC Resto" class="w-8 h-8 rounded-full object-contain">
-                    <span class="text-sm font-bold text-body tracking-wide">BBC Resto · Staff</span>
+                    <span class="text-sm font-bold text-body tracking-wide">BBC Resto · Portal Internal</span>
                 </div>
 
                 {{-- Heading --}}
                 <div class="mb-6 fu d1">
-                    <h2 class="text-xl font-bold text-body tracking-tight mb-1">Masuk Portal Staff</h2>
-                    <p class="text-xs text-gray-500 font-medium">Gunakan Email atau No. WhatsApp & password akun staff Anda.</p>
+                    <h2 class="text-xl font-bold text-body tracking-tight mb-1">Masuk Portal Internal</h2>
+                    <p class="text-xs text-gray-500 font-medium">Gunakan Email atau No. WhatsApp & password akun internal Anda.</p>
                 </div>
 
                 <x-auth-session-status class="mb-5 text-sm" :status="session('status')" />

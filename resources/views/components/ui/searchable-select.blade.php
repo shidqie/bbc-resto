@@ -44,13 +44,54 @@
         selectedName: '',
         options: @js($normalizedOptions),
         init() {
-            if (this.selectedId !== '') {
+            this.syncSelection();
+
+            this.$watch('selectedId', (val) => {
+                this.syncSelection();
+            });
+
+            // Listen for window level value-updated events
+            window.addEventListener('value-updated', (e) => {
+                if (e.detail && (e.detail.id === '{{ $inputUniqueId }}' || e.detail.name === '{{ $name }}')) {
+                    this.setValue(e.detail.value);
+                }
+            });
+
+            // Listen for direct events on hidden input
+            this.$nextTick(() => {
+                if (this.$refs.hiddenInput) {
+                    this.$refs.hiddenInput.addEventListener('set-value', (e) => {
+                        this.setValue(e.detail !== undefined ? e.detail : e.target.value);
+                    });
+                    this.$refs.hiddenInput.addEventListener('change', (e) => {
+                        if (String(this.selectedId) !== String(e.target.value)) {
+                            this.setValue(e.target.value);
+                        }
+                    });
+                }
+            });
+        },
+        syncSelection() {
+            if (this.selectedId !== '' && this.selectedId !== null && this.selectedId !== undefined) {
                 const found = this.options.find(o => String(o.value) === String(this.selectedId));
                 if (found) {
                     this.selectedName = found.label;
                     this.search = found.label;
+                    if (this.$refs.hiddenInput) {
+                        this.$refs.hiddenInput.value = this.selectedId;
+                    }
+                    return;
                 }
             }
+            this.selectedName = '';
+            this.search = '';
+            if (this.$refs.hiddenInput && (this.selectedId === '' || this.selectedId === null)) {
+                this.$refs.hiddenInput.value = '';
+            }
+        },
+        setValue(val) {
+            this.selectedId = (val !== null && val !== undefined && val !== '') ? String(val) : '';
+            this.syncSelection();
         },
         get filteredOptions() {
             if (!this.search || this.search === this.selectedName) return this.options;

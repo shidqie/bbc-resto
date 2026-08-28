@@ -78,6 +78,37 @@ class MenuController extends Controller
             $query->where('kategori_menu_id', $kategoriFilter);
         }
 
+        $statusFilter = $request->input('status');
+        if ($statusFilter && $statusFilter !== 'all') {
+            if ($statusFilter === 'nonaktif') {
+                $query->where('status_aktif', 0);
+            } elseif ($statusFilter === 'habis') {
+                $query->where('status_aktif', 1);
+                $candidateMenus = (clone $query)->with(['resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'komponen_paket.menu_terkait.resep_menu', 'komponen_paket.opsi.menu.resep_menu'])->get();
+                $habisIds = [];
+                foreach ($candidateMenus as $cand) {
+                    $jenisPersediaan = in_array((int)$cand->jenis_menu_id, [2]) ? \App\Models\StokBahan::JENIS_CATERING : \App\Models\StokBahan::JENIS_HARIAN;
+                    $porsi = $kebutuhanBahanService->porsiTersedia($cand, $jenisPersediaan);
+                    if ($porsi < 1.0) {
+                        $habisIds[] = $cand->id;
+                    }
+                }
+                $query->whereIn('menu.id', $habisIds);
+            } elseif ($statusFilter === 'tersedia') {
+                $query->where('status_aktif', 1);
+                $candidateMenus = (clone $query)->with(['resep_menu.bahan_baku.satuan', 'resep_menu.satuan', 'komponen_paket.menu_terkait.resep_menu', 'komponen_paket.opsi.menu.resep_menu'])->get();
+                $tersediaIds = [];
+                foreach ($candidateMenus as $cand) {
+                    $jenisPersediaan = in_array((int)$cand->jenis_menu_id, [2]) ? \App\Models\StokBahan::JENIS_CATERING : \App\Models\StokBahan::JENIS_HARIAN;
+                    $porsi = $kebutuhanBahanService->porsiTersedia($cand, $jenisPersediaan);
+                    if ($porsi >= 1.0) {
+                        $tersediaIds[] = $cand->id;
+                    }
+                }
+                $query->whereIn('menu.id', $tersediaIds);
+            }
+        }
+
         if ($request->has('filter_resep') && $request->filter_resep != '') {
             if ($request->filter_resep == 'ada') {
                 $query->where(function ($q) {
@@ -115,24 +146,32 @@ class MenuController extends Controller
             ->select('menu.*')
             ->paginate(10)
             ->withQueryString();
-        $masterMenus = Menu::where('status_aktif', 1)->whereDoesntHave('komponen_paket')->orderBy('nama_menu')->get();
 
-        $kategoris = KategoriMenu::withCount('menu')->orderBy('id', 'asc')->paginate(10)->withQueryString();
-        $allKategoris = KategoriMenu::with('menu')->orderBy('id', 'asc')->get()->map(function($kat) {
-            if ($kat->menu->isNotEmpty()) {
-                $kat->setAttribute('jenis_menu_id', $kat->menu->first()->jenis_menu_id);
+        $kategoriQuery = KategoriMenu::query();
+        if ($jenisId !== 'all') {
+            if ($jenisId == 2) {
+                // Paket Katering
+                $kategoriQuery->whereHas('menu', function($q) {
+                    $q->where('jenis_menu_id', 2);
+                });
+            } elseif ($jenisId == 3) {
+                // Paket Nasi Box
+                $kategoriQuery->whereHas('menu', function($q) {
+                    $q->where('jenis_menu_id', 3);
+                });
+            } else {
+                // Menu Dine In (jenis_menu_id = 1)
+                $kategoriQuery->whereHas('menu', function($q) {
+                    $q->where('jenis_menu_id', 1)->where('harga_jual', '>', 0);
+                });
             }
-            return $kat;
-        });
-
-        if ($jenisId == 2) {
-            $allKategoris = $allKategoris->filter(fn($k) => $k->id == 16 || $k->jenis_menu_id == 2);
-        } elseif ($jenisId == 3) {
-            $allKategoris = $allKategoris->filter(fn($k) => $k->id == 17 || $k->jenis_menu_id == 3);
-        } elseif ($jenisId == 1) {
-            $allKategoris = $allKategoris->filter(fn($k) => !in_array($k->id, [16, 17]));
+        } else {
+            $kategoriQuery->whereHas('menu');
         }
 
+        $allKategoris = $kategoriQuery->orderBy('nama_kategori', 'asc')->get();
+        $kategoriModalList = KategoriMenu::orderBy('nama_kategori', 'asc')->get();
+        $masterMenus = Menu::where('status_aktif', 1)->whereDoesntHave('komponen_paket')->orderBy('nama_menu')->get();
         $bahanBakus = BahanBaku::with('satuan')->where('status_aktif', true)->orderBy('nama_bahan')->get();
 
         $stats = [
@@ -151,18 +190,11 @@ class MenuController extends Controller
             'nasi_box' => Menu::where('jenis_menu_id', 3)->where(fn($q) => $q->has('item_paket')->orWhere('kategori_menu_id', 17))->count(),
         ];
 
-        $stokBahan = StokBahan::harian()->pluck('jumlah_stok', 'bahan_baku_id');
-        $menus->getCollection()->transform(function ($menu) use ($stokBahan, $kebutuhanBahanService) {
-            $porsi = null;
-            if ($menu->resep_menu->isNotEmpty()) {
-                foreach ($menu->resep_menu as $resep) {
-                    $stok = (float) ($stokBahan[$resep->bahan_baku_id] ?? 0);
-                    $butuh = (float) $resep->jumlah;
-                    $bisa = $butuh > 0 ? (int) floor($stok / $butuh) : PHP_INT_MAX;
-                    $porsi = $porsi === null ? $bisa : min($porsi, $bisa);
-                }
-            }
-            $menu->setAttribute('porsi_tersedia', $porsi);
+        $menus->getCollection()->transform(function ($menu) use ($kebutuhanBahanService) {
+            $jenisPersediaan = in_array((int)$menu->jenis_menu_id, [2]) ? \App\Models\StokBahan::JENIS_CATERING : \App\Models\StokBahan::JENIS_HARIAN;
+            $porsi = $kebutuhanBahanService->porsiTersedia($menu, $jenisPersediaan);
+            $menu->porsi_tersedia = $porsi;
+            $menu->is_habis = ($porsi < 1 && $porsi < PHP_FLOAT_MAX);
 
             // Compute aggregations for Paket
             if (in_array($menu->jenis_menu_id, [2, 3])) {
@@ -193,10 +225,11 @@ class MenuController extends Controller
             return $menu;
         });
 
+        $kategoris = KategoriMenu::withCount('menu')->orderBy('id', 'asc')->paginate(10)->withQueryString();
         $satuans = \App\Models\Satuan::all();
         $allMenusData = Menu::with(['kategori_menu', 'resep_menu.bahan_baku.satuan', 'resep_menu.satuan'])->get();
 
-        return view('admin.menu.index', compact('menus', 'kategoris', 'allKategoris', 'bahanBakus', 'satuans', 'stats', 'jenisId', 'allMenusData', 'masterMenus'));
+        return view('admin.menu.index', compact('menus', 'kategoris', 'allKategoris', 'kategoriModalList', 'bahanBakus', 'satuans', 'stats', 'jenisId', 'allMenusData', 'masterMenus'));
     }
 
     public function create()

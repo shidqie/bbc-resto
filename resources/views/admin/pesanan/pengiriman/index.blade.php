@@ -14,40 +14,24 @@
     $pageTitle = $isTimPengiriman ? 'Pengiriman Saya' : 'Jadwal Pengiriman';
     $pageSubtitle = $isTimPengiriman
         ? 'Lihat tugas pengiriman Katering dan Nasi Box serta perbarui status pengiriman.'
-        : 'Pantau jadwal pengiriman pesanan Katering dan Nasi Box.';
+        : 'Pantau jadwal dan riwayat pengiriman pesanan Katering dan Nasi Box.';
 
     /*
-     * Ringkasan dihitung dari data $orders yang sudah dikirim controller.
-     * Status backend resmi (Multiaktor RM BBC):
+     * Ringkasan dari backend controller:
      * 1 = Dijadwalkan
      * 2 = Siap Dikirim
      * 3 = Dalam Pengantaran
-     * 4 = Terkirim
+     * 4 = Terkirim / Selesai
      * 5 = Dibatalkan
      */
-    $orderCollection = method_exists($orders, 'getCollection')
-        ? $orders->getCollection()
-        : collect($orders);
-
-    $totalPengiriman = method_exists($orders, 'total')
-        ? $orders->total()
-        : $orderCollection->count();
-
-    $dijadwalkan = $orderCollection->filter(function ($order) {
-        return (int) optional($order->pengiriman)->status_pengiriman_id === 1;
-    })->count();
-
-    $siapDikirim = $orderCollection->filter(function ($order) {
-        return (int) optional($order->pengiriman)->status_pengiriman_id === 2;
-    })->count();
-
-    $dalamPengantaran = $orderCollection->filter(function ($order) {
-        return (int) optional($order->pengiriman)->status_pengiriman_id === 3;
-    })->count();
-
-    $terkirim = $orderCollection->filter(function ($order) {
-        return (int) optional($order->pengiriman)->status_pengiriman_id === 4;
-    })->count();
+    $totalPengiriman = $summary['Semua'] ?? 0;
+    $dijadwalkan = $summary['dijadwalkan'] ?? 0;
+    $siapDikirim = $summary['siap'] ?? 0;
+    $dalamPengantaran = $summary['dalam_pengantaran'] ?? 0;
+    $terkirim = $summary['terkirim'] ?? 0;
+    $dibatalkan = $summary['dibatalkan'] ?? 0;
+    $activeCount = $summary['active_count'] ?? 0;
+    $historyCount = $summary['history_count'] ?? 0;
 @endphp
 
 @section('title', $pageTitle)
@@ -107,7 +91,7 @@
             :breadcrumbs="['Penjualan', $pageTitle]"
         >
             <x-slot:actions>
-                <x-ui.button variant="primary" href="{{ route('admin.jadwal.index') }}">
+                <x-ui.button variant="primary" href="{{ route('admin.jadwal.index', ['date' => now()->format('Y-m-d'), 'tab' => $tab]) }}">
                     Hari Ini
                 </x-ui.button>
             </x-slot:actions>
@@ -124,7 +108,7 @@
                         Semua Pengiriman
                     </p>
                     <p class="text-2xl font-black text-gray-900 mt-1">{{ $totalPengiriman }}</p>
-                    <p class="text-[11px] text-gray-400 mt-0.5">{{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d M Y') }}</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ $selectedDate ? \Carbon\Carbon::parse($selectedDate)->translatedFormat('d M Y') : 'Semua Tanggal' }}</p>
                 </div>
                 <div class="w-11 h-11 rounded-2xl bg-gray-50 border border-gray-100 text-gray-700 flex items-center justify-center">
                     <x-heroicon-o-calendar class="w-5 h-5" />
@@ -166,7 +150,7 @@
                         Selesai
                     </p>
                     <p class="text-2xl font-black text-emerald-600 mt-1">{{ $terkirim }}</p>
-                    <p class="text-[11px] text-gray-400 mt-0.5">Berhasil diantar</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ $terkirim }} selesai &bull; {{ $dibatalkan }} batal</p>
                 </div>
                 <div class="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center">
                     <x-heroicon-o-check-circle class="w-5 h-5" />
@@ -174,50 +158,108 @@
             </div>
         </div>
 
+        {{-- TABS --}}
+        <x-ui.tab-list>
+            <x-ui.tab href="{{ route('admin.jadwal.index', array_merge(request()->except('tab', 'status', 'page'), ['tab' => 'jadwal'])) }}" :active="$tab === 'jadwal'">
+                <div class="flex items-center gap-2">
+                    <span>Jadwal Pengiriman</span>
+                    <span class="px-2 py-0.5 text-xs rounded-full font-bold {{ $tab === 'jadwal' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700' }}">
+                        {{ $activeCount }}
+                    </span>
+                </div>
+            </x-ui.tab>
+            <x-ui.tab href="{{ route('admin.jadwal.index', array_merge(request()->except('tab', 'status', 'page'), ['tab' => 'riwayat'])) }}" :active="$tab === 'riwayat'">
+                <div class="flex items-center gap-2">
+                    <span>Riwayat Pengiriman</span>
+                    <span class="px-2 py-0.5 text-xs rounded-full font-bold {{ $tab === 'riwayat' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700' }}">
+                        {{ $historyCount }}
+                    </span>
+                </div>
+            </x-ui.tab>
+        </x-ui.tab-list>
+
         {{-- TABLE CONTAINER --}}
         <x-ui.data-table>
             <x-slot:toolbar>
                 <form
                     action="{{ route('admin.jadwal.index') }}"
                     method="GET"
-                    class="flex items-center gap-3 w-full flex-wrap"
+                    class="flex flex-wrap items-center justify-between gap-3 w-full"
                 >
-                    <div class="w-full sm:w-auto xl:max-w-xs shrink-0">
-                        <x-ui.input
-                            type="date"
-                            name="date"
-                            value="{{ $selectedDate }}"
-                            onchange="this.form.submit()"
-                        />
+                    <input type="hidden" name="tab" value="{{ $tab }}">
+
+                    {{-- Sisi Kiri: Filter Tanggal & Status & Tombol Reset --}}
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        {{-- Filter Tanggal --}}
+                        <div class="w-full sm:w-auto xl:max-w-xs shrink-0">
+                            <x-ui.input
+                                type="date"
+                                name="date"
+                                value="{{ $selectedDate }}"
+                                onchange="this.form.submit()"
+                            />
+                        </div>
+
+                        {{-- Filter Status --}}
+                        @if($tab === 'riwayat')
+                            <x-ui.multi-select
+                                name="status"
+                                :options="[
+                                    'all' => 'Semua Status',
+                                    '4' => 'Selesai',
+                                    '5' => 'Dibatalkan'
+                                ]"
+                                :selected="request('status', 'all')"
+                                label="Status Pengiriman"
+                                type="radio"
+                            />
+                        @else
+                            <x-ui.multi-select
+                                name="status"
+                                :options="[
+                                    'all' => 'Semua Status',
+                                    '1' => 'Dijadwalkan',
+                                    '2' => 'Siap Dikirim',
+                                    '3' => 'Dalam Pengantaran'
+                                ]"
+                                :selected="request('status', 'all')"
+                                label="Status Pengiriman"
+                                type="radio"
+                            />
+                        @endif
+
+                        {{-- Tombol Reset --}}
+                        @if(request()->filled('date') || (request()->filled('status') && request('status') !== 'all' && request('status') !== 'Semua') || request()->filled('search'))
+                            <x-ui.button
+                                href="{{ route('admin.jadwal.index', ['tab' => $tab]) }}"
+                                variant="danger"
+                                size="sm"
+                                class="inline-flex items-center gap-1"
+                            >
+                                <x-heroicon-o-arrow-path class="w-3.5 h-3.5" />
+                                <span>Reset</span>
+                            </x-ui.button>
+                        @endif
                     </div>
 
-                    <x-search-input
-                        name="search"
-                        value="{{ request('search') }}"
-                        placeholder="Cari kode pesanan atau nama konsumen…"
-                    />
-
-                    {{-- Filter Status --}}
-                    <x-ui.multi-select
-                        name="status"
-                        :options="[
-                            '1' => 'Dijadwalkan',
-                            '2' => 'Siap Dikirim',
-                            '3' => 'Dalam Pengantaran',
-                            '4' => 'Selesai',
-                            '5' => 'Dibatalkan'
-                        ]"
-                        :selected="request('status')"
-                        label="Status Pengiriman"
-                        type="radio"
-                    />
+                    {{-- Sisi Kanan: Search Bar --}}
+                    <div class="w-full sm:w-auto shrink-0 ml-auto">
+                        <x-search-input
+                            name="search"
+                            value="{{ request('search') }}"
+                            placeholder="Cari kode pesanan atau konsumen…"
+                            width="w-full sm:w-72"
+                        />
+                    </div>
                 </form>
             </x-slot:toolbar>
 
             <x-ui.table class="min-w-[950px]">
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12 text-[11px] font-bold uppercase tracking-wider text-gray-500">No</th>
-                    <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Jadwal Antar</th>
+                    <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                        {{ $tab === 'riwayat' ? 'Tanggal & Waktu' : 'Jadwal Antar' }}
+                    </th>
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Kode Pesanan</th>
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Konsumen</th>
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Jenis</th>
@@ -458,8 +500,8 @@
                             <td colspan="8">
                                 <x-ui.empty-state
                                     icon="clock"
-                                    title="Belum ada jadwal pengiriman"
-                                    message="Tidak terdapat pesanan Katering atau Nasi Box yang dijadwalkan untuk diantar pada tanggal yang dipilih."
+                                    :title="$tab === 'riwayat' ? 'Belum ada riwayat pengiriman' : 'Belum ada jadwal pengiriman'"
+                                    :message="$tab === 'riwayat' ? 'Tidak ada riwayat pengiriman pesanan yang selesai diantar atau dibatalkan.' : 'Tidak terdapat pesanan Katering atau Nasi Box yang dijadwalkan untuk diantar pada filter yang dipilih.'"
                                 />
                             </td>
                         </tr>

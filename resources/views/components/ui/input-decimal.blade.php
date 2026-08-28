@@ -20,17 +20,30 @@
         rawValue: '{{ $value }}',
         displayValue: '',
         format(val) {
-            let cleaned = String(val).replace(/[^0-9,]/g, '');
-            let parts = cleaned.split(',');
-            if(parts.length > 2) {
-                cleaned = parts[0] + ',' + parts.slice(1).join('');
+            if (val === '' || val === null || val === undefined) {
+                this.displayValue = '';
+                this.rawValue = '';
+                return;
             }
-            this.displayValue = cleaned;
-            this.rawValue = cleaned ? cleaned.replace(',', '.') : '';
+            let str = String(val);
+            if (str.endsWith(',')) {
+                this.displayValue = str;
+                this.rawValue = str.replace(',', '.');
+                return;
+            }
+            let num = parseFloat(str.replace(',', '.'));
+            if (isNaN(num)) {
+                this.displayValue = '';
+                this.rawValue = '';
+                return;
+            }
+            let formatted = num.toString().replace('.', ',');
+            this.displayValue = formatted;
+            this.rawValue = num.toString();
         }
      }" 
-     x-init="format(String(rawValue).replace('.', ','))"
-     @value-updated.window="if($event.detail.id === '{{ $inputId }}') { format(String($event.detail.value).replace('.', ',')); }">
+     x-init="format(rawValue)"
+     @value-updated.window="if($event.detail.id === '{{ $inputId }}') { format($event.detail.value); }">
      
     @if($label)
         <label for="{{ $inputId }}_display" class="block text-sm font-semibold text-gray-700 font-sans">

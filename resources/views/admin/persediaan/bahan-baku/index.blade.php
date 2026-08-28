@@ -423,16 +423,24 @@
             document.getElementById('formBahanBaku').action = `${BASE_URL}/bahan-baku/${bb.id}`;
             document.getElementById('formBahanBakuMethod').innerHTML = '<input type="hidden" name="_method" value="PUT">';
             
-            document.getElementById('bbKode').value = bb.id_bahan_baku;
-            document.getElementById('bbNama').value = bb.nama_bahan;
-            document.getElementById('bbKategori').value = bb.kategori_bahan_baku_id;
-            document.getElementById('bbSatuan').value = bb.satuan_id;
-            document.getElementById('bbPeruntukan').value = bb.jenis_peruntukan;
-            document.getElementById('bbStatus').value = bb.status_aktif ? 1 : 0;
+            document.getElementById('bbKode').value = bb.id_bahan_baku || '';
+            document.getElementById('bbNama').value = bb.nama_bahan || '';
             
-            window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbMinHarian', value: bb.stok_minimal || 0 } }));
-            const stokCatering = bb.stok_catering_balance ? bb.stok_catering_balance.stok_minimal : 0;
-            window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbMinCatering', value: stokCatering } }));
+            const syncValues = () => {
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbKategori', value: bb.kategori_bahan_baku_id } }));
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbSatuan', value: bb.satuan_id } }));
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbPeruntukan', value: bb.jenis_peruntukan || 'Semua' } }));
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbStatus', value: (bb.status_aktif == 1 || bb.status_aktif === true) ? '1' : '0' } }));
+                
+                const stokHarian = bb.stok_harian ? (bb.stok_harian.stok_minimal || bb.stok_minimal || 0) : (bb.stok_minimal || 0);
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbMinHarian', value: stokHarian } }));
+                const stokCatering = bb.stok_catering_balance ? (bb.stok_catering_balance.stok_minimal || 0) : 0;
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbMinCatering', value: stokCatering } }));
+            };
+
+            syncValues();
+            requestAnimationFrame(syncValues);
+            setTimeout(syncValues, 50);
 
             document.getElementById('bbStokAwalContainer').classList.add('hidden');
         } else {
@@ -442,6 +450,19 @@
             
             document.getElementById('formBahanBaku').reset();
             document.getElementById('bbKode').value = '';
+            
+            const resetValues = () => {
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbKategori', value: '' } }));
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbSatuan', value: '' } }));
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbPeruntukan', value: 'Semua' } }));
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbStatus', value: '1' } }));
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbMinHarian', value: 0 } }));
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbMinCatering', value: 0 } }));
+                window.dispatchEvent(new CustomEvent('value-updated', { detail: { id: 'bbStok', value: 0 } }));
+            };
+            resetValues();
+            requestAnimationFrame(resetValues);
+
             document.getElementById('bbStokAwalContainer').classList.remove('hidden');
         }
 

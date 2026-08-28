@@ -31,9 +31,9 @@
         selected: {{ $selectedJson }},
         get count() {
             if (Array.isArray(this.selected)) {
-                return this.selected.length;
+                return this.selected.filter(x => x && x !== 'all' && x !== 'semua' && x !== 'Semua' && x !== '').length;
             }
-            return this.selected ? 1 : 0;
+            return (this.selected && this.selected !== 'all' && this.selected !== 'semua' && this.selected !== 'Semua' && this.selected !== '') ? 1 : 0;
         }
     }" 
     class="relative shrink-0"

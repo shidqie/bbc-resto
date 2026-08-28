@@ -74,10 +74,10 @@ class UnitHelper
             ? (strtolower(trim($satuan->singkatan ?? $satuan->nama_satuan ?? '')))
             : strtolower(trim((string)$satuan));
 
-        if (in_array($satuanClean, ['gram', 'g', 'gr'])) {
+        if (in_array($satuanClean, ['gram', 'g', 'gr', 'kg', 'kilogram'])) {
             return $jumlah / 1000;
         }
-        if (in_array($satuanClean, ['ml', 'mililiter'])) {
+        if (in_array($satuanClean, ['ml', 'mililiter', 'liter', 'l'])) {
             return $jumlah / 1000;
         }
         return $jumlah;

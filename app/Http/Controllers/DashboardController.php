@@ -122,6 +122,12 @@ class DashboardController extends Controller
             ->whereDate('jadwal_pesanan.tanggal_acara', '<=', Carbon::today()->addDays(3))
             ->get();
 
+        $totalPendapatan7Hari = array_sum($dataPendapatan);
+        $totalPesanan7Hari = array_sum($dataDineIn) + array_sum($dataCatering) + array_sum($dataNasiBox);
+        $totalDineIn7Hari = array_sum($dataDineIn);
+        $totalCatering7Hari = array_sum($dataCatering);
+        $totalNasiBox7Hari = array_sum($dataNasiBox);
+
         return view('admin.dashboard.index', compact(
             'pesananHariIni',
             'pendapatanHariIni',
@@ -133,6 +139,11 @@ class DashboardController extends Controller
             'dataDineIn',
             'dataCatering',
             'dataNasiBox',
+            'totalPendapatan7Hari',
+            'totalPesanan7Hari',
+            'totalDineIn7Hari',
+            'totalCatering7Hari',
+            'totalNasiBox7Hari',
             'listStokMenipis',
             'pesananTerbaru',
             'cateringMenunggu',

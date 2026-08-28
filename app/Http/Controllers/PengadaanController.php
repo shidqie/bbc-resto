@@ -79,7 +79,7 @@ class PengadaanController extends Controller
         if ($request->filled('pesanan_id') || $request->filled('kode_pesanan')) {
             $query = Pesanan::with(['pelanggan', 'detail_pesanan.menu', 'detail_pesanan.pilihan_pesanan_catering.pilihan_komponen_paket.menu'])
                 ->whereIn('jenis_pesanan_id', [$jenisCateringId, $jenisNasiBoxId])
-                ->whereNotIn('status_pesanan_id', [1, 6]);
+                ->where('status_pesanan_id', 2);
 
             if ($request->filled('pesanan_id')) {
                 $pesanan = (clone $query)->find($request->pesanan_id);
@@ -100,7 +100,7 @@ class PengadaanController extends Controller
         }
 
         $daftarPesanan = Pesanan::whereIn('jenis_pesanan_id', [$jenisCateringId, $jenisNasiBoxId])
-            ->whereNotIn('status_pesanan_id', [1, 6])
+            ->where('status_pesanan_id', 2)
             ->orderBy('tanggal_pesanan', 'desc')
             ->get(['id', 'id_pesanan', 'tanggal_pesanan', 'status_pesanan_id']);
 

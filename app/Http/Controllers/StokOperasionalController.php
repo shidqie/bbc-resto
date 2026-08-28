@@ -21,6 +21,7 @@ class StokOperasionalController extends Controller
         if ($tab === 'riwayat') {
             $riwayatQuery = \App\Models\MutasiStok::with([
                 'bahan_baku.satuan',
+                'detail_pesanan.menu',
                 'detail_pesanan.pesanan.pelanggan',
                 'detail_pesanan.pesanan.jenis_pesanan',
                 'detail_pesanan.pesanan.meja',
@@ -85,7 +86,7 @@ class StokOperasionalController extends Controller
             $query->where('bahan_baku.kategori_bahan_baku_id', $request->kategori);
         }
 
-        if ($request->has('status') && $request->status != '') {
+        if ($request->has('status') && $request->status != '' && $request->status != 'all' && $request->status != 'semua') {
             if ($request->status == 'habis') {
                 $query->whereRaw('stok_bahan.jumlah_stok <= 0');
             } elseif ($request->status == 'menipis') {

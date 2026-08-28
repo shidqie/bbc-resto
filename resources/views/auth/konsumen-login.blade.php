@@ -142,8 +142,7 @@
                 </p>
 
                 <p class="text-center text-xs text-gray-400 font-medium mt-3 fu d4">
-                    Atau masuk sebagai
-                    <a href="{{ route('admin.login') }}" class="text-gray-500 font-bold hover:text-primary hover:underline transition-all">Admin / Staf Internal</a>
+                    <a href="{{ route('admin.login') }}" class="text-gray-500 font-bold hover:text-primary hover:underline transition-all">Login Masuk ke Portal Internal</a>
                 </p>
 
             </div>

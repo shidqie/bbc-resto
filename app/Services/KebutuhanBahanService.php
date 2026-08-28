@@ -236,10 +236,10 @@ class KebutuhanBahanService
         return $menu->resep_menu()->with(['bahan_baku.satuan', 'satuan'])->get()->map(function (ResepMenu $resep) use ($pengali, $menu) {
             $rawKebutuhan = (float) $resep->jumlah_kebutuhan * $pengali;
             
-            // Konversi jika satuan resep dan satuan bahan baku berbeda
-            $resepSatuan = optional($resep->satuan)->singkatan ?? optional($resep->satuan)->nama_satuan;
-            $bahanSatuan = optional(optional($resep->bahan_baku)->satuan)->singkatan ?? optional(optional($resep->bahan_baku)->satuan)->nama_satuan;
-            $convertedKebutuhan = self::convertUnit($rawKebutuhan, $resepSatuan, $bahanSatuan);
+            // Konversi ke Satuan Dasar Stok (Gram / Ml / Pcs) agar selaras dengan tabel stok_bahan
+            $resepSatuan = optional($resep->satuan)->singkatan ?? optional($resep->satuan)->nama_satuan ?? 'gram';
+            $stockBaseUnit = \App\Helpers\UnitHelper::getBaseUnit(optional($resep->bahan_baku)->satuan ?? $resepSatuan);
+            $convertedKebutuhan = self::convertUnit($rawKebutuhan, $resepSatuan, $stockBaseUnit);
 
             return [
                 'bahan_baku_id' => (int) $resep->bahan_baku_id,
@@ -539,5 +539,126 @@ class KebutuhanBahanService
         }
 
         return true;
+    }
+
+    /**
+     * Hitung pengadaan otomatis untuk seluruh menu yang berstatus Habis (stok < 1 porsi).
+     * Kebutuhan PO dihitung untuk $porsiTarget porsi (default 10 porsi):
+     * Kebutuhan PO = (Kebutuhan bahan per 1 porsi × 10) − Stok bahan baku saat ini.
+     *
+     * @param string $jenisPersediaan 'harian' | 'catering'
+     * @param int $porsiTarget Default 10 porsi
+     * @return array{
+     *   items: \Illuminate\Support\Collection,
+     *   menu_habis: array<array{id: int, id_menu: string, nama_menu: string, porsi_tersedia: float}>,
+     *   total_menu_habis: int
+     * }
+     */
+    public function hitungPengadaanMenuHabis(string $jenisPersediaan = 'harian', int $porsiTarget = 10): array
+    {
+        // 1. Ambil seluruh menu aktif yang memiliki resep
+        $menus = Menu::with(['resep_menu.bahan_baku.satuan', 'kategori_menu', 'item_paket.menu_terkait.resep_menu', 'item_paket.opsi.menu.resep_menu'])
+            ->where('status_aktif', true)
+            ->get();
+
+        $menuHabisList = [];
+        $kebutuhanPerBahan = [];
+
+        foreach ($menus as $menu) {
+            // Cek apakah menu berstatus habis (porsi tersedia < 1)
+            $porsi = $this->porsiTersedia($menu, $jenisPersediaan);
+            if ($porsi < 1 && $porsi < PHP_FLOAT_MAX) {
+                $menuHabisList[] = [
+                    'id' => $menu->id,
+                    'id_menu' => $menu->id_menu,
+                    'nama_menu' => $menu->nama_menu,
+                    'porsi_tersedia' => max(0, (float) floor($porsi)),
+                ];
+
+                // Hitung kebutuhan resep untuk 10 porsi
+                $kebutuhan10Porsi = $this->kebutuhanMenu($menu, $porsiTarget);
+                foreach ($kebutuhan10Porsi as $item) {
+                    $bId = (int) $item['bahan_baku_id'];
+                    $qty = (float) $item['kebutuhan'];
+                    if ($qty <= 0) {
+                        continue;
+                    }
+
+                    if (!isset($kebutuhanPerBahan[$bId])) {
+                        $kebutuhanPerBahan[$bId] = [
+                            'total_kebutuhan_base' => 0,
+                            'menu_names' => [],
+                        ];
+                    }
+                    $kebutuhanPerBahan[$bId]['total_kebutuhan_base'] += $qty;
+                    $kebutuhanPerBahan[$bId]['menu_names'][] = $menu->nama_menu;
+                }
+            }
+        }
+
+        // 2. Evaluasi kekurangan terhadap saldo stok saat ini
+        $items = collect();
+        if (!empty($kebutuhanPerBahan)) {
+            $bahanIds = array_keys($kebutuhanPerBahan);
+            $bahanBakus = BahanBaku::with('satuan')->whereIn('id', $bahanIds)->get()->keyBy('id');
+            $stokBahanMap = StokBahan::whereIn('bahan_baku_id', $bahanIds)
+                ->where('jenis_persediaan', $jenisPersediaan)
+                ->pluck('jumlah_stok', 'bahan_baku_id');
+
+            foreach ($kebutuhanPerBahan as $bId => $data) {
+                $bahan = $bahanBakus->get($bId);
+                if (!$bahan) {
+                    continue;
+                }
+
+                $totalKebutuhanBase = (float) $data['total_kebutuhan_base'];
+                $stokSaatIni = (float) ($stokBahanMap->get($bId) ?? 0);
+
+                // Rumus: Kebutuhan PO = Kebutuhan 10 Porsi - Stok Saat Ini
+                $kekuranganBase = $totalKebutuhanBase - $stokSaatIni;
+
+                // Jika stok saat ini sudah mencukupi kebutuhan 10 porsi, tidak perlu masuk PO
+                if ($kekuranganBase <= 0) {
+                    continue;
+                }
+
+                $satuanBeli = \App\Helpers\UnitHelper::getPurchasingUnit($bahan->satuan);
+                $satuanBeliId = \App\Helpers\UnitHelper::getPurchasingSatuanId($bahan->satuan);
+                $satuanDasar = \App\Helpers\UnitHelper::getBaseUnit($bahan->satuan);
+                $jumlahBeli = \App\Helpers\UnitHelper::toPurchasingQuantity($kekuranganBase, $bahan->satuan);
+                $hargaBeli = \App\Helpers\UnitHelper::toPurchasingPrice($bahan->harga_satuan ?? 0, $bahan->satuan);
+                $uniqueMenuNames = array_values(array_unique($data['menu_names']));
+
+                $itemObj = (object) [
+                    'id' => $bahan->id,
+                    'bahan_baku_id' => $bahan->id,
+                    'id_bahan_baku' => $bahan->id_bahan_baku,
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'satuan' => $bahan->satuan,
+                    'satuan_beli' => $satuanBeli,
+                    'satuan_beli_id' => $satuanBeliId,
+                    'satuan_dasar' => $satuanDasar,
+                    'stok_saat_ini' => $stokSaatIni,
+                    'stok_saat_ini_display' => \App\Helpers\UnitHelper::formatQuantity($stokSaatIni, $bahan->satuan),
+                    'kebutuhan_10_porsi_base' => $totalKebutuhanBase,
+                    'kebutuhan_10_porsi_display' => \App\Helpers\UnitHelper::formatQuantity($totalKebutuhanBase, $bahan->satuan),
+                    'kekurangan_base' => $kekuranganBase,
+                    'jumlah_beli' => $jumlahBeli,
+                    'kebutuhan' => $jumlahBeli,
+                    'kebutuhan_bersih' => $jumlahBeli,
+                    'harga_satuan' => $hargaBeli,
+                    'menu_habis_terkait' => $uniqueMenuNames,
+                    'sumber_kebutuhan' => 'Kebutuhan 10 Porsi Menu Habis: ' . implode(', ', $uniqueMenuNames),
+                ];
+
+                $items->push($itemObj);
+            }
+        }
+
+        return [
+            'items' => $items,
+            'menu_habis' => $menuHabisList,
+            'total_menu_habis' => count($menuHabisList),
+        ];
     }
 }

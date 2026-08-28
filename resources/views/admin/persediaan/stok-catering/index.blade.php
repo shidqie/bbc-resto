@@ -67,8 +67,8 @@
                     <span class="text-2xl font-bold text-emerald-700">{{ $stats['total_tersedia'] }}</span>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Stok Kosong</span>
-                    <span class="text-2xl font-bold text-gray-700">{{ $stats['total_habis'] }}</span>
+                    <span class="text-xs font-semibold text-rose-600 uppercase tracking-wider mb-1">Stok Kosong</span>
+                    <span class="text-2xl font-bold text-rose-700">{{ $stats['total_habis'] }}</span>
                 </div>
             </div>
 
@@ -79,8 +79,8 @@
                         <input type="hidden" name="tab" value="stok">
                         <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari bahan baku..." />
                         <x-ui.multi-select name="kategori" :options="$kategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori')" label="Kategori" type="radio" />
-                        <x-ui.multi-select name="status" :options="['tersedia' => 'Stok Tersedia', 'habis' => 'Stok Kosong']" :selected="request('status')" label="Status" type="radio" />
-                        @if(request()->hasAny(['search', 'kategori', 'status']))
+                        <x-ui.multi-select name="status" :options="['all' => 'Semua Status', 'tersedia' => 'Stok Tersedia', 'habis' => 'Stok Kosong']" :selected="request('status', 'all')" label="Status" type="radio" />
+                        @if(request()->filled('search') || request()->filled('kategori') || (request()->filled('status') && request('status') !== 'all' && request('status') !== 'semua'))
                             <x-ui.button href="{{ route('stok-catering.index', ['tab' => 'stok']) }}" variant="danger" size="sm">Reset</x-ui.button>
                         @endif
                     </form>
@@ -164,7 +164,7 @@
                             if ($pesanan) {
                                 $key = 'pesanan_' . $pesanan->id;
                                 $judul = 'Pesanan #' . $pesanan->id_pesanan;
-                                $tipe = $pesanan->jenis_pesanan?->nama_jenis ?? 'Catering';
+                                $tipe = 'Catering';
                                 $pelanggan = $pesanan->pelanggan?->nama ?? null;
                                 $meja = null;
                             } elseif (preg_match('/Pesanan\s*#?([A-Z0-9\-]+)/i', $riwayat->catatan, $m)) {
@@ -199,10 +199,44 @@
                                     'tanggal' => $riwayat->tanggal_mutasi,
                                     'referensi' => $riwayat->referensi_id,
                                     'items' => [],
+                                    'menu_groups' => [],
                                 ];
                             }
 
                             $bId = $riwayat->bahan_baku_id;
+                            $menuObj = $riwayat->detail_pesanan?->menu;
+                            
+                            $menuNama = $menuObj?->nama_menu;
+                            if (!$menuNama && preg_match('/Menu\s+([^,\[\(\-]+)/i', $riwayat->catatan, $cm)) {
+                                $menuNama = trim($cm[1]);
+                            }
+                            if (!$menuNama) {
+                                $menuNama = $tipe === 'Penyesuaian' ? 'Penyesuaian Stok' : 'Bahan Baku';
+                            }
+
+                            $menuKey = $riwayat->detail_pesanan_id ? 'dp_' . $riwayat->detail_pesanan_id : 'menu_' . md5($menuNama);
+                            $porsi = $riwayat->detail_pesanan?->jumlah ? (float) $riwayat->detail_pesanan->jumlah : null;
+
+                            if (!isset($groupedRiwayat[$key]['menu_groups'][$menuKey])) {
+                                $groupedRiwayat[$key]['menu_groups'][$menuKey] = [
+                                    'nama_menu' => $menuNama,
+                                    'porsi' => $porsi,
+                                    'items' => [],
+                                ];
+                            }
+
+                            if (!isset($groupedRiwayat[$key]['menu_groups'][$menuKey]['items'][$bId])) {
+                                $groupedRiwayat[$key]['menu_groups'][$menuKey]['items'][$bId] = [
+                                    'nama_bahan' => $riwayat->bahan_baku?->nama_bahan ?? '-',
+                                    'kode_bahan' => $riwayat->bahan_baku?->id_bahan_baku ?? '',
+                                    'satuan' => $riwayat->bahan_baku?->satuan?->singkatan ?? $riwayat->bahan_baku?->satuan?->nama_satuan ?? '',
+                                    'jumlah' => 0,
+                                    'stok_sesudah' => $riwayat->stok_sesudah,
+                                ];
+                            }
+                            $groupedRiwayat[$key]['menu_groups'][$menuKey]['items'][$bId]['jumlah'] += (float) $riwayat->jumlah;
+                            $groupedRiwayat[$key]['menu_groups'][$menuKey]['items'][$bId]['stok_sesudah'] = $riwayat->stok_sesudah;
+
                             if (!isset($groupedRiwayat[$key]['items'][$bId])) {
                                 $groupedRiwayat[$key]['items'][$bId] = [
                                     'nama_bahan' => $riwayat->bahan_baku?->nama_bahan ?? '-',
@@ -257,23 +291,54 @@
                             {{-- Expanded Details --}}
                             <tr x-show="expanded" x-cloak class="bg-gray-50/40 border-b border-gray-100">
                                 <td colspan="5" class="p-0 border-t-0">
-                                    <div class="px-6 py-4 md:px-12 md:py-4 bg-gray-50/70 border-y border-gray-100">
-                                        <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-                                            Rincian Bahan Baku Terpotong ({{ count($group['items']) }} Bahan)
+                                    <div class="px-6 py-4 md:px-10 md:py-4 bg-gray-50/70 border-y border-gray-100 space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                                Rincian Bahan Baku Terpotong ({{ count($group['items']) }} Bahan)
+                                            </div>
+                                            @if(count($group['menu_groups']) > 1)
+                                                <span class="text-xs font-semibold text-gray-500 bg-white border border-gray-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+                                                    {{ count($group['menu_groups']) }} Menu
+                                                </span>
+                                            @endif
                                         </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                                            @foreach($group['items'] as $item)
-                                                <div class="flex justify-between items-center p-2.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
-                                                    <div class="min-w-0 pr-2">
-                                                        <p class="text-xs font-bold text-gray-900 truncate leading-tight">{{ $item['nama_bahan'] }}</p>
-                                                        <p class="text-[10px] text-gray-400 mt-0.5 font-medium">
-                                                            Sisa Stok: {{ \App\Helpers\UnitHelper::formatQuantity($item['stok_sesudah'] ?? 0, $item['satuan']) }}
-                                                        </p>
+
+                                        <div class="space-y-3">
+                                            @foreach($group['menu_groups'] as $menuGroup)
+                                                <div class="bg-white rounded-xl border border-gray-200/80 p-3.5 shadow-2xs">
+                                                    {{-- Menu Header --}}
+                                                    <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-100">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                                            <h4 class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                                                                <span class="text-gray-400 font-normal">Menu:</span>
+                                                                <span>{{ $menuGroup['nama_menu'] }}</span>
+                                                            </h4>
+                                                        </div>
+                                                        @if(!empty($menuGroup['porsi']))
+                                                            <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full">
+                                                                {{ $menuGroup['porsi'] }} Porsi
+                                                            </span>
+                                                        @endif
                                                     </div>
-                                                    <div class="text-right shrink-0">
-                                                        <span class="text-xs font-extrabold text-red-600 font-mono">
-                                                            -{{ \App\Helpers\UnitHelper::formatQuantity($item['jumlah'], $item['satuan']) }}
-                                                        </span>
+
+                                                    {{-- Bahan List Grid --}}
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                                        @foreach($menuGroup['items'] as $item)
+                                                            <div class="flex justify-between items-center p-2.5 bg-gray-50/60 hover:bg-gray-50/90 rounded-lg border border-gray-100 transition-colors">
+                                                                <div class="min-w-0 pr-2">
+                                                                    <p class="text-xs font-bold text-gray-900 truncate leading-tight">{{ $item['nama_bahan'] }}</p>
+                                                                    <p class="text-[10px] text-gray-400 mt-0.5 font-medium">
+                                                                        Sisa Stok: {{ \App\Helpers\UnitHelper::formatQuantity($item['stok_sesudah'] ?? 0, $item['satuan']) }}
+                                                                    </p>
+                                                                </div>
+                                                                <div class="text-right shrink-0">
+                                                                    <span class="text-xs font-extrabold text-red-600 font-mono">
+                                                                        -{{ \App\Helpers\UnitHelper::formatQuantity($item['jumlah'], $item['satuan']) }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
                                                     </div>
                                                 </div>
                                             @endforeach

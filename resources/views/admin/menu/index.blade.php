@@ -94,8 +94,9 @@
                     <input type="hidden" name="jenis_menu_id" value="{{ request('jenis_menu_id', '1') }}">
                     <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode…" width="w-full sm:w-72" />
                     <x-ui.multi-select name="kategori_id" :options="$allKategoris->pluck('nama_kategori', 'id')->toArray()" :selected="request('kategori_id')" label="Kategori" type="radio" />
+                    <x-ui.multi-select name="status" :options="['tersedia' => 'Tersedia', 'habis' => 'Habis', 'nonaktif' => 'Nonaktif']" :selected="request('status')" label="Status Ketersediaan" type="radio" />
                     <x-ui.multi-select name="filter_resep" :options="['ada' => 'Sudah Ada Resep', 'belum' => 'Belum Ada Resep']" :selected="request('filter_resep')" label="Resep Menu" type="radio" />
-                    @if(request()->hasAny(['search', 'kategori_id', 'filter_resep']))
+                    @if(request()->hasAny(['search', 'kategori_id', 'status', 'filter_resep']))
                         <x-ui.button href="{{ route('menu.index', ['jenis_menu_id' => request('jenis_menu_id', '1')]) }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
                 </form>
@@ -108,7 +109,8 @@
                     <th class="px-4 py-3.5 text-left">Nama Menu</th>
                     <th class="px-4 py-3.5 text-left">Kategori</th>
                     <th class="px-4 py-3.5 text-left">Harga</th>
-                    @if($jenisId != 1)
+                    <th class="px-4 py-3.5 text-center">Status Ketersediaan</th>
+                    @if($jenisId != 1 && $jenisId !== 'all')
                         <th class="px-4 py-3.5 text-left">Komponen</th>
                     @endif
                     <th class="px-4 py-3.5 text-center">Aksi</th>
@@ -140,6 +142,24 @@
                                     /porsi
                                 @endif
                             </td>
+                            <td class="px-4 py-3 text-center align-middle">
+                                @if(!$menu->status_aktif)
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                                        Nonaktif
+                                    </span>
+                                @elseif(!empty($menu->is_habis))
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                        Habis
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Tersedia
+                                    </span>
+                                @endif
+                            </td>
                             @if($jenisId != 1 && $jenisId !== 'all')
                                 <td class="px-4 py-3 text-sm text-gray-700">
                                     @if($menu->komponen_paket && $menu->komponen_paket->count() > 0)
@@ -166,7 +186,7 @@
                         </x-ui.table.row>
                         @empty
                         <tr>
-                            <td colspan="{{ $jenisId != 1 && $jenisId !== 'all' ? 7 : 6 }}">
+                            <td colspan="{{ $jenisId != 1 && $jenisId !== 'all' ? 8 : 7 }}">
                                 <x-ui.empty-state icon="archive-box" title="Belum ada menu" message="Tambahkan menu untuk mulai melayani pelanggan." />
                             </td>
                         </tr>
@@ -333,7 +353,7 @@
                             <div class="relative">
                                 <select name="kategori_menu_id" id="mnKategori" required class="w-full appearance-none px-3.5 py-2.5 pr-9 text-sm font-semibold border border-gray-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs cursor-pointer">
                                     <option value="">— Pilih Kategori —</option>
-                                    @foreach($allKategoris ?? $kategoris as $kat)
+                                    @foreach($kategoriModalList ?? $allKategoris as $kat)
                                         <option value="{{ $kat->id }}" data-jenis="{{ $kat->jenis_menu_id ?? '' }}">{{ $kat->nama_kategori }}</option>
                                     @endforeach
                                 </select>
@@ -919,7 +939,14 @@ function openMenuModal(menuId = null, isView = false, defaultTab = 'informasi') 
         }
     }
 
-    const isPaket = jenisVal == 2 || jenisVal == 3 || (menu && menu.komponen_paket && menu.komponen_paket.length > 0);
+    let isPaket = false;
+    if (menu) {
+        // Menu yang sudah ada: dianggap paket HANYA jika memiliki komponen paket ATAU masuk kategori Paket Catering (16) / Paket Nasi Box (17)
+        isPaket = (menu.komponen_paket && menu.komponen_paket.length > 0) || [16, 17].includes(Number(menu.kategori_menu_id));
+    } else {
+        // Menu baru: paket jika dibuat melalui opsi tambah paket
+        isPaket = isCreatingPaket;
+    }
     const btnResep = document.getElementById('tabBtnResep');
     const btnDaftarMenuPaket = document.getElementById('tabBtnDaftarMenuPaket');
     const komponenContainerEdit = document.getElementById('komponenPaketContainerEdit');
@@ -1094,7 +1121,7 @@ function openMenuModal(menuId = null, isView = false, defaultTab = 'informasi') 
         btnResep.classList.remove('hidden');
         btnDaftarMenuPaket.classList.add('hidden');
         btnInformasi.textContent = 'Informasi Menu';
-        btnResep.textContent = 'Resep Menu';
+        btnResep.textContent = 'Resep Bahan Baku';
         if (komponenContainerEdit) komponenContainerEdit.classList.add('hidden');
         if (komponenContainerView) komponenContainerView.classList.add('hidden');
     }
@@ -1290,6 +1317,12 @@ function renderPaketResepTree(menu) {
 }
 
 function switchMenuTab(tabId) {
+    if (tabId === 'resep' && document.getElementById('tabBtnResep')?.classList.contains('hidden') && !document.getElementById('tabBtnDaftarMenuPaket')?.classList.contains('hidden')) {
+        tabId = 'daftar_menu_paket';
+    } else if (tabId === 'daftar_menu_paket' && document.getElementById('tabBtnDaftarMenuPaket')?.classList.contains('hidden') && !document.getElementById('tabBtnResep')?.classList.contains('hidden')) {
+        tabId = 'resep';
+    }
+
     const tabs = ['informasi', 'resep', 'daftar_menu_paket', 'kebutuhan_paket'];
     
     tabs.forEach(id => {
@@ -1304,7 +1337,7 @@ function switchMenuTab(tabId) {
 
         if (tabId === id) {
             btn.className = 'py-2.5 px-3 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none border-gray-900 text-gray-900' + ml4 + hiddenClass;
-            if (!isHidden) content.classList.remove('hidden');
+            content.classList.remove('hidden');
         } else {
             btn.className = 'py-2.5 px-3 border-b-2 font-semibold text-sm transition-colors outline-none focus:outline-none border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' + ml4 + hiddenClass;
             content.classList.add('hidden');

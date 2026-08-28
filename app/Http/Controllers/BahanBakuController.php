@@ -304,10 +304,13 @@ class BahanBakuController extends Controller
         }
 
         try {
-            // Hapus stok lama yang mungkin tertinggal (stok_bahan_baku)
-            DB::table('stok_bahan_baku')->where('bahan_baku_id', $id)->delete();
-            
-            $bahanBaku->delete();
+            DB::transaction(function () use ($bahanBaku, $id) {
+                DB::table('stok_bahan')->where('bahan_baku_id', $id)->delete();
+                DB::table('stok_catering')->where('bahan_baku_id', $id)->delete();
+                DB::table('stok_bahan_baku')->where('bahan_baku_id', $id)->delete();
+                $bahanBaku->delete();
+            });
+
             return redirect()->route('bahan-baku.index')->with('success', 'Bahan baku berhasil dihapus.');
         } catch (\Illuminate\Database\QueryException $e) {
             // Error 23000 is Integrity constraint violation

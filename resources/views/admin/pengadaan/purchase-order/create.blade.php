@@ -46,6 +46,19 @@
         </div>
         @endif
 
+        @if(!empty($menuHabisList) && count($menuHabisList) > 0 && !isset($pesanan))
+        <div class="p-4 bg-rose-50 border border-rose-200/90 rounded-2xl text-rose-900 shadow-xs">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <p class="text-sm font-semibold text-rose-800">
+                    Terdapat <strong>{{ count($menuHabisList) }} menu</strong> yang berstatus <strong>Habis</strong> karena kekurangan stok bahan baku.
+                </p>
+            </div>
+        </div>
+        @endif
+
         <form action="{{ route('pengadaan.po.store-unified') }}" method="POST" id="poForm" class="space-y-6">
             @csrf
             <input type="hidden" name="tipe" value="{{ $tipe ?? 'Operasional' }}">
@@ -69,32 +82,110 @@
 
                     {{-- Row 2: Pemilihan Pesanan Katering / Nasi Box --}}
                     @if($tipe === 'Catering' || $tipe === 'Katering')
-                    <div class="grid grid-cols-1 gap-y-3 p-4 bg-emerald-50/40 border border-emerald-100 rounded-2xl">
+                    <div class="grid grid-cols-1 gap-y-3 p-5 bg-emerald-50/40 border border-emerald-100 rounded-2xl">
                         <div>
-                            <label class="block text-xs font-extrabold text-emerald-900 uppercase tracking-wider mb-2">Pesanan Katering (Sumber Kebutuhan BOM) <span class="text-red-500">*</span></label>
-                            <div class="relative">
-                                <select name="kode_pesanan" onchange="window.location.href='?tipe=Catering&kode_pesanan=' + encodeURIComponent(this.value)" class="block w-full appearance-none rounded-xl border border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 bg-white text-sm pl-4 pr-10 py-2.5 transition-all font-semibold text-gray-800 outline-none shadow-xs cursor-pointer">
-                                    <option value="">— Pilih Pesanan Katering —</option>
-                                    @foreach($pesananList as $pk)
+                            <label class="block text-xs font-extrabold text-emerald-900 uppercase tracking-wider mb-2">
+                                Pesanan Katering (Sumber Kebutuhan BOM) <span class="text-red-500">*</span>
+                            </label>
+
+                            <div x-data="{
+                                open: false,
+                                selectedCode: '{{ optional($pesanan)->id_pesanan ?? request('kode_pesanan', '') }}',
+                                selectOrder(code) {
+                                    if (code !== this.selectedCode) {
+                                        window.location.href = '?tipe=Catering' + (code ? '&kode_pesanan=' + encodeURIComponent(code) : '');
+                                    }
+                                }
+                            }" class="relative">
+                                <button type="button"
+                                        @click="open = !open"
+                                        @click.outside="open = false"
+                                        class="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white border border-emerald-200 hover:border-emerald-400 rounded-xl text-left transition shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                                            <x-heroicon-o-clipboard-document-list class="w-5 h-5" />
+                                        </div>
+                                        <div class="min-w-0">
+                                            @if($pesanan)
+                                                @php
+                                                    $namaCust = optional($pesanan->pelanggan)->nama ?? optional($pesanan->pelanggan)->nama_pelanggan ?? 'Umum';
+                                                    $tglPesanan = optional($pesanan->jadwal_pesanan)->tanggal_acara ?? $pesanan->waktu_pesanan ?? $pesanan->dibuat_pada;
+                                                    $tglFormatted = $tglPesanan ? \Carbon\Carbon::parse($tglPesanan)->translatedFormat('d M Y') : '-';
+                                                    $qtyPorsi = optional($pesanan->detail_pesanan->first())->jumlah ?? 0;
+                                                    $menuNama = optional(optional($pesanan->detail_pesanan->first())->menu)->nama_menu ?? 'Paket';
+                                                @endphp
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="font-mono font-bold text-gray-900 text-sm">{{ $pesanan->id_pesanan }}</span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800">Dikonfirmasi</span>
+                                                </div>
+                                                <p class="text-xs text-gray-600 truncate mt-0.5">
+                                                    <span class="font-bold text-gray-800">{{ $namaCust }}</span> &bull; {{ $menuNama }} ({{ $qtyPorsi }} Porsi) &bull; Acara: {{ $tglFormatted }}
+                                                </p>
+                                            @else
+                                                <span class="text-sm font-medium text-gray-400">
+                                                    — Pilih Pesanan Katering (Status Dikonfirmasi) —
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <x-heroicon-o-chevron-down class="w-4 h-4 text-emerald-600 shrink-0 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
+                                </button>
+
+                                {{-- Dropdown Popover --}}
+                                <div x-show="open"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="absolute z-50 mt-1.5 w-full bg-white border border-gray-200 rounded-2xl shadow-xl max-h-72 overflow-y-auto divide-y divide-gray-100 left-0 p-1.5"
+                                     style="display: none;">
+
+                                    @forelse($pesananList as $pk)
                                         @php
                                             $namaCust = optional($pk->pelanggan)->nama ?? optional($pk->pelanggan)->nama_pelanggan ?? 'Umum';
-                                            $tglPesanan = \Carbon\Carbon::parse($pk->waktu_pesanan ?? $pk->dibuat_pada ?? $pk->created_at)->format('d/m/Y');
+                                            $tglAcara = optional($pk->jadwal_pesanan)->tanggal_acara 
+                                                ?? $pk->waktu_pesanan 
+                                                ?? $pk->dibuat_pada;
+                                            $tglFormatted = $tglAcara ? \Carbon\Carbon::parse($tglAcara)->translatedFormat('d M Y') : '-';
                                             $qtyPorsi = optional($pk->detail_pesanan->first())->jumlah ?? 0;
                                             $menuNama = optional(optional($pk->detail_pesanan->first())->menu)->nama_menu ?? 'Paket';
+                                            $isSelected = (optional($pesanan)->id_pesanan === $pk->id_pesanan);
                                         @endphp
-                                        <option value="{{ $pk->id_pesanan }}" {{ (request('kode_pesanan') == $pk->id_pesanan || (optional($pesanan)->id_pesanan == $pk->id_pesanan)) ? 'selected' : '' }}>
-                                            {{ $pk->id_pesanan }} - {{ $namaCust }} ({{ $menuNama }} {{ $qtyPorsi }} Porsi - {{ $tglPesanan }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-700">
-                                    <x-heroicon-o-chevron-down class="w-4 h-4" />
-                                </span>
+                                        <div @click="selectOrder('{{ $pk->id_pesanan }}'); open = false;"
+                                             class="p-3 rounded-xl hover:bg-emerald-50/70 cursor-pointer flex items-center justify-between transition group {{ $isSelected ? 'bg-emerald-50/80 border border-emerald-200' : '' }}">
+                                            <div class="min-w-0 pr-3">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="font-mono font-bold text-xs text-gray-900">{{ $pk->id_pesanan }}</span>
+                                                    <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800">Dikonfirmasi</span>
+                                                </div>
+                                                <p class="text-xs font-bold text-gray-800 mt-1">
+                                                    {{ $namaCust }} &bull; <span class="font-normal text-gray-600">{{ $menuNama }} ({{ $qtyPorsi }} Porsi)</span>
+                                                </p>
+                                                <p class="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1">
+                                                    <x-heroicon-o-calendar class="w-3 h-3 text-gray-400" />
+                                                    <span>Tanggal Acara: {{ $tglFormatted }}</span>
+                                                </p>
+                                            </div>
+                                            @if($isSelected)
+                                                <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                                                    <x-heroicon-o-check class="w-3.5 h-3.5 stroke-[3]" />
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @empty
+                                        <div class="p-5 text-center text-xs text-gray-500">
+                                            <p class="font-bold text-gray-700">Tidak ada pesanan katering berstatus Dikonfirmasi.</p>
+                                            <p class="text-[11px] text-gray-400 mt-1">Semua pesanan katering sudah selesai diproses atau belum terkonfirmasi.</p>
+                                        </div>
+                                    @endforelse
+                                </div>
                             </div>
                         </div>
 
                         @if($pesanan)
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs border-t border-emerald-100">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 text-xs border-t border-emerald-100">
                             <div>
                                 <span class="text-gray-500 block">Pemesan:</span>
                                 <span class="font-bold text-gray-800">{{ optional($pesanan->pelanggan)->nama ?? optional($pesanan->pelanggan)->nama_pelanggan ?? 'Umum' }} ({{ optional($pesanan->pelanggan)->no_telp ?? optional($pesanan->pelanggan)->telepon ?? '-' }})</span>
@@ -115,35 +206,122 @@
                         @endif
                     </div>
                     @else
-                    <div class="grid grid-cols-1 gap-y-3 p-4 bg-emerald-50/40 border border-emerald-100 rounded-2xl">
+                    <div class="grid grid-cols-1 gap-y-3 p-5 bg-emerald-50/40 border border-emerald-100 rounded-2xl">
                         <div>
                             <div class="flex items-center justify-between mb-2">
                                 <label class="block text-xs font-extrabold text-emerald-900 uppercase tracking-wider">Pesanan Nasi Box (Sumber Kebutuhan BOM)</label>
                                 <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded">Opsional</span>
                             </div>
-                            <div class="relative">
-                                <select name="kode_pesanan" onchange="window.location.href='?tipe=Harian' + (this.value ? '&kode_pesanan=' + encodeURIComponent(this.value) : '')" class="block w-full appearance-none rounded-xl border border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 bg-white text-sm pl-4 pr-10 py-2.5 transition-all font-semibold text-gray-800 outline-none shadow-xs cursor-pointer">
-                                    <option value="">— Tanpa Pesanan (Restock Operasional Harian Rutin) —</option>
-                                    @foreach($pesananList as $pk)
+
+                            <div x-data="{
+                                open: false,
+                                selectedCode: '{{ optional($pesanan)->id_pesanan ?? request('kode_pesanan', '') }}',
+                                selectOrder(code) {
+                                    if (code !== this.selectedCode) {
+                                        window.location.href = '?tipe=Harian' + (code ? '&kode_pesanan=' + encodeURIComponent(code) : '');
+                                    }
+                                }
+                            }" class="relative">
+                                <button type="button"
+                                        @click="open = !open"
+                                        @click.outside="open = false"
+                                        class="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white border border-emerald-200 hover:border-emerald-400 rounded-xl text-left transition shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                                            <x-heroicon-o-clipboard-document-list class="w-5 h-5" />
+                                        </div>
+                                        <div class="min-w-0">
+                                            @if($pesanan)
+                                                @php
+                                                    $namaCust = optional($pesanan->pelanggan)->nama ?? optional($pesanan->pelanggan)->nama_pelanggan ?? 'Umum';
+                                                    $tglPesanan = optional($pesanan->jadwal_pesanan)->tanggal_acara ?? $pesanan->waktu_pesanan ?? $pesanan->dibuat_pada;
+                                                    $tglFormatted = $tglPesanan ? \Carbon\Carbon::parse($tglPesanan)->translatedFormat('d M Y') : '-';
+                                                    $qtyPorsi = optional($pesanan->detail_pesanan->first())->jumlah ?? 0;
+                                                    $menuNama = optional(optional($pesanan->detail_pesanan->first())->menu)->nama_menu ?? 'Paket';
+                                                @endphp
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="font-mono font-bold text-gray-900 text-sm">{{ $pesanan->id_pesanan }}</span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800">Dikonfirmasi</span>
+                                                </div>
+                                                <p class="text-xs text-gray-600 truncate mt-0.5">
+                                                    <span class="font-bold text-gray-800">{{ $namaCust }}</span> &bull; {{ $menuNama }} ({{ $qtyPorsi }} Box) &bull; Acara: {{ $tglFormatted }}
+                                                </p>
+                                            @else
+                                                <span class="text-sm font-medium text-gray-600">
+                                                    — Tanpa Pesanan (Restock Operasional Harian Rutin) —
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <x-heroicon-o-chevron-down class="w-4 h-4 text-emerald-600 shrink-0 transition-transform duration-200" x-bind:class="{ 'rotate-180': open }" />
+                                </button>
+
+                                {{-- Dropdown Popover --}}
+                                <div x-show="open"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="absolute z-50 mt-1.5 w-full bg-white border border-gray-200 rounded-2xl shadow-xl max-h-72 overflow-y-auto divide-y divide-gray-100 left-0 p-1.5"
+                                     style="display: none;">
+
+                                    <div @click="selectOrder(''); open = false;"
+                                         class="p-3 rounded-xl hover:bg-emerald-50/70 cursor-pointer flex items-center justify-between transition group {{ !$pesanan ? 'bg-emerald-50/80 border border-emerald-200' : '' }}">
+                                        <div>
+                                            <p class="text-xs font-bold text-gray-800 group-hover:text-emerald-800">
+                                                Tanpa Pesanan Khusus
+                                            </p>
+                                            <p class="text-[11px] text-gray-500 mt-0.5">Restock operasional harian rutin</p>
+                                        </div>
+                                        @if(!$pesanan)
+                                            <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                                                <x-heroicon-o-check class="w-3.5 h-3.5 stroke-[3]" />
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    @forelse($pesananList as $pk)
                                         @php
                                             $namaCust = optional($pk->pelanggan)->nama ?? optional($pk->pelanggan)->nama_pelanggan ?? 'Umum';
-                                            $tglPesanan = \Carbon\Carbon::parse($pk->waktu_pesanan ?? $pk->dibuat_pada ?? $pk->created_at)->format('d/m/Y');
+                                            $tglAcara = optional($pk->jadwal_pesanan)->tanggal_acara 
+                                                ?? $pk->waktu_pesanan 
+                                                ?? $pk->dibuat_pada;
+                                            $tglFormatted = $tglAcara ? \Carbon\Carbon::parse($tglAcara)->translatedFormat('d M Y') : '-';
                                             $qtyPorsi = optional($pk->detail_pesanan->first())->jumlah ?? 0;
                                             $menuNama = optional(optional($pk->detail_pesanan->first())->menu)->nama_menu ?? 'Paket';
+                                            $isSelected = (optional($pesanan)->id_pesanan === $pk->id_pesanan);
                                         @endphp
-                                        <option value="{{ $pk->id_pesanan }}" {{ (request('kode_pesanan') == $pk->id_pesanan || (optional($pesanan)->id_pesanan == $pk->id_pesanan)) ? 'selected' : '' }}>
-                                            {{ $pk->id_pesanan }} - {{ $namaCust }} ({{ $menuNama }} {{ $qtyPorsi }} Box - {{ $tglPesanan }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-700">
-                                    <x-heroicon-o-chevron-down class="w-4 h-4" />
-                                </span>
+                                        <div @click="selectOrder('{{ $pk->id_pesanan }}'); open = false;"
+                                             class="p-3 rounded-xl hover:bg-emerald-50/70 cursor-pointer flex items-center justify-between transition group {{ $isSelected ? 'bg-emerald-50/80 border border-emerald-200' : '' }}">
+                                            <div class="min-w-0 pr-3">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="font-mono font-bold text-xs text-gray-900">{{ $pk->id_pesanan }}</span>
+                                                    <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800">Dikonfirmasi</span>
+                                                </div>
+                                                <p class="text-xs font-bold text-gray-800 mt-1">
+                                                    {{ $namaCust }} &bull; <span class="font-normal text-gray-600">{{ $menuNama }} ({{ $qtyPorsi }} Box)</span>
+                                                </p>
+                                                <p class="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1">
+                                                    <x-heroicon-o-calendar class="w-3 h-3 text-gray-400" />
+                                                    <span>Tanggal Acara: {{ $tglFormatted }}</span>
+                                                </p>
+                                            </div>
+                                            @if($isSelected)
+                                                <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                                                    <x-heroicon-o-check class="w-3.5 h-3.5 stroke-[3]" />
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @empty
+                                    @endforelse
+                                </div>
                             </div>
                         </div>
 
                         @if($pesanan)
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs border-t border-emerald-100">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 text-xs border-t border-emerald-100">
                             <div>
                                 <span class="text-gray-500 block">Pemesan:</span>
                                 <span class="font-bold text-gray-800">{{ optional($pesanan->pelanggan)->nama ?? optional($pesanan->pelanggan)->nama_pelanggan ?? 'Umum' }} ({{ optional($pesanan->pelanggan)->no_telp ?? optional($pesanan->pelanggan)->telepon ?? '-' }})</span>
@@ -319,11 +497,15 @@
                                     <p class="font-bold text-gray-900 item-nama">{{ $item->nama_bahan }}</p>
                                 </td>
                                 <td class="py-3.5 px-4 text-center text-xs font-semibold text-gray-700">
-                                    {{ number_format($kebutuhanTotal, fmod($kebutuhanTotal, 1) === 0.0 ? 0 : 2, ',', '.') }} {{ $satuanDasar }}
+                                    @if(!empty($item->kebutuhan_10_porsi_base))
+                                        <span title="Total kebutuhan 10 porsi menu habis">{{ \App\Helpers\UnitHelper::formatQuantity($item->kebutuhan_10_porsi_base, $item->satuan) }}</span>
+                                    @else
+                                        {{ number_format($kebutuhanTotal, fmod($kebutuhanTotal, 1) === 0.0 ? 0 : 2, ',', '.') }} {{ $satuanDasar }}
+                                    @endif
                                 </td>
                                 <td class="py-3.5 px-4 text-center">
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold {{ $stokVal > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-500' }}">
-                                        {{ number_format($stokVal, fmod($stokVal, 1) === 0.0 ? 0 : 2, ',', '.') }} {{ $satuanDasar }}
+                                        {{ \App\Helpers\UnitHelper::formatQuantity($stokVal, $item->satuan) }}
                                     </span>
                                 </td>
                                 <td class="py-3.5 px-4 text-center text-xs font-semibold text-gray-500">
