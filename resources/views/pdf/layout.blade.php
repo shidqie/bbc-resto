@@ -31,79 +31,95 @@
 
         @page {
             size: A4 @yield('orientation', 'portrait');
-            margin: 25mm 20mm 20mm 20mm;
+            margin: 15mm 14mm 15mm 14mm;
         }
 
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
             font-family: 'Outfit', sans-serif !important;
         }
 
         body {
             font-family: 'Outfit', sans-serif !important;
-            font-size: 10pt;
+            font-size: 9pt;
             color: #111827;
             background: #ffffff;
             line-height: 1.4;
+            margin: 0;
+            padding: 0;
         }
 
-        /* Header Centered Layout (Like Screenshot) */
+        /* ─── HEADER KOP RESTORAN ─── */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+        }
+        .header-table td {
+            vertical-align: middle;
+            border: none;
+            padding: 0;
+        }
+        .brand-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #0D3024;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+        .brand-address {
+            font-size: 7.8pt;
+            color: #4b5563;
+            line-height: 1.35;
+        }
+        .divider-line {
+            border-bottom: 2.5px solid #0D3024;
+            margin-top: 8px;
+            margin-bottom: 14px;
+        }
+
+        /* ─── JUDUL DOKUMEN ─── */
         .doc-header {
             text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .company-name {
-            font-size: 16pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            color: #111827;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            margin-bottom: 12px;
         }
 
         .doc-title {
-            font-size: 13pt;
+            font-size: 11.5pt;
             font-weight: bold;
             text-transform: uppercase;
             color: #111827;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .doc-subtitle {
-            font-size: 9.5pt;
+            font-size: 8.5pt;
             color: #4b5563;
-        }
-
-        .header-divider {
-            border-bottom: 2.5px solid #111827;
-            margin-top: 12px;
-            margin-bottom: 22px;
         }
 
         /* Info Table */
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 16px;
-            font-size: 9.5pt;
+            margin-bottom: 14px;
+            font-size: 9pt;
         }
 
         .info-table td {
-            padding: 4px 0;
+            padding: 3px 0;
             vertical-align: top;
         }
 
         .info-label {
             font-weight: bold;
             color: #374151;
-            width: 130px;
+            width: 120px;
         }
 
         .info-colon {
-            width: 15px;
+            width: 12px;
             text-align: center;
         }
 
@@ -116,22 +132,26 @@
         table.pdf-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 16px;
-            font-size: 9pt;
+            margin-top: 6px;
+            margin-bottom: 14px;
+            font-size: 8.5pt;
+            table-layout: fixed;
+            word-wrap: break-word;
         }
 
         table.pdf-table th, 
         table.pdf-table td {
             border: 1px solid #d1d5db;
-            padding: 7px 9px;
+            padding: 6px 8px;
+            word-wrap: break-word;
+            overflow: hidden;
         }
 
         table.pdf-table thead th {
             background-color: #f3f4f6;
             color: #111827;
             font-weight: bold;
-            font-size: 9pt;
+            font-size: 8.5pt;
             text-align: left;
         }
 
@@ -148,11 +168,11 @@
         /* Footer Counter */
         footer {
             position: fixed;
-            bottom: -15mm;
+            bottom: -10mm;
             left: 0;
             right: 0;
-            height: 20px;
-            font-size: 8pt;
+            height: 15px;
+            font-size: 7.5pt;
             color: #6b7280;
         }
 
@@ -175,6 +195,29 @@
     @yield('styles')
 </head>
 <body>
+    @php
+        $logoPath = public_path('images/logo-saung.png');
+        $logoBase64 = file_exists($logoPath) ? ('data:image/png;base64,' . base64_encode(file_get_contents($logoPath))) : null;
+    @endphp
+
+    {{-- ── HEADER KOP RESTORAN ── --}}
+    <table class="header-table">
+        <tr>
+            @if($logoBase64)
+            <td style="width: 52px; padding-right: 12px; vertical-align: middle;">
+                <img src="{{ $logoBase64 }}" style="width: 48px; height: auto;" alt="Logo Saung Babakan Cinta" />
+            </td>
+            @endif
+            <td style="vertical-align: middle;">
+                <div class="brand-title">RUMAH MAKAN SAUNG BABAKAN CINTA</div>
+                <div class="brand-address">
+                    Jl. Ciloa No. KM 6, Pasirhalang, Kec. Cisarua, Kabupaten Bandung Barat, Jawa Barat 40551
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="divider-line"></div>
 
     <!-- Main Body Content -->
     <main>

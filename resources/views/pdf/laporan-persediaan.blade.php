@@ -4,32 +4,30 @@
 
 @section('content')
     <div class="doc-header">
-        <div class="company-name">RUMAH MAKAN SAUNG BABAKAN CINTA</div>
         <div class="doc-title">{{ $judulLaporan ?? 'LAPORAN PERSEDIAAN BAHAN BAKU' }}</div>
         <div class="doc-subtitle">
             @if(($tab ?? 'harian') === 'katering')
-                Kategori: Stok Katering | Per Tanggal: {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                Kategori: Stok Katering &bull; Per Tanggal: {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             @else
-                Kategori: Stok Harian (Dine-In & Nasi Box) | Per Tanggal: {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                Kategori: Stok Harian (Dine-In & Nasi Box) &bull; Per Tanggal: {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             @endif
         </div>
-        <div class="header-divider"></div>
     </div>
 
     <table class="pdf-table">
         <thead>
             <tr>
-                <th class="text-center" style="width: 35px;">No</th>
-                <th style="width: 90px;">Kode</th>
-                <th>Nama Bahan Baku</th>
-                <th class="text-center" style="width: 70px;">Satuan</th>
+                <th class="text-center" style="width: 5%;">No</th>
+                <th style="width: {{ ($tab ?? 'harian') === 'katering' ? '18%' : '16%' }};">Kode</th>
+                <th style="width: {{ ($tab ?? 'harian') === 'katering' ? '37%' : '30%' }};">Nama Bahan Baku</th>
+                <th class="text-center" style="width: {{ ($tab ?? 'harian') === 'katering' ? '10%' : '9%' }};">Satuan</th>
                 @if(($tab ?? 'harian') === 'katering')
-                    <th class="text-right" style="width: 120px;">Stok Sisa Katering</th>
-                    <th class="text-center" style="width: 90px;">Status</th>
+                    <th class="text-right" style="width: 18%;">Stok Sisa Katering</th>
+                    <th class="text-center" style="width: 12%;">Status</th>
                 @else
-                    <th class="text-right" style="width: 110px;">Stok Saat Ini</th>
-                    <th class="text-right" style="width: 110px;">Stok Minimum</th>
-                    <th class="text-center" style="width: 80px;">Status</th>
+                    <th class="text-right" style="width: 14%;">Stok Saat Ini</th>
+                    <th class="text-right" style="width: 14%;">Stok Minimum</th>
+                    <th class="text-center" style="width: 12%;">Status</th>
                 @endif
             </tr>
         </thead>

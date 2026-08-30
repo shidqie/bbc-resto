@@ -125,15 +125,15 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <x-ui.action-button href="{{ route('users.show', $user) }}" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                <x-ui.action-button href="{{ route('users.show', $user) }}" title="Detail" label="Detail">
+                                    <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                                 <form id="form-delete-user-{{ $user->id }}" action="{{ route('users.destroy', $user) }}" method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
                                 </form>
-                                <x-ui.action-button variant="danger" onclick="window.confirmDialog({ title: 'Hapus Karyawan', name: 'Hapus karyawan {{ addslashes($user->nama) }}?', message: 'Akun karyawan ini akan dihapus dari sistem.', formId: 'form-delete-user-{{ $user->id }}', confirmText: 'Hapus', cancelText: 'Batal', type: 'danger' })" title="Hapus">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                <x-ui.action-button variant="danger" onclick="window.confirmDialog({ title: 'Hapus Karyawan', name: 'Hapus karyawan {{ addslashes($user->nama) }}?', message: 'Akun karyawan ini akan dihapus dari sistem.', formId: 'form-delete-user-{{ $user->id }}', confirmText: 'Hapus', cancelText: 'Batal', type: 'danger' })" title="Hapus" label="Hapus">
+                                    <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                             </div>
                         </td>
@@ -212,15 +212,15 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <x-ui.action-button href="{{ route('pelanggan.show', $user) }}" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                <x-ui.action-button href="{{ route('pelanggan.show', $user) }}" title="Detail" label="Detail">
+                                    <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                                 <form id="form-delete-pelanggan-{{ $user->id }}" action="{{ route('pelanggan.destroy', $user) }}" method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
                                 </form>
-                                <x-ui.action-button variant="danger" onclick="window.confirmDialog({ title: 'Hapus Data Konsumen', name: 'Hapus data konsumen {{ addslashes($user->nama) }}?', message: 'Semua riwayat pesanan konsumen ini juga akan terhapus. Aksi ini tidak dapat dibatalkan.', formId: 'form-delete-pelanggan-{{ $user->id }}', confirmText: 'Hapus', cancelText: 'Batal', type: 'danger' })" title="Hapus">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                <x-ui.action-button variant="danger" onclick="window.confirmDialog({ title: 'Hapus Data Konsumen', name: 'Hapus data konsumen {{ addslashes($user->nama) }}?', message: 'Semua riwayat pesanan konsumen ini juga akan terhapus. Aksi ini tidak dapat dibatalkan.', formId: 'form-delete-pelanggan-{{ $user->id }}', confirmText: 'Hapus', cancelText: 'Batal', type: 'danger' })" title="Hapus" label="Hapus">
+                                    <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                             </div>
                         </td>

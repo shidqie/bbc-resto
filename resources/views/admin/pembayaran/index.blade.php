@@ -19,7 +19,7 @@
         <x-ui.data-table :paginator="$pembayarans">
             <x-slot:toolbar>
                 <form action="{{ route('admin.pembayaran.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap">
-                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari ID Pembayaran / Kode Pesanan…" />
+                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari ID Pembayaran / ID Pesanan…" />
                     @if(request()->hasAny(['search']))
                         <x-ui.button href="{{ route('admin.pembayaran.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
@@ -29,7 +29,7 @@
             <x-ui.table class="min-w-[1000px]">
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
-                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">ID Pesanan</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
                     <th class="px-4 py-3.5 text-right">Total</th>
@@ -91,8 +91,8 @@
                                         </x-ui.button>
                                     </form>
                                 @else
-                                    <x-ui.action-button onclick="openDetailDrawer({{ $bayar->id }})" title="Detail">
-                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    <x-ui.action-button onclick="openDetailDrawer({{ $bayar->id }})" title="Detail" label="Detail">
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 @endif
                             </div>

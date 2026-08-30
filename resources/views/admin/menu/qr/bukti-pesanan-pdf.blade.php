@@ -178,7 +178,7 @@
     {{-- Info Pesanan --}}
     <table class="w-full info-table">
         <tr>
-            <td class="label">Kode Pesanan:</td>
+            <td class="label">ID Pesanan:</td>
             <td class="val">{{ $pesanan->id_pesanan }}</td>
         </tr>
         <tr>

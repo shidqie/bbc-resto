@@ -42,14 +42,14 @@
                 <div class="p-5">
                     <form action="{{ route('pengadaan.catering.create') }}" method="GET" class="flex flex-col sm:flex-row gap-3 items-end">
                         <div class="w-full">
-                            <label class="block text-xs font-semibold text-gray-500 mb-1">Kode Pesanan</label>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">ID Pesanan</label>
                             <input type="text" name="kode_pesanan" list="daftarPesananList" placeholder="Contoh: CTR-20260807-001" required class="w-full border border-gray-200 text-gray-900 text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                             <datalist id="daftarPesananList">
                                 @foreach($daftarPesanan as $dp)
                                     <option value="{{ $dp->id_pesanan }}">
                                 @endforeach
                             </datalist>
-                            <p class="text-xs text-gray-400 mt-1">Ketik atau pilih kode pesanan, lalu sistem menghitung kebutuhan bahan baku dari resep.</p>
+                            <p class="text-xs text-gray-400 mt-1">Ketik atau pilih ID pesanan, lalu sistem menghitung kebutuhan bahan baku dari resep.</p>
                         </div>
                         <button type="submit" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-emerald-600 rounded-lg px-4 py-2 hover:bg-emerald-700 transition-colors shrink-0">
                             <x-heroicon-o-calculator class="w-4 h-4" />
@@ -91,7 +91,7 @@
                                     <input type="text" readonly value="{{ $kodePreview }}" class="w-full bg-gray-50 border border-gray-200 text-gray-600 text-sm rounded-lg px-3 py-2 font-mono font-bold cursor-not-allowed">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Kode Pesanan</label>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">ID Pesanan</label>
                                     <input type="text" readonly value="{{ $pesanan->id_pesanan }}" class="w-full bg-gray-50 border border-gray-200 text-gray-600 text-sm rounded-lg px-3 py-2 font-mono font-bold cursor-not-allowed">
                                 </div>
                                 <div>

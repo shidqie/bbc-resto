@@ -58,7 +58,7 @@
                     <x-ui.table.header>
                         <th class="px-4 py-3.5 text-left w-12">No</th>
                         <th class="px-4 py-3.5 text-left">Waktu Pesanan</th>
-                        <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                        <th class="px-4 py-3.5 text-left">ID Pesanan</th>
                         <th class="px-4 py-3.5 text-left">Meja</th>
                         <th class="px-4 py-3.5 text-center">Status Pesanan</th>
                         <th class="px-4 py-3.5 text-center">Aksi</th>
@@ -96,8 +96,7 @@
                                         default => ['label' => optional($p->status_pesanan)->nama_status ?? 'Status #'.$stId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
                                     };
                                 @endphp
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs whitespace-nowrap {{ $stConfig['color'] }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $stConfig['dot'] }}"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold whitespace-nowrap {{ $stConfig['color'] }}">
                                     <span>{{ $stConfig['label'] }}</span>
                                 </span>
                             </td>
@@ -144,8 +143,8 @@
                     <x-ui.table.header>
                         <th class="px-4 py-3.5 text-left w-12">No</th>
                         <th class="px-4 py-3.5 text-left">Waktu Pesanan</th>
-                        <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
-                        <th class="px-4 py-3.5 text-left">Pelanggan</th>
+                        <th class="px-4 py-3.5 text-left">ID Pesanan</th>
+                        <th class="px-4 py-3.5 text-left">Konsumen</th>
 
                         <th class="px-4 py-3.5 text-right">Total Tagihan</th>
                         <th class="px-4 py-3.5 text-center">Status Pesanan</th>
@@ -165,7 +164,7 @@
                                 <span class="font-mono text-xs font-bold text-gray-900">{{ $p->id_pesanan }}</span>
                             </td>
                             <td class="px-4 py-4 align-middle">
-                                <p class="font-medium text-gray-900 text-sm">{{ optional($p->pelanggan)->nama ?? '-' }}</p>
+                                <p class="font-medium text-gray-900 text-sm">{{ $p->nama_konsumen }}</p>
                             </td>
 
                             <td class="px-4 py-4 text-right font-bold text-gray-900 tabular-nums whitespace-nowrap">
@@ -186,8 +185,7 @@
                                         default => ['label' => optional($p->status_pesanan)->nama_status ?? 'Status #'.$stId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
                                     };
                                 @endphp
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs whitespace-nowrap {{ $stConfig['color'] }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $stConfig['dot'] }}"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold whitespace-nowrap {{ $stConfig['color'] }}">
                                     <span>{{ $stConfig['label'] }}</span>
                                 </span>
                             </td>
@@ -233,11 +231,11 @@
                                             </button>
                                         </form>
                                     @endif
-                                    <x-ui.action-button onclick="openDineinDrawer('{{ route('admin.pesanan.show', $p->id) }}')" @click="$dispatch('open-dinein-drawer', {url: '{{ route('admin.pesanan.show', $p->id) }}'})" title="Detail">
-                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    <x-ui.action-button onclick="openDineinDrawer('{{ route('admin.pesanan.show', $p->id) }}')" @click="$dispatch('open-dinein-drawer', {url: '{{ route('admin.pesanan.show', $p->id) }}'})" title="Detail" label="Detail">
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
-                                    <x-ui.action-button href="{{ route('pos.dinein.print-gabungan', $p->id) }}" target="_blank" title="Cetak Struk">
-                                        <x-heroicon-o-printer class="w-4 h-4" />
+                                    <x-ui.action-button href="{{ route('pos.dinein.print-gabungan', $p->id) }}" target="_blank" title="Cetak Struk" label="Struk">
+                                        <x-heroicon-o-printer class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 </div>
                             </td>

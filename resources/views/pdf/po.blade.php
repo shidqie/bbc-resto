@@ -4,10 +4,8 @@
 
 @section('content')
     <div class="doc-header">
-        <div class="company-name">RUMAH MAKAN SAUNG BABAKAN CINTA</div>
         <div class="doc-title">SURAT PESANAN PEMBELIAN</div>
         <div class="doc-subtitle">(PURCHASE ORDER) &bull; NO: {{ $po->nomor_po }}</div>
-        <div class="header-divider"></div>
     </div>
 
     <table class="info-table">
@@ -29,6 +27,16 @@
                         <td class="info-colon">:</td>
                         <td class="info-val">{{ \Carbon\Carbon::parse($po->tanggal_kebutuhan ?? date('Y-m-d', strtotime($po->tanggal_po . ' +1 day')))->format('d/m/Y') }}</td>
                     </tr>
+                    @php
+                        $kodePsn = $po->kode_pesanan_catering ?: optional(optional($po->pengadaan_bahan)->pesanan)->id_pesanan;
+                    @endphp
+                    @if($kodePsn)
+                    <tr>
+                        <td class="info-label">ID Pesanan</td>
+                        <td class="info-colon">:</td>
+                        <td class="info-val font-bold font-mono">{{ $kodePsn }}</td>
+                    </tr>
+                    @endif
                 </table>
             </td>
             <td style="width: 50%; padding-left: 15px;">
@@ -39,14 +47,9 @@
                         <td class="info-val font-bold">{{ $po->supplier }}</td>
                     </tr>
                     <tr>
-                        <td class="info-label">WhatsApp Supplier</td>
+                        <td class="info-label">Kontak Supplier</td>
                         <td class="info-colon">:</td>
-                        <td class="info-val">{{ $po->no_telp_supplier ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="info-label">Alamat Supplier</td>
-                        <td class="info-colon">:</td>
-                        <td class="info-val">{{ $po->alamat_supplier ?? 'Garut, Jawa Barat' }}</td>
+                        <td class="info-val">{{ $po->no_telp_supplier ?: '-' }}</td>
                     </tr>
                 </table>
             </td>
@@ -56,12 +59,12 @@
     <table class="pdf-table">
         <thead>
             <tr>
-                <th class="text-center" style="width: 35px;">No</th>
-                <th>Nama Bahan Baku</th>
-                <th class="text-right" style="width: 85px;">Jumlah</th>
-                <th class="text-center" style="width: 70px;">Satuan</th>
-                <th class="text-right" style="width: 120px;">Harga Satuan</th>
-                <th class="text-right" style="width: 130px;">Total</th>
+                <th class="text-center" style="width: 5%;">No</th>
+                <th style="width: 37%;">Nama Bahan Baku</th>
+                <th class="text-right" style="width: 12%;">Jumlah</th>
+                <th class="text-center" style="width: 10%;">Satuan</th>
+                <th class="text-right" style="width: 18%;">Harga Satuan</th>
+                <th class="text-right" style="width: 18%;">Total</th>
             </tr>
         </thead>
         <tbody>

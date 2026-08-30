@@ -98,8 +98,6 @@
                                     @php
                                         $dipesanVal = (float) $row['jumlah_dipesan'];
                                         $sisaVal = (float) $row['sisa'];
-                                        $hargaSatuanPO = (float) ($row['harga_satuan'] ?? 0);
-                                        $subtotalInitial = $sisaVal * $hargaSatuanPO;
                                     @endphp
                                     <tr class="item-row hover:bg-gray-50/40 transition-colors" x-show="isItemVisible('{{ $row['detail_id'] }}')">
                                         <td class="px-4 py-3 text-center align-middle">
@@ -120,12 +118,12 @@
                                         <td class="px-4 py-3 align-middle">
                                             <div class="relative inline-block w-full">
                                                 <span class="absolute left-3 top-2 text-xs text-gray-400 font-bold">Rp</span>
-                                                <input type="text" name="harga_beli[{{ $row['detail_id'] }}]" id="hrg_{{ $row['detail_id'] }}" value="{{ $hargaSatuanPO > 0 ? number_format($hargaSatuanPO, 0, ',', '.') : '' }}" placeholder="0" oninput="formatRupiahInput(this); updateRowCalc('{{ $row['detail_id'] }}')" onchange="updateRowCalc('{{ $row['detail_id'] }}')" class="w-full text-right pl-8 pr-3 border border-gray-200 text-gray-900 text-sm rounded-xl py-1.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold hrg-input">
+                                                <input type="text" name="harga_beli[{{ $row['detail_id'] }}]" id="hrg_{{ $row['detail_id'] }}" value="" placeholder="0" oninput="formatRupiahInput(this); updateRowCalc('{{ $row['detail_id'] }}')" onchange="updateRowCalc('{{ $row['detail_id'] }}')" class="w-full text-right pl-8 pr-3 border border-gray-200 text-gray-900 text-sm rounded-xl py-1.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold hrg-input">
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 text-right align-middle">
                                             <div class="font-bold text-gray-900" id="subtotal_{{ $row['detail_id'] }}">
-                                                Rp {{ number_format(round($subtotalInitial), 0, ',', '.') }}
+                                                -
                                             </div>
                                         </td>
                                     </tr>
@@ -294,13 +292,15 @@
         if (!jmlInput || !hrgInput || !subtotalCell || !checkbox) return;
 
         let subtotal = 0;
-        if (checkbox.checked) {
+        const harga = parseNumericPrice(hrgInput.value);
+        if (checkbox.checked && harga > 0) {
             const diterima = parseNumericQty(jmlInput.value);
-            const harga = parseNumericPrice(hrgInput.value);
             subtotal = diterima * harga;
+            subtotalCell.innerHTML = 'Rp ' + formatRupiahDisplay(subtotal);
+        } else {
+            subtotalCell.innerHTML = '-';
         }
 
-        subtotalCell.innerHTML = 'Rp ' + formatRupiahDisplay(subtotal);
         recalcGrandTotal();
     }
 
@@ -309,6 +309,7 @@
      */
     function recalcGrandTotal() {
         let grandTotal = 0;
+        let anyHargaEntered = false;
 
         document.querySelectorAll('.item-row').forEach(row => {
             const checkbox = row.querySelector('.item-checkbox');
@@ -320,14 +321,17 @@
                     const hrgInput = document.getElementById('hrg_' + id);
                     const diterima = parseNumericQty(jmlInput ? jmlInput.value : 0);
                     const harga = parseNumericPrice(hrgInput ? hrgInput.value : 0);
-                    grandTotal += (diterima * harga);
+                    if (harga > 0) {
+                        anyHargaEntered = true;
+                        grandTotal += (diterima * harga);
+                    }
                 }
             }
         });
 
         const grandTotalInput = document.getElementById('grandTotalNota');
         if (grandTotalInput && !isManualInput) {
-            grandTotalInput.value = formatRupiahDisplay(grandTotal);
+            grandTotalInput.value = anyHargaEntered && grandTotal > 0 ? formatRupiahDisplay(grandTotal) : '';
         }
     }
 

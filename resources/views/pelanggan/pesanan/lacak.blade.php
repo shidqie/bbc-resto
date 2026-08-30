@@ -9,7 +9,7 @@
                 <div class="bg-white border border-gray-200 rounded-xl p-8 shadow-xs">
                     <div class="text-center mb-6">
                         <h1 class="text-2xl font-bold text-gray-900 tracking-tight mb-2">Lacak Pesanan Nasi Box & Katering</h1>
-                        <p class="text-gray-500 text-sm">Masukkan kode pesanan Nasi Box atau Katering untuk melihat detail dan status operasional.</p>
+                        <p class="text-gray-500 text-sm">Masukkan ID pesanan Nasi Box atau Katering untuk melihat detail dan status operasional.</p>
                     </div>
 
                     <form method="GET" action="{{ route('lacak.index') }}" class="max-w-xl mx-auto">
@@ -40,7 +40,7 @@
                         </div>
                     @elseif($kodePesanan && !$pesanan)
                         <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                            <span class="font-bold">Pesanan tidak ditemukan:</span> Kode <code class="font-mono bg-red-100 px-1 py-0.5 rounded">{{ $kodePesanan }}</code> tidak terdaftar dalam sistem. Pastikan kode pesanan yang dimasukkan benar dan merupakan pesanan Nasi Box atau Katering.
+                            <span class="font-bold">Pesanan tidak ditemukan:</span> ID <code class="font-mono bg-red-100 px-1 py-0.5 rounded">{{ $kodePesanan }}</code> tidak terdaftar dalam sistem. Pastikan ID pesanan yang dimasukkan benar dan merupakan pesanan Nasi Box atau Katering.
                         </div>
                     @endif
                 </div>
@@ -152,7 +152,7 @@
                                 type="button"
                                 @click="navigator.clipboard.writeText('{{ $pesanan->id_pesanan }}'); copied = true; setTimeout(() => copied = false, 1500)"
                                 class="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
-                                title="Salin Kode Pesanan"
+                                title="Salin ID Pesanan"
                             >
                                 <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                 <svg x-show="copied" x-cloak class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>

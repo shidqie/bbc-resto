@@ -471,7 +471,7 @@
         </p>
         <div class="bg-neutral-50 border border-neutral-200 rounded-xl p-3.5 mb-5 text-left text-xs space-y-1.5">
             <div class="flex justify-between items-center">
-                <span class="text-neutral-500 font-medium">Kode Pesanan:</span>
+                <span class="text-neutral-500 font-medium">ID Pesanan:</span>
                 <span class="font-bold text-neutral-900 font-mono text-xs" x-text="activeKodePesanan"></span>
             </div>
             <div class="flex justify-between items-center">
@@ -529,7 +529,7 @@
                 <span class="font-semibold text-neutral-900" x-text="rp(qrisData.gross_amount||totalPrice)"></span>
             </div>
             <div class="flex justify-between text-xs">
-                <span class="text-neutral-400">Kode Pesanan</span>
+                <span class="text-neutral-400">ID Pesanan</span>
                 <span class="font-mono font-semibold text-neutral-700 text-xs" x-text="qrisData.order_id||lastCode||'-'"></span>
             </div>
         </div>
@@ -558,7 +558,7 @@
             
             <div class="bg-neutral-50 border border-neutral-200 rounded-xl p-4 mb-4 text-left space-y-2.5">
                 <div class="flex justify-between text-xs items-center">
-                    <span class="text-neutral-500 font-medium">Kode Pesanan :</span>
+                    <span class="text-neutral-500 font-medium">ID Pesanan :</span>
                     <span class="font-bold text-neutral-900 font-mono text-xs sm:text-sm" x-text="lastCode"></span>
                 </div>
                 <div class="flex justify-between text-xs items-center">

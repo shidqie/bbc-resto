@@ -4,9 +4,9 @@
 @section('content')
 <div class="flex-1 bg-gray-50 text-gray-800 pb-10">
     @php
-        $userRole = auth()->user()->peran->nama_peran ?? '';
+        $userRole = auth()->user()?->peran?->nama_peran ?? '';
         $isAdminOrPemilik = in_array($userRole, ['Admin', 'Super Admin', 'Pemilik', 'Manajer']);
-        $isDapur = (auth()->user()->hasRole('Dapur', 'Tim Dapur') || in_array($userRole, ['Dapur', 'Tim Dapur', 'Koki'])) && !$isAdminOrPemilik;
+        $isDapur = (auth()->user()?->hasRole('Dapur', 'Tim Dapur') || in_array($userRole, ['Dapur', 'Tim Dapur', 'Koki'])) && !$isAdminOrPemilik;
     @endphp
 
     <div class="w-full p-6 space-y-5">
@@ -49,33 +49,32 @@
 
         <x-ui.alert />
 
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm relative z-30">
-            <form action="{{ route('pengadaan.po.index') }}" method="GET" class="p-3.5 flex flex-wrap items-center justify-start gap-3">
-                <div class="w-full sm:w-64 lg:w-72">
-                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari kode PO / supplier..." />
-                </div>
-                <div class="relative z-40">
-                    <x-ui.multi-select name="status" :options="$statuses" :selected="request('status')" label="Status PO" type="radio" />
-                </div>
-                <div>
-                    <input type="date" name="dari" value="{{ request('dari') }}" class="border border-gray-200 text-gray-900 text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" title="Dari Tanggal">
-                </div>
-                <div>
-                    <input type="date" name="sampai" value="{{ request('sampai') }}" class="border border-gray-200 text-gray-900 text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" title="Sampai Tanggal">
-                </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <button type="submit" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-emerald-600 rounded-lg px-4 py-2 hover:bg-emerald-700 transition-colors">
-                        <x-heroicon-o-funnel class="w-4 h-4" />
-                        Terapkan Filter
-                    </button>
-                    @if(request()->hasAny(['search', 'status', 'dari', 'sampai']))
+        {{-- Table with integrated toolbar --}}
+        <x-ui.data-table :paginator="$pos">
+            <x-slot:toolbar>
+                <form action="{{ route('pengadaan.po.index') }}" method="GET" class="flex items-center gap-2 w-full flex-wrap" x-data="{ periode: '{{ request('periode', 'all') }}' }">
+                    <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari Kode PO / Supplier…" />
+                    
+                    <x-ui.multi-select name="status" :options="['all' => 'Semua Status'] + $statuses" :selected="request('status', 'all')" label="Status PO" type="radio" />
+                    
+                    <x-ui.multi-select name="jenis_po" :options="['all' => 'Semua Sumber', 'catering' => 'Katering', 'operasional' => 'Harian']" :selected="request('jenis_po', 'all')" label="Sumber PO" type="radio" />
+
+                    <x-ui.multi-select name="periode" :options="['all' => 'Semua Periode', 'hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'kustom' => 'Kustom']" :selected="request('periode', 'all')" label="Periode PO" type="radio" @change="periode = $event.target.value" />
+
+                    <template x-if="new URLSearchParams(window.location.search).get('periode') === 'kustom' || periode === 'kustom'">
+                        <div class="flex items-center gap-2">
+                            <x-ui.input type="date" name="dari" value="{{ request('dari') }}" />
+                            <span class="text-gray-500 text-sm">s/d</span>
+                            <x-ui.input type="date" name="sampai" value="{{ request('sampai') }}" />
+                            <x-ui.button type="submit" variant="primary">Terapkan</x-ui.button>
+                        </div>
+                    </template>
+
+                    @if(request()->hasAny(['search', 'status', 'jenis_po', 'periode', 'dari', 'sampai']))
                         <x-ui.button href="{{ route('pengadaan.po.index') }}" variant="danger" size="sm">Reset</x-ui.button>
                     @endif
-                </div>
-            </form>
-        </div>
-
-        <x-ui.data-table :paginator="$pos">
+                </form>
+            </x-slot:toolbar>
             <x-ui.table class="min-w-[950px]">
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
@@ -99,14 +98,6 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-gray-700">
                             <span class="font-semibold">{{ $po->jenis_po == 'operasional' ? 'Harian' : 'Katering' }}</span>
-                            @php
-                                $sumberKode = $po->kode_pesanan_catering ?: optional(optional($po->pengadaan_bahan)->pesanan)->id_pesanan;
-                            @endphp
-                            @if($sumberKode)
-                                <p class="text-[11px] font-mono text-emerald-700 font-bold mt-0.5">
-                                    {{ $sumberKode }}
-                                </p>
-                            @endif
                         </td>
                         <td class="px-4 py-4 align-middle text-gray-700 font-medium">{{ $po->supplier }}</td>
                         <td class="px-4 py-4 align-middle text-center font-bold text-gray-900">{{ $po->detail_purchase_order->count() }} <span class="text-xs font-normal text-gray-500">item</span></td>
@@ -114,19 +105,18 @@
                             <x-ui.badge :color="$po->status_warna" size="sm">{{ $po->status_nama }}</x-ui.badge>
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('pengadaan.po.print', $po->id) }}" target="_blank" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-colors shadow-2xs gap-1" title="Cetak Surat PO ke Supplier">
-                                    <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                    Cetak Surat PO
-                                </a>
+                            <div class="flex items-center justify-center gap-1.5">
                                 @if(app(\App\Services\PengadaanStatusService::class)->poMasihBisaDiterima($po))
-                                    <a href="{{ route('pengadaan.penerimaan.create', $po->id) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors">
-                                        Terima Barang
-                                    </a>
+                                    <x-ui.action-button href="{{ route('pengadaan.po.print', $po->id) }}" target="_blank" title="Cetak Surat PO ke Supplier" label="Cetak PO">
+                                        <x-heroicon-o-printer class="w-3.5 h-3.5" />
+                                    </x-ui.action-button>
+                                    <x-ui.action-button href="{{ route('pengadaan.penerimaan.create', $po->id) }}" variant="success" title="Terima Barang" label="Terima">
+                                        <x-heroicon-o-inbox-arrow-down class="w-3.5 h-3.5" />
+                                    </x-ui.action-button>
                                 @else
-                                    <a href="{{ route('pengadaan.po.show', $po->id) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors">
-                                        Lihat Detail
-                                    </a>
+                                    <x-ui.action-button href="{{ route('pengadaan.po.show', $po->id) }}" title="Detail" label="Detail">
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
+                                    </x-ui.action-button>
                                 @endif
                             </div>
                         </td>

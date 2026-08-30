@@ -47,7 +47,7 @@
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
-                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">ID Pesanan</th>
                     <th class="px-4 py-3.5 text-left">Jenis Pesanan</th>
                     <th class="px-4 py-3.5 text-left">Konsumen</th>
 
@@ -118,8 +118,7 @@
                                     default => ['label' => optional($pesanan->status_pesanan)->nama_status ?? 'Status #'.$stId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
                                 };
                             @endphp
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $stConfig['color'] }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $stConfig['dot'] }}"></span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold {{ $stConfig['color'] }}">
                                 <span>{{ $stConfig['label'] }}</span>
                             </span>
                         </td>
@@ -128,17 +127,16 @@
                             @php
                                 $payId = (int) $pesanan->status_pembayaran_id;
                                 $payConfig = match($payId) {
-                                    1 => ['label' => 'Belum Bayar', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
-                                    2 => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
-                                    3 => ['label' => 'DP Terverifikasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
-                                    4 => ['label' => 'Menunggu Pelunasan', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500'],
-                                    5 => ['label' => 'Lunas', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
-                                    6 => ['label' => 'Pembayaran Ditolak', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
-                                    default => ['label' => optional($pesanan->status_pembayaran)->nama_status ?? 'Status #'.$payId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
+                                    1 => ['label' => 'Belum Bayar', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90'],
+                                    2 => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90'],
+                                    3 => ['label' => 'DP Terverifikasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90'],
+                                    4 => ['label' => 'Menunggu Pelunasan', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90'],
+                                    5 => ['label' => 'Lunas', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90'],
+                                    6 => ['label' => 'Pembayaran Ditolak', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90'],
+                                    default => ['label' => optional($pesanan->status_pembayaran)->nama_status ?? 'Status #'.$payId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200'],
                                 };
                             @endphp
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $payConfig['color'] }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $payConfig['dot'] }}"></span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold {{ $payConfig['color'] }}">
                                 <span>{{ $payConfig['label'] }}</span>
                             </span>
                         </td>
@@ -148,16 +146,15 @@
                                 @php
                                     $shipId = (int) ($pesanan->pengiriman->status_pengiriman_id ?? 1);
                                     $shipConfig = match($shipId) {
-                                        1 => ['label' => 'Dijadwalkan', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
-                                        2 => ['label' => 'Siap Dikirim', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90', 'dot' => 'bg-purple-500'],
-                                        3 => ['label' => 'Dalam Pengantaran', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
-                                        4 => ['label' => 'Selesai', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
-                                        5 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
-                                        default => ['label' => optional($pesanan->pengiriman->status_pengiriman)->nama_status ?? 'Status #'.$shipId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
+                                        1 => ['label' => 'Dijadwalkan', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90'],
+                                        2 => ['label' => 'Siap Dikirim', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90'],
+                                        3 => ['label' => 'Dalam Pengantaran', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90'],
+                                        4 => ['label' => 'Selesai', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90'],
+                                        5 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90'],
+                                        default => ['label' => optional($pesanan->pengiriman->status_pengiriman)->nama_status ?? 'Status #'.$shipId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200'],
                                     };
                                 @endphp
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $shipConfig['color'] }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $shipConfig['dot'] }}"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold {{ $shipConfig['color'] }}">
                                     <span>{{ $shipConfig['label'] }}</span>
                                 </span>
                             @else
@@ -166,11 +163,19 @@
                         </td>
                         <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <x-ui.action-button onclick="openDetailDrawer({{ $pesanan->id }})" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                <x-ui.action-button onclick="openDetailDrawer({{ $pesanan->id }})" title="Detail" label="Detail">
+                                    <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
-                                <x-ui.action-button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" title="Cetak Struk">
-                                    <x-heroicon-o-printer class="w-4 h-4" />
+                                @php
+                                    $printUrl = match($pesanan->jenis_pesanan_id) {
+                                        2 => route('admin.pesanan.catering.pdf', $pesanan->id),
+                                        3 => route('admin.pesanan.nasibox.pdf', $pesanan->id),
+                                        default => url('/pos/dinein/pesanan/' . $pesanan->id . '/print-nota')
+                                    };
+                                    $printLabel = in_array($pesanan->jenis_pesanan_id, [2, 3]) ? 'Bukti' : 'Struk';
+                                @endphp
+                                <x-ui.action-button onclick="window.open('{{ $printUrl }}', '_blank')" title="{{ in_array($pesanan->jenis_pesanan_id, [2, 3]) ? 'Cetak Bukti Pemesanan' : 'Cetak Struk' }}" label="{{ $printLabel }}">
+                                    <x-heroicon-o-printer class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                             </div>
                         </td>

@@ -4,8 +4,9 @@
     <title>Laporan Penjualan</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
-        * { font-family: 'Outfit', sans-serif !important; }
-        body { font-family: 'Outfit', sans-serif !important; font-size: 12px; color: #333; }
+        @page { size: A4 portrait; margin: 25mm 22mm 22mm 22mm; }
+        * { font-family: 'Outfit', sans-serif !important; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif !important; font-size: 12px; color: #333; margin: 0; padding: 0; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .header h2 { margin: 0 0 5px 0; font-size: 18px; text-transform: uppercase; }
         .header h3 { margin: 0 0 5px 0; font-size: 14px; font-weight: normal; }
@@ -46,7 +47,7 @@
             <tr>
                 <th class="text-center" style="width: 30px;">No</th>
                 <th style="width: 80px;">Tanggal</th>
-                <th style="width: 130px;">Kode Pesanan</th>
+                <th style="width: 130px;">ID Pesanan</th>
                 <th style="width: 90px;">Jenis Pesanan</th>
                 <th class="text-right" style="width: 110px;">Total Transaksi</th>
                 <th class="text-center" style="width: 70px;">Status</th>

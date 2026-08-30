@@ -531,7 +531,7 @@ class PesananCateringController extends Controller
 
         $pdf = Pdf::loadView('pdf.invoice', compact('pesanan', 'type', 'kodePesanan'));
 
-        return $pdf->download('bukti-pesanan-'.$pesanan->id_pesanan.'.pdf');
+        return $pdf->stream('bukti-pesanan-'.$pesanan->id_pesanan.'.pdf');
     }
 
     public function updateStatus(Request $request, $id)

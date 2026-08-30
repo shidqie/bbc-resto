@@ -78,7 +78,7 @@
                                 <tr class="border-t-2 border-gray-100 bg-gray-50/80 print-bg">
                                     <td colspan="3" class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs tracking-wider">Total Harga:</td>
                                     <td class="px-6 py-4 font-bold text-primary text-lg text-right">
-                                        Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}
+                                        Rp {{ number_format($pesanan->total_tagihan, 0, ',', '.') }}
                                     </td>
                                 </tr>
                             </tfoot>
@@ -104,8 +104,8 @@
                             <span class="text-xs font-bold text-gray-900">{{ $pesanan->no_meja ?? '-' }}</span>
                         </div>
                         <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200">
-                            <span class="text-sm font-medium text-gray-500">Pelanggan</span>
-                            <span class="text-xs font-bold text-primary">{{ $pesanan->nama_pelanggan ?? 'Walk-in Customer' }}</span>
+                            <span class="text-sm font-medium text-gray-500">Konsumen</span>
+                            <span class="text-xs font-bold text-primary">{{ $pesanan->nama_konsumen ?? $pesanan->nama_pelanggan ?? 'Walk-in Customer' }}</span>
                         </div>
                         <div class="flex justify-between items-center pb-2 border-b border-dashed border-gray-200">
                             <span class="text-sm font-medium text-gray-500">Kasir</span>

@@ -23,51 +23,51 @@
 
     {{-- Detail --}}
     @if($aksiIsPaket)
-        <a href="{{ route('paket-catering.show', $aksiId) }}" title="Lihat Detail Paket" class="w-7 h-7 rounded-full flex items-center justify-center bg-primary-soft text-primary hover:bg-primary/10 transition-colors">
-            <x-heroicon-o-eye class="w-4 h-4" />
-        </a>
+        <x-ui.action-button href="{{ route('paket-catering.show', $aksiId) }}" title="Lihat Detail Paket" label="Detail">
+            <x-heroicon-o-eye class="w-3.5 h-3.5" />
+        </x-ui.action-button>
     @else
-        <a href="{{ route('menu.show', $aksiId) }}" title="Lihat Detail Menu" class="w-7 h-7 rounded-full flex items-center justify-center bg-primary-soft text-primary hover:bg-primary/10 transition-colors">
-            <x-heroicon-o-eye class="w-4 h-4" />
-        </a>
+        <x-ui.action-button href="{{ route('menu.show', $aksiId) }}" title="Lihat Detail Menu" label="Detail">
+            <x-heroicon-o-eye class="w-3.5 h-3.5" />
+        </x-ui.action-button>
     @endif
 
     {{-- Edit --}}
     @if($aksiIsPaket)
-        <a href="{{ route('paket-catering.edit', $aksiId) }}" title="Edit Paket" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-            <x-heroicon-o-pencil-square class="w-4 h-4" />
-        </a>
+        <x-ui.action-button href="{{ route('paket-catering.edit', $aksiId) }}" title="Edit Paket" label="Edit">
+            <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
+        </x-ui.action-button>
     @else
-        <a href="{{ route('menu.edit', $aksiId) }}" title="Edit Menu" class="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">
-            <x-heroicon-o-pencil-square class="w-4 h-4" />
-        </a>
+        <x-ui.action-button href="{{ route('menu.edit', $aksiId) }}" title="Edit Menu" label="Edit">
+            <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
+        </x-ui.action-button>
     @endif
 
-    {{-- Nonaktifkan / Aktifkan --}}
-    @if($aksiIsPaket)
-        <form action="{{ route('paket-catering.toggle', $aksiId) }}" method="POST" class="inline">
-            @csrf @method('PATCH')
-            <x-ui.action-button type="submit" title="{{ $aksiStatus ? 'Nonaktifkan Paket' : 'Aktifkan Paket' }}">
-                <x-heroicon-o-power class="w-4 h-4" />
-            </x-ui.action-button>
-        </form>
-    @else
-        <form action="{{ route('menu.toggle', $aksiId) }}" method="POST" class="inline">
-            @csrf @method('PATCH')
-            <x-ui.action-button type="submit" title="{{ $aksiStatus ? 'Nonaktifkan Menu' : 'Aktifkan Menu' }}">
-                <x-heroicon-o-power class="w-4 h-4" />
-            </x-ui.action-button>
-        </form>
-    @endif
-
-    {{-- Hapus (hanya bila belum pernah digunakan) --}}
-    @if(!$aksiUsed)
-        <form action="{{ $aksiIsPaket ? route('paket-catering.destroy', $aksiId) : route('menu.destroy', $aksiId) }}" method="POST" onsubmit="return confirmHapusMenu(event, '{{ $aksiNama }}')" class="inline">
-            @csrf @method('DELETE')
-            <x-ui.action-button type="submit" title="Hapus {{ $aksiIsPaket ? 'Paket' : 'Menu' }}">
-                <x-heroicon-o-trash class="w-4 h-4" />
-            </x-ui.action-button>
-        </form>
-    @endif
+    {{-- Dropdown Lainnya untuk Status dan Hapus (> 3 aksi) --}}
+    <x-ui.action-dropdown>
+        @if($aksiIsPaket)
+            <form id="toggle-paket-{{ $aksiId }}" action="{{ route('paket-catering.toggle', $aksiId) }}" method="POST" class="hidden">
+                @csrf @method('PATCH')
+            </form>
+            <x-ui.action-dropdown-item icon="power" label="{{ $aksiStatus ? 'Nonaktifkan' : 'Aktifkan' }}" variant="{{ $aksiStatus ? 'warning' : 'success' }}" onclick="document.getElementById('toggle-paket-{{ $aksiId }}').submit()" />
+            @if(!$aksiUsed)
+                <form id="delete-paket-{{ $aksiId }}" action="{{ route('paket-catering.destroy', $aksiId) }}" method="POST" onsubmit="return confirmHapusMenu(event, '{{ $aksiNama }}')" class="hidden">
+                    @csrf @method('DELETE')
+                </form>
+                <x-ui.action-dropdown-item icon="trash" label="Hapus" variant="danger" onclick="document.getElementById('delete-paket-{{ $aksiId }}').submit()" />
+            @endif
+        @else
+            <form id="toggle-menu-{{ $aksiId }}" action="{{ route('menu.toggle', $aksiId) }}" method="POST" class="hidden">
+                @csrf @method('PATCH')
+            </form>
+            <x-ui.action-dropdown-item icon="power" label="{{ $aksiStatus ? 'Nonaktifkan' : 'Aktifkan' }}" variant="{{ $aksiStatus ? 'warning' : 'success' }}" onclick="document.getElementById('toggle-menu-{{ $aksiId }}').submit()" />
+            @if(!$aksiUsed)
+                <form id="delete-menu-{{ $aksiId }}" action="{{ route('menu.destroy', $aksiId) }}" method="POST" onsubmit="return confirmHapusMenu(event, '{{ $aksiNama }}')" class="hidden">
+                    @csrf @method('DELETE')
+                </form>
+                <x-ui.action-dropdown-item icon="trash" label="Hapus" variant="danger" onclick="document.getElementById('delete-menu-{{ $aksiId }}').submit()" />
+            @endif
+        @endif
+    </x-ui.action-dropdown>
 </div>
 @endif

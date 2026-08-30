@@ -66,14 +66,14 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <x-ui.action-button href="{{ route('pemasok.edit', $pemasok->id) }}" title="Ubah">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                <x-ui.action-button href="{{ route('pemasok.edit', $pemasok->id) }}" title="Ubah" label="Edit">
+                                    <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                                 <form action="{{ route('pemasok.destroy', $pemasok->id) }}" method="POST" class="inline-block" data-confirm="Yakin ingin menghapus pemasok ini?">
                                     @csrf
                                     @method('DELETE')
-                                    <x-ui.action-button type="submit" title="Hapus">
-                                        <x-heroicon-o-trash class="w-4 h-4" />
+                                    <x-ui.action-button type="submit" title="Hapus" label="Hapus">
+                                        <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 </form>
                             </div>

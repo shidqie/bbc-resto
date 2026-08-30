@@ -4,18 +4,16 @@
 
 @section('content')
     <div class="doc-header">
-        <div class="company-name">RUMAH MAKAN SAUNG BABAKAN CINTA</div>
         <div class="doc-title">LAPORAN PENJUALAN</div>
         <div class="doc-subtitle">Periode: {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} &ndash; {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</div>
-        <div class="header-divider"></div>
     </div>
 
     <!-- Ringkasan KPI Table Formats -->
-    <table class="pdf-table" style="width: 55%; margin-bottom: 18px;">
+    <table class="pdf-table" style="width: 50%; margin-bottom: 14px;">
         <thead>
             <tr>
-                <th>Keterangan</th>
-                <th class="text-right">Nilai</th>
+                <th style="width: 55%;">Keterangan</th>
+                <th class="text-right" style="width: 45%;">Nilai</th>
             </tr>
         </thead>
         <tbody>
@@ -37,13 +35,13 @@
     <table class="pdf-table">
         <thead>
             <tr>
-                <th class="text-center" style="width: 35px;">No</th>
-                <th style="width: 140px;">Kode Pesanan</th>
-                <th class="text-center" style="width: 95px;">Tanggal</th>
-                <th style="width: 90px;">Jenis</th>
-                <th>Pelanggan</th>
-                <th class="text-right" style="width: 120px;">Total</th>
-                <th class="text-center" style="width: 80px;">Status</th>
+                <th class="text-center" style="width: 5%;">No</th>
+                <th style="width: 23%;">ID Pesanan</th>
+                <th class="text-center" style="width: 13%;">Tanggal</th>
+                <th style="width: 12%;">Jenis</th>
+                <th style="width: 22%;">Konsumen</th>
+                <th class="text-right" style="width: 15%;">Total</th>
+                <th class="text-center" style="width: 10%;">Status</th>
             </tr>
         </thead>
         <tbody>
@@ -51,14 +49,18 @@
             @php
                 $jId = $p->jenis_pesanan_id;
                 $jNama = $jId == 1 ? 'Dine-In' : ($jId == 2 ? 'Katering' : 'Nasi Box');
-                $pelangganNama = $jId == 1 ? ('Meja ' . (optional($p->meja)->nomor_meja ?? '-')) : (optional($p->pelanggan)->nama ?? 'Umum');
+                $namaKonsumen = $p->nama_konsumen ?? ($p->pelanggan->nama ?? ($p->jadwal_pesanan->nama_penerima ?? 'Tamu'));
+                if ($namaKonsumen === 'Tamu' && $p->meja) {
+                    $nomorM = $p->meja->nomor_meja ?? '';
+                    $namaKonsumen = str_starts_with(strtolower($nomorM), 'meja') ? $nomorM : 'Meja ' . $nomorM;
+                }
             @endphp
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td class="font-mono font-bold">{{ $p->id_pesanan }}</td>
                 <td class="text-center">{{ \Carbon\Carbon::parse($p->tanggal_pesanan)->format('d/m/Y') }}</td>
                 <td>{{ $jNama }}</td>
-                <td>{{ $pelangganNama }}</td>
+                <td>{{ $namaKonsumen }}</td>
                 <td class="text-right font-mono">Rp {{ number_format($p->total_tagihan, 0, ',', '.') }}</td>
                 <td class="text-center">Selesai</td>
             </tr>

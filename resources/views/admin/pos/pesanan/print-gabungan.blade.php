@@ -224,7 +224,7 @@
 
             <table class="info-table">
                 <tr>
-                    <td class="info-label">Kode Pesanan</td>
+                    <td class="info-label">ID Pesanan</td>
                     <td class="info-sep">:</td>
                     <td class="info-val">{{ $pesanan->id_pesanan ?? ('DIN-' . $pesanan->id) }}</td>
                 </tr>
@@ -313,7 +313,7 @@
 
             <table class="info-table">
                 <tr>
-                    <td class="info-label">Kode Pesanan</td>
+                    <td class="info-label">ID Pesanan</td>
                     <td class="info-sep">:</td>
                     <td class="info-val">{{ $pesanan->id_pesanan ?? ('DIN-' . $pesanan->id) }}</td>
                 </tr>

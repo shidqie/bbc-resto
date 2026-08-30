@@ -121,9 +121,9 @@
                                                 </div>
                                             </td>
                                             <td class="px-4 py-3 text-center">
-                                                <button type="button" @click="hapusAturan(index)" class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
-                                                    <x-heroicon-o-trash class="w-4 h-4" />
-                                                </button>
+                                                <x-ui.action-button variant="danger" @click="hapusAturan(index)" title="Hapus" label="Hapus">
+                                                    <x-heroicon-o-trash class="w-3.5 h-3.5" />
+                                                </x-ui.action-button>
                                             </td>
                                         </tr>
                                     </template>

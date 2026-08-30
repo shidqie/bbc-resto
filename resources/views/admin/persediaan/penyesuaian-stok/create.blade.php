@@ -246,7 +246,7 @@
                         {{-- 7. Catatan (Opsional) --}}
                         <div>
                             <label class="block text-sm font-semibold text-gray-800 mb-2">Catatan Tambahan <span class="text-xs font-normal text-gray-400">(Opsional)</span></label>
-                            <textarea name="catatan" rows="4" placeholder="Contoh: Sebagian bahan tumpah saat penataan di ruang dapur..." class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white resize-none">{{ old('catatan') }}</textarea>
+                            <textarea name="catatan" rows="4" placeholder="Contoh: Sebagian bahan tumpah saat penataan di ruang dapur..." class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white resize-none">{{ is_array(old('catatan')) ? (old('catatan')[0] ?? '') : old('catatan', '') }}</textarea>
                         </div>
                     </div>
 
@@ -271,13 +271,13 @@
         return {
             openDropdown: false,
             search: '',
-            selectedId: '{{ old('bahan_baku_id') }}',
+            selectedId: '{{ is_array(old('bahan_baku_id')) ? (old('bahan_baku_id')[0] ?? '') : old('bahan_baku_id', '') }}',
             selectedName: '',
             activeItem: null,
-            jenisPersediaan: '{{ old('jenis_persediaan', 'harian') }}',
-            tipeAksi: '{{ old('tipe_aksi', 'kurang') }}',
-            jumlahInput: '{{ old('jumlah_input', '') }}',
-            alasan: '{{ old('alasan', '') }}',
+            jenisPersediaan: '{{ is_array(old('jenis_persediaan')) ? (old('jenis_persediaan')[0] ?? 'harian') : old('jenis_persediaan', 'harian') }}',
+            tipeAksi: '{{ is_array(old('tipe_aksi')) ? (old('tipe_aksi')[0] ?? 'kurang') : old('tipe_aksi', 'kurang') }}',
+            jumlahInput: '{{ is_array(old('jumlah_input')) ? (old('jumlah_input')[0] ?? '') : old('jumlah_input', '') }}',
+            alasan: '{{ is_array(old('alasan')) ? (old('alasan')[0] ?? '') : old('alasan', '') }}',
             stokSistem: 0,
             stokSistemDisplay: '0',
             selisihDisplay: '0',

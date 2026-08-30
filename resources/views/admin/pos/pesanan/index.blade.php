@@ -292,7 +292,7 @@ function posSystemData() {
 
     exportToCsv() {
       const rows = [
-        ['Kode Pesanan', 'Pelanggan', 'Meja', 'Waktu', 'Kasir', 'Metode Bayar', 'Status', 'Total Tagihan (Rp)']
+        ['ID Pesanan', 'Pelanggan', 'Meja', 'Waktu', 'Kasir', 'Metode Bayar', 'Status', 'Total Tagihan (Rp)']
       ];
       this.filteredRiwayat.forEach(t => {
         const total = (t.items || []).reduce((s, i) => s + ((i.menu ? i.menu.harga : (i.harga_satuan || 0)) * i.qty), 0);
@@ -1321,7 +1321,7 @@ document.addEventListener('alpine:init', () => {
                   </span>
                 </div>
                 <div class="flex items-center justify-between">
-                  <span class="text-gray-400 font-medium">Kode Pesanan:</span>
+                  <span class="text-gray-400 font-medium">ID Pesanan:</span>
                   <span class="font-mono font-bold text-primary">
                     #{{ $orderIdCard }}
                   </span>
@@ -1530,9 +1530,9 @@ document.addEventListener('alpine:init', () => {
           <x-ui.table.header>
             <th class="px-4 py-3.5 text-center w-12">No</th>
             <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
-            <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+            <th class="px-4 py-3.5 text-left">ID Pesanan</th>
             <th class="px-4 py-3.5 text-left">Meja</th>
-            <th class="px-4 py-3.5 text-left">Pelanggan</th>
+            <th class="px-4 py-3.5 text-left">Konsumen</th>
             <th class="px-4 py-3.5 text-left">Metode Pemesanan</th>
             <th class="px-4 py-3.5 text-right">Total</th>
             <th class="px-4 py-3.5 text-center">Status Pesanan</th>
@@ -1877,7 +1877,7 @@ document.addEventListener('alpine:init', () => {
           </div>
           <div class="bg-gray-50/80 rounded-xl p-4 border border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-xs">
             <div class="flex items-baseline justify-between sm:justify-start gap-2">
-              <span class="text-gray-500 min-w-[110px]">Kode Pesanan</span>
+              <span class="text-gray-500 min-w-[110px]">ID Pesanan</span>
               <span class="text-gray-400 sm:inline hidden">:</span>
               <span class="font-bold text-gray-900 font-mono" x-text="selectedTrxDetail ? (selectedTrxDetail.id_pesanan || ('DIN-' + selectedTrxDetail.id)) : '-'"></span>
             </div>
@@ -2521,7 +2521,7 @@ document.addEventListener('alpine:init', () => {
 
           <div class="space-y-1 text-[11px] text-black">
             <div class="flex justify-between items-start gap-2">
-              <span class="shrink-0">Kode Pesanan</span>
+              <span class="shrink-0">ID Pesanan</span>
               <span class="font-bold text-right"
                     x-text="checkerPreviewBill?.id_pesanan || ('DIN-' + (checkerPreviewBill?.id || ''))"></span>
             </div>
@@ -2585,7 +2585,7 @@ document.addEventListener('alpine:init', () => {
 
           <div class="space-y-1 text-[11px] text-black">
             <div class="flex justify-between items-start gap-2">
-              <span class="shrink-0">Kode Pesanan</span>
+              <span class="shrink-0">ID Pesanan</span>
               <span class="font-bold text-right"
                     x-text="checkerPreviewBill?.id_pesanan || ('DIN-' + (checkerPreviewBill?.id || ''))"></span>
             </div>
@@ -2685,7 +2685,7 @@ document.addEventListener('alpine:init', () => {
       {{-- Order Summary Box --}}
       <div class="w-full mt-4 bg-gray-50/80 rounded-xl p-3.5 border border-gray-100 space-y-2 text-xs text-left">
         <div class="flex items-center justify-between pb-1.5 border-b border-gray-100">
-          <span class="text-gray-500 font-medium">Kode Pesanan</span>
+          <span class="text-gray-500 font-medium">ID Pesanan</span>
           <span class="font-bold text-gray-900 font-mono" x-text="savedPesananObject ? (savedPesananObject.id_pesanan || ('DIN-' + savedPesananObject.id)) : '-'"></span>
         </div>
         <div class="flex items-center justify-between" x-show="savedPesananObject?.meja">
@@ -2693,7 +2693,7 @@ document.addEventListener('alpine:init', () => {
           <span class="font-bold text-gray-900" x-text="savedPesananObject?.meja ? (typeof savedPesananObject.meja === 'object' ? (savedPesananObject.meja.nomor_meja?.startsWith('Meja') ? savedPesananObject.meja.nomor_meja : 'Meja ' + savedPesananObject.meja.nomor_meja) : (String(savedPesananObject.meja).startsWith('Meja') ? savedPesananObject.meja : 'Meja ' + savedPesananObject.meja)) : '-'"></span>
         </div>
         <div class="flex items-center justify-between" x-show="savedPesananObject?.nama_konsumen">
-          <span class="text-gray-500 font-medium">Pelanggan</span>
+          <span class="text-gray-500 font-medium">Konsumen</span>
           <span class="font-bold text-gray-900" x-text="(savedPesananObject?.nama_konsumen || 'Tamu').split(' – ')[0].split(' - ')[0].split(' | ')[0].replace(/\(\d+\s*tamu\)/i, '').trim()"></span>
         </div>
         <div class="flex items-center justify-between pt-1.5 border-t border-gray-100">

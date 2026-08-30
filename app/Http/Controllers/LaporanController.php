@@ -23,24 +23,7 @@ class LaporanController extends Controller
     // ==========================================
     public function penjualan(Request $request)
     {
-        $periode = $request->input('periode', 'bulan_ini');
-        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
-        $startDate = null;
-        $endDate = null;
-
-        if ($periode == 'hari_ini') {
-            $startDate = Carbon::today()->format('Y-m-d');
-            $endDate = Carbon::today()->format('Y-m-d');
-        } elseif ($periode == 'minggu_ini') {
-            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
-        } elseif ($periode == 'bulan_ini') {
-            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
-        } elseif ($periode == 'custom') {
-            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        }
+        [$startDate, $endDate, $periode] = $this->resolveDateRange($request);
 
         $jenisPenjualan = $request->input('jenis', []);
         $jenisPenjualan = is_array($jenisPenjualan) ? $jenisPenjualan : (array) $jenisPenjualan;
@@ -101,24 +84,7 @@ class LaporanController extends Controller
 
     public function cetakPenjualanPdf(Request $request)
     {
-        $periode = $request->input('periode', 'bulan_ini');
-        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
-        $startDate = null;
-        $endDate = null;
-
-        if ($periode == 'hari_ini') {
-            $startDate = Carbon::today()->format('Y-m-d');
-            $endDate = Carbon::today()->format('Y-m-d');
-        } elseif ($periode == 'minggu_ini') {
-            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
-        } elseif ($periode == 'bulan_ini') {
-            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
-        } elseif ($periode == 'custom') {
-            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        }
+        [$startDate, $endDate, $periode] = $this->resolveDateRange($request);
 
         $jenisPenjualan = $request->input('jenis', []);
         $jenisPenjualan = is_array($jenisPenjualan) ? $jenisPenjualan : (array) $jenisPenjualan;
@@ -161,24 +127,7 @@ class LaporanController extends Controller
 
     public function cetakPenjualanExcel(Request $request)
     {
-        $periode = $request->input('periode', 'bulan_ini');
-        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
-        $startDate = null;
-        $endDate = null;
-
-        if ($periode == 'hari_ini') {
-            $startDate = Carbon::today()->format('Y-m-d');
-            $endDate = Carbon::today()->format('Y-m-d');
-        } elseif ($periode == 'minggu_ini') {
-            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
-        } elseif ($periode == 'bulan_ini') {
-            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
-        } elseif ($periode == 'custom') {
-            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        }
+        [$startDate, $endDate, $periode] = $this->resolveDateRange($request);
 
         $jenisPenjualan = $request->input('jenis', []);
         $jenisPenjualan = is_array($jenisPenjualan) ? $jenisPenjualan : (array) $jenisPenjualan;
@@ -222,7 +171,7 @@ class LaporanController extends Controller
         $callback = function() use ($pesanans) {
             $file = fopen('php://output', 'w');
             fputs($file, "\xEF\xBB\xBF"); // UTF-8 BOM
-            fputcsv($file, ['No', 'Tanggal', 'Kode Pesanan', 'Jenis Pesanan', 'Pelanggan', 'Total Transaksi', 'Status']);
+            fputcsv($file, ['No', 'Tanggal', 'ID Pesanan', 'Jenis Pesanan', 'Konsumen', 'Total Transaksi', 'Status']);
 
             foreach ($pesanans as $idx => $p) {
                 $jenisNama = optional($p->jenis_pesanan)->nama_jenis ?? 'Dine-In';
@@ -637,24 +586,7 @@ class LaporanController extends Controller
     // ==========================================
     public function pengadaan(Request $request)
     {
-        $periode = $request->input('periode', 'bulan_ini');
-        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
-        $startDate = null;
-        $endDate = null;
-
-        if ($periode == 'hari_ini') {
-            $startDate = Carbon::today()->format('Y-m-d');
-            $endDate = Carbon::today()->format('Y-m-d');
-        } elseif ($periode == 'minggu_ini') {
-            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
-        } elseif ($periode == 'bulan_ini') {
-            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
-        } elseif ($periode == 'custom') {
-            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        }
+        [$startDate, $endDate, $periode] = $this->resolveDateRange($request);
 
         $statusStr = $request->input('status', 'semua');
         $search = $request->input('search', '');
@@ -717,24 +649,7 @@ class LaporanController extends Controller
 
     public function cetakPengadaanPdf(Request $request)
     {
-        $periode = $request->input('periode', 'bulan_ini');
-        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
-        $startDate = null;
-        $endDate = null;
-
-        if ($periode == 'hari_ini') {
-            $startDate = Carbon::today()->format('Y-m-d');
-            $endDate = Carbon::today()->format('Y-m-d');
-        } elseif ($periode == 'minggu_ini') {
-            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
-        } elseif ($periode == 'bulan_ini') {
-            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
-        } elseif ($periode == 'custom') {
-            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        }
+        [$startDate, $endDate, $periode] = $this->resolveDateRange($request);
 
         $statusStr = $request->input('status', 'semua');
         $search = $request->input('search', '');
@@ -761,24 +676,7 @@ class LaporanController extends Controller
 
     public function cetakPengadaanExcel(Request $request)
     {
-        $periode = $request->input('periode', 'bulan_ini');
-        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
-        $startDate = null;
-        $endDate = null;
-
-        if ($periode == 'hari_ini') {
-            $startDate = Carbon::today()->format('Y-m-d');
-            $endDate = Carbon::today()->format('Y-m-d');
-        } elseif ($periode == 'minggu_ini') {
-            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
-        } elseif ($periode == 'bulan_ini') {
-            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
-        } elseif ($periode == 'custom') {
-            $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
-        }
+        [$startDate, $endDate, $periode] = $this->resolveDateRange($request);
 
         $statusStr = $request->input('status', 'semua');
         $search = $request->input('search', '');
@@ -844,5 +742,56 @@ class LaporanController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Helper menyelesaikan rentang tanggal secara konsisten dan akurat (mendukung d/m/Y dan Y-m-d).
+     */
+    private function resolveDateRange(Request $request): array
+    {
+        $periode = $request->input('periode', 'bulan_ini');
+        $periode = is_array($periode) ? ($periode[0] ?? 'bulan_ini') : $periode;
+
+        $rawStart = $request->input('start_date') ?: $request->input('dari');
+        $rawEnd = $request->input('end_date') ?: $request->input('sampai');
+
+        if ($rawStart && $rawEnd) {
+            try {
+                $startDate = str_contains($rawStart, '/')
+                    ? Carbon::createFromFormat('d/m/Y', $rawStart)->format('Y-m-d')
+                    : Carbon::parse($rawStart)->format('Y-m-d');
+                $endDate = str_contains($rawEnd, '/')
+                    ? Carbon::createFromFormat('d/m/Y', $rawEnd)->format('Y-m-d')
+                    : Carbon::parse($rawEnd)->format('Y-m-d');
+
+                return [$startDate, $endDate, 'custom'];
+            } catch (\Exception $e) {
+                try {
+                    $startDate = Carbon::parse($rawStart)->format('Y-m-d');
+                    $endDate = Carbon::parse($rawEnd)->format('Y-m-d');
+                    return [$startDate, $endDate, 'custom'];
+                } catch (\Exception $ex) {}
+            }
+        }
+
+        if ($periode == 'hari_ini') {
+            $startDate = Carbon::today()->format('Y-m-d');
+            $endDate = Carbon::today()->format('Y-m-d');
+        } elseif ($periode == 'minggu_ini') {
+            $startDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfWeek()->format('Y-m-d');
+        } elseif ($periode == 'bulan_ini') {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+        } elseif ($periode == 'custom') {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->format('Y-m-d');
+        } else {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+            $periode = 'bulan_ini';
+        }
+
+        return [$startDate, $endDate, $periode];
     }
 }

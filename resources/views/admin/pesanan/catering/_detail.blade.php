@@ -76,7 +76,7 @@
                 const waktuStr = this.waktu ? ` pukul ${this.waktu}` : '';
 
                 if (this.jenisPengingat === 'pesanan') {
-                    this.pesanWa = `Halo ${this.nama}, kami dari RM BBC ingin mengonfirmasi & mengingatkan pesanan ${this.jenis} ${this.paket} sebanyak ${this.porsi} porsi (Kode Pesanan: #${this.kode}) untuk tanggal ${this.tanggal}${waktuStr}.\n\nStatus Pembayaran: ${this.statusBayar}\n\nUntuk melihat rincian dan melacak status pesanan Anda, silakan kunjungi:\n${linkLacak}\n\nMohon pastikan kembali bahwa rincian pesanan dan jadwal acara sudah sesuai. Terima kasih.`;
+                    this.pesanWa = `Halo ${this.nama}, kami dari RM BBC ingin mengonfirmasi & mengingatkan pesanan ${this.jenis} ${this.paket} sebanyak ${this.porsi} porsi (ID Pesanan: #${this.kode}) untuk tanggal ${this.tanggal}${waktuStr}.\n\nStatus Pembayaran: ${this.statusBayar}\n\nUntuk melihat rincian dan melacak status pesanan Anda, silakan kunjungi:\n${linkLacak}\n\nMohon pastikan kembali bahwa rincian pesanan dan jadwal acara sudah sesuai. Terima kasih.`;
                 } else if (this.jenisPengingat === 'pembayaran_dp') {
                     if (this.isSkemaLunas) {
                         this.pesanWa = `Halo ${this.nama}, kami dari RM BBC ingin mengingatkan pembayaran untuk pesanan ${this.jenis} ${this.paket} (${this.porsi} porsi) dengan kode #${this.kode}.\n\nNominal Tagihan: Rp ${this.nominalDp}\n\nSilakan selesaikan pembayaran dan unggah bukti transfer melalui tautan berikut:\n${linkBayar}\n\nLacak status pesanan:\n${linkLacak}\n\nTerima kasih.`;
@@ -130,9 +130,15 @@
                 </div>
                 <div class="flex items-center gap-2">
                     @if(!$isDapur)
+                    <a href="{{ route('admin.pesanan.catering.pdf', $pesanan->id) }}" 
+                       target="_blank" 
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl transition-all shadow-xs cursor-pointer">
+                        <x-heroicon-o-printer class="w-4 h-4 stroke-2" />
+                        <span>Bukti Pemesanan</span>
+                    </a>
                     <button type="button" 
                             @click="bukaModal()" 
-                            class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs cursor-pointer">
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs cursor-pointer">
                         <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                         <span>Kirim Pengingat</span>
                     </button>
@@ -238,7 +244,7 @@
                             <span>Informasi Pesanan</span>
                         </h3>
                         <div class="space-y-2.5 text-sm">
-                            <div class="grid grid-cols-3"><span class="text-gray-500">Kode Pesanan</span> <span class="col-span-2 font-mono text-xs font-bold text-gray-900">{{ $pesanan->id_pesanan }}</span></div>
+                            <div class="grid grid-cols-3"><span class="text-gray-500">ID Pesanan</span> <span class="col-span-2 font-mono text-xs font-bold text-gray-900">{{ $pesanan->id_pesanan }}</span></div>
                             <div class="grid grid-cols-3"><span class="text-gray-500">Jenis Pesanan</span> <span class="col-span-2 font-semibold text-gray-900">{{ $pesanan->jenis_pesanan->nama_jenis ?? '-' }}</span></div>
                             <div class="grid grid-cols-3"><span class="text-gray-500">Paket</span> <span class="col-span-2 font-semibold text-emerald-800">{{ $detailPesanan->menu->nama_menu ?? '-' }}</span></div>
                             <div class="grid grid-cols-3"><span class="text-gray-500">Jumlah Porsi</span> <span class="col-span-2 font-bold text-gray-900">{{ $detailPesanan->jumlah ?? 0 }} Porsi</span></div>
@@ -322,8 +328,7 @@
                                 <div class="grid grid-cols-3">
                                     <span class="text-gray-500">Status Pengiriman</span>
                                     <span class="col-span-2">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-bold shadow-2xs {{ $shipConfig['color'] }}">
-                                            <span class="w-1.5 h-1.5 rounded-full {{ $shipConfig['dot'] }}"></span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold {{ $shipConfig['color'] }}">
                                             <span>{{ $shipConfig['label'] }}</span>
                                         </span>
                                     </span>

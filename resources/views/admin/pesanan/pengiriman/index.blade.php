@@ -247,7 +247,7 @@
                         <x-search-input
                             name="search"
                             value="{{ request('search') }}"
-                            placeholder="Cari kode pesanan atau konsumen…"
+                            placeholder="Cari ID pesanan atau konsumen…"
                             width="w-full sm:w-72"
                         />
                     </div>
@@ -260,7 +260,7 @@
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">
                         {{ $tab === 'riwayat' ? 'Tanggal & Waktu' : 'Jadwal Antar' }}
                     </th>
-                    <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">ID Pesanan</th>
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Konsumen</th>
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Jenis</th>
                     <th class="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Pesanan</th>
@@ -426,8 +426,7 @@
 
                             {{-- STATUS PENGIRIMAN --}}
                             <td class="px-4 py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold {{ $statusClass }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $statusDot }}"></span>
+                                <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold {{ $statusClass }}">
                                     <span>{{ $statusLabel }}</span>
                                 </span>
                             </td>
@@ -435,6 +434,15 @@
                             {{-- AKSI --}}
                             <td class="px-4 py-4 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-1.5">
+                                    {{-- Tombol Detail --}}
+                                    <x-ui.action-button
+                                        @click="openDetailModal({{ json_encode($detailData) }})"
+                                        title="Lihat Detail Pengiriman"
+                                        label="Detail"
+                                    >
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
+                                    </x-ui.action-button>
+
                                     @if($isTimPengiriman && $pengiriman)
                                         @if(in_array($statusId, [1, 2], true))
                                             {{-- Mulai Pengiriman --}}
@@ -443,26 +451,26 @@
                                                 @method('PATCH')
                                                 <input type="hidden" name="status_pengiriman_id" value="3">
 
-                                                <button
+                                                <x-ui.action-button
                                                     type="submit"
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-primary hover:bg-primary-container text-white font-bold text-xs shadow-xs transition active:scale-[0.98] cursor-pointer"
+                                                    variant="primary"
                                                     title="Mulai Pengiriman"
+                                                    label="Mulai"
                                                 >
                                                     <x-heroicon-o-truck class="w-3.5 h-3.5" />
-                                                    <span>Mulai</span>
-                                                </button>
+                                                </x-ui.action-button>
                                             </form>
                                         @elseif($statusId === 3)
                                             {{-- Selesaikan Pengiriman --}}
-                                            <button
+                                            <x-ui.action-button
                                                 type="button"
+                                                variant="success"
                                                 @click="openUploadModal('{{ route('admin.jadwal.update-pengiriman-status', $pengiriman->id) }}', '{{ $kodePesanan }}')"
-                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition active:scale-[0.98] cursor-pointer"
                                                 title="Selesaikan Pengiriman"
+                                                label="Selesai"
                                             >
                                                 <x-heroicon-o-check-circle class="w-3.5 h-3.5" />
-                                                <span>Selesai</span>
-                                            </button>
+                                            </x-ui.action-button>
 
                                             {{-- Gagal Dikirim --}}
                                             <form action="{{ route('admin.jadwal.update-pengiriman-status', $pengiriman->id) }}" method="POST" class="inline-block">
@@ -470,28 +478,18 @@
                                                 @method('PATCH')
                                                 <input type="hidden" name="status_pengiriman_id" value="5">
 
-                                                <button
+                                                <x-ui.action-button
                                                     type="submit"
+                                                    variant="danger"
                                                     onclick="window.confirmDialog({ title: 'Tandai Gagal Dikirim', name: 'Tandai pengiriman ini sebagai gagal dikirim?', message: 'Status pengiriman akan diubah menjadi gagal dikirim.', form: this.closest('form'), confirmText: 'Ya, Gagal', cancelText: 'Batal', type: 'danger' })"
-                                                    class="inline-flex items-center gap-1 px-2 py-1.5 rounded-xl text-rose-600 hover:text-rose-800 hover:bg-rose-50 border border-transparent hover:border-rose-200 font-bold text-xs transition active:scale-[0.98] cursor-pointer"
                                                     title="Tandai Gagal Dikirim"
+                                                    label="Gagal"
                                                 >
                                                     <x-heroicon-o-x-circle class="w-3.5 h-3.5" />
-                                                    <span>Gagal</span>
-                                                </button>
+                                                </x-ui.action-button>
                                             </form>
                                         @endif
                                     @endif
-
-                                    {{-- Tombol Detail (Eye Icon) Membuka Modal Detail --}}
-                                    <button
-                                        type="button"
-                                        @click="openDetailModal({{ json_encode($detailData) }})"
-                                        class="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 border border-transparent hover:border-gray-200 transition cursor-pointer"
-                                        title="Lihat Detail Pengiriman"
-                                    >
-                                        <x-heroicon-o-eye class="w-4 h-4" />
-                                    </button>
                                 </div>
                             </td>
                         </x-ui.table.row>
@@ -719,8 +717,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <template x-if="activeDetail">
-                            <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold" :class="activeDetail.status_class">
-                                <span class="w-1.5 h-1.5 rounded-full" :class="activeDetail.status_dot"></span>
+                            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold" :class="activeDetail.status_class">
                                 <span x-text="activeDetail.status_label"></span>
                             </span>
                         </template>
@@ -744,7 +741,7 @@
 
                                 <div class="grid grid-cols-2 gap-3 text-xs">
                                     <div>
-                                        <span class="text-gray-400 font-medium">Kode Pesanan</span>
+                                        <span class="text-gray-400 font-medium">ID Pesanan</span>
                                         <p class="font-bold text-gray-900 font-mono mt-0.5" x-text="activeDetail.kode_pesanan"></p>
                                     </div>
                                     <div>

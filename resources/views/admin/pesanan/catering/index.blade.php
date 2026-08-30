@@ -3,7 +3,7 @@
 
 @section('content')
 @php
-    $isDapur = auth()->user()->hasRole('Dapur', 'Tim Dapur') || in_array(auth()->user()->peran?->nama_peran, ['Dapur', 'Tim Dapur', 'Koki']);
+    $isDapur = auth()->user()?->hasRole('Dapur', 'Tim Dapur') || in_array(auth()->user()?->peran?->nama_peran, ['Dapur', 'Tim Dapur', 'Koki']);
 @endphp
 <div class="flex-1 bg-gray-50 text-gray-800">
     <div class="w-full p-6 space-y-5">
@@ -51,7 +51,7 @@
                     <x-ui.table.header>
                         <th class="px-4 py-3.5 text-left w-12">No</th>
                         <th class="px-4 py-3.5 text-left">Waktu Pesanan</th>
-                        <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                        <th class="px-4 py-3.5 text-left">ID Pesanan</th>
                         <th class="px-4 py-3.5 text-left">Menu / Paket</th>
                         <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
                         <th class="px-4 py-3.5 text-center">Status Pesanan</th>
@@ -97,8 +97,7 @@
                                         default => ['label' => optional($p->status_pesanan)->nama_status ?? 'Status #'.$stId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
                                     };
                                 @endphp
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs whitespace-nowrap {{ $stConfig['color'] }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $stConfig['dot'] }}"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold whitespace-nowrap {{ $stConfig['color'] }}">
                                     <span>{{ $stConfig['label'] }}</span>
                                 </span>
                             </td>
@@ -177,7 +176,7 @@
                     <x-ui.table.header>
                         <th class="px-4 py-3.5 text-left w-12">No</th>
                         <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
-                        <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                        <th class="px-4 py-3.5 text-left">ID Pesanan</th>
                         <th class="px-4 py-3.5 text-left">Konsumen</th>
                         <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
                         <th class="px-4 py-3.5 text-right">Total Tagihan</th>
@@ -199,7 +198,7 @@
                             <p class="font-semibold text-gray-900 font-mono text-xs whitespace-nowrap">{{ $p->id_pesanan }}</p>
                         </td>
                         <td class="px-4 py-4 align-middle">
-                            <p class="font-semibold text-gray-900 text-xs whitespace-nowrap">{{ optional($p->pelanggan)->nama ?? $p->jadwal_pesanan->nama_penerima ?? 'Katering' }}</p>
+                            <p class="font-semibold text-gray-900 text-xs whitespace-nowrap">{{ optional($p->pelanggan)->nama ?? $p->jadwal_pesanan->nama_penerima ?? $p->nama_konsumen ?? 'Katering' }}</p>
                         </td>
                         <td class="px-4 py-4 align-middle whitespace-nowrap">
                             @if($p->jadwal_pesanan?->tanggal_acara)
@@ -209,24 +208,24 @@
                             @endif
                         </td>
                         <td class="px-4 py-4 align-middle text-right whitespace-nowrap font-bold text-xs text-gray-900">
-                            Rp {{ number_format($p->total_harga, 0, ',', '.') }}
+                            Rp {{ number_format($p->total_tagihan, 0, ',', '.') }}
                         </td>
                         {{-- 1. STATUS PESANAN UTAMA --}}
                         <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
                             @php
                                 $stId = (int) $p->status_pesanan_id;
                                 $stConfig = match($stId) {
-                                    1 => ['label' => 'Menunggu Pembayaran', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
+                                    1 => ['label' => 'Menunggu Konfirmasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
                                     2 => ['label' => 'Dikonfirmasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
-                                    3 => ['label' => 'Diproses Dapur', 'color' => 'bg-purple-50 text-purple-800 border-purple-200/90', 'dot' => 'bg-purple-500 animate-pulse'],
+                                    3 => ['label' => 'Diproses Dapur', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500 animate-pulse'],
                                     4 => ['label' => 'Siap', 'color' => 'bg-teal-50 text-teal-800 border-teal-200/90', 'dot' => 'bg-teal-500'],
                                     5 => ['label' => 'Selesai', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
                                     6 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                    7 => ['label' => 'Terjadwal', 'color' => 'bg-sky-50 text-sky-800 border-sky-200/90', 'dot' => 'bg-sky-500'],
                                     default => ['label' => optional($p->status_pesanan)->nama_status ?? 'Status #'.$stId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
                                 };
                             @endphp
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $stConfig['color'] }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $stConfig['dot'] }}"></span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold {{ $stConfig['color'] }}">
                                 <span>{{ $stConfig['label'] }}</span>
                             </span>
                         </td>
@@ -236,16 +235,15 @@
                                 $payId = (int) $p->status_pembayaran_id;
                                 $payConfig = match($payId) {
                                     1 => ['label' => 'Belum Bayar', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
-                                    2 => ['label' => 'DP Dibayar', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500'],
-                                    3 => ['label' => 'Lunas', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
-                                    4 => ['label' => 'Menunggu Konfirmasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
-                                    5 => ['label' => 'Dibatalkan', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
+                                    2 => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-amber-50 text-amber-800 border-amber-200/90', 'dot' => 'bg-amber-500 animate-pulse'],
+                                    3 => ['label' => 'DP Terverifikasi', 'color' => 'bg-blue-50 text-blue-800 border-blue-200/90', 'dot' => 'bg-blue-500'],
+                                    4 => ['label' => 'Menunggu Pelunasan', 'color' => 'bg-indigo-50 text-indigo-800 border-indigo-200/90', 'dot' => 'bg-indigo-500'],
+                                    5 => ['label' => 'Lunas', 'color' => 'bg-emerald-50 text-emerald-800 border-emerald-200/90', 'dot' => 'bg-emerald-500'],
                                     6 => ['label' => 'Pembayaran Ditolak', 'color' => 'bg-rose-50 text-rose-800 border-rose-200/90', 'dot' => 'bg-rose-500'],
                                     default => ['label' => optional($p->status_pembayaran)->nama_status ?? 'Status #'.$payId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
                                 };
                             @endphp
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $payConfig['color'] }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $payConfig['dot'] }}"></span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold {{ $payConfig['color'] }}">
                                 <span>{{ $payConfig['label'] }}</span>
                             </span>
                         </td>
@@ -263,8 +261,7 @@
                                         default => ['label' => optional($p->pengiriman->status_pengiriman)->nama_status ?? 'Status #'.$shipId, 'color' => 'bg-gray-50 text-gray-700 border-gray-200', 'dot' => 'bg-gray-400'],
                                     };
                                 @endphp
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-2xs {{ $shipConfig['color'] }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $shipConfig['dot'] }}"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold {{ $shipConfig['color'] }}">
                                     <span>{{ $shipConfig['label'] }}</span>
                                 </span>
                             @else
@@ -275,6 +272,10 @@
                             <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                 <x-ui.action-button onclick="openCateringDrawer('{{ route('admin.pesanan.catering.show', $p->id) }}')" @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.catering.show', $p->id) }}'})" title="Lihat Detail Pesanan" label="Detail">
                                     <x-heroicon-o-eye class="w-3.5 h-3.5" />
+                                </x-ui.action-button>
+
+                                <x-ui.action-button href="{{ route('admin.pesanan.catering.pdf', $p->id) }}" target="_blank" title="Cetak Bukti Pemesanan" label="Bukti">
+                                    <x-heroicon-o-document-text class="w-3.5 h-3.5 text-primary" />
                                 </x-ui.action-button>
                                 
                                 @php
@@ -287,17 +288,6 @@
                                     </form>
                                     <x-ui.action-button type="button" variant="success" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi Pembayaran" label="Verifikasi">
                                         <x-heroicon-o-check-badge class="w-3.5 h-3.5" />
-                                    </x-ui.action-button>
-                                @endif
-
-                                @if(!in_array($p->status_pesanan_id, [5, 6]))
-                                    <form id="form-batal-{{ $p->id }}" action="{{ route('admin.pesanan.catering.update-status', $p->id) }}" method="POST" class="hidden">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="status" value="6">
-                                        <input type="hidden" name="alasan_batal" value="">
-                                    </form>
-                                    <x-ui.action-button variant="danger" onclick="window.confirmPrompt({ title: 'Batalkan Pesanan', name: 'Batalkan pesanan ini?', message: 'Masukkan alasan pembatalan. Aksi ini tidak dapat dibatalkan.', formId: 'form-batal-{{ $p->id }}', confirmText: 'Batalkan', cancelText: 'Batal', promptPlaceholder: 'Tulis alasan pembatalan' })" title="Batalkan Pesanan" label="Batal">
-                                        <x-heroicon-o-no-symbol class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 @endif
                             </div>

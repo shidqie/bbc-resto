@@ -52,7 +52,7 @@
                 {{-- Order Summary Details --}}
                 <div class="w-full mt-5 bg-gray-50/80 rounded-2xl p-4 border border-gray-100 space-y-2.5 text-xs text-left">
                     <div class="flex items-center justify-between pb-2 border-b border-gray-200/60">
-                        <span class="text-gray-500 font-medium">Kode Pesanan</span>
+                        <span class="text-gray-500 font-medium">ID Pesanan</span>
                         <span class="font-bold text-gray-900 font-mono tracking-tight">{{ $pesanan->id_pesanan ?? ('DIN-' . $pesanan->id) }}</span>
                     </div>
                     

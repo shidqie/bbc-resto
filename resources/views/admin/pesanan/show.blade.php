@@ -42,7 +42,7 @@
                 <table class="w-full text-sm text-left">
                     <tbody class="divide-y divide-gray-100">
                         <tr class="hover:bg-slate-50">
-                            <td class="px-5 py-3 font-semibold text-gray-500 w-1/3">Kode Pesanan</td>
+                            <td class="px-5 py-3 font-semibold text-gray-500 w-1/3">ID Pesanan</td>
                             <td class="px-5 py-3 text-gray-900 font-bold">{{ $pesanan->id_pesanan ?? 'DIN-'.$pesanan->id }}</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
@@ -515,8 +515,15 @@
                         <button onclick="window.showToast('info', 'Halaman Proses Pembayaran segera hadir')" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-white py-2.5 px-4 rounded-xl text-sm font-bold transition-colors">
                             <x-heroicon-o-banknotes class="w-5 h-5" /> Proses Pembayaran
                         </button>
-                        <button onclick="window.open('/pos/dinein/pesanan/{{ $pesanan->id }}/print-nota', '_blank')" class="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-sm font-bold transition-colors">
-                            <x-heroicon-o-printer class="w-5 h-5" /> Cetak Tagihan
+                        @php
+                            $cetakNotaUrl = match($pesanan->jenis_pesanan_id) {
+                                2 => route('admin.pesanan.catering.pdf', $pesanan->id),
+                                3 => route('admin.pesanan.nasibox.pdf', $pesanan->id),
+                                default => url('/pos/dinein/pesanan/' . $pesanan->id . '/print-nota')
+                            };
+                        @endphp
+                        <button onclick="window.open('{{ $cetakNotaUrl }}', '_blank')" class="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 px-4 rounded-xl text-sm font-bold transition-colors cursor-pointer">
+                            <x-heroicon-o-printer class="w-5 h-5" /> {{ in_array($pesanan->jenis_pesanan_id, [2, 3]) ? 'Cetak Bukti Pemesanan' : 'Cetak Tagihan / Nota' }}
                         </button>
                         <button onclick="window.showToast('info', 'Riwayat Pembayaran segera hadir')" class="w-full flex items-center justify-center gap-2 bg-primary-soft hover:bg-primary/10 text-primary py-2.5 px-4 rounded-xl text-sm font-bold transition-colors">
                             <x-heroicon-o-clock class="w-5 h-5" /> Lihat Riwayat Pembayaran

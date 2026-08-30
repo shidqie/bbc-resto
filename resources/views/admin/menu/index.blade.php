@@ -171,15 +171,15 @@
                                 </td>
                             @endif
                             <td class="px-4 py-3 text-center text-sm font-medium">
-                                <div class="flex items-center justify-center gap-2">
-                                    <x-ui.action-button onclick="openMenuModal({{ $menu->id }}, true)" title="Detail">
-                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <x-ui.action-button onclick="openMenuModal({{ $menu->id }}, true)" title="Detail" label="Detail">
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
-                                    <x-ui.action-button onclick="openMenuModal({{ $menu->id }}, false)" title="Ubah">
-                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    <x-ui.action-button onclick="openMenuModal({{ $menu->id }}, false)" title="Ubah" label="Edit">
+                                        <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
-                                    <x-ui.action-button onclick="deleteMenu({{ $menu->id }})" title="Hapus">
-                                        <x-heroicon-o-trash class="w-4 h-4" />
+                                    <x-ui.action-button onclick="deleteMenu({{ $menu->id }})" title="Hapus" label="Hapus">
+                                        <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 </div>
                             </td>

@@ -53,12 +53,12 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-sm text-gray-700">{{ $role->pengguna_count }}</td>
                         <td class="px-4 py-4 align-middle text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <x-ui.action-button @click="showEditModal = true; editForm = { id: '{{ $role->id }}', nama_peran: '{{ addslashes($role->nama_peran) }}' }" title="Ubah">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                            <div class="flex items-center justify-center gap-1.5">
+                                <x-ui.action-button @click="showEditModal = true; editForm = { id: '{{ $role->id }}', nama_peran: '{{ addslashes($role->nama_peran) }}' }" title="Ubah" label="Edit">
+                                    <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
-                                <x-ui.action-button @click="showDeleteModal = true; deleteForm = { id: '{{ $role->id }}', nama_peran: '{{ addslashes($role->nama_peran) }}' }" title="Hapus">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                <x-ui.action-button @click="showDeleteModal = true; deleteForm = { id: '{{ $role->id }}', nama_peran: '{{ addslashes($role->nama_peran) }}' }" title="Hapus" label="Hapus">
+                                    <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                             </div>
                         </td>

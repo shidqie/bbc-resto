@@ -142,6 +142,11 @@ class Pesanan extends BaseModel
         return $this->id_pesanan;
     }
 
+    public function getTotalHargaAttribute(): float
+    {
+        return (float) ($this->attributes['total_tagihan'] ?? 0);
+    }
+
     public function getNamaKonsumenAttribute(): string
     {
         if ($this->pelanggan && !empty($this->pelanggan->nama)) {

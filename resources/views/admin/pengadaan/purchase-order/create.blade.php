@@ -343,14 +343,22 @@
                     </div>
                     @endif
 
-                    {{-- Row 3: Supplier, Tanggal PO & Kebutuhan --}}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-5 mb-5">
+                    {{-- Row 3: Supplier, Kontak, Tanggal PO & Tanggal Kebutuhan --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
                         <div>
                             <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider mb-2">Supplier / Toko <span class="text-red-500">*</span></label>
-                            <input type="text" name="supplier_nama" id="supplier_nama" value="{{ old('supplier_nama') }}" placeholder="Masukkan nama supplier / toko..." class="block w-full rounded-xl border {{ $errors->has('supplier_nama') ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-primary/20 focus:ring-primary/20' }} bg-white text-sm px-4 py-2.5 transition-all duration-150 outline-none font-medium" required>
+                            <input type="text" name="supplier_nama" id="supplier_nama" value="{{ old('supplier_nama') }}" placeholder="Nama supplier / toko..." class="block w-full rounded-xl border {{ $errors->has('supplier_nama') ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-primary/20 focus:ring-primary/20' }} bg-white text-sm px-4 py-2.5 transition-all duration-150 outline-none font-medium" required>
                             @error('supplier_nama')
                                 <p class="text-xs font-medium text-red-600 mt-1">{{ $message }}</p>
                             @enderror
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider">No. Kontak / WA</label>
+                                <span class="text-[10px] text-gray-400 font-medium">Opsional</span>
+                            </div>
+                            <input type="text" name="no_telp_supplier" id="no_telp_supplier" value="{{ old('no_telp_supplier') }}" placeholder="Contoh: 0812-3456-7890" class="block w-full rounded-xl border border-gray-200 focus:border-primary/20 focus:ring-2 focus:ring-primary/20 bg-white text-sm px-4 py-2.5 transition-all outline-none font-medium">
                         </div>
 
                         <div>

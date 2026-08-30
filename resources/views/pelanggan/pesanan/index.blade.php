@@ -57,7 +57,7 @@
                         <table class="w-full text-left border-collapse whitespace-nowrap">
                             <thead>
                                 <tr class="border-b border-primary/10 bg-primary/[0.03] text-xs font-bold text-body/50 uppercase tracking-wider">
-                                    <th class="py-4 px-5">Kode Pesanan</th>
+                                    <th class="py-4 px-5">ID Pesanan</th>
                                     <th class="py-4 px-5">Tanggal Acara</th>
                                     <th class="py-4 px-5">Paket & Porsi</th>
                                     <th class="py-4 px-5">Status Pembayaran</th>

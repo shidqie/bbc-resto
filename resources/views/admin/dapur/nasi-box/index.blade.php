@@ -41,7 +41,7 @@
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
-                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">ID Pesanan</th>
                     <th class="px-4 py-3.5 text-left">Konsumen</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
                     <th class="px-4 py-3.5 text-right">Total Tagihan</th>
@@ -133,8 +133,8 @@
                             </td>
                             <td class="px-4 py-4 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <x-ui.action-button @click="$dispatch('open-nasibox-drawer', {url: '{{ route('admin.pesanan.nasibox.show', $p->id) }}'})" title="Detail">
-                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    <x-ui.action-button @click="$dispatch('open-nasibox-drawer', {url: '{{ route('admin.pesanan.nasibox.show', $p->id) }}'})" title="Detail" label="Detail">
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                     
                                     @php
@@ -143,13 +143,12 @@
                                     @endphp
                                     
 
-    
                                     @if($buktiPending)
                                         <form id="form-verif-{{ $buktiPending->id }}" action="{{ route('admin.bukti.verifikasi-pembayaran', $buktiPending->id) }}" method="POST" class="hidden">
                                             @csrf @method('PATCH')
                                         </form>
-                                        <x-ui.action-button type="button" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi" class="text-green-600 hover:text-green-800">
-                                            <x-heroicon-o-check-badge class="w-4 h-4" />
+                                        <x-ui.action-button type="button" variant="success" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi" label="Verifikasi">
+                                            <x-heroicon-o-check-badge class="w-3.5 h-3.5" />
                                         </x-ui.action-button>
                                     @endif
 

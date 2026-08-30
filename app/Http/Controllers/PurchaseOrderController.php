@@ -25,23 +25,58 @@ class PurchaseOrderController extends Controller
             ->orderByDesc('dibuat_pada');
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('nomor_po', 'like', "%{$search}%")
                     ->orWhere('supplier', 'like', "%{$search}%");
             });
         }
 
-        if ($request->filled('status')) {
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('jenis_po') && $request->jenis_po !== 'all') {
+            $query->where('jenis_po', $request->jenis_po);
+        }
+
+        // Filter Periode & Tanggal
+        if ($request->filled('periode') && $request->periode !== 'all') {
+            $now = \Carbon\Carbon::now();
+            switch ($request->periode) {
+                case 'hari_ini':
+                    $query->whereDate('tanggal_po', $now->toDateString());
+                    break;
+                case 'minggu_ini':
+                    $query->whereBetween('tanggal_po', [$now->startOfWeek()->toDateString(), $now->endOfWeek()->toDateString()]);
+                    break;
+                case 'bulan_ini':
+                    $query->whereMonth('tanggal_po', $now->month)->whereYear('tanggal_po', $now->year);
+                    break;
+                case 'kustom':
+                    if ($request->filled('dari')) {
+                        $query->whereDate('tanggal_po', '>=', $request->dari);
+                    }
+                    if ($request->filled('sampai')) {
+                        $query->whereDate('tanggal_po', '<=', $request->sampai);
+                    }
+                    break;
+            }
+        } elseif ($request->filled('dari') || $request->filled('sampai')) {
+            if ($request->filled('dari')) {
+                $query->whereDate('tanggal_po', '>=', $request->dari);
+            }
+            if ($request->filled('sampai')) {
+                $query->whereDate('tanggal_po', '<=', $request->sampai);
+            }
         }
 
         $pos = $query->paginate(10)->withQueryString();
 
         $statuses = [
-            PurchaseOrder::MENUNGGU_BARANG => 'Dipesan',
+            PurchaseOrder::MENUNGGU_BARANG => 'Menunggu Barang',
             PurchaseOrder::DITERIMA_SEBAGIAN => 'Diterima Sebagian',
-            PurchaseOrder::SELESAI => 'Diterima',
+            PurchaseOrder::SELESAI => 'Selesai',
             PurchaseOrder::DIBATALKAN => 'Dibatalkan',
         ];
 
@@ -206,10 +241,13 @@ class PurchaseOrderController extends Controller
     {
         $request->validate([
             'supplier_nama' => 'required|string|max:150',
+            'no_telp_supplier' => 'nullable|string|max:50',
             'supplier_telepon' => 'nullable|string|max:50',
             'supplier_alamat' => 'nullable|string|max:500',
+            'alamat_supplier' => 'nullable|string|max:500',
             'jumlah_beli' => 'required|array',
             'tanggal_po' => 'nullable|date',
+            'tanggal_kebutuhan' => 'nullable|date',
         ], [
             'supplier_nama.required' => 'Nama supplier wajib diisi.',
             'jumlah_beli.required' => 'Daftar bahan baku wajib diisi.',
@@ -228,12 +266,15 @@ class PurchaseOrderController extends Controller
 
         try {
             $po = DB::transaction(function () use ($request, $checkeds) {
+                $noTelp = $request->no_telp_supplier ?: $request->supplier_telepon ?: null;
+                $alamat = $request->alamat_supplier ?: $request->supplier_alamat ?: null;
+
                 // Auto match or create Pemasok
                 $pemasok = Pemasok::firstOrCreate(
                     ['nama_pemasok' => trim($request->supplier_nama)],
                     [
-                        'nomor_telepon' => $request->supplier_telepon ?? '-',
-                        'alamat' => $request->supplier_alamat ?? '-',
+                        'nomor_telepon' => $noTelp ?? '-',
+                        'alamat' => $alamat ?? '-',
                         'kode_pemasok' => 'SUP-' . time() . rand(100, 999)
                     ]
                 );
@@ -274,11 +315,12 @@ class PurchaseOrderController extends Controller
                 'nomor_po' => $nomorPo,
                 'pengadaan_bahan_id' => $pengadaan->id,
                 'supplier' => $request->supplier_nama,
-                'no_telp_supplier' => $request->supplier_telepon,
-                'alamat_supplier' => $request->supplier_alamat,
+                'no_telp_supplier' => $noTelp,
+                'alamat_supplier' => $alamat,
                 'jenis_po' => $isCatering ? 'catering' : 'operasional',
-                'kode_pesanan_catering' => $kodePesananCatering,
+                'kode_pesanan_catering' => $isCatering ? $kodePesananCatering : null,
                 'tanggal_po' => $request->tanggal_po ?? now()->toDateString(),
+                'tanggal_kebutuhan' => $request->tanggal_kebutuhan ?? date('Y-m-d', strtotime('+1 day')),
                 'status' => PurchaseOrder::MENUNGGU_BARANG,
                 'catatan' => $request->catatan,
                 'dibuat_oleh' => auth()->id() ?? 1,

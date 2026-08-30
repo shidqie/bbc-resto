@@ -45,7 +45,7 @@
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
-                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">ID Pesanan</th>
                     <th class="px-4 py-3.5 text-left">Konsumen</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
                     <th class="px-4 py-3.5 text-right">Total Tagihan</th>
@@ -137,33 +137,32 @@
                         </td>
                         <td class="px-4 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <x-ui.action-button @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.catering.show', $p->id) }}'})" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                <x-ui.action-button @click="$dispatch('open-catering-drawer', {url: '{{ route('admin.pesanan.catering.show', $p->id) }}'})" title="Detail" label="Detail">
+                                    <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                                 
                                 @php
                                     $buktiPending = $p->pembayaran->firstWhere('status_verifikasi', 'menunggu_verifikasi');
-                                    $buktiTerakhir = $p->pembayaran->whereNotNull('bukti_pembayaran')->last();
+                                    $canCancel = !in_array($p->status_pesanan_id, [5, 6]);
                                 @endphp
-                                
 
                                 @if($buktiPending)
                                     <form id="form-verif-{{ $buktiPending->id }}" action="{{ route('admin.bukti.verifikasi-pembayaran', $buktiPending->id) }}" method="POST" class="hidden">
                                         @csrf @method('PATCH')
                                     </form>
-                                    <x-ui.action-button type="button" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi" class="text-green-600 hover:text-green-800">
-                                        <x-heroicon-o-check-badge class="w-4 h-4" />
+                                    <x-ui.action-button type="button" variant="success" onclick="window.confirmDialog({ title: 'Verifikasi Pembayaran', name: 'Verifikasi bukti pembayaran pesanan ini?', message: 'Pastikan bukti transfer sudah benar sebelum diverifikasi.', formId: 'form-verif-{{ $buktiPending->id }}', confirmText: 'Verifikasi', cancelText: 'Batal' })" title="Verifikasi" label="Verifikasi">
+                                        <x-heroicon-o-check-badge class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 @endif
 
-                                @if(!in_array($p->status_pesanan_id, [5, 6]))
+                                @if($canCancel)
                                     <form id="form-batal-{{ $p->id }}" action="{{ route('admin.pesanan.catering.update-status', $p->id) }}" method="POST" class="hidden">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="status" value="6">
                                         <input type="hidden" name="alasan_batal" value="">
                                     </form>
-                                    <x-ui.action-button onclick="window.confirmPrompt({ title: 'Batalkan Pesanan', name: 'Batalkan pesanan ini?', message: 'Masukkan alasan pembatalan. Aksi ini tidak dapat dibatalkan.', formId: 'form-batal-{{ $p->id }}', confirmText: 'Batalkan', cancelText: 'Batal', promptPlaceholder: 'Tulis alasan pembatalan' })" title="Batalkan">
-                                        <x-heroicon-o-no-symbol class="w-4 h-4" />
+                                    <x-ui.action-button variant="danger" onclick="window.confirmPrompt({ title: 'Batalkan Pesanan', name: 'Batalkan pesanan ini?', message: 'Masukkan alasan pembatalan. Aksi ini tidak dapat dibatalkan.', formId: 'form-batal-{{ $p->id }}', confirmText: 'Batalkan', cancelText: 'Batal', promptPlaceholder: 'Tulis alasan pembatalan' })" title="Batalkan" label="Batal">
+                                        <x-heroicon-o-no-symbol class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 @endif
                             </div>

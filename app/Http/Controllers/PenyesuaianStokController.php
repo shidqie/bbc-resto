@@ -52,25 +52,38 @@ class PenyesuaianStokController extends Controller
 
     public function store(Request $request)
     {
-        // Normalize single field input to array if passed as scalar
-        if ($request->has('bahan_baku_id') && !is_array($request->bahan_baku_id)) {
-            $request->merge([
-                'bahan_baku_id' => [$request->bahan_baku_id],
-                'jenis_persediaan' => [$request->jenis_persediaan ?? 'harian'],
-                'tipe_aksi' => [$request->tipe_aksi ?? 'kurang'],
-                'jumlah_input' => [$request->jumlah_input ?? $request->jumlah_fisik],
-                'jumlah_fisik' => [$request->jumlah_fisik ?? null],
-                'catatan_item' => [$request->catatan ?? null],
-            ]);
-        }
+        $isSingle = !is_array($request->bahan_baku_id);
 
-        $request->validate([
-            'alasan' => 'required|string',
-            'bahan_baku_id' => 'required|array|min:1',
-            'bahan_baku_id.*' => 'required|exists:bahan_baku,id',
-            'jenis_persediaan' => 'required|array',
-            'jenis_persediaan.*' => 'required|in:harian,catering',
-        ]);
+        if ($isSingle) {
+            $request->validate([
+                'alasan'           => 'required|string',
+                'bahan_baku_id'    => 'required|exists:bahan_baku,id',
+                'jenis_persediaan' => 'required|in:harian,catering',
+                'tipe_aksi'        => 'required|in:kurang,tambah,opname',
+                'jumlah_input'     => 'required|numeric|min:0',
+                'catatan'          => 'nullable|string',
+            ]);
+
+            $bahanIds = [$request->bahan_baku_id];
+            $jenisList = [$request->jenis_persediaan];
+            $aksiList = [$request->tipe_aksi];
+            $inputList = [(float) $request->jumlah_input];
+            $catatanList = [$request->catatan];
+        } else {
+            $request->validate([
+                'alasan'             => 'required|string',
+                'bahan_baku_id'      => 'required|array|min:1',
+                'bahan_baku_id.*'    => 'required|exists:bahan_baku,id',
+                'jenis_persediaan'   => 'required|array',
+                'jenis_persediaan.*' => 'required|in:harian,catering',
+            ]);
+
+            $bahanIds = $request->bahan_baku_id;
+            $jenisList = $request->jenis_persediaan;
+            $aksiList = $request->tipe_aksi ?? [];
+            $inputList = $request->jumlah_input ?? $request->jumlah_fisik ?? [];
+            $catatanList = $request->catatan_item ?? [];
+        }
 
         try {
             DB::beginTransaction();
@@ -78,27 +91,27 @@ class PenyesuaianStokController extends Controller
             $nomorPenyesuaian = 'ADJ-'.date('Ymd').'-'.rand(100, 999);
 
             $penyesuaian = PenyesuaianStok::create([
-                'nomor_penyesuaian' => $nomorPenyesuaian,
+                'nomor_penyesuaian'   => $nomorPenyesuaian,
                 'tanggal_penyesuaian' => now(),
-                'dibuat_oleh' => Auth::id(),
-                'alasan' => $request->alasan,
-                'catatan' => $request->catatan ?? null,
-                'status_penyesuaian' => 'DISETUJUI', // auto approve
+                'dibuat_oleh'         => Auth::id(),
+                'disetujui_oleh'      => Auth::id(),
+                'alasan'              => $request->alasan,
+                'status_penyesuaian'  => 'DISETUJUI', // auto approve
             ]);
 
             $stockService = app(StockService::class);
 
-            foreach ($request->bahan_baku_id as $idx => $bahanId) {
+            foreach ($bahanIds as $idx => $bahanId) {
                 $bahan = BahanBaku::find($bahanId);
                 if (!$bahan) continue;
 
-                $jenisPersediaan = $request->jenis_persediaan[$idx] ?? StokBahan::JENIS_HARIAN;
+                $jenisPersediaan = $jenisList[$idx] ?? StokBahan::JENIS_HARIAN;
                 $stokRow = StokBahan::where('bahan_baku_id', $bahanId)
                     ->where('jenis_persediaan', $jenisPersediaan)->first();
 
                 $jumlahSistem = $stokRow ? (float) $stokRow->jumlah_stok : 0;
-                $tipeAksi = $request->tipe_aksi[$idx] ?? 'kurang';
-                $inputVal = isset($request->jumlah_input[$idx]) ? (float) $request->jumlah_input[$idx] : null;
+                $tipeAksi = $aksiList[$idx] ?? 'kurang';
+                $inputVal = isset($inputList[$idx]) ? (float) $inputList[$idx] : null;
 
                 if ($inputVal === null && isset($request->jumlah_fisik[$idx])) {
                     $inputVal = (float) $request->jumlah_fisik[$idx];

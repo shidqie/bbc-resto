@@ -95,8 +95,8 @@
                         </td>
                         <td class="px-4 py-4 align-middle">
                             <div class="flex items-center justify-center gap-1.5">
-                                <x-ui.action-button href="{{ route('pengadaan.permintaan.show', $p->id) }}" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                <x-ui.action-button href="{{ route('pengadaan.permintaan.show', $p->id) }}" title="Detail" label="Detail">
+                                    <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                                 @if(! in_array($kodeStatus, ['selesai', 'dibatalkan']))
                                     <x-ui.button href="{{ route('pengadaan.po.create', $p->id) }}" variant="primary" size="sm">

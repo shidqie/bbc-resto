@@ -97,7 +97,7 @@
                     <div class="p-6 text-gray-900">
                         <h3 class="text-lg font-semibold mb-4 border-b pb-2">Informasi Pesanan</h3>
                         <div class="space-y-3 text-sm">
-                            <div class="grid grid-cols-3"><span class="text-gray-500">Kode Pesanan</span> <span class="col-span-2 font-mono text-xs font-bold">{{ $pesanan->id_pesanan }}</span></div>
+                            <div class="grid grid-cols-3"><span class="text-gray-500">ID Pesanan</span> <span class="col-span-2 font-mono text-xs font-bold">{{ $pesanan->id_pesanan }}</span></div>
                             <div class="grid grid-cols-3"><span class="text-gray-500">Jenis Pesanan</span> <span class="col-span-2 font-semibold">{{ $pesanan->jenis_pesanan->nama_jenis ?? '-' }}</span></div>
                             <div class="grid grid-cols-3"><span class="text-gray-500">Paket</span> <span class="col-span-2 font-semibold">{{ $detailPesanan->menu->nama_menu ?? '-' }}</span></div>
                             <div class="grid grid-cols-3"><span class="text-gray-500">Jumlah Porsi</span> <span class="col-span-2">{{ $detailPesanan->jumlah ?? 0 }}</span></div>

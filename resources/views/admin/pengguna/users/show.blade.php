@@ -210,7 +210,7 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <div class="font-medium text-gray-900">Rp {{ number_format($pesanan->total_harga ?? 0, 0, ',', '.') }}</div>
+                                    <div class="font-medium text-gray-900">Rp {{ number_format($pesanan->total_tagihan ?? 0, 0, ',', '.') }}</div>
                                 </td>
                             </tr>
                             @endforeach
@@ -255,7 +255,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Nilai</p>
-                            <p class="text-2xl font-bold text-gray-900">Rp {{ number_format($pesananList->sum('total_harga') ?? 0, 0, ',', '.') }}</p>
+                            <p class="text-2xl font-bold text-gray-900">Rp {{ number_format($pesananList->sum('total_tagihan') ?? 0, 0, ',', '.') }}</p>
                         </div>
                         <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
                             <x-heroicon-o-banknotes class="w-5 h-5 text-emerald-600" />

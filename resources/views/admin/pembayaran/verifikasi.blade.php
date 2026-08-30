@@ -42,7 +42,7 @@
             <x-ui.table class="min-w-[1000px]">
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
-                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">ID Pesanan</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Pesan</th>
                     <th class="px-4 py-3.5 text-left">Tanggal Acara</th>
                     <th class="px-4 py-3.5 text-right">Total</th>
@@ -102,8 +102,8 @@
                                         </x-ui.button>
                                     </form>
                                 @else
-                                    <x-ui.action-button x-data="" @click="$dispatch('open-modal', 'modal-verifikasi-{{ $pembayaran->id }}')" title="Lihat Detail">
-                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    <x-ui.action-button x-data="" @click="$dispatch('open-modal', 'modal-verifikasi-{{ $pembayaran->id }}')" title="Lihat Detail" label="Detail">
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 @endif
                             </div>

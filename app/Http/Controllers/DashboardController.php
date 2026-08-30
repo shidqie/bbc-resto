@@ -170,7 +170,7 @@ class DashboardController extends Controller
         // 3. Tagihan Belum Lunas Hari Ini (Dine In & POS)
         $pesananBelumBayar = Pesanan::with(['meja', 'detail_pesanan.menu', 'status_pesanan', 'pembayaran'])
             ->where('jenis_pesanan_id', 1)
-            ->where('status_pembayaran_id', '!=', 3)
+            ->where('status_pembayaran_id', '!=', 5)
             ->whereDate('dibuat_pada', $today)
             ->latest('dibuat_pada')
             ->get();
@@ -185,7 +185,7 @@ class DashboardController extends Controller
         // 5. Transaksi Lunas Terakhir Hari Ini
         $transaksiTerakhir = Pesanan::with(['meja', 'status_pesanan', 'pembayaran'])
             ->whereDate('dibuat_pada', $today)
-            ->where('status_pembayaran_id', 3)
+            ->where('status_pembayaran_id', 5)
             ->latest('dibuat_pada')
             ->take(8)
             ->get();

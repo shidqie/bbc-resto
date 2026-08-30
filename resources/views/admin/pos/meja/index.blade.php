@@ -71,22 +71,22 @@
                             </x-ui.badge>
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
-                            <div class="flex items-center justify-center gap-2">
+                            <div class="flex items-center justify-center gap-1.5">
                                 {{-- Detail (QR) --}}
-                                <x-ui.action-button onclick="openQrDrawer({{ $meja->id }}, '{{ $meja->nomor_meja }}', '{{ $meja->kode_meja }}', {{ $meja->kapasitas }}, '{{ $meja->qr_token }}', '{{ $meja->area }}')" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                <x-ui.action-button onclick="openQrDrawer({{ $meja->id }}, '{{ $meja->nomor_meja }}', '{{ $meja->kode_meja }}', {{ $meja->kapasitas }}, '{{ $meja->qr_token }}', '{{ $meja->area }}')" title="Detail" label="Detail">
+                                    <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
 
                                 {{-- Edit (Update) --}}
-                                <x-ui.action-button onclick="openMejaModal({{ $meja->id }}, '{{ $meja->nomor_meja }}', {{ $meja->kapasitas }}, {{ $meja->status_meja_id ?? 1 }}, '{{ $meja->area }}')" title="Ubah">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                <x-ui.action-button onclick="openMejaModal({{ $meja->id }}, '{{ $meja->nomor_meja }}', {{ $meja->kapasitas }}, {{ $meja->status_meja_id ?? 1 }}, '{{ $meja->area }}')" title="Ubah" label="Edit">
+                                    <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
 
                                 {{-- Delete (Hapus) --}}
                                 <form id="delete-meja-{{ $meja->id }}" action="{{ route('meja.destroy', $meja->id) }}" method="POST" class="inline">
                                     @csrf @method('DELETE')
-                                    <x-ui.action-button onclick="window.confirmDialog({ title: 'Hapus Meja', name: 'Meja {{ addslashes($meja->nomor_meja) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-meja-{{ $meja->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" title="Hapus">
-                                        <x-heroicon-o-trash class="w-4 h-4" />
+                                    <x-ui.action-button onclick="window.confirmDialog({ title: 'Hapus Meja', name: 'Meja {{ addslashes($meja->nomor_meja) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-meja-{{ $meja->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" title="Hapus" label="Hapus">
+                                        <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 </form>
                             </div>

@@ -36,7 +36,7 @@
                 <form action="{{ route('laporan.penjualan') }}" method="GET" class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 w-full">
                     <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
                         <div class="w-full sm:w-auto shrink-0">
-                            <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari Kode Pesanan..." width="w-full" />
+                            <x-search-input name="search" value="{{ request('search') }}" placeholder="Cari ID Pesanan..." width="w-full" />
                         </div>
                         <x-ui.multi-select name="jenis" :options="['dinein' => 'Dine-In', 'catering' => 'Katering', 'nasibox' => 'Nasi Box']" :selected="request('jenis', [])" label="Jenis Pesanan" />
                         <x-ui.multi-select name="periode" :options="['hari_ini' => 'Hari Ini', 'minggu_ini' => 'Minggu Ini', 'bulan_ini' => 'Bulan Ini', 'custom' => 'Custom Date']" :selected="request('periode', 'bulan_ini')" label="Periode" type="radio" />
@@ -61,7 +61,7 @@
                     </div>
                     
                     <div class="flex items-center gap-2 shrink-0">
-                        <x-ui.button variant="secondary" icon="document-text" href="{{ route('laporan.penjualan.cetak-pdf', request()->all()) }}" target="_blank" size="sm">
+                        <x-ui.button variant="secondary" icon="document-text" href="{{ route('laporan.penjualan.cetak-pdf', array_merge(request()->query(), ['periode' => $periode, 'start_date' => $startDate, 'end_date' => $endDate])) }}" target="_blank" size="sm" onclick="this.href=buildExportReportUrl('{{ route('laporan.penjualan.cetak-pdf') }}', this)">
                             Export PDF
                         </x-ui.button>
                     </div>
@@ -72,7 +72,7 @@
                 <x-ui.table.header>
                     <th class="px-4 py-3.5 text-left w-12">No</th>
                     <th class="px-4 py-3.5 text-left">Tanggal</th>
-                    <th class="px-4 py-3.5 text-left">Kode Pesanan</th>
+                    <th class="px-4 py-3.5 text-left">ID Pesanan</th>
                     <th class="px-4 py-3.5 text-left">Jenis Pesanan</th>
                     <th class="px-4 py-3.5 text-right">Total Transaksi</th>
                     <th class="px-4 py-3.5 text-center">Status</th>
@@ -103,12 +103,10 @@
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
                             <x-ui.badge color="success" size="sm">Selesai</x-ui.badge>
-                        </td>
                         <td class="px-4 py-4 align-middle text-right">
-                            <button type="button" onclick="openDetailDrawer({{ $p->id }})" class="inline-flex items-center gap-1 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors shadow-2xs">
-                                <x-heroicon-o-eye class="w-3.5 h-3.5 text-gray-500" />
-                                Detail
-                            </button>
+                            <x-ui.action-button onclick="openDetailDrawer({{ $p->id }})" title="Detail" label="Detail">
+                                <x-heroicon-o-eye class="w-3.5 h-3.5" />
+                            </x-ui.action-button>
                         </td>
                     </x-ui.table.row>
                     @empty
@@ -199,6 +197,18 @@
             drawer.classList.add('hidden');
             drawer.style.display = '';
         }, 300);
+    }
+    function buildExportReportUrl(baseRoute, btnEl) {
+        const form = btnEl.closest('form');
+        if (!form) return btnEl.href;
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        for (const [key, val] of formData.entries()) {
+            if (val !== null && val !== '') {
+                params.append(key, val);
+            }
+        }
+        return baseRoute + (baseRoute.includes('?') ? '&' : '?') + params.toString();
     }
 </script>
 @endsection

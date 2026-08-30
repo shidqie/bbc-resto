@@ -85,18 +85,18 @@
                             <x-ui.badge color="gray" size="sm">{{ $paket->komponen_paket_count }} Item Menu</x-ui.badge>
                         </td>
                         <td class="px-4 py-4 align-middle text-center">
-                            <div class="flex items-center justify-center gap-2">
+                            <div class="flex items-center justify-center gap-1.5">
                                 {{-- View (Detail) --}}
-                                <x-ui.action-button onclick="openPaketDrawer({{ json_encode($paket->load('komponen_paket.opsi')) }}, true)" title="Detail">
-                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                <x-ui.action-button onclick="openPaketDrawer({{ json_encode($paket->load('komponen_paket.opsi')) }}, true)" title="Detail" label="Detail">
+                                    <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                                 {{-- Edit (Update) --}}
-                                <x-ui.action-button onclick="openPaketForm({{ $paket->id }})" title="Ubah">
-                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                <x-ui.action-button onclick="openPaketForm({{ $paket->id }})" title="Ubah" label="Edit">
+                                    <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                                 {{-- Delete (Hapus) --}}
-                                <x-ui.action-button onclick="openDeleteModal({{ $paket->id }}, '{{ addslashes($paket->nama_menu) }}')" title="Hapus">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                <x-ui.action-button onclick="openDeleteModal({{ $paket->id }}, '{{ addslashes($paket->nama_menu) }}')" title="Hapus" label="Hapus">
+                                    <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                 </x-ui.action-button>
                             </div>
                         </td>

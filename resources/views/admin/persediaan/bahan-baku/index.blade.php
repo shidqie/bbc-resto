@@ -104,16 +104,16 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <x-ui.action-button onclick="openDetailDrawer({{ $item->id }})" title="Detail">
-                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    <x-ui.action-button onclick="openDetailDrawer({{ $item->id }})" title="Detail" label="Detail">
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
-                                    <x-ui.action-button onclick="openBahanBakuModal({{ $item->id }})" title="Ubah">
-                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    <x-ui.action-button onclick="openBahanBakuModal({{ $item->id }})" title="Ubah" label="Edit">
+                                        <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                     <form id="delete-bahan-{{ $item->id }}" action="{{ route('bahan-baku.destroy', $item->id) }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
-                                        <x-ui.action-button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Bahan Baku', name: '{{ addslashes($item->nama_bahan) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-bahan-{{ $item->id }}', confirmText: 'Hapus', cancelText: 'Batal' })">
-                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                        <x-ui.action-button type="button" title="Hapus" label="Hapus" onclick="window.confirmDialog({ title: 'Hapus Bahan Baku', name: '{{ addslashes($item->nama_bahan) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-bahan-{{ $item->id }}', confirmText: 'Hapus', cancelText: 'Batal' })">
+                                            <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                         </x-ui.action-button>
                                     </form>
                                 </div>
@@ -155,13 +155,13 @@
                             <td class="px-4 py-3 text-right font-medium">{{ $kat->bahan_bakus_count }}</td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <x-ui.action-button onclick="openKategoriModal({{ $kat->id }}, '{{ addslashes($kat->nama_kategori) }}')" title="Ubah">
-                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    <x-ui.action-button onclick="openKategoriModal({{ $kat->id }}, '{{ addslashes($kat->nama_kategori) }}')" title="Ubah" label="Edit">
+                                        <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                     <form id="delete-kategori-{{ $kat->id }}" action="{{ route('kategori-bahan.destroy', $kat->id) }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
-                                        <x-ui.action-button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Kategori', name: '{{ addslashes($kat->nama_kategori) }}', message: 'Kategori ini akan dihapus dari sistem.', formId: 'delete-kategori-{{ $kat->id }}' })">
-                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                        <x-ui.action-button type="button" title="Hapus" label="Hapus" onclick="window.confirmDialog({ title: 'Hapus Kategori', name: '{{ addslashes($kat->nama_kategori) }}', message: 'Kategori ini akan dihapus dari sistem.', formId: 'delete-kategori-{{ $kat->id }}' })">
+                                            <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                         </x-ui.action-button>
                                     </form>
                                 </div>
@@ -205,13 +205,13 @@
                             <td class="px-4 py-3 text-right font-medium">{{ $sat->bahan_bakus_count }}</td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <x-ui.action-button onclick="openSatuanModal({{ $sat->id }}, '{{ addslashes($sat->nama_satuan) }}', '{{ addslashes($sat->singkatan ?? '') }}')" title="Ubah">
-                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    <x-ui.action-button onclick="openSatuanModal({{ $sat->id }}, '{{ addslashes($sat->nama_satuan) }}', '{{ addslashes($sat->singkatan ?? '') }}')" title="Ubah" label="Edit">
+                                        <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                     <form id="delete-satuan-{{ $sat->id }}" action="{{ route('satuan.destroy', $sat->id) }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
-                                        <x-ui.action-button type="button" title="Hapus" onclick="window.confirmDialog({ title: 'Hapus Satuan', name: '{{ addslashes($sat->nama_satuan) }}', message: 'Satuan ini akan dihapus dari sistem.', formId: 'delete-satuan-{{ $sat->id }}' })">
-                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                        <x-ui.action-button type="button" title="Hapus" label="Hapus" onclick="window.confirmDialog({ title: 'Hapus Satuan', name: '{{ addslashes($sat->nama_satuan) }}', message: 'Satuan ini akan dihapus dari sistem.', formId: 'delete-satuan-{{ $sat->id }}' })">
+                                            <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                         </x-ui.action-button>
                                     </form>
                                 </div>

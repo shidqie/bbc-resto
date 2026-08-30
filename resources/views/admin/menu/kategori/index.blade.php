@@ -63,14 +63,14 @@
                             </td>
                             <td class="px-4 py-4 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <x-ui.action-button onclick="editKategori({{ $kategori->id }}, '{{ addslashes($kategori->nama_kategori) }}', '{{ addslashes($kategori->deskripsi) }}')" title="Ubah">
-                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                    <x-ui.action-button onclick="editKategori({{ $kategori->id }}, '{{ addslashes($kategori->nama_kategori) }}', '{{ addslashes($kategori->deskripsi) }}')" title="Ubah" label="Edit">
+                                        <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                     <form id="delete-kategori-{{ $kategori->id }}" action="{{ route('kategori-menu.destroy', $kategori->id) }}" method="POST" class="inline-block">
                                         @csrf
                                         @method('DELETE')
-                                        <x-ui.action-button type="button" onclick="window.confirmDialog({ title: 'Hapus Kategori', name: '{{ addslashes($kategori->nama_kategori) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-kategori-{{ $kategori->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" title="Hapus">
-                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                        <x-ui.action-button type="button" onclick="window.confirmDialog({ title: 'Hapus Kategori', name: '{{ addslashes($kategori->nama_kategori) }}', message: 'Data yang dihapus tidak dapat dikembalikan.', formId: 'delete-kategori-{{ $kategori->id }}', confirmText: 'Hapus', cancelText: 'Batal' })" title="Hapus" label="Hapus">
+                                            <x-heroicon-o-trash class="w-3.5 h-3.5" />
                                         </x-ui.action-button>
                                     </form>
                                 </div>

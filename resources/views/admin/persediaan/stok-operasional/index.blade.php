@@ -129,8 +129,8 @@
                             </td>
                             <td class="px-4 py-4 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <x-ui.action-button onclick="openDetailDrawer({{ $bahan->id }})" title="Detail">
-                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                    <x-ui.action-button onclick="openDetailDrawer({{ $bahan->id }})" title="Detail" label="Detail">
+                                        <x-heroicon-o-eye class="w-3.5 h-3.5" />
                                     </x-ui.action-button>
                                 </div>
                             </td>
